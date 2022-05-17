@@ -1,0 +1,99 @@
+{
+	"name": "zg-assembler",
+	"displayName": "ZG Assembler",
+	"author": {
+		"name": "ZENG GE"
+	},
+	"publisher": "ZENG-GE",
+	"description": "A simple assembler for 6502/65816",
+	"preview": true,
+	"version": "0.0.12",
+	"repository": {
+		"url": "https://github.com/zyr2288/zg-assembler/"
+	},
+	"icon": "syntaxes/chip.png",
+	"engines": {
+		"vscode": "^1.64.0"
+	},
+	"categories": [
+		"Programming Languages",
+		"Other"
+	],
+	"activationEvents": [
+		"onLanguage:zg-assembly"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "zg-assembly.compliteThis",
+				"title": "编译本文件"
+			},
+			{
+				"command": "zg-assembly.compliteMain",
+				"title": "编译入口文件"
+			}
+		],
+		"languages": [
+			{
+				"id": "zg-assembly",
+				"extensions": [
+					".asm"
+				],
+				"icon": {
+					"dark": "./syntaxes/chip.png",
+					"light": "./syntaxes/chip.png"
+				},
+				"configuration": "./syntaxes/language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "zg-assembly",
+				"scopeName": "source.asm.zg-assembly",
+				"path": "./syntaxes/zg-assembly.json"
+			}
+		],
+		"menus": {
+			"editor/context": [
+				{
+					"when": "editorLangId == zg-assembly",
+					"command": "zg-assembly.compliteThis",
+					"group": "z_command"
+				},
+				{
+					"when": "editorLangId == zg-assembly",
+					"command": "zg-assembly.compliteMain",
+					"group": "z_command"
+				}
+			]
+		},
+		"configurationDefaults": {
+			"[zg-assembly]": {
+				"editor.wordBasedSuggestions": false,
+				"editor.tabSize": 8
+			}
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"pretest": "npm run compile && npm run lint",
+		"lint": "eslint src --ext ts",
+		"test": "node ./out/test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/glob": "^7.2.0",
+		"@types/mocha": "^9.1.0",
+		"@types/node": "14.x",
+		"@types/vscode": "^1.64.0",
+		"@typescript-eslint/eslint-plugin": "^5.12.1",
+		"@typescript-eslint/parser": "^5.12.1",
+		"@vscode/test-electron": "^2.1.2",
+		"eslint": "^8.9.0",
+		"glob": "^7.2.0",
+		"mocha": "^9.2.1",
+		"typescript": "^4.5.5"
+	}
+}
