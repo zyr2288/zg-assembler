@@ -15,7 +15,7 @@
     "outputSingleFile": "",     // 单个文件输出，不写则不输出
     "copyToClipboard": true,    // 结果是否复制到剪贴板
     "patchFile": "",            // 匹配文件直接写入，建议备份原文件
-    "includes": ["**/*.65s"],   // 包含的文件
+    "includes": ["**/*.asm"],   // 包含的文件
     "excludes": []              // 排除的文件
 }
 ```

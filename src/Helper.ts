@@ -601,10 +601,12 @@ export class Helper {
 
 	//#region 获取工作目录下所筛选出的文件
 	private async GetWorkspaceFilterFile() {
-		return await vscode.workspace.findFiles(
-			this.assembler.config.ProjectSetting.includes.join(","),
-			this.assembler.config.ProjectSetting.excludes.join(",")
-		);
+		let includes = `{${this.assembler.config.ProjectSetting.includes.join(",")}}`;
+		let excludes: string | null = null;
+		if (this.assembler.config.ProjectSetting.excludes.length != 0)
+			excludes = `{${this.assembler.config.ProjectSetting.excludes.join(",")}}`;
+			
+		return await vscode.workspace.findFiles(includes, excludes);
 	}
 	//#endregion
 

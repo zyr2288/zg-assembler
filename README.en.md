@@ -13,7 +13,7 @@ When the assembly file is opened, the `project-settings.json` file is created in
     "outputSingleFile": "",
     "copyToClipboard": true,
     "patchFile": "",               // It will rewrite patch file
-    "includes": ["**/*.65s"],
+    "includes": ["**/*.asm"],
     "excludes": []
 }
 ```
