@@ -480,7 +480,7 @@ export class Commands {
 				if (!line.label || line.label.isNull)
 					line.errorLine = true;
 				else
-					line.expression = line.label;
+					line.orgText = line.label;
 			}
 		} else {
 			line.errorLine = !check.exsist;

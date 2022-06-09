@@ -12,7 +12,6 @@ import { CommonOption } from "./CommonOption";
 import { Config } from "./Config";
 import { GlobalVar } from "./GlobalVar";
 import { LabelDefinedState } from "./Label";
-import { Macro } from "./Macro";
 import { MyException } from "./MyException";
 import { Token, TokenType } from "./Token";
 
@@ -236,26 +235,27 @@ export class Compile {
 
 	private static GetLineLabel(option: CommonOption) {
 		const line = <CommandLine | InstructionLine>option.allLine[option.lineIndex];
-		let labalToken: Token | undefined;
+		let labelToken: Token | undefined;
 		switch (line.lineType) {
 			case BaseLineType.Command:
 			case BaseLineType.Instruction:
 			case BaseLineType.Macro:
-				labalToken = line.label;
+				labelToken = line.label;
 				break;
 			case BaseLineType.OnlyLabel:
-				labalToken = line.orgText;
+				labelToken = line.orgText;
 				break;
 		}
-		if (!labalToken || labalToken.isNull)
+		if (!labelToken || labelToken.isNull)
 			return;
 
-		let label = LabelUtils.FindTemporaryLabel(labalToken);
+		let label = LabelUtils.FindTemporaryLabel(labelToken);
 		if (label) {
-			let temp = label.lineNumbers.find(value => value.lineNumber == labalToken!.lineNumber);
+			let temp = label.lineNumbers.find(value => value.lineNumber == labelToken!.lineNumber);
 			temp!.value = GlobalVar.env.originalAddress;
 		} else {
-			label = LabelUtils.FindLabel(labalToken, option);
+			console.log(labelToken);
+			label = LabelUtils.FindLabel(labelToken, option);
 			label!.value = GlobalVar.env.originalAddress;
 		}
 	}

@@ -4,9 +4,10 @@
 	"author": {
 		"name": "ZENG GE"
 	},
+	"publisher": "ZENG-GE",
 	"preview": true,
 	"description": "A simple assembler for 6502/65816",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"engines": {
 		"vscode": "^1.67.0"
 	},

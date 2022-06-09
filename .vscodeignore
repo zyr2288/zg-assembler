@@ -10,3 +10,4 @@ vsc-extension-quickstart.md
 **/*.ts
 **/package-lock.json
 PlatformInterface/**
+test/**

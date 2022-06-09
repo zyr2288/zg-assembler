@@ -25,6 +25,7 @@ Click the right mouse button under the editor, “编译本文件” means "comp
 ### Label
 You can use sub labels, such as `player.x` `player.y`.
 Press vscode's Find Definition shortcut key (default F12) to find the label definition location directly.
+
 ![sub labels](https://github.com/zyr2288/zg-assembler/blob/main/test/sub-label.gif)
 
 ### Local label
@@ -32,6 +33,7 @@ If a label is starting with "." (dot), then the label is valid only for this fil
 
 ### Folding
 The folding function starts with `;+` and ends with `;-`.
+
 ![folding](https://github.com/zyr2288/zg-assembler/blob/main/test/folding.gif)
 
 ### Nameless label
