@@ -27,7 +27,7 @@
 ### 标签
 在这个版本增加了子标签的功能，可以使用例如 player.x player.y 这样的子标签，并且智能提示能更好的协助你。
 按vscode的查找定义快捷键（默认F12）可直接找到标签定义位置。
-![子标签](https://gitee.com/zeng_ge/zg-assembler/blob/master/test/sub-label.gif)
+![子标签](https://gitee.com/zeng_ge/zg-assembler/raw/master/test/sub-label.gif)
 
 ### 局部标签
 若文件内使用标签（非编译器指令）以.（点）开头，则该标签的有效范围仅仅于本文件。
@@ -39,7 +39,7 @@
 ### 注释
 ;（分号），后面的文字用于注释，这里提供了新的功能：折叠。
 折叠功能以 `;+...` 开始， `;-...` 结束，同样，折叠会被视为注释，但是这里可以把代码进行折叠，这样可以省略一些可以不需要查看的代码。
-![折叠功能](https://gitee.com/zeng_ge/zg-assembler/blob/master/test/folding.gif)
+![折叠功能](https://gitee.com/zeng_ge/zg-assembler/raw/master/test/folding.gif)
 
 ### 简易标签
 当标签以全部是+号或全部是-号的时候，则是特殊标签。例如：
