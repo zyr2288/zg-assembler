@@ -39,7 +39,7 @@
 ### 注释
 ;（分号），后面的文字用于注释，这里提供了新的功能：折叠。
 折叠功能以 `;+...` 开始， `;-...` 结束，同样，折叠会被视为注释，但是这里可以把代码进行折叠，这样可以省略一些可以不需要查看的代码。
-![折叠功能](https://gitee.com/zeng_ge/zg-assembler/blob/master/test/floding.gif)
+![折叠功能](https://gitee.com/zeng_ge/zg-assembler/blob/master/test/folding.gif)
 
 ### 简易标签
 当标签以全部是+号或全部是-号的时候，则是特殊标签。例如：
