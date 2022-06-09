@@ -2,24 +2,28 @@ import { Label } from "./Label";
 import { Utils } from "../Utils/Utils";
 import { Config } from "./Config";
 import { Macro } from "./Macro";
+import { IBaseLine } from "../BaseLine/BaseLine";
 
 export class Environment {
 
 	/**所有文件，key为fileHash */
 	private files: Record<number, string> = {};
 
-	/** key1:文件hash, key2:lebal hash */
-	fileLebals: Record<number, number[]> = {};
+	/**所有文件基础行，用于高亮 */
+	fileBaseLines: Record<number, IBaseLine[]> = {};
+
+	/** key1:文件hash, key2:Label hash */
+	fileLabels: Record<number, number[]> = {};
 	fileMacro: Record<number, number[]> = {};
 
 	/**全局变量 */
-	allLebals: Record<number, Label> = {};
+	allLabels: Record<number, Label> = {};
 	/**所有Macro */
 	allMacro: Record<number, Macro> = {};
 
-	/** key1:文件File，key2:文本Hash, key3:Lebal */
-	allNamelessLebalDown: Record<number, Record<number, Label>> = {};
-	allNamelessLebalUp: Record<number, Record<number, Label>> = {};
+	/** key1:文件File，key2:文本Hash, key3:Label */
+	allNamelessLabelDown: Record<number, Record<number, Label>> = {};
+	allNamelessLabelUp: Record<number, Record<number, Label>> = {};
 
 	originalAddress: number = -1;
 	baseAddress: number = 0;
@@ -55,9 +59,9 @@ export class Environment {
 
 	//#region 清除所有
 	ClearAll() {
-		this.allLebals = {};
-		this.allNamelessLebalDown = {};
-		this.allNamelessLebalUp = {};
+		this.allLabels = {};
+		this.allNamelessLabelDown = {};
+		this.allNamelessLabelUp = {};
 
 		this.allMacro = {};
 
@@ -84,10 +88,8 @@ export class GlobalVar {
 	 * @param env 环境
 	 * @returns 
 	 */
-	static SwitchEnvironment(env: "Compile" | "Editor") {
-		if (GlobalVar.isCompiling)
-			return;
-
+	static async SwitchEnvironment(env: "Compile" | "Editor") {
+		await GlobalVar.WaitCompileFinished();
 		switch (env) {
 			case "Compile":
 				GlobalVar.env = GlobalVar.compileEnv;
@@ -100,9 +102,22 @@ export class GlobalVar {
 	//#endregion 切换编译环境
 
 	//#region 复制标签变量等到另一个环境
-	static CopyGlobalLebalToOther(env: "Compile" | "Editor") {
+	static CopyGlobalLabelToOther(env: "Compile" | "Editor") {
 
 	}
 	//#endregion 复制标签变量等到另一个环境
+
+	//#region 等待编译完成
+	static async WaitCompileFinished() {
+		return new Promise((resolve, rejects) => {
+			let temp = setInterval(() => {
+				if (!GlobalVar.isCompiling) {
+					clearInterval(temp);
+					resolve("");
+				}
+			}, 200);
+		})
+	}
+	//#endregion 等待编译完成
 
 }

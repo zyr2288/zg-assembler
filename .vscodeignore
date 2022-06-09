@@ -8,6 +8,5 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/*.map
 **/*.ts
-**/*.vsix
-package-lock.json
-test/**
+**/package-lock.json
+PlatformInterface/**

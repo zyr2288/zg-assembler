@@ -12,12 +12,13 @@ export async function activate(context: vscode.ExtensionContext) {
 	statusBarItem.show();
 
 	let helper = new Helper();
-	helper.ChangeDisplayLanguage();
 	try {
 		await helper.Initialize();
-	} catch(e) {
+	} catch (e) {
 		console.log(e);
 	}
+
+
 
 	statusBarItem.text = ` $(check) 载入完成`;
 	setTimeout(() => { statusBarItem.hide(); }, 1000);

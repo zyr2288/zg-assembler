@@ -1,5 +1,5 @@
 export enum CompletionType {
-	Instruction, Command, Macro, Lebal, MacroLebal, Folder, File
+	Instruction, Command, Macro, Label, MacroLabel, Folder, File
 }
 
 /**智能提示 */

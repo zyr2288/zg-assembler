@@ -60,8 +60,6 @@ IRQ
 	LDA #@00001110
 	STA $2001
 
-
-
 NMI
 	LDA $2002
 	LDA #0

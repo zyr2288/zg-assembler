@@ -1,38 +1,27 @@
+import { BaseLineUtils } from "../BaseLine/BaseLine";
+import { Platform } from "../Platform/Platform";
 import { FileUtils } from "../Utils/FileUtils";
-import { LebalUtils } from "../Utils/LebalUtils";
+import { LabelUtils } from "../Utils/LabelUtils";
 import { LexerUtils } from "../Utils/LexerUtils";
 import { MacroUtils } from "../Utils/MacroUtils";
 import { Utils } from "../Utils/Utils";
-import { BaseLine } from "./BaseLine";
 import { Commands } from "./Commands";
 import { Completion, CompletionType } from "./Completion";
 import { Config } from "./Config";
 import { GlobalVar } from "./GlobalVar";
-import { Instructions } from "./Instructions";
 import { LabelDefinedState, LabelState } from "./Label";
 import { Macro } from "./Macro";
 import { MyException } from "./MyException";
-import { OneWord } from "./OneWord";
+import { Token } from "./Token";
 
 type RangeWords = "DataGroup" | "Macro";
-enum CompletionRange { None, Base, Lebal, Macro, Path }
+enum CompletionRange { None, Base, Label, Macro, Path }
 
-/**基础帮助类 */
 export class BaseHelper {
-
-	static get uppercaseRegex() { return new RegExp(BaseHelper.autoUppercaseStr, "ig"); };
 
 	static instructionCompletions: Completion[] = [];
 	static commandsCompletions: Completion[] = [];
 
-	// 忽略不显示提示的文本
-	static readonly ignoreWords = [";", "\\.HEX", "\\.DBG", "\\.DWG", "\\.MACRO"];
-	static get ignoreWordsRegex() { return new RegExp(BaseHelper.ignoreWordStr, "ig"); };
-
-	static readonly rangeWords: Record<string, RegExp> = {
-		DataGroup: /(?<=\.D[BW]G.*\r?\n)(.*\r?\n)*?(?=.*\.ENDD)/ig,
-		Macro: /(?<=\.MACRO\s+)(.*\r?\n)*?(?=.*\.ENDM)/ig
-	}
 	static FileCompletion?: {
 		type: ".INCLUDE" | ".INCBIN",
 		path: string,
@@ -40,33 +29,34 @@ export class BaseHelper {
 		excludeFile: string,
 	};
 
+	static readonly rangeWords: Record<string, RegExp> = {
+		DataGroup: /(?<=\.D[BW]G.*\r?\n)(.*\r?\n)*?(?=.*\.ENDD)/ig,
+		Macro: /(?<=\.MACRO\s+)(.*\r?\n)*?(?=.*\.ENDM)/ig
+	}
+
 	private static readonly NotInMacro = [".DBG", ".DWG", ".MACRO", ".DEF", ".INCLUDE", ".INCBIN", ".BASE", ".ORG"];
 
+	/**自动大写的文本 */
 	private static autoUppercaseStr = "";
-	private static ignoreWordStr = "";
+	private static ignoreWordStr = /;|(^|\s+)(\.HEX|\.DBG|\.DWG|\.MACRO)(\s+|$)/ig;
 
+	static get ignoreWordsRegex() { return new RegExp(BaseHelper.ignoreWordStr); };
+	static get uppercaseRegex() { return new RegExp(BaseHelper.autoUppercaseStr, "ig"); };
 
-	/***** Public *****/
-
-	/***** 基础帮助 *****/
-
-	//#region 更新基础提示
-	/**
-	 * 初始化
-	 */
-	static UpdateHelper() {
-		BaseHelper.UpdateIgnoreRegexStr();
+	//#region 初始化，更新基础提示
+	/**初始化，更新基础提示 */
+	static Initialize() {
 		BaseHelper.SwitchPlatform(Config.ProjectSetting.platform);
 	}
-	//#endregion 更新基础提示
+	//#endregion 初始化，更新基础提示
 
-	//#region 切换平台
+	//#region 切换平台，更新自动大写以及智能提示
 	static SwitchPlatform(platform: string) {
-		Instructions.SwitchPlatform(platform);
+		Platform.SwitchPlatform(platform);
 		BaseHelper.UpdateUppercase();
 		BaseHelper.UpdateCompletion();
 	}
-	//#endregion 切换平台
+	//#endregion 切换平台，更新自动大写以及智能提示
 
 	/***** 智能提示 *****/
 
@@ -84,7 +74,7 @@ export class BaseHelper {
 			return BaseHelper.GetFilePaths(BaseHelper.FileCompletion);
 		}
 
-		let line = OneWord.CreateWord(document.lineText, document.fileHash, document.lineNumber, 0);
+		let line = Token.CreateToken(document.lineText, document.fileHash, document.lineNumber, 0);
 		let leftText = line.Substring(0, document.lineCurrect);
 
 		// 左边文本有忽略内容
@@ -100,20 +90,20 @@ export class BaseHelper {
 		let range = BaseHelper.GetRange(document.allText, document.currect);
 		switch (range?.match) {
 			case "DataGroup":
-				completionTyep = CompletionRange.Lebal;
+				completionTyep = CompletionRange.Label;
 				break;
 			case "Macro":
 				let index = range.expression.search(/\s+|\r?\n/);
 				helperOption.macro = MacroUtils.FindMacro(range.expression.substring(0, index));
-				completionTyep = BaseHelper.GetCommand(leftText.text);
+				completionTyep = BaseHelper.GetIntellisenseType(leftText.text);
 				break;
 			default:
-				completionTyep = BaseHelper.GetCommand(leftText.text);
+				completionTyep = BaseHelper.GetIntellisenseType(leftText.text);
 				break;
 		}
 		// let dataGroups = 
 
-		let word = OneWord.CreateWord(text.text, document.fileHash, document.lineNumber, text.startColumn);
+		let word = Token.CreateToken(text.text, document.fileHash, document.lineNumber, text.startColumn);
 		let result = BaseHelper.GetHelperItem(completionTyep, word, helperOption);
 		return result;
 	}
@@ -175,7 +165,116 @@ export class BaseHelper {
 	}
 	//#endregion 获取帮助提示文件路径
 
-	/***** 折叠信息 *****/
+	//#region 获取文件已更新的行
+	static GetUpdateLine(filePath: string) {
+		let hash = Utils.GetHashcode(filePath);
+		if (!GlobalVar.env.fileBaseLines[hash])
+			return [];
+
+		return GlobalVar.env.fileBaseLines[hash];
+	}
+
+	//#endregion 获取文件已更新的行
+
+	/***** Label相关 *****/
+
+	//#region 获取Label所在文件位置
+	/**获取Label所在文件位置 */
+	static async GetLabelSourcePosition(text: string, currect: number, lineNumber: number, filePath: string) {
+
+		let fileHash = Utils.GetHashcode(filePath);
+		let lineText = Token.CreateToken(text, fileHash, lineNumber);
+
+		let result = { filePath: "", lineNumber: 0, startColumn: 0, length: 0 };
+		const { content, comment } = BaseLineUtils.GetContent(lineText);
+
+		let range = BaseHelper.GetWord(content.text, currect, content.startColumn);
+		if (range.type == "none")
+			return result;
+
+		if (range.type == "path") {
+			let tempPath = await FileUtils.GetPathFolder(filePath);
+			result.filePath = FileUtils.Combine(tempPath, range.text);
+			return result;
+		}
+
+		content.text = range.text;
+		content.startColumn = currect - content.startColumn;
+		let label = LabelUtils.FindLabel(content);
+		if (label && label.labelScope != LabelState.AllParent && label.labelDefined != LabelDefinedState.None) {
+			result.filePath = GlobalVar.env.GetFile(label.fileHash);
+			result.lineNumber = label.lineNumber;
+			result.startColumn = label.word.startColumn;
+			result.length = label.word.length;
+			return result;
+		}
+
+		let macro = MacroUtils.FindMacro(content.text);
+		if (macro) {
+			result.filePath = GlobalVar.env.GetFile(macro.name.fileHash);
+			result.lineNumber = macro.name.lineNumber;
+			result.startColumn = macro.name.startColumn;
+			result.length = macro.name.length;
+		}
+
+		return result;
+	}
+	//#endregion 获取Label所在文件位置
+
+	//#region 获取Label注释以及值
+	/**获取Label注释以及值 */
+	static GetLabelCommentAndValue(text: string, currect: number, lineNumber: number, filePath: string) {
+
+		let fileHash = Utils.GetHashcode(filePath);
+		let lineText = Token.CreateToken(text, fileHash, lineNumber, 0);
+
+		let result = { value: <number | undefined>undefined, comment: <string | undefined>undefined };
+		const { content } = BaseLineUtils.GetContent(lineText);
+
+		let range = BaseHelper.GetWord(content.text, currect);
+		if (range.type == "none")
+			return result;
+
+		if (range.type == "value") {
+			result.value = range.value;
+			return result;
+		}
+
+		if (range.type != "var") {
+			return result;
+		}
+
+		content.text = range.text;
+		content.startColumn = currect - content.startColumn;
+		let label = LabelUtils.FindLabel(content);
+		if (label) {
+			if (label.labelScope == LabelState.AllParent || label.labelDefined == LabelDefinedState.None)
+				return result;
+
+			result.value = label.value;
+			result.comment = label.comment;
+			return result;
+		}
+
+		let macro = MacroUtils.FindMacro(content.text);
+		if (macro) {
+			result.comment = `${macro.comment}\n参数个数 ${macro.parameterCount}`;
+		}
+		return result;
+	}
+	//#endregion 获取Label注释以及值
+
+	//#region 清除某个文件
+	/**清除某个文件 */
+	static ClearFile(filePath: string) {
+		let hash = Utils.GetHashcode(filePath);
+		LabelUtils.DeleteLabel(hash);
+		MacroUtils.DeleteMacro(hash);
+		MyException.ClearFileError(hash);
+	}
+	//#endregion 清除某个文件
+
+	/***** 折叠 *****/
 
 	//#region 获取折叠信息
 	/**
@@ -201,93 +300,7 @@ export class BaseHelper {
 	}
 	//#endregion 获取折叠信息
 
-	/***** 获取Lebal相关 *****/
-
-	//#region 获取Lebal所在文件位置
-	/**获取Lebal所在文件位置 */
-	static async GetLebalSourcePosition(text: string, currect: number, lineNumber: number, filePath: string) {
-
-		let fileHash = Utils.GetHashcode(filePath);
-		let lineText = OneWord.CreateWord(text, fileHash, lineNumber, 0);
-
-		let result = { filePath: "", lineNumber: 0, startColumn: 0, length: 0 };
-		const { word } = BaseLine.GetComment(lineText);
-
-		let range = BaseHelper.GetWord(word.text, currect, word.startColumn);
-		if (range.type == "none")
-			return result;
-
-		if (range.type == "path") {
-			let tempPath = await FileUtils.GetPathFolder(filePath);
-			result.filePath = FileUtils.Combine(tempPath, range.text);
-			return result;
-		}
-
-		word.text = range.text;
-		word.startColumn = currect - word.startColumn;
-		let lebal = LebalUtils.FindLebal(word);
-		if (lebal && lebal.labelScope != LabelState.AllParent && lebal.labelDefined != LabelDefinedState.None) {
-			result.filePath = GlobalVar.env.GetFile(lebal.fileHash);
-			result.lineNumber = lebal.lineNumber;
-			result.startColumn = lebal.word.startColumn;
-			result.length = lebal.word.length;
-			return result;
-		}
-
-		let macro = MacroUtils.FindMacro(word.text);
-		if (macro) {
-			result.filePath = GlobalVar.env.GetFile(macro.name.fileHash);
-			result.lineNumber = macro.name.lineNumber;
-			result.startColumn = macro.name.startColumn;
-			result.length = macro.name.length;
-		}
-
-		return result;
-	}
-	//#endregion 获取Lebal所在文件位置
-
-	//#region 获取Lebal注释以及值
-	/**获取Lebal注释以及值 */
-	static GetLebalCommentAndValue(text: string, currect: number, lineNumber: number, filePath: string) {
-
-		let fileHash = Utils.GetHashcode(filePath);
-		let lineText = OneWord.CreateWord(text, fileHash, lineNumber, 0);
-
-		let result = { value: <number | undefined>undefined, comment: <string | undefined>undefined };
-		const { word } = BaseLine.GetComment(lineText);
-
-		let range = BaseHelper.GetWord(word.text, currect);
-		if (range.type == "none")
-			return result;
-
-		if (range.type == "value") {
-			result.value = range.value;
-			return result;
-		}
-
-		if (range.type != "var") {
-			return result;
-		}
-
-		word.text = range.text;
-		word.startColumn = currect - word.startColumn;
-		let lebal = LebalUtils.FindLebal(word);
-		if (lebal) {
-			if (lebal.labelScope == LabelState.AllParent || lebal.labelDefined == LabelDefinedState.None)
-				return result;
-
-			result.value = lebal.value;
-			result.comment = lebal.comment;
-			return result;
-		}
-
-		let macro = MacroUtils.FindMacro(word.text);
-		if (macro) {
-			result.comment = `${macro.comment}\n参数个数 ${macro.parameterCount}`;
-		}
-		return result;
-	}
-	//#endregion 获取Lebal注释以及值
+	/***** 其它 *****/
 
 	//#region 更改显示语言
 	static ChangeDisplayLanguage(language: string) {
@@ -295,103 +308,7 @@ export class BaseHelper {
 	}
 	//#endregion 更改显示语言
 
-	//#region 清除某个文件
-	/**清除某个文件 */
-	static ClearFile(filePath: string) {
-		let hash = Utils.GetHashcode(filePath);
-		LebalUtils.DeleteLebal(hash);
-
-		MyException.ClearFileError(hash);
-	}
-	//#endregion 清除某个文件
-
 	/***** Private *****/
-
-	//#region 大写的正则表达式
-	private static UpdateUppercase() {
-		BaseHelper.autoUppercaseStr = "(^|\\s+)(";
-
-		Instructions.platform.allKeyword.forEach(value => BaseHelper.autoUppercaseStr += `${value}|`);
-
-		for (let key in Commands.allCommands) {
-			let com = Commands.allCommands[key];
-			BaseHelper.autoUppercaseStr += `\\${com.startCommand}|`;
-			if (com.endCommand)
-				BaseHelper.autoUppercaseStr += `\\${com.endCommand}|`;
-		}
-
-		BaseHelper.autoUppercaseStr = BaseHelper.autoUppercaseStr.substring(0, BaseHelper.autoUppercaseStr.length - 1);
-		BaseHelper.autoUppercaseStr += ")(\\s+|$)";
-	}
-	//#endregion 大写的正则表达式
-
-	//#region 更新忽略的文本
-	private static UpdateIgnoreRegexStr() {
-		BaseHelper.ignoreWordStr = "(^|\\s+)(";
-		BaseHelper.ignoreWords.forEach(value => BaseHelper.ignoreWordStr += `${value}|`);
-		BaseHelper.ignoreWordStr = BaseHelper.ignoreWordStr.substring(0, BaseHelper.ignoreWordStr.length - 1);
-		BaseHelper.ignoreWordStr += ")(\\s+|$)";
-	}
-	//#endregion 更新忽略的文本
-
-	//#region 基础编译指令
-	/**
-	 * 基础编译指令
-	 */
-	private static UpdateCompletion() {
-		BaseHelper.instructionCompletions = [];
-
-		Instructions.platform.allKeyword.forEach(value => {
-			let completion = new Completion();
-			completion.showText = value;
-			if (Instructions.platform.instructionCodeLengthMax[value] == 0)
-				completion.insertText += value + "\r\n";
-			else
-				completion.insertText = value + " ";
-
-			completion.index = 1;
-			completion.type = CompletionType.Instruction;
-			BaseHelper.instructionCompletions.push(completion);
-		});
-
-		BaseHelper.commandsCompletions = [];
-		for (let key in Commands.allCommands) {
-			let completion = new Completion();
-
-			let com = Commands.allCommands[key];
-			completion.showText = com.startCommand;
-			completion.insertText = com.startCommand;
-			completion.index = 1;
-			completion.type = CompletionType.Command;
-
-			if (Commands.commandsParamsCount[key].max != 0)
-				completion.insertText += " ";
-
-			if (com.endCommand) {
-				completion.insertText += `\n\n${com.endCommand}`;
-
-				let completion2 = new Completion();
-				completion2.showText = com.endCommand;
-				completion2.insertText = com.endCommand;
-				completion2.index = 1;
-				completion2.type = CompletionType.Command;
-				BaseHelper.AddCommandCompletion(completion2);
-			}
-
-			BaseHelper.AddCommandCompletion(completion);
-
-			if (com.includeCommand) {
-				com.includeCommand.forEach(value => {
-					let completion = new Completion();
-					completion.showText = value.name;
-					completion.insertText = value.name;
-					completion.type = CompletionType.Command;
-					BaseHelper.AddCommandCompletion(completion);
-				});
-			}
-		}
-	}
-	//#endregion 基础编译指令
 
 	//#region 获取光标所在字符
 	/**
@@ -451,18 +368,116 @@ export class BaseHelper {
 	}
 	//#endregion 获取光标所在字符
 
+	//#region 大写的正则表达式
+	private static UpdateUppercase() {
+		BaseHelper.autoUppercaseStr = "(^|\\s+)(";
+
+		Platform.instructionAnalyser.allKeyword.forEach(value => BaseHelper.autoUppercaseStr += `${value}|`);
+
+		for (let key in Commands.allCommands) {
+			let com = Commands.allCommands[key];
+			BaseHelper.autoUppercaseStr += `\\${com.startCommand}|`;
+			if (com.endCommand)
+				BaseHelper.autoUppercaseStr += `\\${com.endCommand}|`;
+		}
+
+		BaseHelper.autoUppercaseStr = BaseHelper.autoUppercaseStr.substring(0, BaseHelper.autoUppercaseStr.length - 1);
+		BaseHelper.autoUppercaseStr += ")(\\s+|$)";
+	}
+	//#endregion 大写的正则表达式
+
+	//#region 基础编译指令
+	/**
+	 * 基础编译指令
+	 */
+	private static UpdateCompletion() {
+		BaseHelper.instructionCompletions = [];
+
+		Platform.instructionAnalyser.allKeyword.forEach(value => {
+			let completion = new Completion();
+			completion.showText = value;
+			if (Platform.instructionAnalyser.instructionCodeLengthMax[value] == 0)
+				completion.insertText += value + "\r\n";
+			else
+				completion.insertText = value + " ";
+
+			completion.index = 1;
+			completion.type = CompletionType.Instruction;
+			BaseHelper.instructionCompletions.push(completion);
+		});
+
+		BaseHelper.commandsCompletions = [];
+		for (let key in Commands.allCommands) {
+			let completion = new Completion();
+
+			let com = Commands.allCommands[key];
+			completion.showText = com.startCommand;
+			completion.insertText = com.startCommand;
+			completion.index = 1;
+			completion.type = CompletionType.Command;
+
+			if (Commands.commandsParamsCount[key].max != 0)
+				completion.insertText += " ";
+
+			if (com.endCommand) {
+				completion.insertText += `\n\n${com.endCommand}`;
+
+				let completion2 = new Completion();
+				completion2.showText = com.endCommand;
+				completion2.insertText = com.endCommand;
+				completion2.index = 1;
+				completion2.type = CompletionType.Command;
+				BaseHelper.AddCommandCompletion(completion2);
+			}
+
+			BaseHelper.AddCommandCompletion(completion);
+
+			if (com.includeCommand) {
+				com.includeCommand.forEach(value => {
+					let completion = new Completion();
+					completion.showText = value.name;
+					completion.insertText = value.name;
+					completion.type = CompletionType.Command;
+					BaseHelper.AddCommandCompletion(completion);
+				});
+			}
+		}
+	}
+	//#endregion 基础编译指令
+
+	//#region 获取区间
+	/**
+	 * 获取匹配区间
+	 * @param allText 所有文本
+	 * @param currect 当前光标位置
+	 * @returns 满足的Key
+	 */
+	private static GetRange(allText: string, currect: number) {
+		for (let key in BaseHelper.rangeWords) {
+			let regex = new RegExp(BaseHelper.rangeWords[key]);
+			let matches = Utils.GetTextMatches(regex, allText);
+			for (let i = 0; i < matches.length; i++) {
+				const match = matches[i];
+				if (currect >= match.index && currect < match.index + match.match.length) {
+					return { match: <RangeWords>key, expression: match.match };
+				}
+			}
+		}
+	}
+	//#endregion 获取区间
+
 	//#region 获取帮助类型
-	private static GetCommand(prefix: string): CompletionRange {
+	private static GetIntellisenseType(prefix: string): CompletionRange {
 		let match = BaseHelper.uppercaseRegex.exec(prefix)
 		if (!match) {
 			if (prefix.includes("="))		// 若没有命令且前有等号
-				return CompletionRange.Lebal;
+				return CompletionRange.Label;
 
 			return CompletionRange.Base;
 		}
 
 		let command = match[0].trim().toUpperCase();
-		if (Instructions.platform.allKeyword.includes(command) && prefix.includes(",")) {
+		if (Platform.instructionAnalyser.allKeyword.includes(command) && prefix.includes(",")) {
 			return CompletionRange.None;
 		}
 
@@ -470,13 +485,13 @@ export class BaseHelper {
 			case ".DEF": {
 				let temp = prefix.substring(match.index + match[0].length);
 				if (/^.+\s+/g.test(temp)) {
-					return CompletionRange.Lebal;
+					return CompletionRange.Label;
 				} else {
 					return CompletionRange.None;
 				}
 			}
 			default:
-				return CompletionRange.Lebal;
+				return CompletionRange.Label;
 		}
 	}
 	//#endregion 获取帮助类型
@@ -489,7 +504,7 @@ export class BaseHelper {
 	 * @param option 区间词汇
 	 * @returns 
 	 */
-	private static GetHelperItem(type: CompletionRange, prefix: OneWord, option?: { macro?: Macro, trigger?: string }) {
+	private static GetHelperItem(type: CompletionRange, prefix: Token, option?: { macro?: Macro, trigger?: string }) {
 		let result: Completion[] = [];
 
 		switch (type) {
@@ -514,41 +529,41 @@ export class BaseHelper {
 						break;
 				}
 				break;
-			case CompletionRange.Lebal:
+			case CompletionRange.Label:
 				let index = prefix.text.lastIndexOf(".");
 				if (index > 0) {
 					prefix = prefix.Substring(0, index);
 				} else if (option?.macro) {
 					for (let key in option.macro.labels) {
-						let lebal = option.macro.labels[key];
+						let label = option.macro.labels[key];
 						let item = new Completion();
-						item.showText = lebal.keyword.text;
-						item.insertText = lebal.keyword.text;
+						item.showText = label.keyword.text;
+						item.insertText = label.keyword.text;
 						item.index = 0;
-						item.type = CompletionType.MacroLebal;
+						item.type = CompletionType.MacroLabel;
 						result.push(item);
 					}
 				}
 
-				let lebal = LebalUtils.FindLebal(prefix);
-				if (!lebal && index < 0 && GlobalVar.env.allLebals[0]) {	// 全局变量
-					var lebals = GlobalVar.env.allLebals[0].child;
-					for (let key in lebals) {
-						lebal = lebals[key];
+				let label = LabelUtils.FindLabel(prefix);
+				if (!label && index < 0 && GlobalVar.env.allLabels[0]) {	// 全局变量
+					var labels = GlobalVar.env.allLabels[0].child;
+					for (let key in labels) {
+						label = labels[key];
 
 						let item = new Completion();
-						item.showText = lebal.keyword.text;
-						item.insertText = lebal.keyword.text;
-						item.comment = lebal.comment;
+						item.showText = label.keyword.text;
+						item.insertText = label.keyword.text;
+						item.comment = label.comment;
 						item.index = 1;
 						result.push(item);
 					}
-				} else if (lebal?.child) {									// 局部变量
-					for (let key in lebal.child) {
+				} else if (label?.child) {									// 局部变量
+					for (let key in label.child) {
 						let item = new Completion();
-						item.showText = lebal.child[key].keyword.text;
-						item.insertText = lebal.child[key].keyword.text;
-						item.comment = lebal.child[key].comment;
+						item.showText = label.child[key].keyword.text;
+						item.insertText = label.child[key].keyword.text;
+						item.comment = label.child[key].comment;
 						item.index = 1;
 						result.push(item);
 					}
@@ -559,27 +574,6 @@ export class BaseHelper {
 		return result;
 	}
 	//#endregion 获取帮助条目
-
-	//#region 获取区间
-	/**
-	 * 获取匹配区间
-	 * @param allText 所有文本
-	 * @param currect 当前光标位置
-	 * @returns 满足的Key
-	 */
-	private static GetRange(allText: string, currect: number) {
-		for (let key in BaseHelper.rangeWords) {
-			let regex = new RegExp(BaseHelper.rangeWords[key]);
-			let matches = Utils.GetTextMatches(regex, allText);
-			for (let i = 0; i < matches.length; i++) {
-				const match = matches[i];
-				if (currect >= match.index && currect < match.index + match.match.length) {
-					return { match: <RangeWords>key, expression: match.match };
-				}
-			}
-		}
-	}
-	//#endregion 获取区间
 
 	//#region 添加命令提示
 	private static AddCommandCompletion(completion: Completion) {

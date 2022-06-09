@@ -1,12 +1,13 @@
-import { OneWord } from "./OneWord";
+import { Token } from "./Token";
 
 export enum LabelState { Global, Local, Temporary, AllParent }
-export enum LabelDefinedState { None, Variable, Defined }
+export enum LabelDefinedState { None, Variable, Defined, Label }
 
 export class Label {
 	/**用于查找子属性的关键词 */
-	keyword: OneWord;
-	word: OneWord;
+	keyword: Token;
+	/**整个属性 */
+	word: Token;
 	parentHash: number = 0;
 	child: Record<number, Label> = {};
 	/**该Label下所有行号，临时变量使用 */
@@ -22,20 +23,20 @@ export class Label {
 	get lineNumber() { return this.word.lineNumber; }
 
 	constructor() {
-		this.keyword = new OneWord();
-		this.word = new OneWord();
+		this.keyword = new Token();
+		this.word = new Token();
 	}
 
 	GetTemporary(lineNumberIndex: number) {
 		if (lineNumberIndex < 0)
 			return;
 
-		let lebal = new Label();
-		lebal.word = this.word.Copy();
-		lebal.value = this.lineNumbers[lineNumberIndex].value;
-		lebal.word.lineNumber = this.lineNumbers[lineNumberIndex].lineNumber;
-		lebal.labelScope = LabelState.Temporary;
-		lebal.labelDefined = LabelDefinedState.Defined;
-		return lebal;
+		let label = new Label();
+		label.word = this.word.Copy();
+		label.value = this.lineNumbers[lineNumberIndex].value;
+		label.word.lineNumber = this.lineNumbers[lineNumberIndex].lineNumber;
+		label.labelScope = LabelState.Temporary;
+		label.labelDefined = LabelDefinedState.Defined;
+		return label;
 	}
 }

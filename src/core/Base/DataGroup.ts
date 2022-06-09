@@ -1,19 +1,23 @@
-import { OneWord } from "./OneWord";
+import { Utils } from "../Utils/Utils";
+import { Token } from "./Token";
 
 export interface DataGroupPart {
 	index: number;
-	word: OneWord;
+	token: Token;
 }
 
 export class DataGroup {
-	allLebal: DataGroupPart[] = [];
+	/**Key是Hash */
+	allLabels: Record<number, DataGroupPart> = {};
 
-	PushData(word: OneWord) {
-		this.allLebal.push({ index: this.allLebal.length, word: word.Copy() });
+	PushData(token: Token, index: number) {
+		let hash = Utils.GetHashcode(token.text, index);
+		let part: DataGroupPart = { index, token };
+		this.allLabels[hash] = part;
 	}
 
 	FindData(text: string, index: number): DataGroupPart | undefined {
-		let all = this.allLebal.filter(value => { return value.word.text == text });
-		return all[index];
+		let hash = Utils.GetHashcode(text, index);
+		return this.allLabels[hash];
 	}
 }

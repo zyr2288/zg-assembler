@@ -1,12 +1,14 @@
-import { BaseLine } from "./BaseLine";
+import { IBaseLine } from "../BaseLine/BaseLine";
 import { Label } from "./Label";
-import { OneWord } from "./OneWord";
+import { Token } from "./Token";
 
 export class Macro {
 
-	name = <OneWord>{};
+	/***** Class *****/
+
+	name!: Token;
 	labels: Record<number, Label> = {};
-	baseLines: BaseLine[] = [];
+	lines: IBaseLine[] = [];
 	comment?: string;
 	parameterHash: number[] = [];
 	get parameterCount() { return this.parameterHash.length }

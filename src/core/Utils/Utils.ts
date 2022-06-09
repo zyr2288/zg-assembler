@@ -1,5 +1,5 @@
 import { ErrorLevel, ErrorType, MyException } from "../Base/MyException";
-import { OneWord } from "../Base/OneWord";
+import { Token } from "../Base/Token";
 
 export class Utils {
 
@@ -9,7 +9,7 @@ export class Utils {
 	 * @param object 要获取的Hash的对象，string或number
 	 * @returns 
 	 */
-	static GetHashcode(...object: Array<string | number>): number {
+	 static GetHashcode(...object: Array<string | number>): number {
 		let hash = 0;
 
 		object.forEach(value => {
@@ -31,78 +31,6 @@ export class Utils {
 	}
 	//#endregion 获取对象Hash值
 
-	//#region 结果值占用字节数
-	/**
-	 * 结果值占用字节数
-	 * @param value 值
-	 * @returns 
-	 */
-	static DataByteLength(value: number) {
-		let temp = 0xFF;
-		let length = 1;
-		while (value > temp) {
-			temp <<= 8;
-			temp |= 0xFF;
-			length++;
-		}
-		return length;
-	}
-	//#endregion 结果值占用字节数
-
-	//#region 翻转字符串
-	/**
-	 * 翻转字符串
-	 * @param text 要翻转的字符串
-	 * @returns 翻转结果
-	 */
-	static StringReverse(text: string) {
-		return text.split("").reverse().join("")
-	}
-	//#endregion 翻转字符串
-
-	//#region 返回所有正则表达式的匹配
-	/**
-	 * 返回所有正则表达式的匹配
-	 * @param pattern 正则表达式
-	 * @param text 要匹配的文本
-	 * @returns 返回所有匹配结果
-	 */
-	static GetTextMatches(pattern: RegExp, text: string) {
-		let result: { match: string, index: number }[] = [];
-		let temp: RegExpExecArray | null;
-		while (temp = pattern.exec(text))
-			result.push({ match: temp[0], index: temp.index });
-
-		return result;
-	}
-	//#endregion 返回所有正则表达式的匹配
-
-	//#region 讲结果值运算成其他进制
-	/**
-	 * 讲结果值运算成其他进制
-	 * @param value 要运算的值
-	 * @returns 2 10 16进制结果
-	 */
-	static ConvertValue(value: number) {
-		let result = { bin: "", dec: "", hex: "" };
-
-		let temp = value;
-		do {
-			let temp2 = (temp & 0xFF).toString(2);
-			let array = temp2.padStart(8, "0").split("");
-			array.splice(4, 0, " ");
-			temp2 = array.join("");
-			result.bin = " " + temp2 + result.bin;
-			temp >>= 8;
-		} while (temp != 0)
-		result.bin = result.bin.substring(1);
-		result.dec = value.toString();
-		result.hex = value.toString(16).toUpperCase();
-
-		return result;
-	}
-	//#endregion 讲结果值运算成其他进制
-
 	//#region 消除字符串两头空白
 	/**
 	 * 消除字符串两头空白
@@ -119,14 +47,30 @@ export class Utils {
 	}
 	//#endregion 消除字符串两头空白
 
+	//#region 结果值占用字节数
+	/**
+	 * 结果值占用字节数
+	 * @param value 值
+	 * @returns 
+	 */
+	static DataByteLength(value: number) {
+		let length = 0;
+		do {
+			value >>= 8;
+			length++;
+		} while (value != 0)
+		return length;
+	}
+	//#endregion 结果值占用字节数
+
 	//#region 分割逗号
 	/**
 	 * 分割逗号
 	 * @param word 要分割的表达式
-	 * @param ignoreLast 是否忽略最后一个，默认忽略
+	 * @param ignoreLast 是否忽略最后一个，默认不忽略
 	 * @returns 
 	 */
-	static SplitComma(word: OneWord, ignoreLast: boolean = false) {
+	 static SplitComma(word: Token, ignoreLast: boolean = false) {
 		let result = { success: true, parts: word.Split(/\s*\,\s*/g) };
 
 		for (let i = 0; i < result.parts.length; i++) {
@@ -146,6 +90,60 @@ export class Utils {
 		return result;
 	}
 	//#endregion 分割逗号
+
+	//#region 讲结果值运算成其他进制
+	/**
+	 * 讲结果值运算成其他进制
+	 * @param value 要运算的值
+	 * @returns 2 10 16进制结果
+	 */
+	 static ConvertValue(value: number) {
+		let result = { bin: "", dec: "", hex: "" };
+
+		let temp = value;
+		do {
+			let temp2 = (temp & 0xFF).toString(2);
+			let array = temp2.padStart(8, "0").split("");
+			array.splice(4, 0, " ");
+			temp2 = array.join("");
+			result.bin = " " + temp2 + result.bin;
+			temp >>= 8;
+		} while (temp != 0)
+		result.bin = result.bin.substring(1);
+		result.dec = value.toString();
+		result.hex = value.toString(16).toUpperCase();
+
+		return result;
+	}
+	//#endregion 讲结果值运算成其他进制
+
+	//#region 翻转字符串
+	/**
+	 * 翻转字符串
+	 * @param text 要翻转的字符串
+	 * @returns 翻转结果
+	 */
+	 static StringReverse(text: string) {
+		return text.split("").reverse().join("")
+	}
+	//#endregion 翻转字符串
+
+	//#region 返回所有正则表达式的匹配
+	/**
+	 * 返回所有正则表达式的匹配
+	 * @param pattern 正则表达式
+	 * @param text 要匹配的文本
+	 * @returns 返回所有匹配结果
+	 */
+	 static GetTextMatches(pattern: RegExp, text: string) {
+		let result: { match: string, index: number }[] = [];
+		let temp: RegExpExecArray | null;
+		while (temp = pattern.exec(text))
+			result.push({ match: temp[0], index: temp.index });
+
+		return result;
+	}
+	//#endregion 返回所有正则表达式的匹配
 
 	//#region 深拷贝
 	static DeepClone(obj: any) {

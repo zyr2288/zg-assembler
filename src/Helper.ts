@@ -1,45 +1,107 @@
 import { Assembler } from "./core/Assembler";
 import * as vscode from "vscode";
-import { Completion, CompletionType } from "./core/Base/Completion";
 import { TextDecoder, TextEncoder } from "util";
+import { BaseLineType } from "./core/BaseLine/BaseLine";
+import { Completion, CompletionType } from "./core/Base/Completion";
 
-/**帮助的基本类，仅此类与编译器有关联 */
+enum HightlightType { function, keyword, enumMember, struct, variable, operator }
+enum TokenType { None, Label, Variable, Defined, Macro, Keyword }
+
 export class Helper {
 
-	updateFiles: vscode.TextDocumentChangeEvent[] = [];
+	/**文本刷新时间 */
 	private readonly freashTime = 1000;
 
-	private statusBarItem?: vscode.StatusBarItem;
-
-	private freashTreadId?: NodeJS.Timeout;
+	private updateFiles: vscode.TextDocumentChangeEvent[] = [];
 	private assembler = new Assembler();
+	private freashTreadId?: NodeJS.Timeout;
 	private errorCollection = vscode.languages.createDiagnosticCollection(this.assembler.config.FileExtension.language);
+	private fileUpdateFinished = false;
+	private statusBarItem?: vscode.StatusBarItem;
+	private leagend!: vscode.SemanticTokensLegend;
 
-	private leagend = new vscode.SemanticTokensLegend(["class", "keyword"]);
-
-	//#region 初始化
 	/**初始化 */
 	async Initialize() {
+		let temp: string[] = [];
+		for (let key in HightlightType) temp.push(key);
+		temp.splice(0, temp.length / 2);
+		this.leagend = new vscode.SemanticTokensLegend(temp);
+
 		this.FileUtilsRewrite();
-
 		await this.ReadConfig();
-		this.assembler.baseHelper.SwitchPlatform(this.assembler.config.ProjectSetting.platform);
 
-		this.Intellisense();
-		this.ProvideFoldingRanges();
+		this.assembler.baseHelper.Initialize();
+
 		this.DocumentChange();
 		this.DefinitionProvider();
 		this.HoverProvider();
 		this.ProvideDocumentSemanticTokens();
+		this.Intellisense();
+
+		this.fileUpdateFinished = false;
+		await this.LoadAllFile();
+		this.UpdateDiagnostic();
+		this.fileUpdateFinished = true;
 
 		this.RegisterMyCommand();
-		this.WatchFile();
-
-		await this.LoadAllFile();
-
-		// vscode.env.clipboard.writeText(this.assembler.GetKeyword());
 	}
-	//#endregion 初始化
+
+	/***** 辅助方法 *****/
+
+	//#region 文档修改时的自动大写以及重新监测
+	/**文档修改时的自动大写以及重新监测 */
+	private DocumentChange() {
+		vscode.workspace.onDidChangeTextDocument((event: vscode.TextDocumentChangeEvent) => {
+			if (event.document.languageId != this.assembler.config.FileExtension.language)
+				return;
+
+			let total = event.contentChanges.length - 1;
+			event.contentChanges.forEach((value) => {
+				if (value.text.includes("\n")) {
+					let lineNumber = value.range.start.line + total;
+					total--;
+					let content = event.document.lineAt(lineNumber).text;
+					let match = this.assembler.baseHelper.uppercaseRegex.exec(content);
+					if (this.AutoUppercase(match, lineNumber))
+						return;
+				}
+			});
+
+			let index = this.updateFiles.findIndex((value) => {
+				return value.document.uri.fsPath == event.document.uri.fsPath;
+			});
+			if (index < 0)
+				this.updateFiles.push(event);
+
+			this.fileUpdateFinished = false;
+			clearTimeout(this.freashTreadId);
+			this.freashTreadId = setTimeout(async () => {
+				let files: { text: string, filePath: string }[] = [];
+				this.updateFiles.forEach(async value => {
+					let text = value.document.getText();
+					files.push({ text, filePath: value.document.uri.fsPath });
+				});
+				await this.assembler.compile.DecodeText(files);
+				this.UpdateDiagnostic();
+				this.updateFiles = [];
+				this.fileUpdateFinished = true;
+			}, this.freashTime);
+		});
+	}
+
+	private AutoUppercase(match: RegExpExecArray | null, lineNumber: number) {
+		if (match == null)
+			return false;
+
+		let range = new vscode.Range(lineNumber, match.index, lineNumber, match.index + match[0].length);
+		let editor = <vscode.TextEditor>vscode.window.activeTextEditor;
+		editor.edit((ee) => {
+			// @ts-ignore 目前只能替换一个，原因未知
+			ee.replace(range, match[0].toUpperCase());
+		});
+		return true;
+	}
+	//#endregion 文档修改时的自动大写以及重新监测
 
 	//#region 重写编译器的文件操作接口
 	/**重写编译器的文件操作接口 */
@@ -116,76 +178,20 @@ export class Helper {
 	}
 	//#endregion 重写编译器的文件操作接口
 
-	//#region 绑定设置折叠信息
-	/**
-	 * 设置折叠信息
-	 */
-	ProvideFoldingRanges() {
-		vscode.languages.registerFoldingRangeProvider(this.assembler.config.FileExtension, {
-			provideFoldingRanges: (document: vscode.TextDocument,
-				context: vscode.FoldingContext,
-				token: vscode.CancellationToken): vscode.ProviderResult<vscode.FoldingRange[]> => {
-				let result = this.assembler.baseHelper.ProvideFolding(document.getText());
-				return result;
-			}
-		})
+	//#region 读取配置文件
+	async ReadConfig() {
+		let settingFile = this.assembler.fileUtils.Combine(vscode.workspace.workspaceFolders![0].uri.fsPath, ".vscode", "project-settings.json");
+		if (await this.assembler.fileUtils.PathType(settingFile) != "file") {
+			let json = JSON.stringify(this.assembler.config.ProjectDefaultSetting);
+			let buffer = this.assembler.fileUtils.StringToBytes(json);
+			await this.assembler.fileUtils.SaveFile(settingFile, buffer);
+		} else {
+			let buffer = await this.assembler.fileUtils.ReadFile(settingFile);
+			let json = this.assembler.fileUtils.BytesToString(buffer);
+			this.assembler.config.ReadConfigJson(json);
+		}
 	}
-	//#endregion 绑定设置折叠信息
-
-	//#region 文本修改
-	/**文本修改 */
-	DocumentChange() {
-		vscode.workspace.onDidChangeTextDocument((event: vscode.TextDocumentChangeEvent) => {
-			if (event.document.languageId != this.assembler.config.FileExtension.language)
-				return;
-
-			let total = event.contentChanges.length - 1;
-			event.contentChanges.forEach((value) => {
-				if (value.text.includes("\n")) {
-					let lineNumber = value.range.start.line + total;
-					total--;
-					let content = event.document.lineAt(lineNumber).text;
-					let match = this.assembler.baseHelper.uppercaseRegex.exec(content);
-					if (Helper.AutoUppercase(match, lineNumber))
-						return;
-				}
-			});
-
-			let index = this.updateFiles.findIndex((value) => {
-				return value.document.uri.fsPath == event.document.uri.fsPath;
-			});
-			if (index < 0)
-				this.updateFiles.push(event);
-
-			if (this.freashTreadId)
-				clearTimeout(this.freashTreadId);
-
-			this.freashTreadId = setTimeout(async () => {
-				let files: { text: string, filePath: string }[] = [];
-				this.updateFiles.forEach(async value => {
-					let text = value.document.getText();
-					files.push({ text, filePath: value.document.uri.fsPath });
-				});
-				await this.assembler.compile.DecodeText(files);
-				this.UpdateDiagnostic();
-				this.updateFiles = [];
-			}, this.freashTime);
-		});
-	}
-
-	private static AutoUppercase(match: RegExpExecArray | null, lineNumber: number) {
-		if (match == null)
-			return false;
-
-		let range = new vscode.Range(lineNumber, match.index, lineNumber, match.index + match[0].length);
-		let editor = <vscode.TextEditor>vscode.window.activeTextEditor;
-		editor.edit((ee) => {
-			// @ts-ignore 目前只能替换一个，原因未知
-			ee.replace(range, match[0].toUpperCase());
-		});
-		return true;
-	}
-	//#endregion 文本修改
+	//#endregion 读取配置文件
 
 	//#region 绑定智能提示
 	/**绑定智能提示 */
@@ -219,86 +225,15 @@ export class Helper {
 	}
 	//#endregion 绑定智能提示
 
-	//#region 监视文件
-	/**监视文件，改动等 */
-	WatchFile() {
-		if (!vscode.workspace.workspaceFolders)
-			return;
-
-		let rp = new vscode.RelativePattern(
-			vscode.workspace.workspaceFolders![0],
-			`{**/*.${this.assembler.config.FileExtension.extension},${this.assembler.config.ConfigFile}}`
-		);
-
-		let watcher = vscode.workspace.createFileSystemWatcher(rp, false, false, false);
-
-		watcher.onDidDelete(async (e) => {
-			if (e.fsPath == this.assembler.config.ConfigFile)
-				return;
-
-			this.assembler.baseHelper.ClearFile(e.fsPath);
-			let uri = vscode.Uri.file(e.fsPath);
-			this.errorCollection.delete(uri);
-		});
-
-		watcher.onDidChange(async (e) => {
-			let path = await this.assembler.fileUtils.GetFileName(e.fsPath);
-			if (path == this.assembler.config.ConfigFile) {
-				let data = await this.assembler.fileUtils.ReadFile(e.fsPath);
-				let json = this.assembler.fileUtils.BytesToString(data);
-
-				let platform = this.assembler.config.ProjectSetting.platform;
-				this.assembler.config.ReadConfigJson(json);
-				if (platform == this.assembler.config.ProjectSetting.platform)
-					return;
-
-				this.assembler.baseHelper.SwitchPlatform(this.assembler.config.ProjectSetting.platform);
-			}
-		});
-
-		watcher.onDidCreate(async (e) => {
-			let tempFiles = await this.GetWorkspaceFilterFile();
-			let searchFiles = tempFiles.map(value => value.fsPath);
-			if (searchFiles.includes(e.fsPath)) {
-				let buffer = await this.assembler.fileUtils.ReadFile(e.fsPath);
-				let text = this.assembler.fileUtils.BytesToString(buffer);
-				await this.assembler.compile.DecodeText([{ text, filePath: e.fsPath }]);
-			}
-		});
-	}
-
-	//#endregion 监视文件
-
-	//#region 更新错误
-	/**更新错误 */
-	UpdateDiagnostic() {
-		let errors = this.assembler.myException.GetAllException();
-		this.errorCollection.clear();
-		let result: { [key: string]: vscode.Diagnostic[] } = {};
-		for (let i = 0; i < errors.length; i++) {
-			const error = errors[i];
-			if (!result[error.filePath])
-				result[error.filePath] = [];
-
-			let range = new vscode.Range(error.line, error.start, error.line, error.start + error.length);
-			result[error.filePath].push(new vscode.Diagnostic(range, error.message));
-		}
-		for (let key in result) {
-			let uri = vscode.Uri.file(key);
-			this.errorCollection.set(uri, result[key]);
-		}
-	}
-	//#endregion 更新错误
-
 	//#region 查找标签定义位置
 	/**查找标签定义位置 */
-	DefinitionProvider() {
+	private DefinitionProvider() {
 		vscode.languages.registerDefinitionProvider(this.assembler.config.FileExtension, {
 			provideDefinition: async (document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) => {
 				let result: vscode.Location[] = [];
 
 				let text = document.lineAt(position.line);
-				let temp = await this.assembler.baseHelper.GetLebalSourcePosition(text.text, position.character, position.line, document.uri.fsPath);
+				let temp = await this.assembler.baseHelper.GetLabelSourcePosition(text.text, position.character, position.line, document.uri.fsPath);
 
 				if (temp.filePath.trim() != "") {
 					let fileUri = vscode.Uri.file(temp.filePath);
@@ -313,15 +248,15 @@ export class Helper {
 	}
 	//#endregion 查找标签定义位置
 
-	//#region 获取标签注释
-	/**获取标签注释 */
-	HoverProvider() {
+	//#region 鼠标停留时获取的注释标签等
+	/**鼠标停留时获取的注释标签等 */
+	private HoverProvider() {
 		vscode.languages.registerHoverProvider(this.assembler.config.FileExtension, {
 			provideHover: (document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) => {
 				let result: vscode.MarkdownString[] = [];
 
 				let text = document.lineAt(position.line);
-				let temp = this.assembler.baseHelper.GetLebalCommentAndValue(text.text, position.character, position.line, document.uri.fsPath);
+				let temp = this.assembler.baseHelper.GetLabelCommentAndValue(text.text, position.character, position.line, document.uri.fsPath);
 
 				if (temp.comment) {
 					result.push(new vscode.MarkdownString(`**${temp.comment}**`));
@@ -338,17 +273,16 @@ export class Helper {
 			}
 		})
 	}
-	//#endregion 获取标签注释
+	//#endregion 鼠标停留时获取的注释标签等
 
 	//#region 初始化载入所有文件
 	/**初始化载入所有文件 */
-	async LoadAllFile() {
+	private async LoadAllFile() {
 		if (!vscode.workspace.workspaceFolders)
 			return;
 
-		await this.ReadConfig();
-
-		let files = await this.GetWorkspaceFilterFile();
+		// let files = await this.GetWorkspaceFilterFile();
+		let files = await vscode.workspace.findFiles("{**/*.asm}", null);
 
 		let tempFiles: { text: string, filePath: string }[] = [];
 		for (let i = 0; i < files.length; i++) {
@@ -357,43 +291,48 @@ export class Helper {
 			tempFiles.push({ text, filePath: files[i].fsPath });
 		}
 		await this.assembler.compile.DecodeText(tempFiles);
-		this.UpdateDiagnostic();
 	}
 	//#endregion 初始化载入所有文件
 
 	//#region 自定义高亮
 	/**自定义高亮 */
-	ProvideDocumentSemanticTokens() {
+	private ProvideDocumentSemanticTokens() {
 		vscode.languages.registerDocumentSemanticTokensProvider(this.assembler.config.FileExtension, {
-			provideDocumentSemanticTokens: (document: vscode.TextDocument, token: vscode.CancellationToken) => {
+			provideDocumentSemanticTokens: async (document: vscode.TextDocument, token: vscode.CancellationToken) => {
 				const tokenBuilder = new vscode.SemanticTokensBuilder(this.leagend);
-				let allLines = document.getText().split(/\r?\n/g);
-				for (let i = 0; i < allLines.length; i++) {
-					let text = allLines[i].split(";")[0];
+				await this.WaitTextUpdate();
+				try {
+					let allLines = this.assembler.baseHelper.GetUpdateLine(document.fileName);
+					for (let i = 0; i < allLines.length; i++) {
+						const line = allLines[i];
+						if (line.lineType == BaseLineType.Unknow)
+							continue;
 
-					let instructions = this.assembler.GetInstrctionsRegex();
-					let matches = this.assembler.utils.GetTextMatches(instructions, text);
-					if (matches.length != 0) {
-						tokenBuilder.push(i, matches[0].index, matches[0].match.length, 1);
-						continue;
+						let tokens = line.GetToken();
+						for (let j = 0; j < tokens.length; j++) {
+							const token = tokens[j];
+							switch (token.type) {
+								case TokenType.Keyword:
+									tokenBuilder.push(token.lineNumber, token.startColumn, token.text.length, HightlightType.keyword);
+									break;
+								case TokenType.Defined:
+									tokenBuilder.push(token.lineNumber, token.startColumn, token.text.length, HightlightType.enumMember);
+									break;
+								case TokenType.Label:
+									tokenBuilder.push(token.lineNumber, token.startColumn, token.text.length, HightlightType.struct);
+									break;
+								case TokenType.Macro:
+									tokenBuilder.push(token.lineNumber, token.startColumn, token.text.length, HightlightType.function);
+									break;
+							}
+						}
 					}
-
-					let macroDefined = /\.MACRO\s+.*?(\s+|$)/ig.exec(text);
-					if (macroDefined) {
-						tokenBuilder.push(i, macroDefined.index + 6, macroDefined[0].length - 6, 0);
-						continue;
-					}
-
-					let macro = this.assembler.GetMacroMatch(text);
-					if (macro) {
-						tokenBuilder.push(i, macro.index, macro[0].length, 0);
-						continue;
-					}
-
+				} catch (e) {
+					console.log(e);
 				}
 				return tokenBuilder.build();
 			}
-		}, new vscode.SemanticTokensLegend(["class", "keyword"]))
+		}, this.leagend)
 
 	}
 	//#endregion 自定义高亮
@@ -475,65 +414,46 @@ export class Helper {
 	}
 	//#endregion 绑定命令
 
-	/***** 辅助功能 ******/
+	//#region 更新错误
+	/**更新错误 */
+	UpdateDiagnostic() {
+		let errors = this.assembler.myException.GetAllException();
+		this.errorCollection.clear();
+		let result: Record<string, vscode.Diagnostic[]> = {};
+		for (let i = 0; i < errors.length; i++) {
+			const error = errors[i];
+			if (!result[error.filePath])
+				result[error.filePath] = [];
 
-	//#region 更改显示语言
-	ChangeDisplayLanguage() {
-		let config: { locale: "zh-cn" | "en", availableLanguages: any } = JSON.parse(<string>process.env.VSCODE_NLS_CONFIG);
-		this.assembler.baseHelper.ChangeDisplayLanguage(config.locale);
+			if (error.line < 0)
+				continue;
+
+			let range = new vscode.Range(error.line, error.start, error.line, error.start + error.length);
+			result[error.filePath].push(new vscode.Diagnostic(range, error.message));
+		}
+		for (let key in result) {
+			if (key == "undefined")
+				continue;
+
+			let uri = vscode.Uri.file(key);
+			this.errorCollection.set(uri, result[key]);
+		}
 	}
-	//#endregion 更改显示语言
+	//#endregion 更新错误
 
-	//#region 转换Completion成vscode.CompletionItem
-	/**转换Completion成vscode.CompletionItem */
-	private ConvertCompletion(completion: Completion) {
-		let result = new vscode.CompletionItem(completion.showText);
-		result.insertText = completion.insertText;
-		result.detail = completion.comment;
-		result.sortText = completion.index.toString();
-
-		switch (completion.type) {
-			case CompletionType.Instruction:
-				result.kind = vscode.CompletionItemKind.Keyword;
-				break;
-			case CompletionType.Command:
-				result.kind = vscode.CompletionItemKind.Function;
-				result.insertText = result.insertText.substring(1);
-				break;
-			case CompletionType.Macro:
-				result.kind = vscode.CompletionItemKind.Field;
-				break;
-			case CompletionType.Lebal:
-				result.kind = vscode.CompletionItemKind.Variable;
-				break;
-			case CompletionType.MacroLebal:
-				result.kind = vscode.CompletionItemKind.Field;
-				break;
-			case CompletionType.Folder:
-				result.kind = vscode.CompletionItemKind.Folder;
-				result.command = {
-					title: "运行路径智能提示",
-					command: this.assembler.config.ExtensionCommandNames.GetThisFilePath,
-					arguments: [...completion.tag]
+	//#region 等待文本更新
+	private async WaitTextUpdate() {
+		return new Promise((resolve, rejects) => {
+			let temp = setInterval(() => {
+				if (this.fileUpdateFinished) {
+					clearInterval(temp);
+					resolve("");
 				}
-				break;
-			case CompletionType.File:
-				result.kind = vscode.CompletionItemKind.File;
-				break;
-		}
-
-		if (result.label == ".INCLUDE" || result.label == ".INCBIN") {
-			result.insertText = new vscode.SnippetString(result.insertText + "\"${0:}\"");
-			result.command = {
-				title: "运行相对路径智能提示",
-				command: this.assembler.config.ExtensionCommandNames.GetThisFilePath,
-				arguments: [result.label]
-			}
-		}
-
-		return result;
+			}, 200);
+		})
 	}
-	//#endregion 转换Completion成vscode.CompletionItem
+	//#endregion 等待文本更新
+
 
 	//#region 状态栏显示文本
 	StatueBarShowText(text: string, timer: number = 0) {
@@ -547,21 +467,6 @@ export class Helper {
 			setTimeout(() => { this.statusBarItem?.hide(); }, timer);
 	}
 	//#endregion 状态栏显示文本
-
-	//#region 读取配置文件
-	async ReadConfig() {
-		let settingFile = this.assembler.fileUtils.Combine(vscode.workspace.workspaceFolders![0].uri.fsPath, ".vscode", "project-settings.json");
-		if (await this.assembler.fileUtils.PathType(settingFile) != "file") {
-			let json = JSON.stringify(this.assembler.config.ProjectDefaultSetting);
-			let buffer = this.assembler.fileUtils.StringToBytes(json);
-			await this.assembler.fileUtils.SaveFile(settingFile, buffer);
-		} else {
-			let buffer = await this.assembler.fileUtils.ReadFile(settingFile);
-			let json = this.assembler.fileUtils.BytesToString(buffer);
-			this.assembler.config.ReadConfigJson(json);
-		}
-	}
-	//#endregion 读取配置文件
 
 	//#region 输出结果
 	async OutputResult(result: number[], option?: { toFile?: string, copy?: boolean, patchFile?: string }) {
@@ -599,15 +504,56 @@ export class Helper {
 	}
 	//#endregion 输出结果
 
-	//#region 获取工作目录下所筛选出的文件
-	private async GetWorkspaceFilterFile() {
-		let includes = `{${this.assembler.config.ProjectSetting.includes.join(",")}}`;
-		let excludes: string | null = null;
-		if (this.assembler.config.ProjectSetting.excludes.length != 0)
-			excludes = `{${this.assembler.config.ProjectSetting.excludes.join(",")}}`;
-			
-		return await vscode.workspace.findFiles(includes, excludes);
-	}
-	//#endregion
+	/***** Private *****/
 
+	//#region 转换Completion成vscode.CompletionItem
+	/**转换Completion成vscode.CompletionItem */
+	private ConvertCompletion(completion: Completion) {
+		let result = new vscode.CompletionItem(completion.showText);
+		result.insertText = completion.insertText;
+		result.detail = completion.comment;
+		result.sortText = completion.index.toString();
+
+		switch (completion.type) {
+			case CompletionType.Instruction:
+				result.kind = vscode.CompletionItemKind.Keyword;
+				break;
+			case CompletionType.Command:
+				result.kind = vscode.CompletionItemKind.Function;
+				result.insertText = result.insertText.substring(1);
+				break;
+			case CompletionType.Macro:
+				result.kind = vscode.CompletionItemKind.Field;
+				break;
+			case CompletionType.Label:
+				result.kind = vscode.CompletionItemKind.Variable;
+				break;
+			case CompletionType.MacroLabel:
+				result.kind = vscode.CompletionItemKind.Field;
+				break;
+			case CompletionType.Folder:
+				result.kind = vscode.CompletionItemKind.Folder;
+				result.command = {
+					title: "运行路径智能提示",
+					command: this.assembler.config.ExtensionCommandNames.GetThisFilePath,
+					arguments: [...completion.tag]
+				}
+				break;
+			case CompletionType.File:
+				result.kind = vscode.CompletionItemKind.File;
+				break;
+		}
+
+		if (result.label == ".INCLUDE" || result.label == ".INCBIN") {
+			result.insertText = new vscode.SnippetString(result.insertText + "\"${0:}\"");
+			result.command = {
+				title: "运行相对路径智能提示",
+				command: this.assembler.config.ExtensionCommandNames.GetThisFilePath,
+				arguments: [result.label]
+			}
+		}
+
+		return result;
+	}
+	//#endregion 转换Completion成vscode.CompletionItem
 }

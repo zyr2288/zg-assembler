@@ -1,63 +1,22 @@
-import { BaseLine, BaseLineFinishType, BaseLineType } from "./BaseLine";
-import { BaseOption, CompileOption } from "./CompileOption";
-import { Instructions } from "./Instructions";
-import { LebalUtils } from "../Utils/LebalUtils";
-import { GlobalVar } from "./GlobalVar";
-import { Label, LabelDefinedState, LabelState } from "./Label";
-import { Macro } from "./Macro";
-import { ErrorLevel, ErrorType, MyException } from "./MyException";
-import { Commands } from "./Commands";
+import { BaseLineType, BaseLineUtils, IBaseLine } from "../BaseLine/BaseLine";
+import { CommandLine } from "../BaseLine/CommandLine";
+import { ExpressionLine } from "../BaseLine/ExpressionLine";
+import { InstructionLine } from "../BaseLine/InstructionLine";
+import { MacroLine } from "../BaseLine/MacroLine";
+import { Platform } from "../Platform/Platform";
+import { LabelUtils } from "../Utils/LabelUtils";
 import { LexerUtils } from "../Utils/LexerUtils";
-import { Config } from "./Config";
 import { MacroUtils } from "../Utils/MacroUtils";
+import { Commands } from "./Commands";
+import { CommonOption } from "./CommonOption";
+import { Config } from "./Config";
+import { GlobalVar } from "./GlobalVar";
+import { LabelDefinedState } from "./Label";
+import { Macro } from "./Macro";
+import { MyException } from "./MyException";
+import { Token, TokenType } from "./Token";
 
 export class Compile {
-
-	//#region 编译所有文本
-	/**
-	 * 编译所有文本
-	 * @param text 文本
-	 * @param filePath 文件路径
-	 * @returns 基础行的基础分割
-	 */
-	static async CompileText(text: string, filePath: string) {
-
-		GlobalVar.SwitchEnvironment("Compile");
-		GlobalVar.isCompiling = true;
-
-		GlobalVar.env.isCompile = true;
-
-		GlobalVar.env.ClearAll();
-		MyException.ClearAll();
-
-		let hash = GlobalVar.env.SetFile(filePath);
-		let allBaseLine = Compile.GetAllBaseLine(text, hash);
-
-		let noError = await Compile.LebalAndMacroAnalyse(allBaseLine);
-		if (!noError)
-			return;
-
-		await Compile.AnalyseMacro(allBaseLine);
-
-		GlobalVar.env.compileCount = Config.ProjectSetting.compileTimes;
-		await Compile.AnalyseLebal(allBaseLine);
-
-		GlobalVar.env.compileCount = 0;
-		if (!MyException.isError) {
-			while (GlobalVar.env.compileCount < Config.ProjectSetting.compileTimes) {
-				await Compile.CompileAndGetResult(allBaseLine);
-				GlobalVar.env.compileCount++;
-			}
-		}
-
-		let result: number[] = [];
-		if (!MyException.isError)
-			result = Compile.GetAllBaseLineResult(allBaseLine);
-
-		GlobalVar.isCompiling = false;
-		return result;
-	}
-	//#endregion 编译所有文本
 
 	//#region 解析文本
 	/**
@@ -66,248 +25,263 @@ export class Compile {
 	 * @returns 
 	 */
 	static async DecodeText(files: { text: string, filePath: string }[]) {
-		GlobalVar.SwitchEnvironment("Editor");
+		await GlobalVar.SwitchEnvironment("Editor");
 		GlobalVar.isCompiling = true;
-		let allBaseLine: BaseLine[] = [];
+		let allLines: IBaseLine[] = [];
+
 		for (let i = 0; i < files.length; i++) {
 			let hash = GlobalVar.env.SetFile(files[i].filePath);
-			LebalUtils.DeleteLebal(hash);
+			LabelUtils.DeleteLabel(hash);
 			MacroUtils.DeleteMacro(hash);
 			MyException.ClearFileError(hash);
 
 			let tempLines = Compile.GetAllBaseLine(files[i].text, hash);
+			let option: CommonOption = { allLine: tempLines, lineIndex: 0 };
+			await Compile.FirstAnalyse(option);
+			await Compile.SecondAnalyse(option);
 
-			await Compile.LebalAndMacroAnalyse(tempLines);
-			await Compile.AnalyseMacro(tempLines);
+			if (!GlobalVar.env.fileBaseLines[hash])
+				GlobalVar.env.fileBaseLines[hash] = [];
 
-			tempLines.forEach(value => allBaseLine.push(value));
+			GlobalVar.env.fileBaseLines[hash] = tempLines;
+			allLines.push(...tempLines);
 		}
 
-		await Compile.AnalyseLebal(allBaseLine);
+		let option: CommonOption = { allLine: allLines, lineIndex: 0 };
+		await Compile.ThirdAnalyse(option);
 		GlobalVar.isCompiling = false;
 	}
 	//#endregion 解析文本
 
-	/***** 辅助方法 *****/
+	//#region 编译文本
+	static async CompileText(text: string, filePath: string) {
+		await GlobalVar.SwitchEnvironment("Compile");
+		GlobalVar.isCompiling = true;
+		GlobalVar.env.isCompile = true;
 
-	//#region 获取基础行
-	/**
-	 * 获取基础行
-	 * @param text 文本
-	 * @param fileHash 文件Hash值
-	 * @returns 所有解析的基础行
-	 */
+		GlobalVar.env.ClearAll();
+		MyException.ClearAll();
+
+		let hash = GlobalVar.env.SetFile(filePath);
+		let tempLines = Compile.GetAllBaseLine(text, hash);
+		let option: CommonOption = { allLine: tempLines, lineIndex: 0 };
+		await Compile.FirstAnalyse(option);
+		await Compile.SecondAnalyse(option);
+		await Compile.ThirdAnalyse(option);
+
+		GlobalVar.env.compileCount = 0;
+		if (!MyException.isError) {
+			while (GlobalVar.env.compileCount < Config.ProjectSetting.compileTimes) {
+				await Compile.CompileAndGetResult(option);
+				GlobalVar.env.compileCount++;
+			}
+		}
+
+		let result: number[] = [];
+		if (!MyException.isError) {
+			Compile.GetAllBaseLineResult(tempLines, result);
+		}
+
+		GlobalVar.isCompiling = false;
+		return result;
+	}
+	//#endregion 编译文本
+
+	/***** 三次基本分析 *****/
+
+	//#region 仅仅分割每一行，并不做其它分析
 	static GetAllBaseLine(text: string, fileHash: number) {
 		let lines = text.split(/\r?\n/g);
-		let baseLines: BaseLine[] = [];
+		let baseLines: IBaseLine[] = [];
 		lines.forEach((value, index) => {
-			let temp = BaseLine.SplitBaseLine(value, fileHash, index);
-			if (temp)
-				baseLines.push(temp);
+			let temp = BaseLineUtils.GetLineType(value, fileHash, index);
+			if (temp) baseLines.push(temp);
 		});
-
 		return baseLines;
 	}
-	//#endregion 获取基础行
+	//#endregion 仅仅分割每一行，并不做其它分析
 
-	//#region 第一阶段，基础分析标签与定义的自定义函数
+	//#region 第一次分析，分析标签，自定义函数，命令基本参数个数是否符合等
 	/**
-	 * 第一阶段，基础分析标签与定义的自定义函数
-	 * @param baseLines 所有基础行
-	 * @param option 选项
-	 * @returns 是否继续，false为有误
+	 * 第一次分析，分析标签，自定义函数，命令基本参数个数是否符合等
+	 * @param option 通用编译选项
 	 */
-	static async LebalAndMacroAnalyse(baseLines: BaseLine[], option?: BaseOption) {
-		let op: CompileOption = { allBaseLine: baseLines, baseLineIndex: 0, currectLine: baseLines[0], macro: option?.macro };
-		for (let i = 0; i < baseLines.length; i++) {
-			op.baseLineIndex = i;
-			op.currectLine = baseLines[i];
-
-			switch (op.currectLine.lineType) {
-				case BaseLineType.Command:
-					await Commands.BaseAnalyse(op);
-					break;
-				case BaseLineType.Expression:
-					let lebal = LebalUtils.CreateLebal(op.currectLine.lebalWord);
-					if (lebal) {
-						lebal.labelDefined = LabelDefinedState.Variable;
-					}
-					break;
-				case BaseLineType.Ignore:
-					continue;
-			}
-
-			if (op.currectLine.finishType == BaseLineFinishType.ErrorAndBreak)
-				return false;
-
-			i = op.baseLineIndex;
-		}
-		return true;
-	}
-	//#endregion 第一阶段，基础分析标签与定义的自定义函数
-
-	//#region 第二阶段，分析自定义函数之前的标签
-	/**
-	 * 第二阶段，分析自定义函数之前的标签
-	 * @param allBaseLine 所有编译行
-	 * @param option 选项
-	 */
-	static async AnalyseMacro(allBaseLine: BaseLine[], option?: BaseOption) {
-		let compileOption: CompileOption = { allBaseLine: allBaseLine, baseLineIndex: 0, currectLine: allBaseLine[0], macro: option?.macro };
-		for (let i = 0; i < allBaseLine.length; i++) {
-			const line = allBaseLine[i];
-			compileOption.currectLine = line;
-
-			const { word, comment } = BaseLine.GetComment(line.originalString);
-			switch (line.lineType) {
-				case BaseLineType.Instruction:
-					if (!line.lebalWord?.isNull) {
-						LebalUtils.CreateLebal(line.lebalWord, undefined, comment, compileOption);
-					}
-					break;
-				case BaseLineType.Command:
-					if (line.lebalWord) {
-						LebalUtils.CreateLebal(line.lebalWord, undefined, comment, compileOption);
-					}
-					await Commands.AnalyseMacro(compileOption)
-					break;
-				case BaseLineType.Unknow:
-					let match = MacroUtils.RegexMatch(word.text);
-					if (match) {
-						let lebalWord = word.Substring(0, match.index);
-						if (!lebalWord.isNull) {
-							let lebal = LebalUtils.CreateLebal(lebalWord, undefined, comment, option);
-							lebal!.labelDefined = LabelDefinedState.Defined;
-							line.lebalWord = lebalWord;
-						}
-
-						line.lineType = BaseLineType.Macro;
-						line.keyword = word.Substring(match.index, match[0].length);
-						line.expression = word.Substring(match.index + match[0].length);
-					} else {
-						line.lineType = BaseLineType.OnlyLebal;
-						line.lebalWord = word;
-						let lebal = LebalUtils.CreateLebal(word, undefined, comment, option);
-						if (lebal)
-							lebal.labelDefined = LabelDefinedState.Defined;
-					}
-					break;
-				case BaseLineType.OnlyLebal:
-					let lebal = LebalUtils.CreateLebal(line.lebalWord, undefined, comment);
-					if (lebal)
-						lebal.labelDefined = LabelDefinedState.Defined;
-
-					break;
-				case BaseLineType.Ignore:
-					continue;
-			}
-		}
-	}
-	//#endregion 第二阶段，分析自定义函数之前的标签
-
-	//#region 第三阶段，获取标签后的分析
-	/**第三阶段，获取标签后的分析 */
-	static async AnalyseLebal(allBaseLine: BaseLine[], option?: BaseOption) {
-		let compileOption: CompileOption = { allBaseLine: allBaseLine, baseLineIndex: 0, currectLine: allBaseLine[0], macro: option?.macro };
-		for (let i = 0; i < allBaseLine.length; i++) {
-			compileOption.currectLine = allBaseLine[i];
-
-			if (compileOption.currectLine.finishType == BaseLineFinishType.ErrorLine)
+	static async FirstAnalyse(option: CommonOption) {
+		for (let i = 0; i < option.allLine.length; i++) {
+			const line = option.allLine[i];
+			if (line.errorLine)
 				continue;
 
-			compileOption.baseLineIndex = i;
-			switch (compileOption.currectLine.lineType) {
-				case BaseLineType.Command:
-					await Commands.AnalyseLebal(compileOption);
-					break;
+			option.lineIndex = i;
+
+			switch (line.lineType) {
 				case BaseLineType.Instruction:
-					Instructions.platform.InstructionLineBaseAnalyse(compileOption.currectLine);
+					InstructionLine.FirstAnalyse(option);
+					break;
+				case BaseLineType.Command:
+					await Commands.FirstAnalyse(option);
 					break;
 				case BaseLineType.Expression:
-					if (compileOption.currectLine.expression.isNull) {
-						MyException.PushException(compileOption.currectLine.expression, ErrorType.ExpressionError, ErrorLevel.Show);
-					} else {
-						const { comment } = BaseLine.GetComment(compileOption.currectLine.originalString);
-						let temp = LexerUtils.GetExpressionValue(compileOption.currectLine.expression, "tryValue");
-						let lebal = LebalUtils.FindLebal(compileOption.currectLine.lebalWord!, option);
-						lebal!.comment = comment;
-						if (temp.success)
-							lebal!.value = temp.value;
-					}
+					ExpressionLine.FirstAnalyse(option);
 					break;
-				case BaseLineType.Macro:
-					await MacroUtils.AnalyseMacro(compileOption.currectLine);
-					break;
-				case BaseLineType.Ignore:
-					continue;
 			}
+
+			i = option.lineIndex;
 		}
 	}
-	//#endregion 第三阶段，获取标签后的分析
+	//#endregion 第一次分析，分析标签，自定义函数，命令基本参数个数是否符合等
+
+	//#region 第二次分析，分析是自定义函数或标签
+	static async SecondAnalyse(option: CommonOption) {
+		for (let i = 0; i < option.allLine.length; i++) {
+			let line = option.allLine[i];
+			if (line.errorLine)
+				continue;
+
+			option.lineIndex = i;
+			switch (line.lineType) {
+				case BaseLineType.Unknow:
+					let match = MacroUtils.MatchMacro(line.orgText.text);
+					if (match) {
+						let temp = BaseLineUtils.GetMatchLineParts(line.orgText, match);
+						option.allLine[i] = MacroLine.CreateLine(temp);
+						option.allLine[i].orgText = line.orgText;
+					} else {
+						option.allLine[i].lineType = BaseLineType.OnlyLabel;
+						let label = LabelUtils.CreateLabel(option.allLine[i].orgText, undefined, option.allLine[i].comment, option);
+						if (label)
+							label.labelDefined = LabelDefinedState.Label;
+
+						option.allLine[i].GetToken = Compile.SetLineTokenFunc.bind(option.allLine[i]);
+					}
+					break;
+				case BaseLineType.Command:
+					await Commands.SecondAnalyse(option);
+					break;
+			}
+			i = option.lineIndex;
+		}
+	}
+	//#endregion 第二次分析，分析是自定义函数或标签
+
+	//#region 第三次分析，分析各表达式是否正确
+	static async ThirdAnalyse(option: CommonOption) {
+		for (let i = 0; i < option.allLine.length; i++) {
+			const line = option.allLine[i];
+			if (line.errorLine)
+				continue;
+
+			option.lineIndex = i;
+			switch (line.lineType) {
+				case BaseLineType.Instruction:
+					InstructionLine.ThirdAnalyse(option);
+					break;
+				case BaseLineType.Expression:
+					ExpressionLine.ThirdAnalyse(option);
+					break;
+				case BaseLineType.Macro:
+					MacroLine.ThirdAnalyse(option);
+					break;
+				case BaseLineType.Command:
+					await Commands.ThirdAnalyse(option);
+					break;
+			}
+			i = option.lineIndex;
+		}
+	}
+	//#endregion 第三次分析，分析各表达式是否正确
 
 	//#region 解析所有行获取结果
-	static async CompileAndGetResult(allBaseLine: BaseLine[], option?: BaseOption) {
-		let compileOption: CompileOption = { allBaseLine, baseLineIndex: 0, currectLine: allBaseLine[0], macro: option?.macro };
-		for (let i = 0; i < allBaseLine.length; i++) {
+	static async CompileAndGetResult(option: CommonOption) {
+		for (let i = 0; i < option.allLine.length; i++) {
 			if (MyException.isError)
 				break;
 
-			const line = allBaseLine[i];
-			if (line.finishType == BaseLineFinishType.Finished || line.lineType == BaseLineType.Ignore)
+			const line = option.allLine[i];
+			if (line.errorLine || line.isFinished)
 				continue;
 
-			compileOption.baseLineIndex = i;
-			compileOption.currectLine = allBaseLine[i];
-			let lebal: Label | undefined;
-			if (line.lineType != BaseLineType.Expression && line.lebalWord) {
-				if (lebal = LebalUtils.FindTemporaryLebal(line.lebalWord)) {
-					let temp = lebal.lineNumbers.find(value => value.lineNumber == line.lebalWord!.lineNumber);
-					temp!.value = GlobalVar.env.originalAddress;
-				} else if (lebal = LebalUtils.FindLebal(line.lebalWord)) {
-					lebal.value = GlobalVar.env.originalAddress;
-				}
-			}
-
+			option.lineIndex = i;
 			switch (line.lineType) {
 				case BaseLineType.Instruction:
-					Instructions.platform.InstructionAnalyse(line);
+					Compile.GetLineLabel(option);
+					Platform.instructionAnalyser.InstructionCompile(option);
 					break;
 				case BaseLineType.Command:
-					await Commands.AnalyseCommand(compileOption);
+					Compile.GetLineLabel(option);
+					await Commands.CompileCommands(option);
 					break;
-				case BaseLineType.OnlyLebal:
-					line.finishType = BaseLineFinishType.Finished;
+				case BaseLineType.OnlyLabel:
+					Compile.GetLineLabel(option);
+					line.isFinished = true;
 					break;
 				case BaseLineType.Expression:
-					let result = LexerUtils.GetExpressionValue(line.expression, "getValue");
+					const tempLine = <ExpressionLine>option.allLine[i];
+					let result = LexerUtils.GetExpressionValue(tempLine.expParts, "getValue", option);
 					if (result.success) {
-						let lebal = LebalUtils.FindLebal(line.lebalWord!);
-						lebal!.value = result.value;
-						line.finishType = BaseLineFinishType.Finished;
+						let label = LabelUtils.FindLabel(tempLine.label, option);
+						label!.value = result.value;
+						line.isFinished = true;
 					}
 					break;
 				case BaseLineType.Macro:
-					Commands.Command_Macro(compileOption);
+					Compile.GetLineLabel(option);
+					await MacroLine.CompileMacro(option);
 					break;
 			}
 
-			i = compileOption.baseLineIndex;
+			i = option.lineIndex;
+		}
+	}
+
+	private static GetLineLabel(option: CommonOption) {
+		const line = <CommandLine | InstructionLine>option.allLine[option.lineIndex];
+		let labalToken: Token | undefined;
+		switch (line.lineType) {
+			case BaseLineType.Command:
+			case BaseLineType.Instruction:
+			case BaseLineType.Macro:
+				labalToken = line.label;
+				break;
+			case BaseLineType.OnlyLabel:
+				labalToken = line.orgText;
+				break;
+		}
+		if (!labalToken || labalToken.isNull)
+			return;
+
+		let label = LabelUtils.FindTemporaryLabel(labalToken);
+		if (label) {
+			let temp = label.lineNumbers.find(value => value.lineNumber == labalToken!.lineNumber);
+			temp!.value = GlobalVar.env.originalAddress;
+		} else {
+			label = LabelUtils.FindLabel(labalToken, option);
+			label!.value = GlobalVar.env.originalAddress;
 		}
 	}
 	//#endregion 解析所有行获取结果
 
+	/***** 辅助方法 *****/
+
 	//#region 所有解析后的行获取值
-	static GetAllBaseLineResult(allBaseLine: BaseLine[]): number[] {
-		let result: number[] = [];
+	static GetAllBaseLineResult(allBaseLine: IBaseLine[], result: number[]) {
 		for (let i = 0; i < allBaseLine.length; i++) {
 			const line = allBaseLine[i];
-			if (line.finishType) {
-				line.result.forEach((value, index) => {
+			if (line.lineType == BaseLineType.Macro) {
+				const macroLine = <MacroLine>allBaseLine[i];
+				Compile.GetAllBaseLineResult(macroLine.resultLines, result);
+				continue;
+			}
+
+			// @ts-ignore
+			let tempResult: number[] = line.result;
+			if (line.isFinished && tempResult && tempResult.length != 0) {
+				tempResult.forEach((value, index) => {
+					// @ts-ignore
 					result[line.baseAddress + index] = value;
 				});
 			}
 		}
-		return result;
 	}
 	//#endregion 所有解析后的行获取值
 
@@ -342,4 +316,10 @@ export class Compile {
 	}
 	//#endregion 获取编译的String
 
+	/***** 辅助选项 *****/
+
+	private static SetLineTokenFunc(this: IBaseLine) {
+		this.orgText.type = TokenType.Label;
+		return [this.orgText];
+	}
 }

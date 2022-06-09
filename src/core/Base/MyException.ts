@@ -1,14 +1,14 @@
-import { OneWord } from "./OneWord";
+import { Token } from "./Token";
 import { GlobalVar } from "./GlobalVar";
 
 export enum ErrorLevel { AtLastShow, ShowAndBreak, Show }
 export enum ErrorType {
 	ExpressionError, UnknowOriginalAddress, UnSupportCommand, ArgumentCountError,
 	ArgumentError, ArgumentOutofRange,
-	LebalIllegal, LebalAlreadyDefined, NamelessLebalNotInMacro, LebalInMacroIllegal, UnknowLebal,
+	LabelIllegal, LabelAlreadyDefined, NamelessLabelNotInMacro, LabelInMacroIllegal, UnknowLabel,
 	MacroAlreadyDefined,
 	InstructionNotSupportAddress,
-	CommandNotSupportNested, CommandNotClosed, CommandParamsError, CommandNotInMacro, CommandNotSupportLebal,
+	CommandNotSupportNested, CommandNotClosed, CommandParamsError, CommandNotInMacro, CommandNotSupportLabel,
 	NotSupportString, OnlyOneString, StringError,
 	FileIsNotExsist
 }
@@ -16,10 +16,10 @@ export enum ErrorType {
 const AllErrorMessage_en = [
 	"Expression error", "Unknow original address", "Unsupport command", "Wrong arguments count",
 	"Argument error", "Argument out of range",
-	"Lebal is illegal", "Lebal is already defined", "Not support nameless lebal in Macro", "Sub-lebal do not supported in Macro", "Unknow lebal",
+	"Label is illegal", "Label is already defined", "Not support nameless label in Macro", "Sub-label do not supported in Macro", "Unknow label",
 	"Macro is already defined",
 	"Instruction do not support this addressing method",
-	"Can not use Macro in Macro", ".ENDM not founded", "Incorrect Macro parameters", "Can not use Macro in Macro", "Macro do not support lebal",
+	"Can not use Macro in Macro", ".ENDM not founded", "Incorrect Macro parameters", "Can not use Macro in Macro", "Macro do not support label",
 	"String is too long", "Only one string is supported", "String error",
 	"File is not exsist"
 ];
@@ -43,12 +43,12 @@ export class MyException {
 	static ErrorMessages: string[] = AllErrorMessage_cn;
 	static isError = false;
 
-	static PushException(word: OneWord, errorType: ErrorType, level: ErrorLevel) {
+	static PushException(word: Token, errorType: ErrorType, level: ErrorLevel) {
 		if (!GlobalVar.env.lastCompile && level == ErrorLevel.AtLastShow)
 			return;
 
 		let exception = new ExceptionWords(errorType, word);
-		let hash = word.hashcode;
+		let hash = word.hashCode;
 		if (!MyException.words[hash]) {
 			MyException.words[hash] = exception;
 			MyException.isError = true;
@@ -112,10 +112,10 @@ export class MyException {
 
 //#region 错误信息
 export class ExceptionWords {
-	word: OneWord;
+	word: Token;
 	errorType: ErrorType;
 
-	constructor(type: ErrorType, word: OneWord) {
+	constructor(type: ErrorType, word: Token) {
 		this.errorType = type;
 		this.word = word;
 	}

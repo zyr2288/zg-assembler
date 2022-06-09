@@ -1,19 +1,19 @@
 import { Label, LabelDefinedState, LabelState } from "../Base/Label";
-import { OneWord } from "../Base/OneWord";
+import { Token } from "../Base/Token";
 import { GlobalVar } from "../Base/GlobalVar";
 import { ErrorLevel, ErrorType, MyException } from "../Base/MyException";
 import { Utils } from "./Utils";
 import { LexerUtils } from "./LexerUtils";
 import { DataGroup } from "../Base/DataGroup";
-import { BaseOption } from "../Base/CompileOption";
+import { CommonOption } from "../Base/CommonOption";
 
-export class LebalUtils {
+export class LabelUtils {
 
-	static get namelessLebal() { return new RegExp(/^[\\+\\-]+$/g); };
+	static get namelessLabel() { return new RegExp(/^[\\+\\-]+$/g); };
 
 	//#region 创建标签
 	/**创建标签 */
-	static CreateLebal(word: OneWord | undefined, value?: number, comment?: string, option?: BaseOption): Label | undefined {
+	static CreateLabel(word: Token | undefined, value?: number, comment?: string, option?: CommonOption): Label | undefined {
 		if (!word || word.isNull)
 			return;
 
@@ -23,42 +23,42 @@ export class LebalUtils {
 		lebal.value = value;
 		lebal.comment = comment;
 
-		let match = LebalUtils.namelessLebal.exec(word.text);
+		let match = LabelUtils.namelessLabel.exec(word.text);
 
 		//#region 临时标签
 		if (match) {
 			if (option?.macro) {
-				MyException.PushException(word, ErrorType.NamelessLebalNotInMacro, ErrorLevel.Show);
+				MyException.PushException(word, ErrorType.NamelessLabelNotInMacro, ErrorLevel.Show);
 				return;
 			}
 
-			if (!LebalUtils.CheckIllegal(word.Substring(match.index + match[0].length), false))
+			if (!LabelUtils.CheckIllegal(word.Substring(match.index + match[0].length), false))
 				return;
 
 			lebal.labelScope = LabelState.Temporary;
-			let textHash = LebalUtils.GetLebalHash(word.text, word.fileHash, lebal.labelScope);
+			let textHash = LabelUtils.GetLebalHash(word.text, word.fileHash, lebal.labelScope);
 			switch (match[0][0]) {
 				case "+":
-					if (!GlobalVar.env.allNamelessLebalDown[word.fileHash])
-						GlobalVar.env.allNamelessLebalDown[word.fileHash] = {};
+					if (!GlobalVar.env.allNamelessLabelDown[word.fileHash])
+						GlobalVar.env.allNamelessLabelDown[word.fileHash] = {};
 
-					if (GlobalVar.env.allNamelessLebalDown[word.fileHash][textHash]) {
-						lebal = GlobalVar.env.allNamelessLebalDown[word.fileHash][textHash];
+					if (GlobalVar.env.allNamelessLabelDown[word.fileHash][textHash]) {
+						lebal = GlobalVar.env.allNamelessLabelDown[word.fileHash][textHash];
 					} else {
-						GlobalVar.env.allNamelessLebalDown[word.fileHash][textHash] = lebal;
+						GlobalVar.env.allNamelessLabelDown[word.fileHash][textHash] = lebal;
 					}
-					LebalUtils.NamelessSort(word.lineNumber, lebal, false);
+					LabelUtils.NamelessSort(word.lineNumber, lebal, false);
 					break;
 				case "-":
-					if (!GlobalVar.env.allNamelessLebalUp[word.fileHash])
-						GlobalVar.env.allNamelessLebalUp[word.fileHash] = {};
+					if (!GlobalVar.env.allNamelessLabelUp[word.fileHash])
+						GlobalVar.env.allNamelessLabelUp[word.fileHash] = {};
 
-					if (GlobalVar.env.allNamelessLebalUp[word.fileHash][textHash]) {
-						lebal = GlobalVar.env.allNamelessLebalUp[word.fileHash][textHash];
+					if (GlobalVar.env.allNamelessLabelUp[word.fileHash][textHash]) {
+						lebal = GlobalVar.env.allNamelessLabelUp[word.fileHash][textHash];
 					} else {
-						GlobalVar.env.allNamelessLebalUp[word.fileHash][textHash] = lebal;
+						GlobalVar.env.allNamelessLabelUp[word.fileHash][textHash] = lebal;
 					}
-					LebalUtils.NamelessSort(word.lineNumber, lebal, true);
+					LabelUtils.NamelessSort(word.lineNumber, lebal, true);
 					break;
 			}
 			return lebal;
@@ -67,14 +67,14 @@ export class LebalUtils {
 
 		if (option?.macro) {
 			// 不允许使用
-			if (!LebalUtils.CheckIllegal(word, false)) {
-				MyException.PushException(word, ErrorType.LebalIllegal, ErrorLevel.Show);
+			if (!LabelUtils.CheckIllegal(word, false)) {
+				MyException.PushException(word, ErrorType.LabelIllegal, ErrorLevel.Show);
 				return;
 			}
 
-			let hash = LebalUtils.GetLebalHash(word.text, word.fileHash, lebal.labelScope, option);
+			let hash = LabelUtils.GetLebalHash(word.text, word.fileHash, lebal.labelScope, option);
 			if (option.macro.labels[hash] || option.macro.name.text == word.text) {
-				MyException.PushException(word, ErrorType.LebalAlreadyDefined, ErrorLevel.Show);
+				MyException.PushException(word, ErrorType.LabelAlreadyDefined, ErrorLevel.Show);
 				return;
 			}
 			option.macro.labels[hash] = lebal;
@@ -83,7 +83,7 @@ export class LebalUtils {
 
 		let hash = Utils.GetHashcode(word.text)
 		if (GlobalVar.env.allMacro[hash]) {
-			MyException.PushException(word, ErrorType.LebalAlreadyDefined, ErrorLevel.Show);
+			MyException.PushException(word, ErrorType.LabelAlreadyDefined, ErrorLevel.Show);
 			return;
 		}
 
@@ -95,11 +95,11 @@ export class LebalUtils {
 		}
 
 		if (tempWord.isNull) {
-			MyException.PushException(tempWord, ErrorType.LebalIllegal, ErrorLevel.Show);
+			MyException.PushException(tempWord, ErrorType.LabelIllegal, ErrorLevel.Show);
 			return;
 		}
 
-		let result = LebalUtils.SplitLebal(tempWord, lebal.labelScope);
+		let result = LabelUtils.SplitLebal(tempWord, lebal.labelScope);
 		if (result) {
 			result.value = value;
 			result.comment = comment;
@@ -116,33 +116,35 @@ export class LebalUtils {
 	 * @param option 选项
 	 * @returns 是否找到标签
 	 */
-	static FindLebal(word: OneWord, option?: BaseOption) {
-		let match = LebalUtils.namelessLebal.exec(word.text);
+	static FindLabel(word: Token, option?: CommonOption) {
+		let match = LabelUtils.namelessLabel.exec(word.text);
 		if (match) {
 			let lebals: Record<number, Record<number, Label>> = {};
 			let isDown = true;
 			switch (match[0][0]) {
 				case "+":
-					lebals = GlobalVar.env.allNamelessLebalDown;
+					lebals = GlobalVar.env.allNamelessLabelDown;
 					break;
 				case "-":
-					lebals = GlobalVar.env.allNamelessLebalUp;
+					lebals = GlobalVar.env.allNamelessLabelUp;
 					isDown = false;
 					break;
 			}
 
-			let textHash = LebalUtils.GetLebalHash(word.text, word.fileHash, LabelState.Temporary);
+			let textHash = LabelUtils.GetLebalHash(word.text, word.fileHash, LabelState.Temporary);
 			if (!lebals[word.fileHash] || !lebals[word.fileHash][textHash])
 				return;
 
-			let lebal = lebals[word.fileHash][textHash];
+			let label = lebals[word.fileHash][textHash];
 			let temp: number;
 			if (isDown) {
-				temp = lebal.lineNumbers.findIndex(value => { return word.lineNumber < value.lineNumber; });
+				temp = label.lineNumbers.findIndex(value => { return word.lineNumber < value.lineNumber; });
 			} else {
-				temp = lebal.lineNumbers.findIndex(value => { return word.lineNumber > value.lineNumber; });
+				temp = label.lineNumbers.findIndex(value => { return word.lineNumber > value.lineNumber; });
 			}
-			return lebal.GetTemporary(temp);
+			let temp2 = label.GetTemporary(temp);
+			if (temp2) temp2.labelDefined = LabelDefinedState.Label;
+			return temp2;
 		}
 
 		if (option?.macro) {
@@ -154,7 +156,7 @@ export class LebalUtils {
 		if (word.text.includes(":")) {
 			let part = word.Split(/\:/g, 2);
 			if (part[0].isNull || part[1].isNull) {
-				MyException.PushException(part[0], ErrorType.LebalIllegal, ErrorLevel.Show);
+				MyException.PushException(part[0], ErrorType.LabelIllegal, ErrorLevel.Show);
 				return;
 			}
 
@@ -169,7 +171,7 @@ export class LebalUtils {
 				}
 			}
 
-			let lebal = LebalUtils._FindLebal(part[0]);
+			let lebal = LabelUtils._FindLebal(part[0]);
 			if (!lebal)
 				return;
 
@@ -179,41 +181,40 @@ export class LebalUtils {
 				return;
 
 			let result = new Label();
-			result.word = data.word.Copy();
+			result.word = data.token.Copy();
 			result.labelDefined = LabelDefinedState.Variable;
 			result.value = data.index;
 			return result;
 		}
 
-		return LebalUtils._FindLebal(word);
+		return LabelUtils._FindLebal(word);
 	}
 
-	static FindTemporaryLebal(lebalWord: OneWord) {
-		let match = LebalUtils.namelessLebal.exec(lebalWord.text);
+	/**查询临时标签 */
+	static FindTemporaryLabel(labelWord: Token) {
+		let match = LabelUtils.namelessLabel.exec(labelWord.text);
 		if (!match)
 			return;
 
-		let lebals: Record<number, Record<number, Label>> = {};
-		let isDown = true;
+		let labels: Record<number, Record<number, Label>> = {};
 		switch (match[0][0]) {
 			case "+":
-				lebals = GlobalVar.env.allNamelessLebalDown;
+				labels = GlobalVar.env.allNamelessLabelDown;
 				break;
 			case "-":
-				lebals = GlobalVar.env.allNamelessLebalUp;
-				isDown = false;
+				labels = GlobalVar.env.allNamelessLabelUp;
 				break;
 		}
 
-		let textHash = LebalUtils.GetLebalHash(lebalWord.text, lebalWord.fileHash, LabelState.Temporary);
-		if (!lebals[lebalWord.fileHash] || !lebals[lebalWord.fileHash][textHash])
+		let textHash = LabelUtils.GetLebalHash(labelWord.text, labelWord.fileHash, LabelState.Temporary);
+		if (!labels[labelWord.fileHash] || !labels[labelWord.fileHash][textHash])
 			return;
 
-		let lebal = lebals[lebalWord.fileHash][textHash];
-		return lebal;
+		let label = labels[labelWord.fileHash][textHash];
+		return label;
 	}
 
-	private static _FindLebal(word: OneWord) {
+	private static _FindLebal(word: Token) {
 		let tempWord = word;
 		let scope = LabelState.Global;
 		if (tempWord.text.startsWith(".")) {
@@ -221,8 +222,8 @@ export class LebalUtils {
 			scope = LabelState.Local;
 		}
 
-		let hash2 = LebalUtils.GetLebalHash(tempWord.text, word.fileHash, scope);
-		return GlobalVar.env.allLebals[hash2];
+		let hash2 = LabelUtils.GetLebalHash(tempWord.text, word.fileHash, scope);
+		return GlobalVar.env.allLabels[hash2];
 	}
 	//#endregion 查找标签
 
@@ -233,7 +234,7 @@ export class LebalUtils {
 	 * @param type 作用域
 	 * @returns Lebal
 	 */
-	private static SplitLebal(lebalWord: OneWord, type: LabelState) {
+	private static SplitLebal(lebalWord: Token, type: LabelState) {
 		let words = lebalWord.Split(/\./g);
 		let text = "";
 
@@ -242,10 +243,10 @@ export class LebalUtils {
 			parentHash = Utils.GetHashcode(lebalWord.fileHash);
 		}
 
-		if (!GlobalVar.env.allLebals[parentHash])
-			GlobalVar.env.allLebals[parentHash] = new Label();
+		if (!GlobalVar.env.allLabels[parentHash])
+			GlobalVar.env.allLabels[parentHash] = new Label();
 
-		let parent = GlobalVar.env.allLebals[parentHash];
+		let parent = GlobalVar.env.allLabels[parentHash];
 		parent.labelScope = LabelState.AllParent;
 
 		let result: Label | undefined;
@@ -254,45 +255,45 @@ export class LebalUtils {
 				text += ".";
 
 			text += words[i].text;
-			if (!LebalUtils.CheckIllegal(words[i], true)) {
-				MyException.PushException(words[i], ErrorType.LebalIllegal, ErrorLevel.Show);
+			if (!LabelUtils.CheckIllegal(words[i], true)) {
+				MyException.PushException(words[i], ErrorType.LabelIllegal, ErrorLevel.Show);
 				return;
 			}
 
-			let hash = LebalUtils.GetLebalHash(text, lebalWord.fileHash, type);
-			if (GlobalVar.env.allLebals[hash]) {
+			let hash = LabelUtils.GetLebalHash(text, lebalWord.fileHash, type);
+			if (GlobalVar.env.allLabels[hash]) {
 				if (i == words.length - 1) {
-					if (GlobalVar.env.allLebals[hash].labelDefined == LabelDefinedState.Defined) {
-						MyException.PushException(words[i], ErrorType.LebalAlreadyDefined, ErrorLevel.Show);
+					if (GlobalVar.env.allLabels[hash].labelDefined == LabelDefinedState.Defined) {
+						MyException.PushException(words[i], ErrorType.LabelAlreadyDefined, ErrorLevel.Show);
 						return;
 					}
 
-					GlobalVar.env.allLebals[hash].labelDefined = LabelDefinedState.Defined;
+					GlobalVar.env.allLabels[hash].labelDefined = LabelDefinedState.Defined;
 				}
 
 				parentHash = hash;
 			} else {
 				let tempLebal = new Label();
-				tempLebal.word = OneWord.CreateWord(text, lebalWord.fileHash, lebalWord.lineNumber, lebalWord.startColumn);
+				tempLebal.word = Token.CreateToken(text, lebalWord.fileHash, lebalWord.lineNumber, lebalWord.startColumn);
 				tempLebal.keyword = words[i];
 				tempLebal.parentHash = parentHash;
 				tempLebal.labelDefined = i == words.length - 1 ? LabelDefinedState.Defined : LabelDefinedState.None;
 
-				GlobalVar.env.allLebals[hash] = tempLebal;
+				GlobalVar.env.allLabels[hash] = tempLebal;
 				parentHash = hash;
 				if (parent && !parent.child[hash]) {
 					parent.child[hash] = tempLebal;
 				}
 			}
 
-			parent = GlobalVar.env.allLebals[hash];
-			result = GlobalVar.env.allLebals[hash];
+			parent = GlobalVar.env.allLabels[hash];
+			result = GlobalVar.env.allLabels[hash];
 
-			if (!GlobalVar.env.fileLebals[result.fileHash])
-				GlobalVar.env.fileLebals[result.fileHash] = [];
+			if (!GlobalVar.env.fileLabels[result.fileHash])
+				GlobalVar.env.fileLabels[result.fileHash] = [];
 
-			if (!GlobalVar.env.fileLebals[result.fileHash].includes(hash))
-				GlobalVar.env.fileLebals[result.fileHash].push(hash);
+			if (!GlobalVar.env.fileLabels[result.fileHash].includes(hash))
+				GlobalVar.env.fileLabels[result.fileHash].push(hash);
 		}
 		return result;
 	}
@@ -305,15 +306,15 @@ export class LebalUtils {
 	 * @param allowDot 允许逗号
 	 * @returns true为合法
 	 */
-	static CheckIllegal(word: OneWord, allowDot: boolean) {
+	static CheckIllegal(word: Token, allowDot: boolean) {
 		if (allowDot) {
 			if (/(^\d)|\s|\+|\-|\*|\/|\>|\<|\=|\!|\~|#|&|\||%|\$/g.test(word.text)) {
-				MyException.PushException(word, ErrorType.LebalIllegal, ErrorLevel.Show);
+				MyException.PushException(word, ErrorType.LabelIllegal, ErrorLevel.Show);
 				return false;
 			}
 		} else {
 			if (/(^\d)|\s|\+|\-|\*|\/|\>|\<|\=|\!|\~|#|&|\||%|\$|\./g.test(word.text)) {
-				MyException.PushException(word, ErrorType.LebalIllegal, ErrorLevel.Show);
+				MyException.PushException(word, ErrorType.LabelIllegal, ErrorLevel.Show);
 				return false;
 			}
 		}
@@ -330,7 +331,7 @@ export class LebalUtils {
 	 * @param option 选项
 	 * @returns Hash值
 	 */
-	private static GetLebalHash(text: string, fileHash: number, type: LabelState, option?: BaseOption) {
+	private static GetLebalHash(text: string, fileHash: number, type: LabelState, option?: CommonOption) {
 		if (option?.macro)
 			return Utils.GetHashcode(text);
 
@@ -393,32 +394,32 @@ export class LebalUtils {
 	 * @param fileHash 文件Hash
 	 * @returns 
 	 */
-	static DeleteLebal(fileHash: number) {
-		if (GlobalVar.env.fileLebals[fileHash]) {
-			let lebalHashes = GlobalVar.env.fileLebals[fileHash];
+	static DeleteLabel(fileHash: number) {
+		if (GlobalVar.env.fileLabels[fileHash]) {
+			let lebalHashes = GlobalVar.env.fileLabels[fileHash];
 			for (let i = 0; i < lebalHashes.length; i++) {
-				LebalUtils._DeleteLebal(lebalHashes[i]);
+				LabelUtils._DeleteLebal(lebalHashes[i]);
 			}
 
-			GlobalVar.env.fileLebals[fileHash] = [];
+			GlobalVar.env.fileLabels[fileHash] = [];
 		}
 
-		GlobalVar.env.allNamelessLebalUp[fileHash] = {};
-		GlobalVar.env.allNamelessLebalDown[fileHash] = {};
+		GlobalVar.env.allNamelessLabelUp[fileHash] = {};
+		GlobalVar.env.allNamelessLabelDown[fileHash] = {};
 	}
 
 	private static _DeleteLebal(lebalHash: number) {
-		let lebal = GlobalVar.env.allLebals[lebalHash];
+		let lebal = GlobalVar.env.allLabels[lebalHash];
 		for (let key in lebal.child)
 			return;
 
-		delete (GlobalVar.env.allLebals[lebalHash]);
+		delete (GlobalVar.env.allLabels[lebalHash]);
 
-		let parent = GlobalVar.env.allLebals[lebal.parentHash];
+		let parent = GlobalVar.env.allLabels[lebal.parentHash];
 		if (parent) {
 			delete (parent.child[lebalHash]);
 			if (parent.labelScope != LabelState.AllParent)
-				LebalUtils._DeleteLebal(lebal.parentHash);
+				LabelUtils._DeleteLebal(lebal.parentHash);
 		}
 	}
 	//#endregion 删除某个文件的标签
