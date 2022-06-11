@@ -5,6 +5,7 @@ import { Utils } from "./Utils";
 import { ErrorLevel, ErrorType, MyException } from "../Base/MyException";
 import { Macro } from "../Base/Macro";
 import { Label, LabelDefinedState } from "../Base/Label";
+import { Platform } from "../Platform/Platform";
 
 export class MacroUtils {
 
@@ -30,6 +31,11 @@ export class MacroUtils {
 	static CreateMacro(name: Token, params: Token) {
 		if (!LabelUtils.CheckIllegal(name, false))
 			return;
+
+		if (Platform.instructionAnalyser.instructionsRegex.test(name.text)) {
+			MyException.PushException(name, ErrorType.MacroNameIllegal, ErrorLevel.Show);
+			return;
+		}
 
 		let hash = Utils.GetHashcode(name.text);
 		if (GlobalVar.env.allLabels[hash] || GlobalVar.env.allMacro[hash]) {

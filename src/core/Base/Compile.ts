@@ -27,6 +27,7 @@ export class Compile {
 		await GlobalVar.SwitchEnvironment("Editor");
 		GlobalVar.isCompiling = true;
 		let allLines: IBaseLine[] = [];
+		let allLineIndex = 0;
 
 		for (let i = 0; i < files.length; i++) {
 			let hash = GlobalVar.env.SetFile(files[i].filePath);
@@ -35,18 +36,18 @@ export class Compile {
 			MyException.ClearFileError(hash);
 
 			let tempLines = Compile.GetAllBaseLine(files[i].text, hash);
-			let option: CommonOption = { allLine: tempLines, lineIndex: 0 };
-			await Compile.FirstAnalyse(option);
-			await Compile.SecondAnalyse(option);
 
 			if (!GlobalVar.env.fileBaseLines[hash])
 				GlobalVar.env.fileBaseLines[hash] = [];
 
 			GlobalVar.env.fileBaseLines[hash] = tempLines;
-			allLines.push(...tempLines);
+			for (let j = 0; j < tempLines.length; j++, allLineIndex++)
+				allLines[allLineIndex] = tempLines[j];
 		}
 
 		let option: CommonOption = { allLine: allLines, lineIndex: 0 };
+		await Compile.FirstAnalyse(option);
+		await Compile.SecondAnalyse(option);
 		await Compile.ThirdAnalyse(option);
 		GlobalVar.isCompiling = false;
 	}
@@ -143,8 +144,10 @@ export class Compile {
 					let match = MacroUtils.MatchMacro(line.orgText.text);
 					if (match) {
 						let temp = BaseLineUtils.GetMatchLineParts(line.orgText, match);
+						let index = GlobalVar.env.fileBaseLines[line.orgText.fileHash].indexOf(line);
 						option.allLine[i] = MacroLine.CreateLine(temp);
 						option.allLine[i].orgText = line.orgText;
+						GlobalVar.env.fileBaseLines[line.orgText.fileHash][index] = option.allLine[i];
 					} else {
 						option.allLine[i].lineType = BaseLineType.OnlyLabel;
 						let label = LabelUtils.CreateLabel(option.allLine[i].orgText, undefined, option.allLine[i].comment, option);

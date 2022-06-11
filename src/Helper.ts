@@ -103,6 +103,56 @@ export class Helper {
 	}
 	//#endregion 文档修改时的自动大写以及重新监测
 
+	//#region 监视文件
+	/**监视文件，改动等 */
+	WatchFile() {
+		if (!vscode.workspace.workspaceFolders)
+			return;
+
+		let rp = new vscode.RelativePattern(
+			vscode.workspace.workspaceFolders![0],
+			`{**/*.${this.assembler.config.FileExtension.extension},${this.assembler.config.ConfigFile}}`
+		);
+
+		let watcher = vscode.workspace.createFileSystemWatcher(rp, false, false, false);
+
+		watcher.onDidDelete(async (e) => {
+			if (e.fsPath == this.assembler.config.ConfigFile)
+				return;
+
+			this.assembler.baseHelper.ClearFile(e.fsPath);
+			let uri = vscode.Uri.file(e.fsPath);
+			this.errorCollection.delete(uri);
+		});
+
+		watcher.onDidChange(async (e) => {
+			let path = await this.assembler.fileUtils.GetFileName(e.fsPath);
+			if (path == this.assembler.config.ConfigFile) {
+				let data = await this.assembler.fileUtils.ReadFile(e.fsPath);
+				let json = this.assembler.fileUtils.BytesToString(data);
+
+				let platform = this.assembler.config.ProjectSetting.platform;
+				this.assembler.config.ReadConfigJson(json);
+				if (platform == this.assembler.config.ProjectSetting.platform)
+					return;
+
+				this.assembler.baseHelper.SwitchPlatform(this.assembler.config.ProjectSetting.platform);
+			}
+		});
+
+		watcher.onDidCreate(async (e) => {
+			let tempFiles = await this.GetWorkspaceFilterFile();
+			let searchFiles = tempFiles.map(value => value.fsPath);
+			if (searchFiles.includes(e.fsPath)) {
+				let buffer = await this.assembler.fileUtils.ReadFile(e.fsPath);
+				let text = this.assembler.fileUtils.BytesToString(buffer);
+				await this.assembler.compile.DecodeText([{ text, filePath: e.fsPath }]);
+			}
+		});
+	}
+
+	//#endregion 监视文件
+
 	//#region 重写编译器的文件操作接口
 	/**重写编译器的文件操作接口 */
 	private FileUtilsRewrite() {
@@ -281,8 +331,7 @@ export class Helper {
 		if (!vscode.workspace.workspaceFolders)
 			return;
 
-		// let files = await this.GetWorkspaceFilterFile();
-		let files = await vscode.workspace.findFiles("{**/*.asm}", null);
+		let files = await this.GetWorkspaceFilterFile();
 
 		let tempFiles: { text: string, filePath: string }[] = [];
 		for (let i = 0; i < files.length; i++) {
@@ -556,4 +605,16 @@ export class Helper {
 		return result;
 	}
 	//#endregion 转换Completion成vscode.CompletionItem
+
+	//#region 获取工作目录下所筛选出的文件
+	private async GetWorkspaceFilterFile() {
+		let includes = `{${this.assembler.config.ProjectSetting.includes.join(",")}}`;
+		let excludes: string | null = null;
+		if (this.assembler.config.ProjectSetting.excludes.length != 0)
+			excludes = `{${this.assembler.config.ProjectSetting.excludes.join(",")}}`;
+			
+		return await vscode.workspace.findFiles(includes, excludes);
+	}
+	//#endregion 获取工作目录下所筛选出的文件
+
 }

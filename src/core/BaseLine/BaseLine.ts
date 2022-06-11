@@ -42,18 +42,18 @@ export class BaseLineUtils {
 		if (content.isNull)
 			return;
 
-		let match = Platform.instructionAnalyser.instructionsRegex.exec(content.text);
+		let match = Commands.commandsRegex.exec(content.text)
 		if (match) {
-			let matchParts = BaseLineUtils.GetMatchLineParts(content, match);
-			let line = InstructionLine.CreateLine(matchParts, comment);
+			let matchPart = BaseLineUtils.GetMatchLineParts(content, match);
+			let line = CommandLine.CreateLine(matchPart, comment);
 			line.orgText = content;
 			return line;
 		}
 
-		match = Commands.commandsRegex.exec(content.text)
+		match = Platform.instructionAnalyser.instructionsRegex.exec(content.text);
 		if (match) {
-			let matchPart = BaseLineUtils.GetMatchLineParts(content, match);
-			let line = CommandLine.CreateLine(matchPart, comment);
+			let matchParts = BaseLineUtils.GetMatchLineParts(content, match);
+			let line = InstructionLine.CreateLine(matchParts, comment);
 			line.orgText = content;
 			return line;
 		}

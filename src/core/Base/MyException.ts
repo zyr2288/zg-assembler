@@ -5,7 +5,7 @@ export enum ErrorLevel { AtLastShow, ShowAndBreak, Show }
 export enum ErrorType {
 	ExpressionError, UnknowOriginalAddress, UnSupportCommand, ArgumentCountError,
 	ArgumentError, ArgumentOutofRange,
-	LabelIllegal, LabelAlreadyDefined, NamelessLabelNotInMacro, LabelInMacroIllegal, UnknowLabel,
+	LabelIllegal, LabelAlreadyDefined, NamelessLabelNotInMacro, LabelInMacroIllegal, UnknowLabel, MacroNameIllegal,
 	MacroAlreadyDefined,
 	InstructionNotSupportAddress,
 	CommandNotSupportNested, CommandNotClosed, CommandParamsError, CommandNotInMacro, CommandNotSupportLabel,
@@ -16,7 +16,7 @@ export enum ErrorType {
 const AllErrorMessage_en = [
 	"Expression error", "Unknow original address", "Unsupport command", "Wrong arguments count",
 	"Argument error", "Argument out of range",
-	"Label is illegal", "Label is already defined", "Not support nameless label in Macro", "Sub-label do not supported in Macro", "Unknow label",
+	"Label is illegal", "Label is already defined", "Not support nameless label in Macro", "Sub-label do not supported in Macro", "Unknow label", "Macro name is illegal",
 	"Macro is already defined",
 	"Instruction do not support this addressing method",
 	"Can not use Macro in Macro", ".ENDM not founded", "Incorrect Macro parameters", "Can not use Macro in Macro", "Macro do not support label",
@@ -27,7 +27,7 @@ const AllErrorMessage_en = [
 const AllErrorMessage_cn = [
 	"表达式错误", "未设定编译起始地址", "不支持的编译器指令", "编译器指令参数错误",
 	"参数错误", "参数越界",
-	"标签定义错误", "标签已重复定义", "自定义函数内不支持临时标签", "在自定义函数内不支持包含子属性的标签", "未找到标签",
+	"标签定义错误", "标签已重复定义", "自定义函数内不支持临时标签", "在自定义函数内不支持包含子属性的标签", "未找到标签", "不允许使用汇编指令作为自定义函数名称",
 	"已重复定义自定义函数",
 	"汇编指令不支持该寻址方式",
 	"命令不支持嵌套", "命令找不到配对结尾", "命令参数不正确", "该命令不允许在自定义函数内使用", "命令不支持标签",

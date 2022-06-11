@@ -6,6 +6,7 @@ import { Utils } from "./Utils";
 import { LexerUtils } from "./LexerUtils";
 import { DataGroup } from "../Base/DataGroup";
 import { CommonOption } from "../Base/CommonOption";
+import { Platform } from "../Platform/Platform";
 
 export class LabelUtils {
 

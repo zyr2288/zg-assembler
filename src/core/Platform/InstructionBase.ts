@@ -59,6 +59,7 @@ export class InstructionBase<BaseAddressType = Record<string, AddressType>> {
 		compile?: (option: CommonOption) => boolean
 	}> = {};
 
+	/**获取汇编指令 */
 	get instructionsRegex() { return new RegExp(this.instructionsRegexStr, "ig"); }
 
 	private instructionsRegexStr: string = "";

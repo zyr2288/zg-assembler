@@ -822,7 +822,7 @@ export class Commands {
 			lineIndex: 0,
 			macro: macro
 		};
-		Compile.SecondAnalyse(tempOption);
+		await Compile.SecondAnalyse(tempOption);
 		return true;
 	}
 
