@@ -264,7 +264,8 @@ export class LabelUtils {
 			let hash = LabelUtils.GetLebalHash(text, lebalWord.fileHash, type);
 			if (GlobalVar.env.allLabels[hash]) {
 				if (i == words.length - 1) {
-					if (GlobalVar.env.allLabels[hash].labelDefined == LabelDefinedState.Defined) {
+					if (GlobalVar.env.allLabels[hash].labelDefined == LabelDefinedState.Defined ||
+						GlobalVar.env.allLabels[hash].labelDefined == LabelDefinedState.Label) {
 						MyException.PushException(words[i], ErrorType.LabelAlreadyDefined, ErrorLevel.Show);
 						return;
 					}
