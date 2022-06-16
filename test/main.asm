@@ -84,7 +84,7 @@ ppuWrite	;+写入PPU
 +	RTS
 	;-写入PPU
 
-	.INCLUDE "data.asm"
+	.INCLUDE "D:\ProgramTest\zg-assembler\test\data.asm"
 
 	.ORG $FFFA
 	.DW NMI

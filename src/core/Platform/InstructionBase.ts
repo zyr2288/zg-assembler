@@ -267,6 +267,7 @@ export class InstructionBase<BaseAddressType = Record<string, AddressType>> {
 		this.allKeyword = [];
 		this.instructionsRegexStr = "(^|\\s+)(";
 		for (let key in this.allInstructions) {
+			key = Utils.ReplaceRegStr(key);
 			this.instructionsRegexStr += `${key}|`;
 			this.allKeyword.push(key);
 		}

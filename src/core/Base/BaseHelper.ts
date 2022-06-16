@@ -193,8 +193,12 @@ export class BaseHelper {
 			return result;
 
 		if (range.type == "path") {
-			let tempPath = await FileUtils.GetPathFolder(filePath);
-			result.filePath = FileUtils.Combine(tempPath, range.text);
+			if (await FileUtils.PathType(range.text) == "file") {
+				result.filePath = range.text;
+			} else {
+				let tempPath = await FileUtils.GetPathFolder(filePath);
+				result.filePath = FileUtils.Combine(tempPath, range.text);
+			}
 			return result;
 		}
 

@@ -9,7 +9,7 @@ export class Utils {
 	 * @param object 要获取的Hash的对象，string或number
 	 * @returns 
 	 */
-	 static GetHashcode(...object: Array<string | number>): number {
+	static GetHashcode(...object: Array<string | number>): number {
 		let hash = 0;
 
 		object.forEach(value => {
@@ -70,7 +70,7 @@ export class Utils {
 	 * @param ignoreLast 是否忽略最后一个，默认不忽略
 	 * @returns 
 	 */
-	 static SplitComma(word: Token, ignoreLast: boolean = false) {
+	static SplitComma(word: Token, ignoreLast: boolean = false) {
 		let result = { success: true, parts: word.Split(/\s*\,\s*/g) };
 
 		for (let i = 0; i < result.parts.length; i++) {
@@ -97,7 +97,7 @@ export class Utils {
 	 * @param value 要运算的值
 	 * @returns 2 10 16进制结果
 	 */
-	 static ConvertValue(value: number) {
+	static ConvertValue(value: number) {
 		let result = { bin: "", dec: "", hex: "" };
 
 		let temp = value;
@@ -123,7 +123,7 @@ export class Utils {
 	 * @param text 要翻转的字符串
 	 * @returns 翻转结果
 	 */
-	 static StringReverse(text: string) {
+	static StringReverse(text: string) {
 		return text.split("").reverse().join("")
 	}
 	//#endregion 翻转字符串
@@ -135,7 +135,7 @@ export class Utils {
 	 * @param text 要匹配的文本
 	 * @returns 返回所有匹配结果
 	 */
-	 static GetTextMatches(pattern: RegExp, text: string) {
+	static GetTextMatches(pattern: RegExp, text: string) {
 		let result: { match: string, index: number }[] = [];
 		let temp: RegExpExecArray | null;
 		while (temp = pattern.exec(text))
@@ -161,5 +161,12 @@ export class Utils {
 		return _out;
 	}
 	//#endregion 深拷贝
+
+	//#region 替换正则表达式转义字符
+	static ReplaceRegStr(str: string) {
+		str = str.replace(".", "\.");
+		return str;
+	}
+	//#endregion 替换正则表达式转义字符
 
 }

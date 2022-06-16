@@ -144,10 +144,12 @@ export class Compile {
 					let match = MacroUtils.MatchMacro(line.orgText.text);
 					if (match) {
 						let temp = BaseLineUtils.GetMatchLineParts(line.orgText, match);
-						let index = GlobalVar.env.fileBaseLines[line.orgText.fileHash].indexOf(line);
 						option.allLine[i] = MacroLine.CreateLine(temp);
 						option.allLine[i].orgText = line.orgText;
-						GlobalVar.env.fileBaseLines[line.orgText.fileHash][index] = option.allLine[i];
+						if (!GlobalVar.env.isCompile) {
+							let index = GlobalVar.env.fileBaseLines[line.orgText.fileHash].indexOf(line);
+							GlobalVar.env.fileBaseLines[line.orgText.fileHash][index] = option.allLine[i];
+						}
 					} else {
 						option.allLine[i].lineType = BaseLineType.OnlyLabel;
 						let label = LabelUtils.CreateLabel(option.allLine[i].orgText, undefined, option.allLine[i].comment, option);
@@ -257,7 +259,6 @@ export class Compile {
 			let temp = label.lineNumbers.find(value => value.lineNumber == labelToken!.lineNumber);
 			temp!.value = GlobalVar.env.originalAddress;
 		} else {
-			console.log(labelToken);
 			label = LabelUtils.FindLabel(labelToken, option);
 			label!.value = GlobalVar.env.originalAddress;
 		}

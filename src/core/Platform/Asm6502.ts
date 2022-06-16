@@ -67,24 +67,41 @@ export class Asm6502 extends InstructionBase<typeof asm6502_AddressType> {
 			0xAD, "Absolute", 0xBD, "AbsoluteX", 0xB9, "AbsoluteY",
 			0xA5, "ZeroPage", 0xB5, "ZeroPageX",
 			0xA1, "IndirectX", 0xB1, "IndirectY"]);
+		this.AddInstruction("LDA.B", [0xA5, "ZeroPage", 0xB5, "ZeroPageX"]);
+		this.AddInstruction("LDA.W", [0xAD, "Absolute", 0xBD, "AbsoluteX"]);
+
 		this.AddInstruction("LDX", [
 			0xA2, "Immediate",
 			0xAE, "Absolute", 0xBE, "AbsoluteY",
 			0xA6, "ZeroPage", 0xB6, "ZeroPageY"]);
+		this.AddInstruction("LDX.B", [0xA6, "ZeroPage", 0xB6, "ZeroPageY"]);
+		this.AddInstruction("LDX.W", [0xAE, "Absolute", 0xBE, "AbsoluteY"])
+
 		this.AddInstruction("LDY", [
 			0xA0, "Immediate",
 			0xAC, "Absolute", 0xBC, "AbsoluteX",
 			0xA4, "ZeroPage", 0xB4, "ZeroPageX"]);
+		this.AddInstruction("LDY.B", [0xA4, "ZeroPage", 0xB4, "ZeroPageX"]);
+		this.AddInstruction("LDY.W", [0xAC, "Absolute", 0xBC, "AbsoluteX"]);
+
 		this.AddInstruction("STA", [
 			0x8D, "Absolute", 0x9D, "AbsoluteX", 0x99, "AbsoluteY",
 			0x85, "ZeroPage", 0x95, "ZeroPageX",
 			0x81, "IndirectX", 0x91, "IndirectY"]);
+		this.AddInstruction("STA.B", [0x85, "ZeroPage", 0x95, "ZeroPageX"]);
+		this.AddInstruction("STA.W", [0x8D, "Absolute", 0x9D, "AbsoluteX"]);
+
 		this.AddInstruction("STX", [
 			0x8E, "Absolute",
 			0x86, "ZeroPage", 0x96, "ZeroPageY"]);
+		this.AddInstruction("STX.B", [0x86, "ZeroPage"]);
+		this.AddInstruction("STX.W", [0x8E, "Absolute"]);
+
 		this.AddInstruction("STY", [
 			0x8C, "Absolute",
 			0x84, "ZeroPage", 0x94, "ZeroPageX"]);
+		this.AddInstruction("STY.B", [0x84, "ZeroPage"]);
+		this.AddInstruction("STY.W", [0x8C, "Absolute"]);
 
 		this.AddInstruction("TXA", [0x8A, "Implied"]);
 		this.AddInstruction("TAX", [0xAA, "Implied"]);
@@ -98,17 +115,29 @@ export class Asm6502 extends InstructionBase<typeof asm6502_AddressType> {
 			0x6D, "Absolute", 0x7D, "AbsoluteX", 0x79, "AbsoluteY",
 			0x65, "ZeroPage", 0x75, "ZeroPageX",
 			0x61, "IndirectX", 0x71, "IndirectY"]);
+		this.AddInstruction("ADC.B", [0x65, "ZeroPage", 0x75, "ZeroPageX"]);
+		this.AddInstruction("ADC.W", [0x6D, "Absolute", 0x7D, "AbsoluteX"]);
+
 		this.AddInstruction("SBC", [
 			0xE9, "Immediate",
 			0xED, "Absolute", 0xFD, "AbsoluteX", 0xF9, "AbsoluteY",
 			0xE5, "ZeroPage", 0xF5, "ZeroPageX",
 			0xE1, "IndirectX", 0xF1, "IndirectY"]);
+		this.AddInstruction("SBC.B", [0xE5, "ZeroPage", 0xF5, "ZeroPageX"]);
+		this.AddInstruction("SBC.W", [0xED, "Absolute", 0xFD, "AbsoluteX"]);
+
 		this.AddInstruction("INC", [
 			0xEE, "Absolute", 0xFE, "AbsoluteX",
 			0xE6, "ZeroPage", 0xF6, "ZeroPageX"]);
+		this.AddInstruction("INC.B", [0xE6, "ZeroPage", 0xF6, "ZeroPageX"]);
+		this.AddInstruction("INC.W", [0xEE, "Absolute", 0xFE, "AbsoluteX"]);
+
 		this.AddInstruction("DEC", [
 			0xCE, "Absolute", 0xDE, "AbsoluteX",
 			0xC6, "ZeroPage", 0xD6, "ZeroPageX"]);
+		this.AddInstruction("DEC.B", [0xC6, "ZeroPage", 0xD6, "ZeroPageX"]);
+		this.AddInstruction("DEC.W", [0xCE, "Absolute", 0xDE, "AbsoluteX"]);
+
 		this.AddInstruction("INX", [0xE8, "Implied"]);
 		this.AddInstruction("DEX", [0xCA, "Implied"]);
 		this.AddInstruction("INY", [0xC8, "Implied"]);
@@ -119,16 +148,24 @@ export class Asm6502 extends InstructionBase<typeof asm6502_AddressType> {
 			0x2D, "Absolute", 0x3D, "AbsoluteX", 0x39, "AbsoluteY",
 			0x25, "ZeroPage", 0x35, "ZeroPageX",
 			0x21, "IndirectX", 0x31, "IndirectY"]);
+		this.AddInstruction("AND.B", [0x25, "ZeroPage", 0x35, "ZeroPageX"]);
+		this.AddInstruction("AND.W", [0x2D, "Absolute", 0x3D, "AbsoluteX"]);
+
 		this.AddInstruction("ORA", [
 			0x09, "Immediate",
 			0x0D, "Absolute", 0x1D, "AbsoluteX", 0x19, "AbsoluteY",
 			0x05, "ZeroPage", 0x15, "ZeroPageX",
 			0x01, "IndirectX", 0x11, "IndirectY"]);
+		this.AddInstruction("ORA.B", [0x05, "ZeroPage", 0x15, "ZeroPageX"]);
+		this.AddInstruction("ORA.W", [0x0D, "Absolute", 0x1D, "AbsoluteX"]);
+
 		this.AddInstruction("EOR", [
 			0x49, "Immediate",
 			0x4D, "Absolute", 0x5D, "AbsoluteX", 0x59, "AbsoluteY",
 			0x45, "ZeroPage", 0x55, "ZeroPageX",
 			0x41, "IndirectX", 0x51, "IndirectY"]);
+		this.AddInstruction("EOR.B", [0x45, "ZeroPage", 0x55, "ZeroPageX"]);
+		this.AddInstruction("EOR.W", [0x4D, "Absolute", 0x5D, "AbsoluteX"]);
 
 		this.AddInstruction("CLC", [0x18, "Implied"]);
 		this.AddInstruction("SEC", [0x38, "Implied"]);
@@ -143,22 +180,43 @@ export class Asm6502 extends InstructionBase<typeof asm6502_AddressType> {
 			0xCD, "Absolute", 0xDD, "AbsoluteX", 0xD9, "AbsoluteY",
 			0xC5, "ZeroPage", 0xD5, "ZeroPageX",
 			0xC1, "IndirectX", 0xD1, "IndirectY"]);
+		this.AddInstruction("CMP.B", [0xC5, "ZeroPage", 0xD5, "ZeroPageX"]);
+		this.AddInstruction("CMP.W", [0xCD, "Absolute", 0xDD, "AbsoluteX"]);
+
 		this.AddInstruction("CPX", [0xE0, "Immediate", 0xEC, "Absolute", 0xE4, "ZeroPage"]);
+		this.AddInstruction("CPX.B", [0xE4, "ZeroPage"]);
+		this.AddInstruction("CPX.W", [0xEC, "Absolute"]);
+
 		this.AddInstruction("CPY", [0xC0, "Immediate", 0xCC, "Absolute", 0xC4, "ZeroPage"]);
+		this.AddInstruction("CPX.B", [0xC4, "ZeroPage"]);
+		this.AddInstruction("CPX.W", [0xCC, "Absolute"]);
+
 		this.AddInstruction("BIT", [0x2C, "Absolute", 0x24, "ZeroPage"]);
+		this.AddInstruction("BIT.B", [0x24, "ZeroPage"]);
+		this.AddInstruction("BIT.W", [0x2C, "Absolute"]);
+
 
 		this.AddInstruction("ASL", [
 			0x0A, "Implied",
 			0x0E, "Absolute", 0x1E, "AbsoluteX",
 			0x06, "ZeroPage", 0x16, "ZeroPageX"]);
+		this.AddInstruction("ASL.B", [0x06, "ZeroPage", 0x16, "ZeroPageX"]);
+		this.AddInstruction("ASL.W", [0x0E, "Absolute", 0x1E, "AbsoluteX"]);
+
 		this.AddInstruction("LSR", [
 			0x4A, "Implied",
 			0x4E, "Absolute", 0x5E, "AbsoluteX",
 			0x46, "ZeroPage", 0x56, "ZeroPageX"]);
+		this.AddInstruction("LSR.B", [0x46, "ZeroPage", 0x56, "ZeroPageX"]);
+		this.AddInstruction("LSR.W", [0x4E, "Absolute", 0x5E, "AbsoluteX"]);
+
 		this.AddInstruction("ROL", [
 			0x2A, "Implied",
 			0x2E, "Absolute", 0x3E, "AbsoluteX",
 			0x26, "ZeroPage", 0x36, "ZeroPageX"]);
+		this.AddInstruction("ROL.B", [0x26, "ZeroPage", 0x36, "ZeroPageX"]);
+		this.AddInstruction("ROL.W", [0x2E, "Absolute", 0x3E, "AbsoluteX"]);
+
 		this.AddInstruction("ROR", [
 			0x6A, "Implied",
 			0x6E, "Absolute", 0x7E, "AbsoluteX",

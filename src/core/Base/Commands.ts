@@ -890,7 +890,8 @@ export class Commands {
 	private static GetCommandRegexStr() {
 		Commands.commandsRegexStr = "(^|\\s+)(";
 		for (let key in Commands.commandsParamsCount) {
-			Commands.commandsRegexStr += `\\${key}|`;
+			key = Utils.ReplaceRegStr(key);
+			Commands.commandsRegexStr += `${key}|`;
 		}
 		Commands.commandsRegexStr = Commands.commandsRegexStr.substring(0, Commands.commandsRegexStr.length - 1);
 		Commands.commandsRegexStr += ")(\\s+|$)";
@@ -1114,10 +1115,17 @@ export class Commands {
 			return result;
 		}
 
+		/**被检测文件 */
+		let path1 = expression.Substring(1, expression.length - 2);
+		if (await FileUtils.PathType(path1.text) == "file") {
+			result.exsist = true;
+			result.path = path1.text;
+			return result;
+		}
+		
 		/**当前文件 */
 		let file = GlobalVar.env.GetFile(expression.fileHash);
-		/**检测文件 */
-		let path1 = expression.Substring(1, expression.length - 2);
+
 		let folder = await FileUtils.GetPathFolder(file);
 
 		let path2 = FileUtils.Combine(folder, path1.text);
