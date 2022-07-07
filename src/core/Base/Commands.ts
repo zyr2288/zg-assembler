@@ -334,7 +334,7 @@ export class Commands {
 
 		// line.tag 是 LexPart[][]
 		for (let i = 0; i < line.tag.length; i++) {
-			const part = line.tag[i];
+			const part: LexPart[] = line.tag[i];
 			let temp = LexerUtils.GetExpressionValues(part, option);
 			if (!temp.success) {
 				line.isFinished = false;
@@ -344,7 +344,7 @@ export class Commands {
 				for (let j = 0; j < temp.values.length; j++) {
 					let byteLength = Utils.DataByteLength(temp.values[j]);
 					if (byteLength > dataLength) {
-						MyException.PushException(part, ErrorType.ArgumentOutofRange, ErrorLevel.ShowAndBreak);
+						MyException.PushException(part[j].token, ErrorType.ArgumentOutofRange, ErrorLevel.ShowAndBreak);
 						return false;
 					}
 
@@ -1122,7 +1122,7 @@ export class Commands {
 			result.path = path1.text;
 			return result;
 		}
-		
+
 		/**当前文件 */
 		let file = GlobalVar.env.GetFile(expression.fileHash);
 
