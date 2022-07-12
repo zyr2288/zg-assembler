@@ -142,9 +142,9 @@
 -----
 ### `.INCBIN` 
 可以读取引用文件的二进制内容，后面双引号内请填写本文件的相对路径。
-例如：
+例如：(中括号为可选参数)
 ```
-    .INCBIN "文件夹\文件.bin" FileStartPoint ReadLength
+    .INCBIN "文件夹\文件.bin" [FileStartPoint] [ReadLength]
 ```
 -----
 ### `.INCLUDE`

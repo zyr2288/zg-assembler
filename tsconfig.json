@@ -6,7 +6,7 @@
 		"lib": [
 			"ES2020"
 		],
-		"sourceMap": false,
+		"sourceMap": true,
 		"rootDir": "src",
 		"strict": true   /* enable all strict type-checking options */
 		/* Additional Checks */

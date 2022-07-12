@@ -339,19 +339,18 @@ export class Commands {
 			if (!temp.success) {
 				line.isFinished = false;
 				line.result.length += temp.values.length * dataLength;
-				index += dataLength;
 			} else {
 				for (let j = 0; j < temp.values.length; j++) {
-					let byteLength = Utils.DataByteLength(temp.values[j]);
-					if (byteLength > dataLength) {
-						MyException.PushException(part[j].token, ErrorType.ArgumentOutofRange, ErrorLevel.ShowAndBreak);
-						return false;
-					}
+					// let byteLength = Utils.DataByteLength(temp.values[j]);
+					// if (byteLength > dataLength) {
+					// 	MyException.PushException(part[j].token, ErrorType.ArgumentOutofRange, ErrorLevel.ShowAndBreak);
+					// 	return false;
+					// }
 
 					BaseLineUtils.SetResult(line, temp.values[j], index, dataLength);
-					index += dataLength;
 				}
 			}
+			index += dataLength;
 		}
 
 		BaseLineUtils.AddressAdd(line);
@@ -438,20 +437,24 @@ export class Commands {
 		line.result.length = args.length * dataLength;
 		line.isFinished = true;
 
+		let index = 0;
 		for (let i = 0; i < args.length; i++) {
 			const lex = args[i];
 			let temp = LexerUtils.GetExpressionValue(lex, "getValue");
 			if (!temp.success) {
 				break;
 			} else {
-				let byteLength = Utils.DataByteLength(temp.value);
-				if (byteLength > dataLength) {
-					let token = LexerUtils.CombineLexToToken(lex);
-					MyException.PushException(token, ErrorType.ArgumentOutofRange, ErrorLevel.ShowAndBreak);
-					line.errorLine = true;
-					break;
-				}
+				// let byteLength = Utils.DataByteLength(temp.value);
+				// if (byteLength > dataLength) {
+				// 	let token = LexerUtils.CombineLexToToken(lex);
+				// 	MyException.PushException(token, ErrorType.ArgumentOutofRange, ErrorLevel.ShowAndBreak);
+				// 	line.errorLine = true;
+				// 	break;
+				// }
+				
+				BaseLineUtils.SetResult(line, temp.value, index, dataLength);
 			}
+			index += dataLength;
 		}
 
 		BaseLineUtils.AddressAdd(line);
