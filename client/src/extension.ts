@@ -14,11 +14,8 @@ import {
 } from 'vscode-languageclient/node';
 
 let client: LanguageClient;
-console.log("test1");
 
-export function activate(context: ExtensionContext) {
-	console.log("test2");
-
+export async function activate(context: ExtensionContext) {
 	// The server is implemented in node
 	const serverModule = context.asAbsolutePath(
 		path.join('server', 'out', 'server.js')
@@ -28,10 +25,7 @@ export function activate(context: ExtensionContext) {
 	// Otherwise the run options are used
 	const serverOptions: ServerOptions = {
 		run: { module: serverModule, transport: TransportKind.ipc },
-		debug: {
-			module: serverModule,
-			transport: TransportKind.ipc,
-		}
+		debug: { module: serverModule, transport: TransportKind.ipc, }
 	};
 
 	// Options to control the language client
@@ -45,12 +39,7 @@ export function activate(context: ExtensionContext) {
 	};
 
 	// Create the language client and start the client.
-	client = new LanguageClient(
-		'languageServerExample',
-		'Language Server Example',
-		serverOptions,
-		clientOptions
-	);
+	client = new LanguageClient('languageServerExample', 'Language Server Example', serverOptions, clientOptions);
 
 	// Start the client. This will also launch the server
 	client.start();

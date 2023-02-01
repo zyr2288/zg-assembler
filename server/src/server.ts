@@ -20,6 +20,7 @@ import {
 import {
 	TextDocument
 } from 'vscode-languageserver-textdocument';
+import { Parser } from './Core/Parser';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -37,12 +38,8 @@ connection.onInitialize((params: InitializeParams) => {
 
 	// Does the client support the `workspace/configuration` request?
 	// If not, we fall back using global settings.
-	hasConfigurationCapability = !!(
-		capabilities.workspace && !!capabilities.workspace.configuration
-	);
-	hasWorkspaceFolderCapability = !!(
-		capabilities.workspace && !!capabilities.workspace.workspaceFolders
-	);
+	hasConfigurationCapability = !!(capabilities.workspace && !!capabilities.workspace.configuration);
+	hasWorkspaceFolderCapability = !!(capabilities.workspace && !!capabilities.workspace.workspaceFolders);
 	hasDiagnosticRelatedInformationCapability = !!(
 		capabilities.textDocument &&
 		capabilities.textDocument.publishDiagnostics &&
@@ -53,17 +50,11 @@ connection.onInitialize((params: InitializeParams) => {
 		capabilities: {
 			textDocumentSync: TextDocumentSyncKind.Incremental,
 			// Tell the client that this server supports code completion.
-			completionProvider: {
-				resolveProvider: true
-			}
+			completionProvider: { resolveProvider: true }
 		}
 	};
 	if (hasWorkspaceFolderCapability) {
-		result.capabilities.workspace = {
-			workspaceFolders: {
-				supported: true
-			}
-		};
+		result.capabilities.workspace = { workspaceFolders: { supported: true } };
 	}
 	return result;
 });
@@ -78,6 +69,8 @@ connection.onInitialized(() => {
 			connection.console.log('Workspace folder change event received.');
 		});
 	}
+
+	Parser.ParseText("\t.ORG $8000\n\tLDA #12")
 });
 
 // The example settings
@@ -193,16 +186,8 @@ connection.onCompletion(
 		// which code complete got requested. For the example we ignore this
 		// info and always provide the same completion items.
 		return [
-			{
-				label: 'TypeScript',
-				kind: CompletionItemKind.Text,
-				data: 1
-			},
-			{
-				label: 'JavaScript',
-				kind: CompletionItemKind.Text,
-				data: 2
-			}
+			{ label: 'TypeScript', kind: CompletionItemKind.Text, data: 1 },
+			{ label: 'JavaScript', kind: CompletionItemKind.Text, data: 2 }
 		];
 	}
 );
