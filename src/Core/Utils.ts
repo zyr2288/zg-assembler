@@ -21,4 +21,10 @@ export class Utils {
 	}
 	//#endregion 深拷贝
 
+	//#region 转义可使用正则的字符串
+	static TransformRegex(source:string) {
+		return source.replace(".", "\.");
+	}
+	//#endregion 转义可使用正则的字符串
+
 }

@@ -3,12 +3,16 @@ export class Token {
 }
 
 export enum ParseType {
-	None, Space, Word, Operator, Comma, Period, Mark, Quotation1, Quotation2, Brackets1, Brackets2, Brackets3, LineEnd
+	None = -1, Space, LineEnd, Brackets, Operator
+}
+
+export enum TokenType {
+	None, Command, Operation
 }
 
 export interface IToken {
-	text: string;
 	start: number;
+	text: string;
 }
 
 export interface IParseToken {
