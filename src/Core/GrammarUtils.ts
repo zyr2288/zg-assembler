@@ -11,49 +11,105 @@ export class GrammarUtils {
 
 		let result: IParseToken[] = [];
 
-		let matchStrings = [
-			"\\s+", "[\\(\\)\\[\\]\\{\\}]", "[(\\<\\<)\\<\\>\\+\\-\\*\\/\\&\\|\\!]", "\\r?\\n+"
-		];
-
-		let tempToken: IParseToken = { type: ParseType.None, level: 0, token: { start: 0, text: "" } };
-
 		let index = 0;
-		let matchToken = { start: 0, matchIndex: -1, text: "" };
 
-		const SaveToken = () => {
-			if (matchToken.matchIndex == ParseType.Space)
-				return;
+		let tempToken: IParseToken = { type: ParseType.None, level: 0, token: { start: index, text: "" } };
 
-			tempToken.token.start = matchToken.start;
-			tempToken.token.text = matchToken.text;
-			tempToken.type = matchToken.matchIndex;
-			result.push(tempToken);
-			tempToken = { type: ParseType.None, level: 0, token: { start: 0, text: "" } };
+		const SaveToken = (type?: ParseType) => {
+			if (tempToken.token.text && tempToken.type != ParseType.Space)
+				result.push(tempToken);
+
+			tempToken = { type: type ?? ParseType.None, level: 0, token: { start: index, text: text[index] } };
 		}
 
-		const MatchText = () => {
-			text = text.substring(index);
-			for (let i = 0; i < matchStrings.length; ++i) {
-				let regex = new RegExp(matchStrings[i]);
-				let match = regex.exec(text);
-				if (match == null)
-					continue;
+		for (; index < text.length; ++index) {
+			switch (text[index]) {
+				case "\r":
+					break;
+				case " ":
+				case "\t":
+					if (tempToken.type == ParseType.Space) {
+						tempToken.token.text += text[index];
+						break;
+					}
 
-				SaveToken();
-				break;
+					SaveToken(ParseType.Space);
+					break;
+				case "\n":
+					SaveToken(ParseType.LineEnd);
+					break;
+				case "!":
+				case "@":
+				case "#":
+				case "$":
+				case "%":
+				case "^":
+				case "&":
+				case "*":
+				case "(":
+				case ")":
+				case "-":
+				case "+":
+				case "=":
+				case "{":
+				case "}":
+				case "[":
+				case "}":
+				case "|":
+				case "\\":
+				case ":":
+				case ";":
+				case "\"":
+				case "'":
+				case ",":
+				case "?":
+				case "/":
+					SaveToken(ParseType.Operator);
+					break;
+				case "<":
+					SaveToken(ParseType.Operator);
+					let temp1 = GrammarUtils.FindNext(text, index + 1, "<", "=");
+					if (temp1) {
+						tempToken.token.text += temp1;
+						index += temp1.length;
+					}
+					break;
+				case ">":
+					SaveToken(ParseType.Operator);
+					let temp2 = GrammarUtils.FindNext(text, index + 1, ">", "=");
+					if (temp2) {
+						tempToken.token.text += temp2;
+						index += temp2.length;
+					}
+					break;
+				case "!":
+					SaveToken(ParseType.Operator);
+					let temp3 = GrammarUtils.FindNext(text, index + 1, "=");
+					if (temp3) {
+						tempToken.token.text += temp3;
+						index += temp3.length;
+					}
+					break;
+				case "=":
+					SaveToken(ParseType.Operator);
+					let temp4 = GrammarUtils.FindNext(text, index + 1, "=");
+					if (temp4) {
+						tempToken.token.text += temp4;
+						index += temp4.length;
+					}
+					break;
+				default:
+					if (tempToken.type != ParseType.None) {
+						SaveToken();
+						break;
+					}
+
+					tempToken.token.text += text[index];
+					break;
 			}
-			return result;
 		}
 
-		while (true) {
-			GrammarUtils.MatchText();
-			index = matchToken.matchIndex + matchToken.text.length;
-			if (matchToken.matchIndex < 0)
-				break;
-
-			SaveToken();
-		}
-
+		SaveToken();
 		return result;
 	}
 
@@ -61,23 +117,6 @@ export class GrammarUtils {
 
 	}
 	//#endregion 分解文本
-
-	//#region 文本排序
-	static SortTokens(tokens: IParseToken[]) {
-
-		let index = 0;
-		let lineStart = true;
-
-		for (; index < tokens.length; ++index) {
-			const parserToken = tokens[index];
-			const upper = parserToken.token.text.toUpperCase();
-			if (Commands.AllCommand.includes(upper)) {
-			}
-		}
-
-
-	}
-	//#endregion 文本排序
 
 	//#region 匹配表达式
 	/**匹配表达式 例子 ([exp]),Y [exp],[exp] */
@@ -103,6 +142,8 @@ export class GrammarUtils {
 					matchResult = "";
 					break;
 				}
+
+				matchResult += text.charAt(j);
 			}
 		}
 

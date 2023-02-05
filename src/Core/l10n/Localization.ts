@@ -10,22 +10,22 @@ export class Localization {
 
 	/**修改显示语言 */
 	static ChangeLanguage(localization: string) {
-		switch (localization) {
-			case "en":
-				Localization.message = English;
-				break;
-			case "zh-cn":
-				Localization.message = Chinese;
-				break;
-		}
+
+		const languages = ["en", "zh-cn"];
+		const settingLanguages = [English, Chinese];
+
+		let index = languages.indexOf(localization);
+		if (index < 0) index = 0;
+		
+		Localization.message = settingLanguages[index];
 	}
 
-	/**获取本地化信息 */
+	/**输出信息格式化 */
 	static GetMessage(msg: LocalizationKey, ...args: string[]) {
 		let message = Localization.message[msg];
 		for (let i = 0; i < args.length; ++i)
 			message = message.replace(`{${i}}`, args[i]);
-		
+
 		return message;
 	}
 }
