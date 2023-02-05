@@ -1,7 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { GrammarUtils } from './Core/Parser';
+import { GrammarUtils } from './Core/GrammarUtils';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -20,7 +20,8 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Hello World from test!');
 	});
 
-	GrammarUtils.AnalyseText("\t\t.ORG $8000\n\tLDA #12\nSTA $12");
+	let text = "\t\t.ORG $8000\n\tLDA #12\nSTA $12";
+	GrammarUtils.AnalyseText(text);
 
 	context.subscriptions.push(disposable);
 }

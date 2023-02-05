@@ -1,6 +1,6 @@
 import { Commands } from './Commands';
 import { Platform } from './Platform/Platform';
-import { IParseToken, ParseType } from './Token';
+import { IParseToken, ParseType, IToken } from './Token';
 import { Utils } from './Utils';
 
 export class GrammarUtils {
@@ -12,7 +12,7 @@ export class GrammarUtils {
 		let result: IParseToken[] = [];
 
 		let matchStrings = [
-			"\\s+", "[\\(\\)\\[\\]\\{\\}]", "[(\\<\\<)\\<\\>\\+\\-\\*\\/\\&\\|\\!]", "\r?\n+"
+			"\\s+", "[\\(\\)\\[\\]\\{\\}]", "[(\\<\\<)\\<\\>\\+\\-\\*\\/\\&\\|\\!]", "\\r?\\n+"
 		];
 
 		let tempToken: IParseToken = { type: ParseType.None, level: 0, token: { start: 0, text: "" } };
@@ -39,16 +39,14 @@ export class GrammarUtils {
 				if (match == null)
 					continue;
 
-				result.text = match[0];
-				result.start = match.index + index;
-				result.matchIndex = i;
+				SaveToken();
 				break;
 			}
 			return result;
 		}
 
 		while (true) {
-			matchToken = GrammarUtils.MatchText(text, index, matchStrings);
+			GrammarUtils.MatchText();
 			index = matchToken.matchIndex + matchToken.text.length;
 			if (matchToken.matchIndex < 0)
 				break;
@@ -82,9 +80,34 @@ export class GrammarUtils {
 	//#endregion 文本排序
 
 	//#region 匹配表达式
-	static MatchingExpression(exp: string) {
+	/**匹配表达式 例子 ([exp]),Y [exp],[exp] */
+	static MatchingExpression(input: IToken, exp: string, flag?: string) {
 
+
+
+		let regex = new RegExp("\[exp\]");
+		let result: IToken[] = [];
+
+		let matches = input.text.match(regex)
+
+		return result;
 	}
 	//#endregion 匹配表达式
+
+	//#region 找到下一个匹配的字符
+	private static FindNext(text: string, index: number, ...matches: string[]) {
+		let matchResult = "";
+		for (let i = 0; i < matches.length; ++i) {
+			for (let j = 0; j < matches[i].length; ++j) {
+				if (text.charAt(index + j) != matches[i].charAt(j)) {
+					matchResult = "";
+					break;
+				}
+			}
+		}
+
+		return matchResult;
+	}
+	//#endregion 找到下一个匹配的字符
 
 }

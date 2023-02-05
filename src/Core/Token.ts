@@ -1,7 +1,3 @@
-export class Token {
-
-}
-
 export enum ParseType {
 	None = -1, Space, LineEnd, Brackets, Operator
 }

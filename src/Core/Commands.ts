@@ -3,7 +3,7 @@ import { Utils } from "./Utils";
 
 export class Commands {
 
-	static readonly AllCommand = [".ORG", ".BASE"];
+	static readonly AllCommand = [".ORG", ".BASE", ".DB", ".DW", ".DL"];
 	private static commandsRegex: string;
 
 	static GetCommandRegexString() {
