@@ -18,10 +18,12 @@ export function activate(context: vscode.ExtensionContext) {
 		// The code you place here will be executed every time your command is executed
 		// Display a message box to the user
 		vscode.window.showInformationMessage('Hello World from test!');
+
+		let text = vscode.window.activeTextEditor!.document.getText();
+		GrammarUtils.ParseTexts(text);
 	});
 
-	let text = "\t\t.ORG $8000\n\tLDA #12\nSTA $12";
-	GrammarUtils.AnalyseText(text);
+
 
 	context.subscriptions.push(disposable);
 }
