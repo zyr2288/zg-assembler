@@ -7,7 +7,7 @@ export interface IAddressType {
 
 export class Instructoins {
 
-	private allOperations?: string[];
+	private regexString!: string;
 	private allOperation: Map<string, number> = new Map();
 	private allAddressType: Map<number, IAddressType[]> = new Map();
 
@@ -22,16 +22,14 @@ export class Instructoins {
 		this.allOperationWord = undefined;
 	}
 
-	GetInstructions() {
-		if (this.allOperations)
-			return this.allOperations;
-
-		this.allOperations = [];
+	UpdateRegex() {
+		this.regexString = "(^|\\s+)("
 		this.allOperation.forEach((value, key, map) => {
-			this.allOperations!.push(key);
+			this.regexString += Utils.TransformRegex(key) + "|"
 		});
 
-		return this.allOperations;
+		this.regexString = this.regexString.substring(0, this.regexString.length - 1);
+		this.regexString += ")(\\s+|$)";
 	}
 
 	// 例如 A9 LDA #n

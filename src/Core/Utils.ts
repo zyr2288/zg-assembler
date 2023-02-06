@@ -27,4 +27,20 @@ export class Utils {
 	}
 	//#endregion 转义可使用正则的字符串
 
+	//#region 消除字符串两头空白
+	/**
+	 * 消除字符串两头空白
+	 * @param startIndex 起始位置
+	 * @param text 文本
+	 */
+	static StringTrim(startIndex: number, text: string) {
+		let match = /^\s+/.exec(text);
+		if (match == null) {
+			return { index: startIndex, text: text.trim() };
+		} else {
+			return { index: startIndex + match[0].length, text: text.trim() };
+		}
+	}
+	//#endregion 消除字符串两头空白
+
 }

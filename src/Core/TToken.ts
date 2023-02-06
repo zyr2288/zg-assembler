@@ -1,9 +1,9 @@
 export enum ParseType {
-	None = -1, Space, LineEnd, Brackets, Operation, Common
+	None = -1, Word, Space, LineEnd, Brackets, Operator, Common
 }
 
 export enum PartType {
-	None = -1, Label, Expression, Instruction, Command, Common,
+	None = -1, Label, Number, Instruction, Command, Common,
 }
 
 export enum TokenType {
@@ -17,11 +17,11 @@ export interface IToken {
 
 export interface IParseToken {
 	type: ParseType;
-	level: number;
 	token: IToken;
 }
 
 export interface IPartToken {
+	level: 0;
 	type: PartType;
 	token: IToken;
 }

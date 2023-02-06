@@ -1,6 +1,6 @@
 import { Commands } from './Commands';
 import { Platform } from './Platform/Platform';
-import { IParseToken, ParseType, IToken, IPartToken, PartType } from './Token';
+import { IParseToken, ParseType, IToken, IPartToken, PartType } from './TToken';
 
 export class GrammarUtils {
 
@@ -10,166 +10,96 @@ export class GrammarUtils {
 
 		let result: IParseToken[] = [];
 
+		const regexs = [
+			/\s+/, /\;.*?((\r?\n)|$)/, /\r?\n/,
+			/[\(\)\[\]\{\}]/,
+			/(\<\<)|(\<\=)|(\>\>)|(\>\=)|(\!\=)|\=|(\&\&)|(\|\|)|\<|\>|\+|\-|\*|\/|\&|\||\!/
+		];
+		const regexType = [ParseType.Space, ParseType.Common, ParseType.LineEnd, ParseType.Brackets, ParseType.Operator];
+
+		let match, tempMatch: RegExpExecArray | null = null;
+		let parseToken: IParseToken = { type: ParseType.None, token: { start: 0, text: "" } };
 		let index = 0;
-		let tempToken: IParseToken = { type: ParseType.None, level: 0, token: { start: index, text: "" } };
-		let isCommon = false;
+		let matchIndex = 0;
 
-		const SaveToken = (type?: ParseType) => {
-			if (tempToken.token.text && tempToken.type != ParseType.Space)
-				result.push(tempToken);
-
-			tempToken = { type: type ?? ParseType.None, level: 0, token: { start: index, text: text[index] } };
-		}
-
-		const SaveNext = (...matches: string[]) => {
-			SaveToken(ParseType.Operation);
-			let temp1 = GrammarUtils.FindNext(text, index + 1, ...matches);
-			if (temp1) {
-				tempToken.token.text += temp1;
-				index += temp1.length;
-			}
-		}
-
-		for (; index < text.length; ++index) {
-			if (isCommon) {
-				if (text[index] != "\n") {
-					if (text[index] == "\r")
-						continue;
-
-					tempToken.token.text += text[index];
+		while (true) {
+			for (let i = 0; i < regexs.length && text; ++i) {
+				const regex = new RegExp(regexs[i]);
+				tempMatch = regex.exec(text);
+				if (!tempMatch || (match && tempMatch.index > match.index))
 					continue;
+
+				match = tempMatch;
+				matchIndex = i;
+			}
+
+			if (match) {
+				let temp = text.substring(0, match.index);
+				if (temp != "") {
+					let preToken = { type: ParseType.Word, token: { start: index, text: temp } };
+					result.push(preToken);
 				}
-				isCommon = false;
+
+				if (regexType[matchIndex] != ParseType.Space) {
+					parseToken.token.start = index + match.index;
+					parseToken.token.text = match[0].trimEnd();
+					parseToken.type = regexType[matchIndex];
+					result.push(parseToken);
+					parseToken = { type: ParseType.None, token: { start: 0, text: "" } };
+				}
+
+				let temp2 = match.index + match[0].length;
+				index += temp2;
+				text = text.substring(temp2);
+				match = null;
+				continue;
 			}
-
-			switch (text[index]) {
-				case "\r":
-					SaveToken();
-					tempToken.token.text = "";
-					break;
-				case " ":
-				case "\t":
-					if (tempToken.type == ParseType.Space) {
-						tempToken.token.text += text[index];
-						break;
-					}
-
-					SaveToken(ParseType.Space);
-					break;
-				case "\n":
-					if (tempToken.type == ParseType.LineEnd) {
-						tempToken.token.text += text[index];
-						break;
-					}
-
-					SaveToken(ParseType.LineEnd);
-					break;
-				case "!":
-				case "@":
-				case "#":
-				case "$":
-				case "%":
-				case "^":
-				case "&":
-				case "*":
-				case "-":
-				case "+":
-				case "=":
-				case "|":
-				case "\\":
-				case ":":
-				case "\"":
-				case "'":
-				case ",":
-				case "?":
-				case "/":
-					SaveToken(ParseType.Operation);
-					break;
-				case ";":
-					isCommon = true;
-					SaveToken(ParseType.Common);
-					break;
-				case "(":
-				case ")":
-				case "{":
-				case "}":
-				case "[":
-				case "}":
-					break;
-				case "<":
-					SaveNext("<", "=");
-					break;
-				case ">":
-					SaveNext(">", "=");
-					break;
-				case "!":
-				case "=":
-					SaveNext("=");
-					break;
-
-				default:
-					if (tempToken.type != ParseType.None) {
-						SaveToken();
-						break;
-					}
-
-					tempToken.token.text += text[index];
-					break;
-			}
+			break;
 		}
 
-		SaveToken();
 		return result;
 	}
+	//#endregion 分解文本
 
-	static AnalyseParsers(tokens: IParseToken[]) {
-		let lineStart = true;
+	static GetWordType(parseTokens: IParseToken[]) {
 
-		let index = 0;
-		let matchIndex = -1;
 		let result: IPartToken[] = [];
 
-		let allInstruction = Platform.platform.instruction.GetInstructions();
+		// et instructions = Platform.platform.instruction.GetInstructions();
+		let tempPart: IPartToken = { level: 0, type: PartType.None, token: { start: 0, text: "" } };
 
-		let tempPart: IPartToken = { type: PartType.None, token: { start: 0, text: "" } };
-		let parseToken: IParseToken;
-		let partToken: IPartToken;
-
-		const SaveToken = (type?: PartType) => {
+		const SaveToken = (type: PartType) => {
+			tempPart.type = type;
 			result.push(tempPart);
-			tempPart = { type: type ?? PartType.None, token: parseToken.token };
+			tempPart = { level: 0, type: PartType.None, token: { start: 0, text: "" } };
 		}
 
-		for (; index < tokens.length; ++index) {
-			parseToken = tokens[index];
+		let index = 0;
+		let partType = PartType.None;
+		let lineStart = true;
 
+		for (; index < parseTokens.length; ++index) {
+			const parseToken = parseTokens[index];
+			tempPart.token = parseToken.token;
 			switch (parseToken.type) {
+				case ParseType.Word:
+					if (Commands.AllCommand.includes(parseToken.token.text.toUpperCase())) {
+						SaveToken(PartType.Command);
+						
+					// } else if (instructions.includes(parseToken.token.text.toUpperCase())) {
+					// 	SaveToken(PartType.Instruction);
+					} else {
+						SaveToken(PartType.Label);
+					}
+					break;
 				case ParseType.LineEnd:
 					lineStart = true;
-					continue;
-				case ParseType.Common:
-					SaveToken(PartType.Common);
-					lineStart = true;
-					continue;
-			}
-
-			if (lineStart) {
-				lineStart = false;
-
-				matchIndex = allInstruction.indexOf(parseToken.token.text.toUpperCase());
-				if (matchIndex >= 0) {
-					partToken = { type: PartType.Instruction, token: parseToken.token };
-				}
-
-				matchIndex = Commands.AllCommand.indexOf(parseToken.token.text.toUpperCase())
-				if (matchIndex >= 0) {
-
-				}
-
+					break;
 			}
 		}
+
+		return result;
 	}
-	//#endregion 分解文本
 
 	//#region 匹配表达式
 	/**匹配表达式 例子 ([exp]),Y [exp],[exp] */

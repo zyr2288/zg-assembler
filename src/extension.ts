@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { GrammarUtils } from './Core/GrammarUtils';
+import { PeggyTest } from './TestGrammar/PeggyTest';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -20,7 +21,8 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Hello World from test!');
 
 		let text = vscode.window.activeTextEditor!.document.getText();
-		GrammarUtils.ParseTexts(text);
+		// GrammarUtils.ParseTexts(text);
+		PeggyTest.Test(text);
 	});
 
 
