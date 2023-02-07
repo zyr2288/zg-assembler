@@ -29,28 +29,34 @@ export class Token {
 	 * @param count 分割次数，不填写则最大分割
 	 * @returns 返回分割的OneWord[]
 	 */
-	Split(regex: RegExp, count?: number): Token[] {
+	Split(regex: RegExp, option?: { saveToken?: boolean, count?: number }): Token[] {
 		let result: Token[] = [];
 		let match: RegExpExecArray | null;
 		let start = 0;
-		if (count == undefined) {
+		if (option?.count == undefined) {
 			while (match = regex.exec(this.text)) {
 				result.push(this.Substring(start, match.index - start));
 				start = match.index + match[0].length;
+
+				if (option?.saveToken)
+					result.push(this.Substring(match.index, match.length));
 			}
 
 			let temp = this.Substring(start);
 			result.push(temp);
 		} else {
-			result.length = count + 1;
+			result.length = option.count + 1;
 			let index = 0;
-			while ((match = regex.exec(this.text)) != null && index < count) {
+			while ((match = regex.exec(this.text)) != null && index < option.count) {
 				result[index] = this.Substring(start, match.index - start);
 				start = match.index + match[0].length;
 				index++;
+
+				if (option?.saveToken)
+					result.push(this.Substring(match.index, match.length));
 			}
 
-			while (index <= count) {
+			while (index <= option.count) {
 				result[index] = this.Substring(start);
 				start += result[index].length;
 				index++;

@@ -41,6 +41,7 @@ export class LineUtils {
 
 		let result: IBaseLine[] = [];
 
+		//#region 保存行Token
 		const SaveToken = (lineType: number) => {
 			let pre = tokens[0].Substring(0, match!.index);
 			let currect = tokens[0].Substring(match!.index, match![0].length);
@@ -73,6 +74,7 @@ export class LineUtils {
 					break;
 			}
 		}
+		//#endregion 保存行Token
 
 		let allLines: string[] = text.split(/\r?\n/);
 		let index = 0;
@@ -88,21 +90,15 @@ export class LineUtils {
 
 			if (match?.groups?.["command"]) {
 				SaveToken(0);
-				continue;
-			}
-
-			if (match?.groups?.["instruction"]) {
+			} else if (match?.groups?.["instruction"]) {
 				SaveToken(1);
-				continue;
-			}
-
-			if (match?.groups?.["variable"]) {
+			} else if (match?.groups?.["variable"]) {
 				SaveToken(2);
-				continue;
+			} else {
+				let unknow: IUnknowLine = { type: BaseLineType.Unknow, orgToken: tokens[0], comment: tokens[1] };
+				result.push(unknow);
 			}
 
-			let unknow: IUnknowLine = { type: BaseLineType.Unknow, orgToken: tokens[0], comment: tokens[1] };
-			result.push(unknow);
 		}
 		return;
 	}
@@ -111,8 +107,10 @@ export class LineUtils {
 	//#region 分割内容与注释
 	/**分割内容与注释 */
 	private static GetContent(token: Token) {
-		return token.Split(/;[+-]?/, 1);
+		return token.Split(/;[+-]?/, { count: 1 });
 	}
 	//#endregion 分割内容与注释
+
+	
 
 }
