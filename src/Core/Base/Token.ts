@@ -2,11 +2,25 @@ import { Utils } from "../Utils";
 
 export class Token {
 
+	//#region 建立一个Token
+	static CreateToken(line: number, start: number, text: string) {
+		let token = new Token();
+		token.line = line;
+		token.start = start;
+		token.text = text;
+
+		token.Trim();
+
+		return token;
+	}
+	//#endregion 建立一个Token
+
 	line: number = 0;
 	start: number = 0;
 	text: string = "";
 
 	get length() { return this.text.length; }
+	get isEmpty() { return this.text.length == 0; }
 
 	//#region 用正则表达式分割字符串
 	/**

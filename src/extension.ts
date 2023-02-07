@@ -1,7 +1,8 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { GrammarUtils } from './Core/GrammarUtils';
+import { LineUtils } from './Core/Base/LineUtils';
+import { Platform } from './Core/Platform/Platform';
 import { PeggyTest } from './TestGrammar/PeggyTest';
 
 // this method is called when your extension is activated
@@ -19,10 +20,12 @@ export function activate(context: vscode.ExtensionContext) {
 		// The code you place here will be executed every time your command is executed
 		// Display a message box to the user
 		vscode.window.showInformationMessage('Hello World from test!');
+		Platform.ChangePlatform("6502");
 
 		let text = vscode.window.activeTextEditor!.document.getText();
-		// GrammarUtils.ParseTexts(text);
-		PeggyTest.Test(text);
+		LineUtils.ParseTexts(text);
+		// PeggyTest.Test(text);
+
 	});
 
 

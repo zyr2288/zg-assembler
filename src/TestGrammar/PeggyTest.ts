@@ -21,8 +21,14 @@ Comment = ";" [+-]? comment:(.*) "\\r"?" \\n"? { return comment.join(""); }
 
 export class PeggyTest {
 	static Test(input: string) {
-		var temp = peggy.generate(Grammar, { trace: true });
-		var out = temp.parse(input);
+		var temp = peggy.generate(Grammar);
+		var out = temp.parse(input, {
+			tracer: {
+				trace(test) {
+					console.log(test);
+				}
+			}
+		});
 		console.log(out);
 	}
 }

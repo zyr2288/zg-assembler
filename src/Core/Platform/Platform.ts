@@ -1,4 +1,6 @@
+import { Commands } from "../Commands";
 import { Localization } from "../l10n/Localization";
+import { Utils } from "../Utils";
 import { Asm6502 } from "./Asm6502";
 import { Asm65816 } from "./Asm65816";
 import { AsmCommon } from "./AsmCommon";
@@ -7,6 +9,7 @@ import { AsmCommon } from "./AsmCommon";
 export class Platform {
 
 	static platform: AsmCommon;
+	static regexString: string;
 
 	/**改变编译平台 */
 	static ChangePlatform(platform: string) {
@@ -21,5 +24,24 @@ export class Platform {
 				const errorMsg = Localization.GetMessage("Unsupport Platform {0}", platform);
 				throw new Error(errorMsg);
 		}
+		Platform.UpdateRegex();
+	}
+
+	private static UpdateRegex() {
+
+		Platform.regexString = "(\\s+|^)(?<command>";
+		for (let i = 0; i < Commands.AllCommand.length; ++i)
+			Platform.regexString += Utils.TransformRegex(Commands.AllCommand[i]) + "|";
+
+		Platform.regexString = Platform.regexString.substring(0, Platform.regexString.length - 1);
+		Platform.regexString += ")|";
+
+		Platform.regexString += "(?<instruction>";
+		let instructions = Platform.platform.instructions;
+		for (let i = 0; i < instructions.length; ++i)
+			Platform.regexString += Utils.TransformRegex(instructions[i]) + "|";
+
+		Platform.regexString = Platform.regexString.substring(0, Platform.regexString.length - 1);
+		Platform.regexString += ")|(?<variable>\=!\=)(\\s+|$)"
 	}
 }
