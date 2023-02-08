@@ -7,7 +7,7 @@ enum BaseLineType {
 
 export interface IBaseLine {
 	type: BaseLineType;
-	comment: Token;
+	comment?: string;
 }
 
 export interface ICommandLine extends IBaseLine {
@@ -52,7 +52,6 @@ export class LineUtils {
 					let command: ICommandLine = {
 						type: BaseLineType.Command,
 						label: pre,
-						comment: tokens[1],
 						command: currect,
 						expr: after
 					};
@@ -62,17 +61,19 @@ export class LineUtils {
 					let instruction: IInstructionLine = {
 						type: BaseLineType.Instruction,
 						label: pre,
-						comment: tokens[1],
 						instruction: currect,
 						expr: after
 					};
 					result.push(instruction);
 					break;
 				case 2:
-					let variable: IVariable = { type: BaseLineType.Variable, label: pre, comment: tokens[1], expr: after };
+					let variable: IVariable = { type: BaseLineType.Variable, label: pre, expr: after };
 					result.push(variable);
 					break;
 			}
+
+			if (!tokens[1].isEmpty)
+				result[result.length - 1].comment = tokens[1].text;
 		}
 		//#endregion 保存行Token
 
@@ -95,7 +96,7 @@ export class LineUtils {
 			} else if (match?.groups?.["variable"]) {
 				SaveToken(2);
 			} else {
-				let unknow: IUnknowLine = { type: BaseLineType.Unknow, orgToken: tokens[0], comment: tokens[1] };
+				let unknow: IUnknowLine = { type: BaseLineType.Unknow, orgToken: tokens[0], comment: tokens[1].text };
 				result.push(unknow);
 			}
 
@@ -111,6 +112,6 @@ export class LineUtils {
 	}
 	//#endregion 分割内容与注释
 
-	
+
 
 }
