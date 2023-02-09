@@ -45,6 +45,8 @@ export interface INamelessLabel extends ICommonLabel {
 
 }
 
+//#region 标签工具类
+/**标签工具类 */
 export class LabelUtils {
 
 	static get namelessLabelRegex() { return new RegExp(/^[\\+\\-]+$/g); };
@@ -254,6 +256,7 @@ export class LabelUtils {
 	//#endregion 获取标签的Hash值
 
 }
+//#endregion 标签工具类
 
 export interface LabelTreeUtils {
 
