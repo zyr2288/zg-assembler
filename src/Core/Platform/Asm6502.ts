@@ -11,5 +11,6 @@ export class Asm6502 extends AsmCommon {
 
 	private AddIns() {
 		this.AddInstruction(0xA9, "LDA", "#[exp]");
+		this.AddInstruction(0xB1, "LDA", "([exp]),Y");
 	}
 }

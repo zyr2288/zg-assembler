@@ -1,35 +1,10 @@
 import { Platform } from '../Platform/Platform';
-import { Token } from './Token';
-
-enum BaseLineType {
-	Unknow, Command, Instruction, Variable
-}
-
-export interface IBaseLine {
-	type: BaseLineType;
-	comment?: string;
-}
-
-export interface ICommandLine extends IBaseLine {
-	label: Token;
-	command: Token;
-	expr: Token;
-}
-
-export interface IInstructionLine extends IBaseLine {
-	label: Token;
-	instruction: Token;
-	expr: Token;
-}
-
-export interface IVariable extends IBaseLine {
-	label: Token;
-	expr: Token;
-}
-
-export interface IUnknowLine extends IBaseLine {
-	orgToken: Token;
-}
+import { Token } from '../Base/Token';
+import { ICommonLine, LineType } from './CommonLine';
+import { IInstructionLine } from './InstructionLine';
+import { ICommandLine } from './CommandsLine';
+import { IVariableLine } from './VariableLine';
+import { IUnknowLine } from './UnknowLine';
 
 export class LineUtils {
 
@@ -39,39 +14,32 @@ export class LineUtils {
 		let match: RegExpExecArray | null = null;
 		let tokens: Token[];
 
-		let result: IBaseLine[] = [];
+		let result: ICommonLine[] = [];
 
 		//#region 保存行Token
-		const SaveToken = (lineType: number) => {
+		const SaveToken = (lineType: LineType) => {
 			let pre = tokens[0].Substring(0, match!.index);
 			let currect = tokens[0].Substring(match!.index, match![0].length);
 			let after = tokens[0].Substring(match!.index + match![0].length);
 
+			let line!: IInstructionLine | ICommandLine | IVariableLine;
+
 			switch (lineType) {
-				case 0:
-					let command: ICommandLine = {
-						type: BaseLineType.Command,
-						label: pre,
-						command: currect,
-						expr: after
-					};
-					result.push(command);
+				case LineType.Instruction:
+					line = { type: LineType.Instruction, labelToken: pre, instruction: currect, expression: after };
 					break;
-				case 1:
-					let instruction: IInstructionLine = {
-						type: BaseLineType.Instruction,
-						label: pre,
-						instruction: currect,
-						expr: after
-					};
-					result.push(instruction);
+				case LineType.Command:
+					line = { type: LineType.Command, labelToken: pre, command: currect, expression: after }
 					break;
-				case 2:
-					let variable: IVariable = { type: BaseLineType.Variable, label: pre, expr: after };
-					result.push(variable);
+				case LineType.Variable:
+					line = { type: LineType.Variable, labelToken: pre, expression: after };
 					break;
 			}
 
+			if (!pre.isEmpty)
+				line.labelToken = pre;
+
+			result.push(line);
 			if (!tokens[1].isEmpty)
 				result[result.length - 1].comment = tokens[1].text;
 		}
@@ -96,7 +64,7 @@ export class LineUtils {
 			} else if (match?.groups?.["variable"]) {
 				SaveToken(2);
 			} else {
-				let unknow: IUnknowLine = { type: BaseLineType.Unknow, orgToken: tokens[0], comment: tokens[1].text };
+				let unknow: IUnknowLine = { type: LineType.Unknow, orgToken: tokens[0], comment: tokens[1].text };
 				result.push(unknow);
 			}
 

@@ -1,3 +1,5 @@
+import { Utils } from "../Utils";
+
 export class Environment {
 	private files: Map<number, string> = new Map();
 
@@ -5,7 +7,8 @@ export class Environment {
 		return this.files.get(hash);
 	}
 
-	SetFile(hash: number, filePath: string) {
-		
+	SetFile(filePath: string) {
+		let hash = Utils.GetHashcode(filePath);
+		this.files.set(hash, filePath);
 	}
 }

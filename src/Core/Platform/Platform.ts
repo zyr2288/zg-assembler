@@ -21,14 +21,14 @@ export class Platform {
 				Platform.platform = new Asm65816();
 				break;
 			default:
-				const errorMsg = Localization.GetMessage("Unsupport Platform {0}", platform);
+				const errorMsg = Localization.GetMessage("Unsupport platform {0}", platform);
 				throw new Error(errorMsg);
 		}
 		Platform.UpdateRegex();
 	}
 
+	//#region 更新编译平台的正则表达式
 	private static UpdateRegex() {
-
 		Platform.regexString = "(\\s+|^)(?<command>";
 		for (let i = 0; i < Commands.AllCommand.length; ++i)
 			Platform.regexString += Utils.TransformRegex(Commands.AllCommand[i]) + "|";
@@ -44,4 +44,6 @@ export class Platform {
 		Platform.regexString = Platform.regexString.substring(0, Platform.regexString.length - 1);
 		Platform.regexString += ")|(?<variable>\=!\=)(\\s+|$)"
 	}
+	//#endregion 更新编译平台的正则表达式
+	
 }

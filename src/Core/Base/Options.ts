@@ -1,8 +1,9 @@
 import { Macro } from "./Macro";
-import { IBaseLine } from "./LineUtils";
+import { ICommonLine } from "../Lines/CommonLine";
 
 export interface DecodeOption {
 	macro?: Macro;
-	allLines: IBaseLine[];
+	allLines: ICommonLine[];
 	lineIndex: number;
+	fileHash: number;
 }

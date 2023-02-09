@@ -1,5 +1,7 @@
+import { Token } from "../Base/Token";
+
 export interface IAddressType {
-	addressType?: string;
+	addressType: string[];
 	opCode: number;
 }
 
@@ -36,6 +38,24 @@ export class AsmCommon {
 			this.allOperation.set(operation, index);
 		}
 
-		let type: IAddressType = { opCode, addressType };
+		let type: IAddressType = { opCode, addressType: [] };
+		if (!addressType)
+			return;
+
+		let match;
+		let start = 0;
+
+		while (match = /\[exp\]/.exec(addressType)) {
+
+			type.addressType.push(addressType.substring(start, match.index).trim());
+			type.addressType.push(addressType.substring(match.index, match[0].length).trim());
+			start = match.index + match[0].length;
+		}
+
+		type.addressType.push(addressType.substring(start).trim());
+	}
+
+	MatchAddressType(expression: Token) {
+
 	}
 }
