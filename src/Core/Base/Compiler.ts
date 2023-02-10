@@ -11,17 +11,23 @@ export class Compiler {
 
 	static enviroment: Environment;
 
+	//#region 解析文本
 	static async DecodeText(files: { text: string, filePath: string }[]) {
 
 		Compiler.enviroment = Compiler.editorEnv;
 
-		let lines;
+		let option: DecodeOption = { allLines: [], lineIndex: 0, fileHash: 1 };
 		for (let index = 0; index < files.length; ++index) {
-			lines = LineUtils.ParseTexts(files[index].text);
-
+			option.fileHash = Compiler.enviroment.SetFile(files[index].filePath);
+			option.allLines.push(...LineUtils.ParseTexts(files[index].text));
 		}
-	}
 
+		await Compiler.FirstAnalyse(option);
+	}
+	//#endregion 解析文本
+
+	//#region 第一次分析
+	/**第一次分析 */
 	static async FirstAnalyse(option: DecodeOption) {
 
 		for (let i = 0; i < option.allLines.length; ++i) {
@@ -42,5 +48,6 @@ export class Compiler {
 		}
 
 	}
+	//#endregion 第一次分析
 
 }

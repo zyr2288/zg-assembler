@@ -1,6 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { Compiler } from './Core/Base/Compiler';
 import { LineUtils } from './Core/Lines/LineUtils';
 import { Platform } from './Core/Platform/Platform';
 import { PeggyTest } from './TestGrammar/PeggyTest';
@@ -8,7 +9,7 @@ import { PeggyTest } from './TestGrammar/PeggyTest';
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-	
+
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "test" is now active!');
@@ -22,8 +23,10 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Hello World from test!');
 		Platform.ChangePlatform("6502");
 
-		let text = vscode.window.activeTextEditor!.document.getText();
-		LineUtils.ParseTexts(text);
+
+
+		let document = vscode.window.activeTextEditor!.document;
+		Compiler.DecodeText([{ text: document.getText(), filePath: document.uri.fsPath }]);
 		// PeggyTest.Test(text);
 
 	});
@@ -34,4 +37,4 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }

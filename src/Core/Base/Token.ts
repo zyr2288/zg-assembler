@@ -22,6 +22,16 @@ export class Token {
 	get length() { return this.text.length; }
 	get isEmpty() { return this.text.length == 0; }
 
+	//#region 拷贝
+	Copy() {
+		let token = new Token();
+		token.line = this.line;
+		token.start = this.start;
+		token.text = this.text;
+		return token;
+	}
+	//#endregion 拷贝
+
 	//#region 用正则表达式分割字符串
 	/**
 	 * 用正则表达式分割字符串
@@ -74,7 +84,7 @@ export class Token {
 		else
 			end = index + length;
 
-		let word = Utils.DeepClone<Token>(this);
+		let word = this.Copy();
 		word.text = word.text.substring(index, end);
 		word.start = this.start + index;
 		word.Trim();

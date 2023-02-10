@@ -10,7 +10,8 @@ export class Asm6502 extends AsmCommon {
 	}
 
 	private AddIns() {
-		this.AddInstruction(0xA9, "LDA", "#[exp]");
-		this.AddInstruction(0xB1, "LDA", "([exp]),Y");
+		this.AddInstruction(0xA9, "LDA", { addressType: "#[exp]", addMin: 1 });
+		this.AddInstruction(0xB1, "LDA", { addressType: "([exp]),Y", addMin: 1 });
+		this.AddInstruction(0xFF, "LDA", { addressType: "[exp],[exp]", addMin: 2 });
 	}
 }

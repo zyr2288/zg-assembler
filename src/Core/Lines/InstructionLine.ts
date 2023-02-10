@@ -1,6 +1,7 @@
 import { LabelType, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
+import { Platform } from "../Platform/Platform";
 import { ICommonLine, LineType } from "./CommonLine";
 
 export interface IInstructionLine extends ICommonLine {
@@ -18,5 +19,7 @@ export class InstructinLineUtils {
 			if (label) label.labelType = LabelType.Label;
 			delete(line.labelToken);
 		}
+
+		Platform.platform.MatchAddressType(line.instruction, line.expression, option.fileHash);
 	}
 }

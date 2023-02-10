@@ -10,5 +10,6 @@ export class Environment {
 	SetFile(filePath: string) {
 		let hash = Utils.GetHashcode(filePath);
 		this.files.set(hash, filePath);
+		return hash;
 	}
 }

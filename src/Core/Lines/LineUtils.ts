@@ -69,7 +69,7 @@ export class LineUtils {
 			}
 
 		}
-		return;
+		return result;
 	}
 	//#endregion 分解文本
 

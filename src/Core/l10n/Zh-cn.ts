@@ -6,4 +6,5 @@ export const Chinese: LocalizationMsg = {
 	"Can not use nameless label in Macro": "不能在Macro函数内使用临时标签",
 	"Label {0} illegal": "标签 \"{0}\" 命名有误",
 	"Label {0} is already defined": "标签 \"{0}\" 重复",
+	"Unknow instruction {0}": "未知的汇编指令 \"{0}\"",
 }
