@@ -1,13 +1,29 @@
 import { MyException } from "../Base/MyException";
 import { Token } from "../Base/Token";
 import { Localization } from "../l10n/Localization";
-import { Utils } from "../Utils";
+import { Utils } from "../Base/Utils";
 
 export interface IAddressType {
 	addressType: string[] | RegExp;
 	opCode: number;
 	addMin: number;
 	addMax: number;
+}
+
+export interface AddressOption {
+	opCode: number;
+	type?: {
+		/**寻址模式，可用正则表达式 或例如：([exp]),Y */
+		addressingMode: string | RegExp,
+		addMin: number;
+		addMax?: number;
+	}
+}
+
+export interface MutiAddressOption {
+	addressingMode: string;
+	/**寻址模式不同长度，例如： LDA nn,x，当opLength:1,B5, opLength:2,D5 */
+	opCodeAndLength: number[][];
 }
 
 export class AsmCommon {
@@ -35,16 +51,13 @@ export class AsmCommon {
 	}
 
 	//#region 添加基础指令
-	AddInstruction(opCode: number, operation: string, option?: { addressType: string | RegExp, addMin: number, addMax?: number }) {
+	AddInstruction(operation: string, option: AddressOption | MutiAddressOption) {
 		operation = operation.toUpperCase();
 		let index = this.allInstructions.get(operation);
 		if (!index) {
 			index = [];
 			this.allInstructions.set(operation, index);
 		}
-
-		if (!option)
-			return;
 
 		let type: IAddressType = { opCode, addressType: [] as string[], addMin: 0, addMax: 0 };
 		type.addMin = option.addMin;
@@ -87,7 +100,7 @@ export class AsmCommon {
 			return;
 		}
 
-		let result = { type: undefined as IAddressType | undefined, exps: [] as Token[] }
+		let result = { type: {} as IAddressType, exps: [] as Token[] }
 		let start = 0;
 		let foundAddressType = false;
 
@@ -97,7 +110,6 @@ export class AsmCommon {
 
 			// 重置搜索结果
 			result.exps = [];
-			result.type = undefined;
 
 			foundAddressType = false;
 
@@ -153,13 +165,27 @@ export class AsmCommon {
 					foundAddressType = true;
 				}
 
-
 				if (foundAddressType)
 					break;
 			}
 			//#endregion RegExp类型
 
 		}
+
+		if (!foundAddressType) {
+			let errorMsg = Localization.GetMessage("Instruction {0} do not support this addressing mode", instruction.text);
+			MyException.PushException(expression, fileHash, errorMsg);
+			return;
+		} else {
+			for (let i = 0; i < result.exps.length; ++i) {
+				if (result.exps[i].isEmpty) {
+					let errorMsg = Localization.GetMessage("Expression error");
+					MyException.PushException(result.exps[i], fileHash, errorMsg);
+					return;
+				}
+			}
+		}
+
 		return result;
 	}
 	//#endregion 匹配指令

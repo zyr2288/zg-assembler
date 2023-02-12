@@ -1,9 +1,11 @@
 import { Commands } from "../Commands";
 import { Localization } from "../l10n/Localization";
-import { Utils } from "../Utils";
+import { Utils } from "../Base/Utils";
 import { Asm6502 } from "./Asm6502";
 import { Asm65816 } from "./Asm65816";
 import { AsmCommon } from "./AsmCommon";
+
+export type SupportPlatform = "6502" | "65816";
 
 /**平台 */
 export class Platform {
@@ -12,7 +14,7 @@ export class Platform {
 	static regexString: string;
 
 	/**改变编译平台 */
-	static ChangePlatform(platform: string) {
+	static ChangePlatform(platform: SupportPlatform) {
 		switch (platform) {
 			case "6502":
 				Platform.platform = new Asm6502();

@@ -7,4 +7,6 @@ export const Chinese: LocalizationMsg = {
 	"Label {0} illegal": "标签 \"{0}\" 命名有误",
 	"Label {0} is already defined": "标签 \"{0}\" 重复",
 	"Unknow instruction {0}": "未知的汇编指令 \"{0}\"",
+	"Instruction {0} do not support this addressing mode": "汇编指令 \"{0}\" 不支持该寻址方式",
+	"Expression error": "表达式错误"
 }

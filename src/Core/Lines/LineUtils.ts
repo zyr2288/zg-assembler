@@ -15,6 +15,8 @@ export class LineUtils {
 		let tokens: Token[];
 
 		let result: ICommonLine[] = [];
+		let index = 0;
+		let allLines = LineUtils.SplitText(text);
 
 		//#region 保存行Token
 		const SaveToken = (lineType: LineType) => {
@@ -26,15 +28,20 @@ export class LineUtils {
 
 			switch (lineType) {
 				case LineType.Instruction:
-					line = { type: LineType.Instruction, labelToken: pre, instruction: currect, expression: after };
+					line = { type: LineType.Instruction, instruction: currect, expression: after, finished: false } as IInstructionLine;
 					break;
 				case LineType.Command:
-					line = { type: LineType.Command, labelToken: pre, command: currect, expression: after }
+					line = { type: LineType.Command, command: currect, expression: after, finished: false } as ICommandLine;
 					break;
 				case LineType.Variable:
-					line = { type: LineType.Variable, labelToken: pre, expression: after };
+					line = { type: LineType.Variable, expression: after, finished: false } as IVariableLine;
 					break;
 			}
+
+			line.labelToken = pre;
+			line.finished = false;
+			line.lineStart = allLines[index].lineStart;
+			line.lineEnd = allLines[index].lineEnd;
 
 			if (!pre.isEmpty)
 				line.labelToken = pre;
@@ -45,11 +52,9 @@ export class LineUtils {
 		}
 		//#endregion 保存行Token
 
-		let allLines: string[] = text.split(/\r?\n/);
-		let index = 0;
 		for (; index < allLines.length; ++index) {
 
-			tokens = LineUtils.GetContent(Token.CreateToken(index, 0, allLines[index]));
+			tokens = LineUtils.GetContent(Token.CreateToken(index, 0, allLines[index].text));
 
 			if (tokens[0].isEmpty)
 				continue;
@@ -64,7 +69,14 @@ export class LineUtils {
 			} else if (match?.groups?.["variable"]) {
 				SaveToken(2);
 			} else {
-				let unknow: IUnknowLine = { type: LineType.Unknow, orgToken: tokens[0], comment: tokens[1].text };
+				let unknow: IUnknowLine = {
+					type: LineType.Unknow,
+					orgToken: tokens[0],
+					comment: tokens[1].text,
+					finished: false,
+					lineStart: allLines[index].lineStart,
+					lineEnd: allLines[index].lineEnd
+				};
 				result.push(unknow);
 			}
 
@@ -80,6 +92,29 @@ export class LineUtils {
 	}
 	//#endregion 分割内容与注释
 
+	//#region 分割所有文本
+	private static SplitText(text: string) {
+		let result: { text: string, lineStart: number, lineEnd: number }[] = [];
 
+		let regex = /\r?\n/;
+
+		let start = 0;
+		let match;
+		while (match = regex.exec(text)) {
+			let temp = text.substring(start, match.index);
+			if (temp.trim() == "")
+				continue;
+
+			result.push({ text: temp, lineStart: start, lineEnd: match.index });
+			start = match.index + match[0].length;
+		}
+
+		let temp = text.substring(start);
+		if (temp.trim() != "")
+			result.push({ text: temp, lineStart: start, lineEnd: text.length });
+
+		return result;
+	}
+	//#endregion 分割所有文本
 
 }

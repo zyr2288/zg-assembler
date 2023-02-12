@@ -1,5 +1,5 @@
 import { Localization } from "../l10n/Localization";
-import { Utils } from "../Utils";
+import { Utils } from "./Utils";
 import { MyException } from "./MyException";
 import { DecodeOption } from "./Options";
 import { Token } from "./Token";

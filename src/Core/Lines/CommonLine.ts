@@ -6,6 +6,9 @@ export enum LineType {
 
 /**通用行接口 */
 export interface ICommonLine {
+	lineStart: number;
+	lineEnd: number;
 	type: LineType;
+	finished: boolean;
 	comment?: string;
 }
