@@ -1,8 +1,9 @@
 import { Environment } from "./Environment";
 import { LineUtils } from "../Lines/LineUtils";
 import { DecodeOption } from "./Options";
-import { InstructinLineUtils } from "../Lines/InstructionLine";
+import { Instruction } from "../Lines/Instruction";
 import { LineType } from "../Lines/CommonLine";
+import { Commands } from "../Commands/Commands";
 
 export class Compiler {
 
@@ -19,10 +20,13 @@ export class Compiler {
 		let option: DecodeOption = { allLines: [], lineIndex: 0, fileHash: 1 };
 		for (let index = 0; index < files.length; ++index) {
 			option.fileHash = Compiler.enviroment.SetFile(files[index].filePath);
-			option.allLines.push(...LineUtils.ParseTexts(files[index].text));
+			Compiler.enviroment.ClearFileRange(option.fileHash);
+			
+			option.allLines.push(...LineUtils.SplitTexts(files[index].text));
 		}
 
 		await Compiler.FirstAnalyse(option);
+
 	}
 	//#endregion 解析文本
 
@@ -36,9 +40,10 @@ export class Compiler {
 			option.lineIndex = i;
 			switch (line.type) {
 				case LineType.Instruction:
-					InstructinLineUtils.FirstAnalyse(option);
+					Instruction.FirstAnalyse(option);
 					break;
 				case LineType.Command:
+					Commands.FirstAnalyse(option);
 					break;
 				case LineType.Variable:
 					break;

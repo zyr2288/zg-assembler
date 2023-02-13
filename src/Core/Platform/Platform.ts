@@ -1,4 +1,4 @@
-import { Commands } from "../Commands";
+import { Commands } from "../Commands/Commands";
 import { Localization } from "../l10n/Localization";
 import { Utils } from "../Base/Utils";
 import { Asm6502 } from "./Asm6502";

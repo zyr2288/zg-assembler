@@ -6,5 +6,6 @@ export const English = {
 	"Label {0} is already defined": "Label \"{0}\" is already defined",
 	"Unknow instruction {0}": "Unknow instruction \"{0}\"",
 	"Instruction {0} do not support this addressing mode": "Instruction \"{0}\" do not support this addressing mode",
+	"Command {0} Error": "Command \"{0}\" Error",
 	"Expression error": "Expression error",
 }

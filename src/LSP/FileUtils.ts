@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { Config } from "../Base/Config";
+import { Config } from "../Core/Base/Config";
 
 export class FileUtils {
 

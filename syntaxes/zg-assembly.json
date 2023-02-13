@@ -1,0 +1,65 @@
+{
+	"scopeName": "source.asm.zg-assembly",
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"patterns": [
+		{ "include": "#keywords" },
+		{ "include": "#strings" },
+		{ "include": "#asmCommand" },
+		{ "include": "#comment" },
+		{ "include": "#number" },
+		{ "include": "#operator" }
+	],
+	"repository": {
+		"strings": {
+			"name": "string.quoted.double.zg-assembly",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"match": "\\\\\"",
+					"name": "constant.character.escape.zg-assembly"
+				}
+			]
+		},
+		"asmCommand": {
+			"name": "keyword.other.zg-assembly.commands",
+			"match": "(?i)(^|\\s+)(\\.BASE|\\.ORG|\\.DEF|\\.IF|\\.INCLUDE|\\.INCBIN|\\.ELSEIF|\\.ELSE|\\.ENDIF|\\.IFDEF|\\.IFNDEF|\\.DB|\\.DW|\\.DL|\\.DBG|\\.DWG|\\.DLG|\\.ENDD|\\.REPEAT|\\.ENDR|\\.MACRO|\\.ENDM|\\.MSG)\\s+"
+		}
+		"number": {
+			"patterns": [
+				{
+					"name": "constant.numeric.hex.zg-assembly",
+					"match": "\\$[0-9a-fA-F]+\\b"
+				},
+				{
+					"name": "constant.numeric.binary.zg-assembly",
+					"match": "\\@[0-1]+\\b"
+				},
+				{
+					"name": "constant.numeric.zg-assembly",
+					"match": "\\b[0-9]+\\b"
+				},
+				{
+					"name": "keyword.other.zg-assembly",
+					"begin": "(?i)\\.HEX\\s+",
+					"end": "(?=(;.*))|$",
+					"patterns": [
+						{
+							"name": "constant.numeric.hex.zg-assembly",
+							"match": "[0-9a-fA-F\\s+]+"
+						}
+					]
+				}
+			]
+		},
+		"operator": {
+			"name": "variable.name.zg-assembly",
+			"match": "[^\\+\\-\\*\\/\\>\\<\\(\\)\\,\\#\\=\\!\\[\\]\\&\\|]"
+		},
+		"comment": {
+			"name": "comment.base",
+			"begin": ";",
+			"end": "$"
+		}
+	}
+}

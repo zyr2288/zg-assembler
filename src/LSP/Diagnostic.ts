@@ -1,6 +1,6 @@
 // import { Diagnostic } from 'vscode-languageserver/node';
 import * as vscode from 'vscode'
-import { Assembler } from '../Assembler';
+import { Assembler } from '../Core/Assembler';
 
 
 export class MyDiagnostic {

@@ -3,27 +3,16 @@ import { Token } from "../Base/Token";
 import { Localization } from "../l10n/Localization";
 import { Utils } from "../Base/Utils";
 
-export interface IAddressType {
-	addressType: string[] | RegExp;
-	opCode: number;
-	addMin: number;
-	addMax: number;
+export interface IAddressingMode {
+	addressType: string[];
+	opCode: Array<number | undefined>;
 }
 
 export interface AddressOption {
-	opCode: number;
-	type?: {
-		/**寻址模式，可用正则表达式 或例如：([exp]),Y */
-		addressingMode: string | RegExp,
-		addMin: number;
-		addMax?: number;
-	}
-}
-
-export interface MutiAddressOption {
-	addressingMode: string;
-	/**寻址模式不同长度，例如： LDA nn,x，当opLength:1,B5, opLength:2,D5 */
-	opCodeAndLength: number[][];
+	/**寻址模式，可用正则表达式 或例如：([exp]),Y */
+	addressingMode?: string,
+	/**操作码，后续寻址模式长度为 index，例如 LDA #nn，寻址长度为 1byte，所以 0xA9 的下标为1 */
+	opCode: Array<number | undefined>;
 }
 
 export class AsmCommon {
@@ -31,7 +20,7 @@ export class AsmCommon {
 	/**所有汇编指令 */
 	instructions!: string[];
 	/**Key为 Instruction，例如：LDA */
-	private allInstructions: Map<string, IAddressType[]> = new Map();
+	private allInstructions: Map<string, IAddressingMode[]> = new Map();
 
 	constructor() {
 		this.ClearAll();
@@ -51,7 +40,7 @@ export class AsmCommon {
 	}
 
 	//#region 添加基础指令
-	AddInstruction(operation: string, option: AddressOption | MutiAddressOption) {
+	AddInstruction(operation: string, option: AddressOption) {
 		operation = operation.toUpperCase();
 		let index = this.allInstructions.get(operation);
 		if (!index) {
@@ -59,40 +48,39 @@ export class AsmCommon {
 			this.allInstructions.set(operation, index);
 		}
 
-		let type: IAddressType = { opCode, addressType: [] as string[], addMin: 0, addMax: 0 };
-		type.addMin = option.addMin;
-		type.addMax = option.addMax ?? type.addMin;
+		let type: IAddressingMode = { addressType: [] as string[], opCode: [] };
+		if (option.addressingMode) {
+			let match;
+			let start = 0;
+			let temp: string;
 
-		let match;
-		let start = 0;
-		let temp: string;
-
-		if (typeof (option.addressType) == "string") {
 			let stringMatch: string[] = [];
 			let regex = /\[exp\]/g;
-			while (match = regex.exec(option.addressType)) {
-				temp = option.addressType.substring(start, match.index).trim();
+			while (match = regex.exec(option.addressingMode)) {
+				temp = option.addressingMode.substring(start, match.index).trim();
 				if (temp) stringMatch.push(Utils.TransformRegex(temp));
 				stringMatch.push("");
 				start = match.index + match[0].length;
 			}
 
-			temp = option.addressType.substring(start).trim();
+			temp = option.addressingMode.substring(start).trim();
 			if (temp) stringMatch.push(Utils.TransformRegex(temp));
 
-			stringMatch[0] = "^" + stringMatch[0];
+			if (stringMatch.length != 1)
+				stringMatch[0] = "^" + stringMatch[0];
+				
 			stringMatch[stringMatch.length - 1] = stringMatch[stringMatch.length - 1] + "$";
 
 			type.addressType = stringMatch;
-		} else {
-			type.addressType = option.addressType;
 		}
+
+		type.opCode = option.opCode;
 		index.push(type);
 	}
 	//#endregion 添加基础指令
 
 	//#region 匹配指令
-	MatchAddressType(instruction: Token, expression: Token, fileHash: number) {
+	MatchAddressingMode(instruction: Token, expression: Token, fileHash: number) {
 		let addressTypes = this.allInstructions.get(instruction.text.toUpperCase());
 		if (!addressTypes) {
 			let errorMsg = Localization.GetMessage("Unknow instruction {0}", instruction.text);
@@ -100,7 +88,7 @@ export class AsmCommon {
 			return;
 		}
 
-		let result = { type: {} as IAddressType, exps: [] as Token[] }
+		let result = { addressingMode: {} as IAddressingMode, exprs: [] as Token[] }
 		let start = 0;
 		let foundAddressType = false;
 
@@ -109,67 +97,51 @@ export class AsmCommon {
 			const type = addressTypes[i];
 
 			// 重置搜索结果
-			result.exps = [];
+			result.exprs = [];
 
 			foundAddressType = false;
 
-			//#region 数组类型
-			if (type.addressType instanceof Array) {
-				if (expression.isEmpty) {
-					if (type.addressType.length == 0) {
-						result.type = type;
-						break;
-					}
-				} else {
-					if (type.addressType.length == 0)
+			// 表达式为空
+			if (expression.isEmpty) {
+				if (type.addressType.length == 0) {
+					foundAddressType = true;
+					result.addressingMode = type;
+					break;
+				}
+			}
+
+			// 表达式不为空
+			else {
+				if (type.addressType.length == 0)
+					continue;
+
+				let text = expression.text;
+				start = 0;
+				foundAddressType = true;
+				for (let j = 0; j < type.addressType.length; ++j) {
+					if (type.addressType[j] == "")
 						continue;
 
-					let text = expression.text;
-					start = 0;
-					foundAddressType = true;
-					for (let j = 0; j < type.addressType.length; ++j) {
-						if (type.addressType[j] == "")
-							continue;
-
-						const regex = new RegExp(type.addressType[j], "i");
-						let match = regex.exec(text);
-						if (!match) {
-							foundAddressType = false;
-							break;
-						}
-
-						let token = expression.Substring(start, match.index);
-						if (!token.isEmpty)
-							result.exps.push(token);
-
-						start += match.index + match[0].length;
-						text = text.substring(start);
-					}
-
-					if (foundAddressType) {
-						result.type = type;
+					const regex = new RegExp(type.addressType[j], "i");
+					let match = regex.exec(text);
+					if (!match) {
+						foundAddressType = false;
 						break;
 					}
-				}
-			}
-			//#endregion 数组类型
 
-			//#region RegExp类型
-			else {
-				let match;
-				result.type = type;
-				start = 0;
-				while (match = type.addressType.exec(expression.text)) {
-					result.exps.push(expression.Substring(start, match.index));
-					start = match.index + match[0].length;
-					foundAddressType = true;
+					let token = expression.Substring(start, match.index);
+					if (!token.isEmpty)
+						result.exprs.push(token);
+
+					start += match.index + match[0].length;
+					text = text.substring(start);
 				}
 
-				if (foundAddressType)
+				if (foundAddressType) {
+					result.addressingMode = type;
 					break;
+				}
 			}
-			//#endregion RegExp类型
-
 		}
 
 		if (!foundAddressType) {
@@ -177,10 +149,10 @@ export class AsmCommon {
 			MyException.PushException(expression, fileHash, errorMsg);
 			return;
 		} else {
-			for (let i = 0; i < result.exps.length; ++i) {
-				if (result.exps[i].isEmpty) {
+			for (let i = 0; i < result.exprs.length; ++i) {
+				if (result.exprs[i].isEmpty) {
 					let errorMsg = Localization.GetMessage("Expression error");
-					MyException.PushException(result.exps[i], fileHash, errorMsg);
+					MyException.PushException(result.exprs[i], fileHash, errorMsg);
 					return;
 				}
 			}

@@ -1,22 +1,24 @@
-import { Platform } from '../Platform/Platform';
-import { Token } from '../Base/Token';
-import { ICommonLine, LineType } from './CommonLine';
-import { IInstructionLine } from './InstructionLine';
-import { ICommandLine } from './CommandsLine';
-import { IVariableLine } from './VariableLine';
-import { IUnknowLine } from './UnknowLine';
+import { Platform } from "../Platform/Platform";
+import { Token } from "../Base/Token";
+import { ICommonLine, LineType } from "./CommonLine";
+import { IInstructionLine } from "./Instruction";
+import { ICommandLine } from "../Commands/Commands";
+import { IVariableLine } from "./VariableLine";
+import { IUnknowLine } from "./UnknowLine";
 
 export class LineUtils {
 
 	//#region 分解文本
 	/**分解文本 */
-	static ParseTexts(text: string) {
+	static SplitTexts(text: string) {
 		let match: RegExpExecArray | null = null;
 		let tokens: Token[];
 
 		let result: ICommonLine[] = [];
 		let index = 0;
 		let allLines = LineUtils.SplitText(text);
+
+		
 
 		//#region 保存行Token
 		const SaveToken = (lineType: LineType) => {
@@ -40,8 +42,6 @@ export class LineUtils {
 
 			line.labelToken = pre;
 			line.finished = false;
-			line.lineStart = allLines[index].lineStart;
-			line.lineEnd = allLines[index].lineEnd;
 
 			if (!pre.isEmpty)
 				line.labelToken = pre;
@@ -74,8 +74,6 @@ export class LineUtils {
 					orgToken: tokens[0],
 					comment: tokens[1].text,
 					finished: false,
-					lineStart: allLines[index].lineStart,
-					lineEnd: allLines[index].lineEnd
 				};
 				result.push(unknow);
 			}
@@ -96,7 +94,7 @@ export class LineUtils {
 	private static SplitText(text: string) {
 		let result: { text: string, lineStart: number, lineEnd: number }[] = [];
 
-		let regex = /\r?\n/;
+		let regex = /\r\n|\r|\n/;
 
 		let start = 0;
 		let match;

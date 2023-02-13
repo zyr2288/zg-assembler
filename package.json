@@ -15,17 +15,55 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:test.helloWorld"
+		"onLanguage:zg-assembly"
 	],
 	"main": "./dist/extension.js",
-	"l10n": "./l10n",
 	"contributes": {
 		"commands": [
 			{
-				"command": "test.helloWorld",
-				"title": "Hello World"
+				"command": "zg-assembly.compliteThis",
+				"title": "%Compile This File%"
+			},
+			{
+				"command": "zg-assembly.compliteMain",
+				"title": "%Compile Entry File%"
 			}
-		]
+		],
+		"languages": [
+			{
+				"id": "zg-assembly",
+				"extensions": [
+					".asm"
+				]
+			}
+		],
+		"grammars": [
+			{
+				"language": "zg-assembly",
+				"scopeName": "source.asm.zg-assembly",
+				"path": "./syntaxes/zg-assembly.json"
+			}
+		],
+		"menus": {
+			"editor/context": [
+				{
+					"when": "editorLangId == zg-assembly",
+					"command": "zg-assembly.compliteThis",
+					"group": "z_command"
+				},
+				{
+					"when": "editorLangId == zg-assembly",
+					"command": "zg-assembly.compliteMain",
+					"group": "z_command"
+				}
+			]
+		},
+		"configurationDefaults": {
+			"[zg-assembly]": {
+				"editor.wordBasedSuggestions": false,
+				"editor.tabSize": 8
+			}
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run package",
