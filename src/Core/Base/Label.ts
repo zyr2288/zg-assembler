@@ -24,6 +24,7 @@ export interface ICommonLabel {
 	token: Token;
 	comment?: string;
 	value?: number;
+	labelType: LabelType;
 }
 
 export interface ILabelTree {
@@ -33,7 +34,6 @@ export interface ILabelTree {
 
 /**标签 */
 export interface ILabel extends ICommonLabel {
-	labelType: LabelType;
 }
 
 /**临时标签 ++ --- */
@@ -43,11 +43,9 @@ export interface INamelessLabelCollection {
 }
 
 export interface INamelessLabel extends ICommonLabel {
-
 }
 
 
-//#region 标签工具类
 /**标签工具类 */
 export class LabelUtils {
 
@@ -131,9 +129,14 @@ export class LabelUtils {
 
 			let labels = count > 0 ? collection.downLabels : collection.upLabels;
 			for (let i = 0; i < labels.length; ++i) {
-				const label = labels[i];
-				label.
+				if (labels[i].token.line > word.line)
+					return labels[i];
+
 			}
+
+			let errorMsg = Localization.GetMessage("Label {0} not found", word.text);
+			MyException.PushException(word, errorMsg);
+			return;
 		}
 
 		// 函数内标签
@@ -176,7 +179,7 @@ export class LabelUtils {
 
 		let line = option.allLines[option.lineIndex];
 
-		let newItem: INamelessLabel = { token, comment: line.comment };
+		let newItem: INamelessLabel = { token, comment: line.comment, labelType: LabelType.Label };
 		if (!labels) {
 			labels = { upLabels: [], downLabels: [] };
 			Compiler.enviroment.namelessLabel.set(token.fileHash, labels);
@@ -310,7 +313,6 @@ export class LabelUtils {
 	//#endregion 获取标签的Hash值
 
 }
-//#endregion 标签工具类
 
 export interface LabelTreeUtils {
 
