@@ -17,12 +17,11 @@ export class Compiler {
 
 		Compiler.enviroment = Compiler.editorEnv;
 
-		let option: DecodeOption = { allLines: [], lineIndex: 0, fileHash: 1 };
+		let option: DecodeOption = { allLines: [], lineIndex: 0, };
 		for (let index = 0; index < files.length; ++index) {
-			option.fileHash = Compiler.enviroment.SetFile(files[index].filePath);
-			Compiler.enviroment.ClearFileRange(option.fileHash);
-			
-			option.allLines.push(...LineUtils.SplitTexts(files[index].text));
+			let fileHash = Compiler.enviroment.SetFile(files[index].filePath);
+			Compiler.enviroment.ClearFileRange(fileHash);
+			LineUtils.SplitTexts(files[index].text, option);
 		}
 
 		await Compiler.FirstAnalyse(option);

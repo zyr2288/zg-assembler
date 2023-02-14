@@ -5,57 +5,54 @@ import { IInstructionLine } from "./Instruction";
 import { ICommandLine } from "../Commands/Commands";
 import { IVariableLine } from "./VariableLine";
 import { IUnknowLine } from "./UnknowLine";
+import { DecodeOption, SplitOption } from "../Base/Options";
 
 export class LineUtils {
 
 	//#region 分解文本
 	/**分解文本 */
-	static SplitTexts(text: string) {
+	static SplitTexts(text: string, option: DecodeOption): void {
 		let match: RegExpExecArray | null = null;
 		let tokens: Token[];
-
-		let result: ICommonLine[] = [];
-		let index = 0;
-		let allLines = LineUtils.SplitText(text);
-
-		
+		let newLine = {} as ICommonLine;
 
 		//#region 保存行Token
 		const SaveToken = (lineType: LineType) => {
+
 			let pre = tokens[0].Substring(0, match!.index);
 			let currect = tokens[0].Substring(match!.index, match![0].length);
 			let after = tokens[0].Substring(match!.index + match![0].length);
 
-			let line!: IInstructionLine | ICommandLine | IVariableLine;
-
 			switch (lineType) {
-				case LineType.Instruction:
-					line = { type: LineType.Instruction, instruction: currect, expression: after, finished: false } as IInstructionLine;
-					break;
 				case LineType.Command:
-					line = { type: LineType.Command, command: currect, expression: after, finished: false } as ICommandLine;
+					newLine = { type: LineType.Command, command: currect, expression: after, finished: false } as ICommandLine;
+					break;
+				case LineType.Instruction:
+					newLine = { type: LineType.Instruction, instruction: currect, expression: after, finished: false } as IInstructionLine;
 					break;
 				case LineType.Variable:
-					line = { type: LineType.Variable, expression: after, finished: false } as IVariableLine;
+					newLine = { type: LineType.Variable, expression: after, finished: false } as IVariableLine;
 					break;
 			}
 
-			line.labelToken = pre;
-			line.finished = false;
+			// @ts-ignore
+			newLine.labelToken = pre;
+			newLine.finished = false;
 
 			if (!pre.isEmpty)
-				line.labelToken = pre;
+				// @ts-ignore
+				newLine.labelToken = pre;
 
-			result.push(line);
 			if (!tokens[1].isEmpty)
-				result[result.length - 1].comment = tokens[1].text;
+				option.allLines[option.allLines.length - 1].comment = tokens[1].text;
 		}
 		//#endregion 保存行Token
 
-		for (; index < allLines.length; ++index) {
+		let allLines = text.split(/\r\n|\r|\n/);
+		for (let index = 0; index < allLines.length; ++index) {
+			newLine.orgText = Token.CreateToken(index, 0, allLines[index]);
 
-			tokens = LineUtils.GetContent(Token.CreateToken(index, 0, allLines[index].text));
-
+			tokens = LineUtils.GetContent(newLine.orgText);
 			if (tokens[0].isEmpty)
 				continue;
 
@@ -63,23 +60,23 @@ export class LineUtils {
 			match = regex.exec(tokens[0].text);
 
 			if (match?.groups?.["command"]) {
-				SaveToken(0);
+				SaveToken(LineType.Command);
 			} else if (match?.groups?.["instruction"]) {
-				SaveToken(1);
+				SaveToken(LineType.Instruction);
 			} else if (match?.groups?.["variable"]) {
-				SaveToken(2);
+				SaveToken(LineType.Variable);
 			} else {
-				let unknow: IUnknowLine = {
+				newLine = {
 					type: LineType.Unknow,
 					orgToken: tokens[0],
 					comment: tokens[1].text,
-					finished: false,
-				};
-				result.push(unknow);
+					finished: false
+				} as IUnknowLine;
 			}
 
+			option.allLines.push(newLine);
+			newLine = {} as ICommonLine;
 		}
-		return result;
 	}
 	//#endregion 分解文本
 
@@ -89,30 +86,5 @@ export class LineUtils {
 		return token.Split(/;[+-]?/, { count: 1 });
 	}
 	//#endregion 分割内容与注释
-
-	//#region 分割所有文本
-	private static SplitText(text: string) {
-		let result: { text: string, lineStart: number, lineEnd: number }[] = [];
-
-		let regex = /\r\n|\r|\n/;
-
-		let start = 0;
-		let match;
-		while (match = regex.exec(text)) {
-			let temp = text.substring(start, match.index);
-			if (temp.trim() == "")
-				continue;
-
-			result.push({ text: temp, lineStart: start, lineEnd: match.index });
-			start = match.index + match[0].length;
-		}
-
-		let temp = text.substring(start);
-		if (temp.trim() != "")
-			result.push({ text: temp, lineStart: start, lineEnd: text.length });
-
-		return result;
-	}
-	//#endregion 分割所有文本
 
 }

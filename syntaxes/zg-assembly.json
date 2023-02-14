@@ -24,7 +24,7 @@
 		"asmCommand": {
 			"name": "keyword.other.zg-assembly.commands",
 			"match": "(?i)(^|\\s+)(\\.BASE|\\.ORG|\\.DEF|\\.IF|\\.INCLUDE|\\.INCBIN|\\.ELSEIF|\\.ELSE|\\.ENDIF|\\.IFDEF|\\.IFNDEF|\\.DB|\\.DW|\\.DL|\\.DBG|\\.DWG|\\.DLG|\\.ENDD|\\.REPEAT|\\.ENDR|\\.MACRO|\\.ENDM|\\.MSG)\\s+"
-		}
+		},
 		"number": {
 			"patterns": [
 				{

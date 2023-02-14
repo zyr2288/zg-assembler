@@ -1,6 +1,7 @@
 import { Localization } from "../l10n/Localization";
-import { LabelUtils } from "./Label";
+import { LabelType, LabelUtils } from "./Label";
 import { MyException } from "./MyException";
+import { DecodeOption } from "./Options";
 import { Token } from "./Token";
 
 //#region 算数优先级
@@ -116,6 +117,28 @@ export class ExpressionUtils {
 		return result;
 	}
 	//#endregion 获取数字
+
+	//#region 分析所有表达式小节并推送错误
+	/**
+	 * 分析所有表达式小节并推送错误
+	 * @param parts 表达式所有小节
+	 * @param option 编译选项
+	 * @returns 返回true为有错误
+	 */
+	static CheckLabelsAndShowError(parts: ExpressionPart[], option?: DecodeOption) {
+		for (let i = 0; i < parts.length; i++) {
+			const part = parts[i];
+			if (part.type != PriorityType.Level_1_Label)
+				continue;
+
+			let temp = LabelUtils.FindLabel(part.token, option);
+			if (!temp) {
+				let errorMsg = Localization.GetMessage("Label {0} not found", parts[i].token.text);
+				MyException.PushException(parts[i].token, errorMsg);
+			}
+		}
+	}
+	//#endregion 分析所有表达式小节并推送错误
 
 	/** Private */
 
@@ -235,7 +258,7 @@ export class ExpressionUtils {
 
 			if (!result.success) {
 				let errorMsg = Localization.GetMessage("Expression error");
-				// MyException.PushException(now.token, ErrorType.ExpressionError, ErrorLevel.Show);
+				MyException.PushException(part.token, errorMsg);
 				break;
 			}
 
@@ -288,7 +311,7 @@ export class ExpressionUtils {
 							let lex = stack.pop();
 							if (!lex) {
 								let erroMsg = Localization.GetMessage("Expression error");
-								// MyException.PushException(part.token, erroMsg);
+								MyException.PushException(part.token, erroMsg);
 								result.success = false;
 								break;
 							} else if (lex.type == PriorityType.Level_4_Brackets) {
@@ -303,7 +326,7 @@ export class ExpressionUtils {
 						let top = stack.pop();
 						if (!top) {
 							let erroMsg = Localization.GetMessage("Expression error");
-							// MyException.PushException(part.token, ErrorType.ExpressionError, ErrorLevel.Show);
+							MyException.PushException(part.token, erroMsg);
 							result.success = false;
 							break;
 						}

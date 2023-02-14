@@ -3,6 +3,8 @@ import { Utils } from "./Utils";
 import { MyException } from "./MyException";
 import { DecodeOption } from "./Options";
 import { Token } from "./Token";
+import { Compiler } from "./Compiler";
+import { ExpressionUtils } from "./ExpressionUtils";
 
 /**标签类型 */
 export enum LabelType {
@@ -32,7 +34,6 @@ export interface ILabelTree {
 /**标签 */
 export interface ILabel extends ICommonLabel {
 	labelType: LabelType;
-	fileHash: number;
 }
 
 /**临时标签 ++ --- */
@@ -45,22 +46,12 @@ export interface INamelessLabel extends ICommonLabel {
 
 }
 
+
 //#region 标签工具类
 /**标签工具类 */
 export class LabelUtils {
 
-	static get namelessLabelRegex() { return new RegExp(/^[\\+\\-]+$/g); };
-
-	/**所有标签 Key: Label的Hash值 */
-	private static allLabel = new Map<number, ILabel>();
-	/**Key: 文件的fileHash */
-	private static namelessLabel = new Map<number, INamelessLabelCollection>();
-
-	/**标签树，key为 Label的Key，用于记忆标签层集关系 */
-	private static labelTrees = new Map<number, ILabelTree>();
-
-	/**文件标签，用于记忆文件内的所有标签 */
-	private static fileLabels = new Map<number, Set<number>>();
+	static get namelessLabelRegex() { return new RegExp(/^((?<plus>\\+)|(?<minus>\\-))+$/g); };
 
 	/** Public */
 
@@ -72,18 +63,18 @@ export class LabelUtils {
 		if (LabelUtils.namelessLabelRegex.test(token.text)) {
 			if (option?.macro) {
 				let errorMsg = Localization.GetMessage("Can not use nameless label in Macro");
-				MyException.PushException(token, option.fileHash, errorMsg);
+				MyException.PushException(token, errorMsg);
 				return;
 			}
 
 			let isDown = token.text[0] == "+";
-			LabelUtils.InsertNamelessLabel(option.fileHash, token, isDown, option);
+			LabelUtils.InsertNamelessLabel(token, isDown, option);
 			return;
 		}
 
 		if (!LabelUtils.CheckIllegal(token, !!option.macro)) {
 			let errorMsg = Localization.GetMessage("Label {0} illegal", token.text);
-			MyException.PushException(token, option.fileHash, errorMsg);
+			MyException.PushException(token, errorMsg);
 			return;
 		}
 
@@ -92,21 +83,21 @@ export class LabelUtils {
 			let hash = Utils.GetHashcode(token.text);
 			if (option.macro.labels.has(hash) || option.macro.name.text == token.text) {
 				let errorMsg = Localization.GetMessage("Label {0} is already defined", token.text);
-				MyException.PushException(token, option.fileHash, errorMsg);
+				MyException.PushException(token, errorMsg);
 				return;
 			}
 		}
 
 		let type = token.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
 
-		let hash = LabelUtils.GetLebalHash(token.text, option.fileHash, type);
-		if (LabelUtils.allLabel.has(hash)) {
+		let hash = LabelUtils.GetLebalHash(token.text, token.fileHash, type);
+		if (Compiler.enviroment.allLabel.has(hash)) {
 			let errorMsg = Localization.GetMessage("Label {0} is already defined", token.text);
-			MyException.PushException(token, option.fileHash, errorMsg);
+			MyException.PushException(token, errorMsg);
 			return;
 		}
 
-		let label = LabelUtils.SplitLabel(token, option.fileHash, type);
+		let label = LabelUtils.SplitLabel(token, type);
 		if (label)
 			label.comment = option.allLines[option.lineIndex].comment;
 
@@ -114,16 +105,81 @@ export class LabelUtils {
 	}
 	//#endregion 创建标签
 
+	//#region 查找标签
+	/**
+	 * 查找标签
+	 * @param word 要查找的标签
+	 * @param option 选项
+	 * @returns 是否找到标签
+	 */
+	static FindLabel(word: Token, option?: DecodeOption): ILabel | undefined {
+		if (!word || word.isEmpty)
+			return;
+
+		let match = LabelUtils.namelessLabelRegex.exec(word.text);
+		if (match) {
+			let count = match[0].length;
+			if (match.groups?.["minus"])
+				count = -count;
+
+			let collection = Compiler.enviroment.namelessLabel.get(word.fileHash);
+			if (!collection) {
+				let errorMsg = Localization.GetMessage("Label {0} not found", word.text);
+				MyException.PushException(word, errorMsg);
+				return;
+			}
+
+			let labels = count > 0 ? collection.downLabels : collection.upLabels;
+			for (let i = 0; i < labels.length; ++i) {
+				const label = labels[i];
+				label.
+			}
+		}
+
+		// 函数内标签
+		if (option?.macro) {
+			let hash = Utils.GetHashcode(word.text);
+			let label = option.macro.labels.get(hash);
+			if (label) return label;
+		}
+
+		// 数组下标
+		if (word.text.includes(":")) {
+			let part = word.Split(/\:/g, { count: 2 });
+			if (part[0].isEmpty || part[1].isEmpty) {
+				let errorMsg = Localization.GetMessage("Label {0} not found", word.text);
+				MyException.PushException(word, errorMsg);
+				return;
+			}
+
+			let index = 0;
+			if (!part[2].isEmpty) {
+				let temp = ExpressionUtils.GetNumber(part[2].text);
+				if (temp.success) {
+					index = temp.value;
+				} else {
+					let errorMsg = Localization.GetMessage("Label {0} not found", part[2].text);
+					MyException.PushException(part[2], errorMsg);
+					return;
+				}
+			}
+		}
+		return;
+	}
+	//#endregion 查找标签
+
+	/** Private */
+
 	//#region 插入临时标签
-	private static InsertNamelessLabel(fileHash: number, token: Token, isDown: boolean, option: DecodeOption) {
-		let labels = LabelUtils.namelessLabel.get(fileHash);
+	private static InsertNamelessLabel(token: Token, isDown: boolean, option: DecodeOption) {
+		let labels = Compiler.enviroment.namelessLabel.get(token.fileHash);
 
 		let line = option.allLines[option.lineIndex];
 
 		let newItem: INamelessLabel = { token, comment: line.comment };
 		if (!labels) {
 			labels = { upLabels: [], downLabels: [] };
-			LabelUtils.namelessLabel.set(fileHash, labels);
+			Compiler.enviroment.namelessLabel.set(token.fileHash, labels);
 		}
 
 		let index = 0;
@@ -137,25 +193,23 @@ export class LabelUtils {
 	}
 	//#endregion 插入临时标签
 
-	/** Private */
-
 	//#region 分割标签并插入
-	private static SplitLabel(token: Token, fileHash: number, type: LabelScope) {
+	private static SplitLabel(token: Token, type: LabelScope) {
 		let tokens = token.Split(/\./);
 		let text = "";
 
-		if (!LabelUtils.fileLabels.has(fileHash))
-			LabelUtils.fileLabels.set(fileHash, new Set());
+		if (!Compiler.enviroment.fileLabels.has(token.fileHash))
+			Compiler.enviroment.fileLabels.set(token.fileHash, new Set());
 
-		let fileLabelSet = LabelUtils.fileLabels.get(fileHash)!;
+		let fileLabelSet = Compiler.enviroment.fileLabels.get(token.fileHash)!;
 		let parentHash = 0;
 		if (type == LabelScope.Local)
-			parentHash = Utils.GetHashcode(fileHash);
+			parentHash = Utils.GetHashcode(token.fileHash);
 
-		let parentLabelTree = LabelUtils.labelTrees.get(parentHash);
+		let parentLabelTree = Compiler.enviroment.labelTrees.get(parentHash);
 		if (!parentLabelTree) {
 			parentLabelTree = { parent: parentHash, child: new Set() };
-			LabelUtils.labelTrees.set(parentHash, parentLabelTree);
+			Compiler.enviroment.labelTrees.set(parentHash, parentLabelTree);
 		}
 
 		const lastIndex = tokens.length - 1;
@@ -167,40 +221,40 @@ export class LabelUtils {
 
 			if (tokens[index].isEmpty) {
 				let errorMsg = Localization.GetMessage("Label {0} illegal", token.text);
-				MyException.PushException(token, fileHash, errorMsg);
+				MyException.PushException(token, errorMsg);
 				return;
 			}
 
 			text += tokens[index].text;
-			labelHash = LabelUtils.GetLebalHash(text, fileHash, type);
+			labelHash = LabelUtils.GetLebalHash(text, token.fileHash, type);
 			if (!fileLabelSet.has(labelHash))
 				fileLabelSet.add(labelHash);
 
 			// 查找label的trees是否创建
-			let labelTree = LabelUtils.labelTrees.get(labelHash);
+			let labelTree = Compiler.enviroment.labelTrees.get(labelHash);
 			if (!labelTree) {
 				labelTree = { parent: parentHash, child: new Set() };
-				LabelUtils.labelTrees.set(labelHash, labelTree);
+				Compiler.enviroment.labelTrees.set(labelHash, labelTree);
 			}
 
-			result = LabelUtils.allLabel.get(labelHash);
+			result = Compiler.enviroment.allLabel.get(labelHash);
 
 			//如果是最后一个
 			if (index == lastIndex) {
 				if (result?.labelType == LabelType.Defined || result?.labelType == LabelType.Label) {
 					let errorMsg = Localization.GetMessage("Label {0} is already defined", tokens[index].text);
-					MyException.PushException(token, fileHash, errorMsg);
+					MyException.PushException(token, errorMsg);
 					return;
 				}
 
-				result = { token: tokens[index], fileHash, labelType: LabelType.Defined };
-				LabelUtils.allLabel.set(labelHash, result);
+				result = { token: tokens[index], labelType: LabelType.Defined };
+				Compiler.enviroment.allLabel.set(labelHash, result);
 			} else {
-				if (LabelUtils.allLabel.has(labelHash))
+				if (Compiler.enviroment.allLabel.has(labelHash))
 					continue;
 
-				result = { token: tokens[index], fileHash, labelType: LabelType.None };
-				LabelUtils.allLabel.set(labelHash, result);
+				result = { token: tokens[index], labelType: LabelType.None };
+				Compiler.enviroment.allLabel.set(labelHash, result);
 			}
 
 			parentLabelTree.child.add(labelHash);

@@ -44,7 +44,7 @@ export class Platform {
 			Platform.regexString += Utils.TransformRegex(instructions[i]) + "|";
 
 		Platform.regexString = Platform.regexString.substring(0, Platform.regexString.length - 1);
-		Platform.regexString += ")|(?<variable>\=!\=)(\\s+|$)"
+		Platform.regexString += ")|(?<variable>\\=!\\=)(\\s+|$)"
 	}
 	//#endregion 更新编译平台的正则表达式
 	

@@ -2,16 +2,13 @@ import { Macro } from "./Macro";
 import { ICommonLine } from "../Lines/CommonLine";
 
 export interface SplitOption {
-	fileHash: number;
-	text: string;
-	lineStart: number;
-	lineEnd: number;
-	line: ICommonLine;
+	lineText: string;
+	restText: string;
+	lineNumber: number;
 }
 
 export interface DecodeOption {
 	macro?: Macro;
 	allLines: ICommonLine[];
 	lineIndex: number;
-	fileHash: number;
 }

@@ -1,5 +1,9 @@
 import { Utils } from "./Utils";
 
+export enum TokenType {
+	Defined, Label, Variable
+}
+
 export class Token {
 
 	//#region 建立一个Token
@@ -15,6 +19,7 @@ export class Token {
 	}
 	//#endregion 建立一个Token
 
+	fileHash: number = 0;
 	line: number = 0;
 	start: number = 0;
 	text: string = "";

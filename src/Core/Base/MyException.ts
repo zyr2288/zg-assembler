@@ -22,15 +22,15 @@ export class MyException {
 
 	//#region 添加错误
 	/**添加错误 */
-	static PushException(word: Token, fileHash: number, msg: string) {
-		let fileErrors = MyException.allErrors.get(fileHash);
+	static PushException(token: Token, msg: string) {
+		let fileErrors = MyException.allErrors.get(token.fileHash);
 		if (!fileErrors) {
 			fileErrors = new Map();
-			MyException.allErrors.set(fileHash, fileErrors);
+			MyException.allErrors.set(token.fileHash, fileErrors);
 		}
 
-		let errorHash = Utils.GetHashcode(word.line, word.start);
-		fileErrors.set(errorHash, { word, msg });
+		let errorHash = Utils.GetHashcode(token.line, token.start);
+		fileErrors.set(errorHash, { word: token, msg });
 	}
 	//#endregion 添加错误
 

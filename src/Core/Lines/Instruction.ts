@@ -10,7 +10,7 @@ export interface IInstructionLine extends ICommonLine {
 	labelToken?: Token;
 	instruction: Token;
 	expression: Token;
-	exprParts?: ExpressionPart[];
+	exprParts: ExpressionPart[][];
 	addressingMode: IAddressingMode;
 	result?: number[];
 }
@@ -25,18 +25,28 @@ export class Instruction {
 			delete (line.labelToken);
 		}
 
+		line.exprParts = [];
+
 		let temp;
-		if (temp = Platform.platform.MatchAddressingMode(line.instruction, line.expression as Token, option.fileHash)) {
+		if (temp = Platform.platform.MatchAddressingMode(line.instruction, line.expression as Token)) {
 			line.addressingMode = temp.addressingMode;
 			for (let i = 0; i < temp.exprs.length; ++i) {
-				ExpressionUtils.SplitAndSort(temp.exprs[i]);
+				let temp2 = ExpressionUtils.SplitAndSort(temp.exprs[i]) ?? [];
+				line.exprParts[i] = temp2;
 			}
 		}
 
 	}
 
+	static ThirdAnalyse(option: DecodeOption): void {
+		let line = option.allLines[option.lineIndex] as IInstructionLine;
+		for (let i = 0; i < line.exprParts.length; ++i)
+			ExpressionUtils.CheckLabelsAndShowError(line.exprParts[i]);
+
+	}
+
 	static SetResult(line: IInstructionLine, value: number, index: number, length: number) {
 		line.result ??= [];
-		
+
 	}
 }

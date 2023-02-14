@@ -3,6 +3,7 @@ import { Config } from "./Base/Config";
 import { ExpressionUtils } from "./Base/ExpressionUtils";
 import { MyException } from "./Base/MyException";
 import { Localization } from "./l10n/Localization";
+import { Platform } from "./Platform/Platform";
 
 export class Assembler {
 	
@@ -14,6 +15,7 @@ export class Assembler {
 
 	constructor() {
 		ExpressionUtils.Initialize();
+		Platform.ChangePlatform("6502");
 	}
 
 

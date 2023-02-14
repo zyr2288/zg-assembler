@@ -1,4 +1,5 @@
 import { DecodeOption } from "../Base/Options";
+import { Token } from "../Base/Token";
 
 export enum LineType {
 	Unknow, Instruction, Command, Variable, Macro, Delegate
@@ -6,6 +7,7 @@ export enum LineType {
 
 /**通用行接口 */
 export interface ICommonLine {
+	orgText: Token;
 	type: LineType;
 	finished: boolean;
 	comment?: string;

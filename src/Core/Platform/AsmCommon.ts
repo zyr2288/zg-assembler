@@ -80,11 +80,11 @@ export class AsmCommon {
 	//#endregion 添加基础指令
 
 	//#region 匹配指令
-	MatchAddressingMode(instruction: Token, expression: Token, fileHash: number) {
+	MatchAddressingMode(instruction: Token, expression: Token) {
 		let addressTypes = this.allInstructions.get(instruction.text.toUpperCase());
 		if (!addressTypes) {
 			let errorMsg = Localization.GetMessage("Unknow instruction {0}", instruction.text);
-			MyException.PushException(instruction, fileHash, errorMsg);
+			MyException.PushException(instruction, errorMsg);
 			return;
 		}
 
@@ -146,13 +146,13 @@ export class AsmCommon {
 
 		if (!foundAddressType) {
 			let errorMsg = Localization.GetMessage("Instruction {0} do not support this addressing mode", instruction.text);
-			MyException.PushException(expression, fileHash, errorMsg);
+			MyException.PushException(expression, errorMsg);
 			return;
 		} else {
 			for (let i = 0; i < result.exprs.length; ++i) {
 				if (result.exprs[i].isEmpty) {
 					let errorMsg = Localization.GetMessage("Expression error");
-					MyException.PushException(result.exprs[i], fileHash, errorMsg);
+					MyException.PushException(result.exprs[i], errorMsg);
 					return;
 				}
 			}
