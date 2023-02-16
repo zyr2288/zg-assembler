@@ -8,4 +8,5 @@ export const English = {
 	"Instruction {0} do not support this addressing mode": "Instruction \"{0}\" do not support this addressing mode",
 	"Command {0} Error": "Command \"{0}\" Error",
 	"Expression error": "Expression error",
+	"Macro arguments error": "Macro arguments error",
 }

@@ -14,6 +14,8 @@ export class Environment {
 
 	/**标签树，key为 Label的Key，用于记忆标签层集关系 */
 	labelTrees = new Map<number, ILabelTree>();
+	/**用于记忆文件内macro */
+	macroTrees = new Map<number, string[]>();
 
 	/**文件标签，用于记忆文件内的所有标签 */
 	fileLabels = new Map<number, Set<number>>();
