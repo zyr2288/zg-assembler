@@ -1,6 +1,6 @@
 import { MyException } from "../Base/MyException";
 import { Token } from "../Base/Token";
-import { Localization } from "../l10n/Localization";
+import { Localization } from "../i18n/Localization";
 import { Utils } from "../Base/Utils";
 
 export interface IAddressingMode {

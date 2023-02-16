@@ -1,10 +1,9 @@
 import { Platform } from "../Platform/Platform";
 import { Token } from "../Base/Token";
-import { ICommonLine, LineType } from "./CommonLine";
+import { ICommonLine, LineType ,IUnknowLine} from "./CommonLine";
 import { IInstructionLine } from "./Instruction";
-import { ICommandLine } from "../Commands/Commands";
+import { ICommandLine,  } from "../Commands/Commands";
 import { IVariableLine } from "./VariableLine";
-import { IUnknowLine } from "./UnknowLine";
 import { DecodeOption, SplitOption } from "../Base/Options";
 
 export class LineUtils {
@@ -68,7 +67,7 @@ export class LineUtils {
 			} else {
 				newLine = {
 					type: LineType.Unknow,
-					orgToken: tokens[0],
+					orgText: tokens[0],
 					comment: tokens[1].text,
 					finished: false
 				} as IUnknowLine;

@@ -2,7 +2,7 @@ import { Compiler } from "../Base/Compiler";
 import { ExpressionPart } from "../Base/ExpressionUtils";
 import { MyException } from "../Base/MyException";
 import { SplitOption } from "../Base/Options";
-import { Localization } from "../l10n/Localization";
+import { Localization } from "../i18n/Localization";
 import { HightlightRange } from "../Lines/CommonLine";
 import { ICommandLine, ICommandTag } from "./Commands";
 

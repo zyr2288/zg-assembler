@@ -17,6 +17,11 @@ export interface IInstructionLine extends ICommonLine {
 
 export class Instruction {
 
+	//#region 第一次分析
+	/**
+	 * 第一次编译，分析操作指令的地址模式，并分割表达式内容
+	 * @param option 解析选项
+	 */
 	static FirstAnalyse(option: DecodeOption) {
 		let line = option.allLines[option.lineIndex] as IInstructionLine;
 		if (line.labelToken) {
@@ -37,13 +42,16 @@ export class Instruction {
 		}
 
 	}
+	//#endregion 第一次分析
 
+	//#region 第三次分析，并检查表达式是否有误
 	static ThirdAnalyse(option: DecodeOption): void {
 		let line = option.allLines[option.lineIndex] as IInstructionLine;
 		for (let i = 0; i < line.exprParts.length; ++i)
 			ExpressionUtils.CheckLabelsAndShowError(line.exprParts[i]);
 
 	}
+	//#endregion 第三次分析，并检查表达式是否有误
 
 	static SetResult(line: IInstructionLine, value: number, index: number, length: number) {
 		line.result ??= [];

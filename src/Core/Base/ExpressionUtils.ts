@@ -1,4 +1,4 @@
-import { Localization } from "../l10n/Localization";
+import { Localization } from "../i18n/Localization";
 import { LabelType, LabelUtils } from "./Label";
 import { MyException } from "./MyException";
 import { DecodeOption } from "./Options";

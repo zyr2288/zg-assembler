@@ -2,7 +2,7 @@ import { Compiler } from "./Base/Compiler";
 import { Config } from "./Base/Config";
 import { ExpressionUtils } from "./Base/ExpressionUtils";
 import { MyException } from "./Base/MyException";
-import { Localization } from "./l10n/Localization";
+import { Localization } from "./i18n/Localization";
 import { Platform } from "./Platform/Platform";
 
 export class Assembler {

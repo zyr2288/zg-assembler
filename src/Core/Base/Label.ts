@@ -1,4 +1,4 @@
-import { Localization } from "../l10n/Localization";
+import { Localization } from "../i18n/Localization";
 import { Utils } from "./Utils";
 import { MyException } from "./MyException";
 import { DecodeOption } from "./Options";
@@ -49,7 +49,7 @@ export interface INamelessLabel extends ICommonLabel {
 /**标签工具类 */
 export class LabelUtils {
 
-	static get namelessLabelRegex() { return new RegExp(/^((?<plus>\\+)|(?<minus>\\-))+$/g); };
+	static get namelessLabelRegex() { return new RegExp(/^((?<plus>\+)|(?<minus>\-))+$/g); };
 
 	/** Public */
 
@@ -185,11 +185,19 @@ export class LabelUtils {
 			Compiler.enviroment.namelessLabel.set(token.fileHash, labels);
 		}
 
+		let temp;
 		let index = 0;
-		let temp = isDown ? labels.upLabels : labels.downLabels;
-		for (; index < temp.length; ++index)
-			if (temp[index].token.line < token.line)
-				break;
+		if (isDown) {
+			temp = labels.downLabels;
+			for (; index < temp.length; ++index)
+				if (temp[index].token.line > token.line)
+					break;
+		} else {
+			temp = labels.upLabels;
+			for (; index < temp.length; ++index)
+				if (temp[index].token.line < token.line)
+					break;
+		}
 
 		temp.splice(index, 0, newItem);
 		return;

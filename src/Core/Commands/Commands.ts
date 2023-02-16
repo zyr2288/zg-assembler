@@ -34,4 +34,8 @@ export class Commands {
 
 	}
 
+	static SecondAnalyse(option: DecodeOption) {
+
+	}
+
 }
