@@ -23,7 +23,7 @@ export class LanguageServer {
 	/**文档修改时的自动大写以及重新监测 */
 	private DocumentChange() {
 		vscode.workspace.onDidChangeTextDocument((event: vscode.TextDocumentChangeEvent) => {
-			if (event.document.languageId != this.assembler.config.FileExtension.language)
+			if (event.document.languageId !== this.assembler.config.FileExtension.language)
 				return;
 
 

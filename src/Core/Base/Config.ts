@@ -55,31 +55,31 @@ export class Config {
 	static ReadConfigJson(json: string) {
 		Config.ProjectSetting = JSON.parse(json);
 
-		if (typeof (Config.ProjectSetting.platform) != "string")
+		if (typeof (Config.ProjectSetting.platform) !== "string")
 			Config.ProjectSetting.platform = "6502";
 
-		if (typeof (Config.ProjectSetting.intellisense) != "boolean")
+		if (typeof (Config.ProjectSetting.intellisense) !== "boolean")
 			Config.ProjectSetting.intellisense = true;
 
-		if (typeof (Config.ProjectSetting.argumentOutOfRangeError) != "boolean")
+		if (typeof (Config.ProjectSetting.argumentOutOfRangeError) !== "boolean")
 			Config.ProjectSetting.argumentOutOfRangeError = true;
 
-		if (typeof (Config.ProjectSetting.entry) != "string")
+		if (typeof (Config.ProjectSetting.entry) !== "string")
 			Config.ProjectSetting.entry = "";
 
-		if (typeof (Config.ProjectSetting.compileTimes) != "number")
+		if (typeof (Config.ProjectSetting.compileTimes) !== "number")
 			Config.ProjectSetting.compileTimes = 2;
 
-		if (typeof (Config.ProjectSetting.outputEntryFile) != "string")
+		if (typeof (Config.ProjectSetting.outputEntryFile) !== "string")
 			Config.ProjectSetting.outputEntryFile = "";
 
-		if (typeof (Config.ProjectSetting.outputSingleFile) != "string")
+		if (typeof (Config.ProjectSetting.outputSingleFile) !== "string")
 			Config.ProjectSetting.outputSingleFile = "";
 
-		if (typeof (Config.ProjectSetting.copyToClipboard) != "boolean")
+		if (typeof (Config.ProjectSetting.copyToClipboard) !== "boolean")
 			Config.ProjectSetting.copyToClipboard = false;
 
-		if (typeof (Config.ProjectSetting.patchFile) != "string")
+		if (typeof (Config.ProjectSetting.patchFile) !== "string")
 			Config.ProjectSetting.patchFile = "";
 
 		if (!(Config.ProjectSetting.includes instanceof Array)) {
@@ -87,7 +87,7 @@ export class Config {
 		} else {
 			let success = true;
 			for (let i = 0; i < Config.ProjectSetting.includes.length; i++) {
-				if (typeof (Config.ProjectSetting.includes[i]) == "string")
+				if (typeof (Config.ProjectSetting.includes[i]) === "string")
 					continue;
 
 				success = false;
@@ -101,7 +101,7 @@ export class Config {
 		} else {
 			let success = true;
 			for (let i = 0; i < Config.ProjectSetting.excludes.length; i++) {
-				if (typeof (Config.ProjectSetting.excludes[i]) == "string")
+				if (typeof (Config.ProjectSetting.excludes[i]) === "string")
 					continue;
 
 				success = false;

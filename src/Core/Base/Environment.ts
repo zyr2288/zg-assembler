@@ -5,6 +5,10 @@ import { Utils } from "./Utils";
 
 export class Environment {
 
+	orgAddress: number = -1;
+	baseAddress: number = 0;
+	addressOffset: number = 0;
+
 	/**所有标签 Key: Label的Hash值 */
 	allLabel = new Map<number, ILabel>();
 	allMacro = new Map<string, Macro>();
@@ -54,7 +58,7 @@ export class Environment {
 	}
 
 	UpdateMacroRegexString() {
-		if (this.allMacro.size == 0) {
+		if (this.allMacro.size === 0) {
 			this.macroRegexString = "";
 			return;
 		}

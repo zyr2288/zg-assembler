@@ -103,7 +103,7 @@ export class AsmCommon {
 
 			// 表达式为空
 			if (expression.isEmpty) {
-				if (type.addressType.length == 0) {
+				if (type.addressType.length === 0) {
 					foundAddressType = true;
 					result.addressingMode = type;
 					break;
@@ -112,14 +112,14 @@ export class AsmCommon {
 
 			// 表达式不为空
 			else {
-				if (type.addressType.length == 0)
+				if (type.addressType.length === 0)
 					continue;
 
 				let text = expression.text;
 				start = 0;
 				foundAddressType = true;
 				for (let j = 0; j < type.addressType.length; ++j) {
-					if (type.addressType[j] == "")
+					if (type.addressType[j] === "")
 						continue;
 
 					const regex = new RegExp(type.addressType[j], "i");

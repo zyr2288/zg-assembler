@@ -11,4 +11,9 @@ export const Chinese: LocalizationMsg = {
 	"Command {0} Error": "命令 \"{0}\" 错误",
 	"Expression error": "表达式错误",
 	"Macro arguments error": "自定义函数参数错误",
+	"Command {0} do not support nesting": "命令 \"{0}\" 不支持嵌套",
+	"Command {0} can not use in Macro": "命令 \"{0}\" 不能使用在自定义函数内",
+	"Unmatched end of command {0}": "找不到匹配的结束命令",
+	"Command {0} can not use label": "命令 \"{0}\" 不支持标签",
+	"Command arguments error": "命令参数错误",
 }

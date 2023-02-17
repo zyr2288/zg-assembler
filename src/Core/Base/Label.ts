@@ -65,7 +65,7 @@ export class LabelUtils {
 				return;
 			}
 
-			let isDown = token.text[0] == "+";
+			let isDown = token.text[0] === "+";
 			LabelUtils.InsertNamelessLabel(token, isDown, option);
 			return;
 		}
@@ -79,7 +79,7 @@ export class LabelUtils {
 		// 自定义函数内不允许使用子标签
 		if (option.macro) {
 			let hash = Utils.GetHashcode(token.text);
-			if (option.macro.labels.has(hash) || option.macro.name.text == token.text) {
+			if (option.macro.labels.has(hash) || option.macro.name.text === token.text) {
 				let errorMsg = Localization.GetMessage("Label {0} is already defined", token.text);
 				MyException.PushException(token, errorMsg);
 				return;
@@ -214,7 +214,7 @@ export class LabelUtils {
 
 		let fileLabelSet = Compiler.enviroment.fileLabels.get(token.fileHash)!;
 		let parentHash = 0;
-		if (type == LabelScope.Local)
+		if (type === LabelScope.Local)
 			parentHash = Utils.GetHashcode(token.fileHash);
 
 		let parentLabelTree = Compiler.enviroment.labelTrees.get(parentHash);
@@ -251,8 +251,8 @@ export class LabelUtils {
 			result = Compiler.enviroment.allLabel.get(labelHash);
 
 			//如果是最后一个
-			if (index == lastIndex) {
-				if (result?.labelType == LabelType.Defined || result?.labelType == LabelType.Label) {
+			if (index === lastIndex) {
+				if (result?.labelType === LabelType.Defined || result?.labelType === LabelType.Label) {
 					let errorMsg = Localization.GetMessage("Label {0} is already defined", tokens[index].text);
 					MyException.PushException(token, errorMsg);
 					return;

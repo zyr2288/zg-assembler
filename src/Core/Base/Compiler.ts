@@ -6,8 +6,15 @@ import { Commands, ICommandLine } from "../Commands/Commands";
 import { MacroUtils } from "./Macro";
 import { LabelType, LabelUtils } from "./Label";
 import { Token } from "./Token";
-import { IVariableLine } from "../Lines/VariableLine";
+import { IVariableLine, VariableUtils } from "../Lines/VariableLine";
 import { Platform } from "../Platform/Platform";
+
+export interface SplitLine {
+	label: Token;
+	comOrIntrs: Token;
+	expression: Token;
+}
+
 
 export class Compiler {
 
@@ -50,8 +57,7 @@ export class Compiler {
 					Commands.FirstAnalyse(option);
 					break;
 				case LineType.Variable:
-					break;
-				case LineType.Unknow:
+					VariableUtils.FirstAnalyse(option);
 					break;
 			}
 
@@ -105,6 +111,7 @@ export class Compiler {
 				case LineType.Command:
 					break;
 				case LineType.Variable:
+					VariableUtils.ThirdAnalyse(option);
 					break;
 				case LineType.Macro:
 					break;
@@ -115,7 +122,7 @@ export class Compiler {
 
 	//#region 分解文本
 	/**分解文本 */
-	static SplitTexts(text: string, option: DecodeOption): void {
+	private static SplitTexts(text: string, option: DecodeOption): void {
 		let match: RegExpExecArray | null = null;
 		let tokens: Token[];
 		let newLine = {} as ICommonLine;
@@ -123,29 +130,27 @@ export class Compiler {
 		//#region 保存行Token
 		const SaveToken = (lineType: LineType) => {
 
-			let pre = tokens[0].Substring(0, match!.index);
-			let currect = tokens[0].Substring(match!.index, match![0].length);
-			let after = tokens[0].Substring(match!.index + match![0].length);
+			let splitLine: SplitLine = {
+				label: tokens[0].Substring(0, match!.index),
+				comOrIntrs: tokens[0].Substring(match!.index, match![0].length),
+				expression: tokens[0].Substring(match!.index + match![0].length),
+			};
 
 			switch (lineType) {
 				case LineType.Command:
-					newLine = { type: LineType.Command, command: currect, expression: after, finished: false } as ICommandLine;
+					newLine = { type: LineType.Command } as ICommandLine;
 					break;
 				case LineType.Instruction:
-					newLine = { type: LineType.Instruction, instruction: currect, expression: after, finished: false } as IInstructionLine;
+					newLine = { type: LineType.Instruction } as IInstructionLine;
 					break;
 				case LineType.Variable:
-					newLine = { type: LineType.Variable, expression: after, finished: false } as IVariableLine;
+					newLine = { type: LineType.Variable } as IVariableLine;
 					break;
 			}
 
 			// @ts-ignore
-			newLine.labelToken = pre;
+			newLine.splitLine = splitLine;
 			newLine.finished = false;
-
-			if (!pre.isEmpty)
-				// @ts-ignore
-				newLine.labelToken = pre;
 
 			if (!tokens[1].isEmpty)
 				option.allLines[option.allLines.length - 1].comment = tokens[1].text;

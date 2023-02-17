@@ -99,11 +99,11 @@ export class FileUtils {
 	 */
 	static async GetPathFolder(path: string) {
 		let type = await FileUtils.PathType(path);
-		if (type == "none")
+		if (type === "none")
 			return "";
 
 		let parts = path.split(/[\\\/]/g);
-		if (type == "file")
+		if (type === "file")
 			parts.splice(parts.length - 1, 1);
 
 		return parts.join(Config.CommonSplit);

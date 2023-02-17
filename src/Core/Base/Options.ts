@@ -10,5 +10,6 @@ export interface SplitOption {
 export interface DecodeOption {
 	macro?: Macro;
 	allLines: ICommonLine[];
+	includeCommandLines?: { match: string, index: number }[];
 	lineIndex: number;
 }

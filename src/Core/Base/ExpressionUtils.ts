@@ -1,4 +1,5 @@
 import { Localization } from "../i18n/Localization";
+import { Compiler } from "./Compiler";
 import { LabelType, LabelUtils } from "./Label";
 import { MyException } from "./MyException";
 import { DecodeOption } from "./Options";
@@ -139,6 +140,154 @@ export class ExpressionUtils {
 		}
 	}
 	//#endregion 分析所有表达式小节并推送错误
+
+	//#region 获取表达式的值
+	static GetExpressionValue(allParts: ExpressionPart[], analyseOption: "tryValue" | "getValue", option?: DecodeOption) {
+		const GetPart = (index: number) => {
+			if (index < 0 || index >= allParts.length)
+				return;
+
+			return allParts[index];
+		}
+
+		let labelUnknow = false;
+		let result = { success: true, value: 0 };
+		for (let index = 0; index < allParts.length; index++) {
+			const element = allParts[index];
+			if (element.type === PriorityType.Level_0_Sure)
+				continue;
+
+			if (element.type < PriorityType.Level_4_Brackets && element.type >= 0) {
+				if (labelUnknow)
+					continue;
+
+				if (element.token.text === "*") {
+					element.value = Compiler.enviroment.orgAddress;
+					element.type = PriorityType.Level_0_Sure;
+					continue;
+				}
+
+				let temp = ExpressionUtils.GetNumber(element.token.text);
+				if (temp.success) {
+					element.value = temp.value;
+					element.type = PriorityType.Level_0_Sure;
+				} else {
+					let label = LabelUtils.FindLabel(element.token, option);
+					if (label?.value === undefined) {
+						if (analyseOption === "getValue") {
+							let errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
+							MyException.PushException(element.token, errorMsg);
+							result.success = false;
+							break;
+						}
+						labelUnknow = true;
+					} else {
+						element.value = label.value;
+						element.type = PriorityType.Level_0_Sure;
+					}
+				}
+				continue;
+			}
+
+			let pre1 = GetPart(index - 2);
+			let pre2 = GetPart(index - 1);
+			let operation = element;
+			if (element.type === PriorityType.Level_5) {
+				if (!pre2) {
+					result.success = false;
+					let errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
+					MyException.PushException(element.token, errorMsg);
+					break;
+				}
+
+				switch (operation.token.text) {
+					case "!":
+						operation.value = pre2.value !== 0 ? 1 : 0;
+						break;
+					case "-":
+						operation.value = -pre2.value;
+						break;
+					case ">":
+						operation.value = (pre2.value & 0xFF00) >> 8
+						break;
+					case "<":
+						operation.value = pre2.value & 0xFF;
+						break;
+				}
+				operation.type = PriorityType.Level_0_Sure;
+				allParts.splice(index - 1, 1);
+				index -= 1;
+			} else {
+				if (!pre1 || !pre2) {
+					result.success = false;
+					let errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
+					MyException.PushException(element.token, errorMsg);
+					break;
+				}
+
+				switch (operation.token.text) {
+					case "*":
+						operation.value = pre1.value * pre2.value;
+						break;
+					case "/":
+						operation.value = pre1.value / pre2.value;
+						break;
+					case "%":
+						operation.value = pre1.value % pre2.value;
+						break;
+					case "+":
+						operation.value = pre1.value + pre2.value;
+						break;
+					case "-":
+						operation.value = pre1.value - pre2.value;
+						break;
+					case "<<":
+						operation.value = pre1.value << pre2.value;
+						break;
+					case ">>":
+						operation.value = pre1.value >> pre2.value;
+						break;
+					case "==":
+						operation.value = pre1.value === pre2.value ? 1 : 0;
+						break;
+					case "!=":
+						operation.value = pre1.value !== pre2.value ? 1 : 0;
+						break;
+					case "&":
+						operation.value = pre1.value >> pre2.value;
+						break;
+					case "^":
+						operation.value = pre1.value >> pre2.value;
+						break;
+					case "|":
+						operation.value = pre1.value >> pre2.value;
+						break;
+					case "&&":
+						operation.value = pre1.value && pre2.value;
+						break;
+					case "||":
+						operation.value = pre1.value || pre2.value;
+						break;
+				}
+
+				operation.type = PriorityType.Level_0_Sure;
+				allParts.splice(index - 2, 2);
+				index -= 2;
+			}
+
+			if (!result.success)
+				break;
+		}
+
+		if (labelUnknow)
+			result.success = false;
+
+		if (result.success)
+			result.value = allParts[0].value;
+
+		return result;
+	}
+	//#endregion 获取表达式的值
 
 	/** Private */
 
@@ -304,7 +453,7 @@ export class ExpressionUtils {
 					result.parts.push(part);
 					break;
 				case PriorityType.Level_4_Brackets:
-					if (part.token.text == "(") {
+					if (part.token.text === "(") {
 						stack.push(part);
 					} else {
 						while (true) {
@@ -314,7 +463,7 @@ export class ExpressionUtils {
 								MyException.PushException(part.token, erroMsg);
 								result.success = false;
 								break;
-							} else if (lex.type == PriorityType.Level_4_Brackets) {
+							} else if (lex.type === PriorityType.Level_4_Brackets) {
 								break;
 							}
 							result.parts.push(lex);

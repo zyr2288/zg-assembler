@@ -1,4 +1,3 @@
-import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 
 export enum LineType {
