@@ -9,27 +9,15 @@ export interface IDefinedTag extends ICommandTag {
 	exprParts: ExpressionPart[];
 }
 
+export class Defined {
+	static FirstAnalyse_Def(option: DecodeOption) {
+
+		return true;
+	}
+}
+
 function FirstAnalyse_Def(option: DecodeOption) {
-	let line = option.allLines[option.lineIndex] as ICommandLine;
-	let tokens: Token[] = line.tag;
-	let label = LabelUtils.CreateLabel(tokens[0], undefined, line.comment);
-	if (!label) {
-		line.errorLine = true;
-		return false;
-	}
 
-	label.labelDefined = LabelDefinedState.Defined;
-	line.label = tokens[0];
-	tokens[0].type = TokenType.Defined;
-	line.tokens.push(tokens[0]);
-
-	let temp = LexerUtils.SplitAndSort(tokens[1]);
-	if (!temp) {
-		line.errorLine = true;
-		return false;
-	}
-
-	line.tag = temp;
 	return true;
 }
 
@@ -38,6 +26,7 @@ function SecondAnalyse_Def(option: DecodeOption) {
 }
 
 function ThirdAnalyse_Def(option: DecodeOption) {
+	return true;
 
 }
 
@@ -58,5 +47,9 @@ function Compile_Def(option: DecodeOption) {
 }
 
 Commands.AddCommand({
-	
+	name: ".DEF",
+	min: 1,
+	firstAnalyse: FirstAnalyse_Def,
+	thirdAnalyse: ThirdAnalyse_Def,
+	compile: Compile_Def
 })

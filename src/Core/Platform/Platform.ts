@@ -32,8 +32,8 @@ export class Platform {
 	//#region 更新编译平台的正则表达式
 	private static UpdateRegex() {
 		Platform.regexString = "(\\s+|^)(?<command>";
-		for (let i = 0; i < Commands.AllCommand.length; ++i)
-			Platform.regexString += Utils.TransformRegex(Commands.AllCommand[i]) + "|";
+		for (let i = 0; i < Commands.allCommandNames.length; ++i)
+			Platform.regexString += Utils.TransformRegex(Commands.allCommandNames[i]) + "|";
 
 		Platform.regexString = Platform.regexString.substring(0, Platform.regexString.length - 1);
 		Platform.regexString += ")|";

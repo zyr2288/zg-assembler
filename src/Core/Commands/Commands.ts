@@ -56,21 +56,21 @@ export interface ICommandLine extends ICommonLine {
 
 export class Commands {
 
-	static allCommand = [];
+	static allCommandNames: string[] = [];
 
 	/**命令的参数个数最小与最大，key是命令 */
 	private static commandsParamsCount = new Map<string, { min: number, max: number }>();
 	private static allCommands = new Map<string, CommandParams>();
-	private static ignoreEndCom: string[] = [];
+	private static ignoreEndCom = new Set<string>();
 
 	static Initialize() {
-		this.AddCommand
+		
 	}
 
 	//#region 第一次分析
 	static async FirstAnalyse(option: DecodeOption) {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
-		if (Commands.ignoreEndCom.includes(line.command.text)) {
+		if (Commands.ignoreEndCom.has(line.command.text)) {
 			line.finished = true;
 			return true;
 		}
@@ -147,15 +147,27 @@ export class Commands {
 	}
 	//#endregion 第三次分析
 
+	//#region 增加命令
+	/**
+	 * 增加命令
+	 * @param option 选项
+	 */
 	static AddCommand(option: {
+		/**命令名称 例如:".ORG" */
 		name: string,
+		/**中间包含的命令 */
 		includes?: IncludeCommand[],
+		/**命令结尾 */
 		end?: string,
+		/**是否忽略命令后的参数 */
 		ignoreEnd?: boolean,
 		/**允许有标签，默认允许 */
 		label?: boolean,
+		/**参数最小个数 */
 		min: number,
+		/**参数最大个数 */
 		max?: number,
+		/**是否允许嵌套，默认允许 */
 		nested?: boolean,
 		/**允许使用在Macro内，默认允许 */
 		ableMacro?: boolean
@@ -165,8 +177,35 @@ export class Commands {
 		thirdAnalyse?: (baseLine: DecodeOption) => Promise<boolean> | boolean,
 		compile?: (option: DecodeOption) => Promise<boolean> | boolean,
 	}) {
+		let actionParams: CommandParams = {
+			FirstAnalyse: option.firstAnalyse,
+			SecondAnalyse: option.secondAnalyse,
+			ThirdAnalyse: option.thirdAnalyse,
+			CommandCompile: option.compile,
+			startCommand: option.name,
+			includeCommand: option.includes,
+			endCommand: option.end,
+			enableLabel: option.label ?? true,
+			nested: option.nested ?? false,
+			enableInMacro: option.ableMacro ?? true
+		};
 
+		Commands.commandsParamsCount.set(option.name, { min: option.min, max: option.max ?? option.min });
+		if (option.end) {
+			Commands.commandsParamsCount.set(option.end, { min: 0, max: 0 });
+			if (option.ignoreEnd && !Commands.ignoreEndCom.has(option.end))
+				Commands.ignoreEndCom.add(option.end);
+		}
+
+		if (option.includes) {
+			option.includes.forEach(value => {
+				Commands.commandsParamsCount.set(value.name, { min: value.min, max: value.max ?? value.min });
+			});
+		}
+
+		Commands.allCommands.set(option.name, actionParams);
 	}
+	//#endregion 增加命令
 
 	/***** Private *****/
 
