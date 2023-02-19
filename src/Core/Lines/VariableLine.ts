@@ -10,7 +10,7 @@ export interface IVariableLine extends ICommonLine {
 	exprParts: ExpressionPart[];
 }
 
-export class VariableUtils {
+export class VariableLineUtils {
 	static FirstAnalyse(option: DecodeOption) {
 		let line = option.allLines[option.lineIndex] as IVariableLine;
 		let label = LabelUtils.CreateLabel(line.splitLine!.label, option);

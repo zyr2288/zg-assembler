@@ -6,7 +6,7 @@ import { Commands, ICommandLine } from "../Commands/Commands";
 import { MacroUtils } from "./Macro";
 import { LabelType, LabelUtils } from "./Label";
 import { Token } from "./Token";
-import { IVariableLine, VariableUtils } from "../Lines/VariableLine";
+import { IVariableLine, VariableLineUtils } from "../Lines/VariableLine";
 import { Platform } from "../Platform/Platform";
 
 export interface SplitLine {
@@ -57,7 +57,7 @@ export class Compiler {
 					Commands.FirstAnalyse(option);
 					break;
 				case LineType.Variable:
-					VariableUtils.FirstAnalyse(option);
+					VariableLineUtils.FirstAnalyse(option);
 					break;
 			}
 
@@ -111,7 +111,7 @@ export class Compiler {
 				case LineType.Command:
 					break;
 				case LineType.Variable:
-					VariableUtils.ThirdAnalyse(option);
+					VariableLineUtils.ThirdAnalyse(option);
 					break;
 				case LineType.Macro:
 					break;

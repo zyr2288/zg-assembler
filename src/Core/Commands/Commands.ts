@@ -51,7 +51,7 @@ export interface ICommandLine extends ICommonLine {
 	/**结果 */
 	result?: number[];
 	/**附加数据 */
-	tag?: ICommandTag;
+	tag?: any;
 }
 
 export class Commands {
@@ -62,6 +62,10 @@ export class Commands {
 	private static commandsParamsCount = new Map<string, { min: number, max: number }>();
 	private static allCommands = new Map<string, CommandParams>();
 	private static ignoreEndCom: string[] = [];
+
+	static Initialize() {
+		this.AddCommand
+	}
 
 	//#region 第一次分析
 	static async FirstAnalyse(option: DecodeOption) {
@@ -133,7 +137,7 @@ export class Commands {
 	//#endregion 第二次分析
 
 	//#region 第三次分析
-	static async ThirdAnalyse(option:DecodeOption) {
+	static async ThirdAnalyse(option: DecodeOption) {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
 		let com = Commands.allCommands.get(line.command.text)!;
 		if (com.ThirdAnalyse)
@@ -142,6 +146,27 @@ export class Commands {
 		return true;
 	}
 	//#endregion 第三次分析
+
+	static AddCommand(option: {
+		name: string,
+		includes?: IncludeCommand[],
+		end?: string,
+		ignoreEnd?: boolean,
+		/**允许有标签，默认允许 */
+		label?: boolean,
+		min: number,
+		max?: number,
+		nested?: boolean,
+		/**允许使用在Macro内，默认允许 */
+		ableMacro?: boolean
+		/**基础分析 */
+		firstAnalyse?: (option: DecodeOption) => Promise<boolean> | boolean,
+		secondAnalyse?: (option: DecodeOption) => Promise<boolean> | boolean,
+		thirdAnalyse?: (baseLine: DecodeOption) => Promise<boolean> | boolean,
+		compile?: (option: DecodeOption) => Promise<boolean> | boolean,
+	}) {
+
+	}
 
 	/***** Private *****/
 

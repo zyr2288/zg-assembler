@@ -1,11 +1,17 @@
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
-import { LabelUtils } from "../Base/Label";
+import { ILabel, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
-import { ICommandLine } from "./Commands";
+import { Token } from "../Base/Token";
+import { Commands, ICommandLine, ICommandTag } from "./Commands";
 
-export function FirstAnalyse_Def(option: DecodeOption) {
+export interface IDefinedTag extends ICommandTag {
+	label: ILabel;
+	exprParts: ExpressionPart[];
+}
+
+function FirstAnalyse_Def(option: DecodeOption) {
 	let line = option.allLines[option.lineIndex] as ICommandLine;
-	let tokens: Token[] = option.tag;
+	let tokens: Token[] = line.tag;
 	let label = LabelUtils.CreateLabel(tokens[0], undefined, line.comment);
 	if (!label) {
 		line.errorLine = true;
@@ -27,20 +33,20 @@ export function FirstAnalyse_Def(option: DecodeOption) {
 	return true;
 }
 
-export function SecondAnalyse_Def(option: DecodeOption) {
+function SecondAnalyse_Def(option: DecodeOption) {
 
 }
 
-export function ThirdAnalyse_Def(option: DecodeOption) {
+function ThirdAnalyse_Def(option: DecodeOption) {
 
 }
 
-export function Compile_Def(option: DecodeOption) {
+function Compile_Def(option: DecodeOption) {
 	let line = option.allLines[option.lineIndex] as ICommandLine;
 
 	let tag = line.tag as ExpressionPart[];
 
-	
+
 	let temp = ExpressionUtils.GetExpressionValue(tag, "getValue");
 	let label = LabelUtils.FindLabel(line.label!.token, option);
 	if (label && temp.success) {
@@ -50,3 +56,7 @@ export function Compile_Def(option: DecodeOption) {
 	}
 	return false;
 }
+
+Commands.AddCommand({
+	
+})
