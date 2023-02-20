@@ -1,10 +1,13 @@
 import { SplitLine } from "../Base/Compiler";
+import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { MyException } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Localization } from "../i18n/Localization";
-import { ICommonLine, LineType } from "../Lines/CommonLine";
+import { HightlightToken, HightlightType, ICommonLine, LineType } from "../Lines/CommonLine";
+import { BaseAndOrg } from "./BaseAndOrg";
+import { Defined } from "./Defined";
 
 interface CommandParams {
 	/**第一阶段，基础分析 */
@@ -47,7 +50,7 @@ export interface ICommandLine extends ICommonLine {
 	/**命令 */
 	command: Token;
 	/**表达式 */
-	expression: Token;
+	expParts: ExpressionPart[][];
 	/**结果 */
 	result?: number[];
 	/**附加数据 */
@@ -63,9 +66,20 @@ export class Commands {
 	private static allCommands = new Map<string, CommandParams>();
 	private static ignoreEndCom = new Set<string>();
 
+	//#region 初始化
 	static Initialize() {
-		
+		const classes = [BaseAndOrg, Defined];
+		for (let i = 0; i < classes.length; ++i) {
+			let func = Reflect.get(classes[i], "Initialize");
+			func();
+		}
+
+		Commands.allCommandNames = [];
+		Commands.allCommands.forEach((value, key, map) => {
+			Commands.allCommandNames.push(key)
+		});
 	}
+	//#endregion 初始化
 
 	//#region 第一次分析
 	static async FirstAnalyse(option: DecodeOption) {
@@ -159,13 +173,13 @@ export class Commands {
 		includes?: IncludeCommand[],
 		/**命令结尾 */
 		end?: string,
-		/**是否忽略命令后的参数 */
+		/**是否忽略命令后的参数，默认忽略 */
 		ignoreEnd?: boolean,
 		/**允许有标签，默认允许 */
 		label?: boolean,
 		/**参数最小个数 */
 		min: number,
-		/**参数最大个数 */
+		/**参数最大个数，-1为无限制 */
 		max?: number,
 		/**是否允许嵌套，默认允许 */
 		nested?: boolean,
@@ -207,6 +221,18 @@ export class Commands {
 	}
 	//#endregion 增加命令
 
+	//#region 基础获取命令的高亮Token
+	static GetTokens(this: ICommandLine) {
+		let result: HightlightToken[] = [];
+
+		if (this.label)
+			result.push({ token: this.label.token, type: HightlightType.Defined });
+
+		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
+		return result;
+	}
+	//#endregion 基础获取命令的高亮Token
+
 	/***** Private *****/
 
 	//#region 分析参数是否满足，并做最大分割
@@ -218,15 +244,16 @@ export class Commands {
 	private static AnalyseParams(line: ICommandLine) {
 		let params = Commands.commandsParamsCount.get(line.command.text)!;
 		if (params.max === 0) {
-			if (!line.expression.isEmpty) {
+			if (!line.splitLine!.expression.isEmpty) {
 				let errorMsg = Localization.GetMessage("Macro arguments error");
 				MyException.PushException(line.command, errorMsg);
 				return;
 			}
-			return [line.expression.Copy()];
+			return [line.splitLine!.expression.Copy()];
 		}
 
-		let args = line.expression.Split(/(?=\"([^\"]*)\")\s+/g, { count: params.max - 1 });
+		let count = params.max === -1 ? undefined : params.max;
+		let args = line.splitLine!.expression.Split(/(?=\"([^\"]*)\")\,/g, { count });
 		if (args[params.min - 1].isEmpty) {
 			let errorMsg = Localization.GetMessage("Macro arguments error");
 			MyException.PushException(line.command, errorMsg);

@@ -1,12 +1,13 @@
 import { ICommonLine, IUnknowLine, LineType } from "../Lines/CommonLine";
-import { Utils } from "./Utils";
-import { ILabel, LabelUtils } from "./Label";
-import { Token } from "./Token";
-import { DecodeOption } from "./Options";
-import { Compiler } from "./Compiler";
-import { MyException } from "./MyException";
+import { Utils } from "../Base/Utils";
+import { ILabel, LabelUtils } from "../Base/Label";
+import { Token } from "../Base/Token";
+import { DecodeOption } from "../Base/Options";
+import { Compiler } from "../Base/Compiler";
+import { MyException } from "../Base/MyException";
 import { Localization } from "../i18n/Localization";
-import { ExpressionPart, ExpressionUtils } from "./ExpressionUtils";
+import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
+import { Commands } from "./Commands";
 
 export interface IMacroLine extends ICommonLine {
 	macro: Token;
@@ -14,7 +15,7 @@ export interface IMacroLine extends ICommonLine {
 	expression: Token;
 }
 
-export class Macro {
+export class MacroLabel {
 	name!: Token;
 	args: Token[] = [];
 	labels = new Map<number, ILabel>();
@@ -22,7 +23,7 @@ export class Macro {
 	comment?: string;
 
 	GetCopy() {
-		return Utils.DeepClone<Macro>(this);
+		return Utils.DeepClone<MacroLabel>(this);
 	}
 }
 
@@ -64,5 +65,27 @@ export class MacroUtils {
 
 	}
 	//#endregion 匹配一行自定义函数
-	
+
+}
+
+export class Macro {
+	static Initialize() {
+		Commands.AddCommand({
+			name: ".MACRO",
+			end: ".ENDM",
+			min: 1,
+			max: -1,
+			nested: false,
+			label: false,
+			ableMacro: false,
+		})
+	}
+
+	static FirstAnalyse(option:DecodeOption) {
+
+	}
+
+	static ThirdAnalyse(option:DecodeOption) {
+		
+	}
 }

@@ -2,7 +2,7 @@ import { SplitLine } from "../Base/Compiler";
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
-import { ICommonLine } from "./CommonLine";
+import { HightlightToken, HightlightType, ICommonLine } from "./CommonLine";
 
 export interface IVariableLine extends ICommonLine {
 	splitLine?: SplitLine;
@@ -19,11 +19,23 @@ export class VariableLineUtils {
 		let parts = ExpressionUtils.SplitAndSort(line.splitLine!.expression);
 		if (parts) line.exprParts = parts;
 
-		delete(line.splitLine);
+		delete (line.splitLine);
 	}
 
 	static ThirdAnalyse(option: DecodeOption) {
 		let line = option.allLines[option.lineIndex] as IVariableLine;
 		ExpressionUtils.CheckLabelsAndShowError(line.exprParts);
+
+		line.GetTokens = VariableLineUtils.GetTokens.bind(line);
+	}
+
+	static GetTokens(this: IVariableLine) {
+		let result: HightlightToken[] = [];
+
+		for (let i = 0; i < this.exprParts.length; ++i) {
+			const part = this.exprParts[i];
+			result.push({ token: part.token, type: part.highlightingType });
+		}
+		return result;
 	}
 }

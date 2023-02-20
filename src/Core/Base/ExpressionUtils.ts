@@ -1,4 +1,5 @@
 import { Localization } from "../i18n/Localization";
+import { HightlightToken, HightlightType } from "../Lines/CommonLine";
 import { Compiler } from "./Compiler";
 import { LabelType, LabelUtils } from "./Label";
 import { MyException } from "./MyException";
@@ -43,6 +44,7 @@ enum PriorityType {
 
 //#region 表达式分割
 export interface ExpressionPart {
+	highlightingType: HightlightType;
 	type: PriorityType;
 	token: Token;
 	value: number;
@@ -136,6 +138,15 @@ export class ExpressionUtils {
 			if (!temp) {
 				let errorMsg = Localization.GetMessage("Label {0} not found", parts[i].token.text);
 				MyException.PushException(parts[i].token, errorMsg);
+			} else {
+				switch (temp.labelType) {
+					case LabelType.Defined:
+						part.highlightingType = HightlightType.Defined;
+						break;
+					case LabelType.Label:
+						part.highlightingType = HightlightType.Label;
+						break;
+				}
 			}
 		}
 	}
@@ -289,6 +300,17 @@ export class ExpressionUtils {
 	}
 	//#endregion 获取表达式的值
 
+	//#region 将所有表达式部分转换成高亮Token
+	static GetHighlightingTokens(parts: ExpressionPart[][]) {
+		let result: HightlightToken[] = [];
+		for (let i = 0; i < parts.length; ++i)
+			for (let j = 0; j < parts[i].length; ++j)
+				result.push({ token: parts[i][j].token, type: parts[i][j].highlightingType });
+
+		return result;
+	}
+	//#endregion 将所有表达式部分转换成高亮Token
+
 	/** Private */
 
 	//#region 表达式分解
@@ -302,7 +324,7 @@ export class ExpressionUtils {
 
 		// 临时标签
 		if (LabelUtils.namelessLabelRegex.test(expression.text)) {
-			result.parts.push({ token: expression, type: PriorityType.Level_1_Label, value: 0 });
+			result.parts.push({ token: expression, type: PriorityType.Level_1_Label, value: 0, highlightingType: HightlightType.Label });
 			return result;
 		}
 
@@ -311,7 +333,7 @@ export class ExpressionUtils {
 		let tokens = expression.Split(regex, { saveToken: true });
 		let isLabel = true;
 
-		let part: ExpressionPart = { type: PriorityType.Level_0_Sure, token: {} as Token, value: 0 };
+		let part: ExpressionPart = { type: PriorityType.Level_0_Sure, token: {} as Token, value: 0, highlightingType: HightlightType.None };
 
 		let stringStart = - 1;
 		for (let i = 0; i < tokens.length; ++i) {
@@ -412,7 +434,7 @@ export class ExpressionUtils {
 			}
 
 			result.parts.push(part);
-			part = { type: PriorityType.Level_0_Sure, token: {} as Token, value: 0 };
+			part = { type: PriorityType.Level_0_Sure, token: {} as Token, value: 0, highlightingType: HightlightType.None };
 		}
 
 		if (result.success) {
@@ -420,8 +442,8 @@ export class ExpressionUtils {
 			let right = new Token();
 			left.text = "(";
 			right.text = ")";
-			result.parts.unshift({ token: left, type: PriorityType.Level_4_Brackets, value: 0 });
-			result.parts.push({ token: right, type: PriorityType.Level_4_Brackets, value: 0 });
+			result.parts.unshift({ token: left, type: PriorityType.Level_4_Brackets, value: 0, highlightingType: HightlightType.None });
+			result.parts.push({ token: right, type: PriorityType.Level_4_Brackets, value: 0, highlightingType: HightlightType.None });
 		}
 
 		return result;

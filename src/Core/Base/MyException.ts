@@ -36,7 +36,7 @@ export class MyException {
 
 	//#region 获取错误
 	/**获取所有错误 */
-	static GetException() {
+	static GetExceptions() {
 		let errors: OutErrorMsg[] = [];
 		MyException.allErrors.forEach((errorMap, fileHash) => {
 			errorMap.forEach((errorMsg, wordHash) => {

@@ -1,5 +1,9 @@
 import * as vscode from "vscode";
 import { Assembler } from "../Core/Assembler";
+import { Hightlighting } from "./Hightlighting";
+import { IOImplementation } from "./IOImplementation";
+import { LSPUtils } from "./LSPUtils";
+import { UpdateFile } from "./UpdateFile";
 
 const FreshTime = 1000;
 
@@ -7,11 +11,21 @@ export class LanguageServer {
 
 	private assembler = new Assembler();
 
-	private freashTreadId?: NodeJS.Timeout;
-	private fileUpdateFinished = false;
-
 	async Initialize() {
+		LSPUtils.assembler = this.assembler;
+
 		this.SetLanguage(vscode.env.language);
+
+		const classes = [
+			IOImplementation,
+			UpdateFile,
+			Hightlighting
+		];
+		for (let i = 0; i < classes.length; ++i) {
+			let temp = Reflect.get(classes[i], "Initialize");
+			await temp();
+		}
+
 		this.RegisterMyCommand();
 	}
 
@@ -19,30 +33,7 @@ export class LanguageServer {
 		this.assembler.localization.ChangeLanguage(language);
 	}
 
-	//#region 文档修改时的自动大写以及重新监测
-	/**文档修改时的自动大写以及重新监测 */
-	private DocumentChange() {
-		vscode.workspace.onDidChangeTextDocument((event: vscode.TextDocumentChangeEvent) => {
-			if (event.document.languageId !== this.assembler.config.FileExtension.language)
-				return;
 
-
-		});
-	}
-
-	private AutoUppercase(match: RegExpExecArray | null, lineNumber: number) {
-		if (match == null)
-			return false;
-
-		let range = new vscode.Range(lineNumber, match.index, lineNumber, match.index + match[0].length);
-		let editor = <vscode.TextEditor>vscode.window.activeTextEditor;
-		editor.edit((ee) => {
-			// @ts-ignore 目前只能替换一个，原因未知
-			ee.replace(range, match[0].toUpperCase());
-		});
-		return true;
-	}
-	//#endregion 文档修改时的自动大写以及重新监测
 
 	//#region 注册命令
 	private RegisterMyCommand() {

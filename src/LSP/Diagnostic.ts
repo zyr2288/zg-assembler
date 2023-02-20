@@ -14,7 +14,7 @@ export class MyDiagnostic {
 	}
 
 	UpdateDiagnostic() {
-		let errors = this.assembler.exceptions.GetException();
+		let errors = this.assembler.exceptions.GetExceptions();
 
 	}
 }

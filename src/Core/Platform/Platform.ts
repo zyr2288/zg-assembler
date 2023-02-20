@@ -12,6 +12,7 @@ export class Platform {
 
 	static platform: AsmCommon;
 	static regexString: string;
+	static uppperCaseRegexString: string;
 
 	/**改变编译平台 */
 	static ChangePlatform(platform: SupportPlatform) {
@@ -31,21 +32,32 @@ export class Platform {
 
 	//#region 更新编译平台的正则表达式
 	private static UpdateRegex() {
+
+		Platform.uppperCaseRegexString = "(\\s+|^)(";
 		Platform.regexString = "(\\s+|^)(?<command>";
-		for (let i = 0; i < Commands.allCommandNames.length; ++i)
-			Platform.regexString += Utils.TransformRegex(Commands.allCommandNames[i]) + "|";
+		let temp:string;
+		for (let i = 0; i < Commands.allCommandNames.length; ++i) {
+			temp = Utils.TransformRegex(Commands.allCommandNames[i]) + "|";
+			Platform.regexString += temp;
+			Platform.uppperCaseRegexString += temp;
+		}
 
 		Platform.regexString = Platform.regexString.substring(0, Platform.regexString.length - 1);
 		Platform.regexString += ")|";
 
 		Platform.regexString += "(?<instruction>";
 		let instructions = Platform.platform.instructions;
-		for (let i = 0; i < instructions.length; ++i)
-			Platform.regexString += Utils.TransformRegex(instructions[i]) + "|";
+		for (let i = 0; i < instructions.length; ++i) {
+			temp = Utils.TransformRegex(instructions[i]) + "|";
+			Platform.regexString += temp;
+			Platform.uppperCaseRegexString += temp;
+		}
+		Platform.uppperCaseRegexString = Platform.uppperCaseRegexString.substring(0, Platform.uppperCaseRegexString.length - 1);
+		Platform.uppperCaseRegexString += ")(\\s+|$)";
 
 		Platform.regexString = Platform.regexString.substring(0, Platform.regexString.length - 1);
 		Platform.regexString += ")|(?<variable>\\=!\\=)(\\s+|$)"
 	}
 	//#endregion 更新编译平台的正则表达式
-	
+
 }

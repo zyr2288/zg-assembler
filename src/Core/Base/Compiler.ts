@@ -3,7 +3,7 @@ import { DecodeOption } from "./Options";
 import { IInstructionLine, Instruction } from "../Lines/Instruction";
 import { ICommonLine, IUnknowLine, LineType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "../Commands/Commands";
-import { MacroUtils } from "./Macro";
+import { MacroUtils } from "../Commands/Macro";
 import { LabelType, LabelUtils } from "./Label";
 import { Token } from "./Token";
 import { IVariableLine, VariableLineUtils } from "../Lines/VariableLine";
@@ -30,9 +30,13 @@ export class Compiler {
 
 		let option: DecodeOption = { allLines: [], lineIndex: 0, };
 		for (let index = 0; index < files.length; ++index) {
+
 			let fileHash = Compiler.enviroment.SetFile(files[index].filePath);
 			Compiler.enviroment.ClearFileRange(fileHash);
-			Compiler.SplitTexts(files[index].text, option);
+			let lines = Compiler.SplitTexts(files[index].text);
+
+			Compiler.enviroment.allBaseLines.set(fileHash, lines);
+			option.allLines.push(...lines);
 		}
 
 		await Compiler.FirstAnalyse(option);
@@ -122,10 +126,11 @@ export class Compiler {
 
 	//#region 分解文本
 	/**分解文本 */
-	private static SplitTexts(text: string, option: DecodeOption): void {
+	private static SplitTexts(text: string): ICommonLine[] {
 		let match: RegExpExecArray | null = null;
 		let tokens: Token[];
 		let newLine = {} as ICommonLine;
+		let result: ICommonLine[] = [];
 
 		//#region 保存行Token
 		const SaveToken = (lineType: LineType) => {
@@ -153,7 +158,7 @@ export class Compiler {
 			newLine.finished = false;
 
 			if (!tokens[1].isEmpty)
-				option.allLines[option.allLines.length - 1].comment = tokens[1].text;
+				result[result.length - 1].comment = tokens[1].text;
 		}
 		//#endregion 保存行Token
 
@@ -183,9 +188,10 @@ export class Compiler {
 				} as IUnknowLine;
 			}
 
-			option.allLines.push(newLine);
+			result.push(newLine);
 			newLine = {} as ICommonLine;
 		}
+		return result;
 	}
 	//#endregion 分解文本
 

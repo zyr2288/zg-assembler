@@ -5,7 +5,7 @@ import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { IAddressingMode } from "../Platform/AsmCommon";
 import { Platform } from "../Platform/Platform";
-import { ICommonLine, LineType } from "./CommonLine";
+import { HightlightToken, HightlightType, ICommonLine, LineType } from "./CommonLine";
 
 export interface IInstructionLine extends ICommonLine {
 	splitLine?: SplitLine;
@@ -43,7 +43,7 @@ export class Instruction {
 		}
 
 		// 删除分行设置
-		delete(line.splitLine);
+		delete (line.splitLine);
 	}
 	//#endregion 第一次分析
 
@@ -53,8 +53,29 @@ export class Instruction {
 		for (let i = 0; i < line.exprParts.length; ++i)
 			ExpressionUtils.CheckLabelsAndShowError(line.exprParts[i]);
 
+		line.GetTokens = Instruction.GetToken.bind(line);
 	}
 	//#endregion 第三次分析，并检查表达式是否有误
+
+	//#region 获取高亮Token
+	static GetToken(this: IInstructionLine) {
+		let result: HightlightToken[] = [];
+
+		if (this.label)
+			result.push({ token: this.label.token, type: HightlightType.Label });
+
+		result.push({ token: this.instruction, type: HightlightType.Keyword });
+
+		for (let i = 0; i < this.exprParts.length; ++i) {
+			for (let j = 0; j < this.exprParts[i].length; ++j) {
+				const part = this.exprParts[i][j];
+				result.push({ token: part.token, type: part.highlightingType });
+			}
+		}
+
+		return result;
+	}
+	//#endregion 获取高亮Token
 
 	static SetResult(line: IInstructionLine, value: number, index: number, length: number) {
 		line.result ??= [];

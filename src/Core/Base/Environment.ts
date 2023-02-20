@@ -1,6 +1,6 @@
-import { HightlightRange } from "../Lines/CommonLine";
+import { HightlightRange, ICommonLine } from "../Lines/CommonLine";
 import { ILabel, ILabelTree, INamelessLabelCollection } from "./Label";
-import { Macro } from "./Macro";
+import { MacroLabel } from "../Commands/Macro";
 import { Utils } from "./Utils";
 
 export class Environment {
@@ -11,7 +11,9 @@ export class Environment {
 
 	/**所有标签 Key: Label的Hash值 */
 	allLabel = new Map<number, ILabel>();
-	allMacro = new Map<string, Macro>();
+	allMacro = new Map<string, MacroLabel>();
+
+	allBaseLines = new Map<number, ICommonLine[]>();
 
 	/**临时标签 Key: 文件的fileHash */
 	namelessLabel = new Map<number, INamelessLabelCollection>();

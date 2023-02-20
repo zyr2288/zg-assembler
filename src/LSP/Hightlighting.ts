@@ -1,15 +1,63 @@
-import { Assembler } from "../Core/Assembler";
 import * as vscode from "vscode";
+import { Assembler } from "../Core/Assembler";
+import { HightlightType } from "../Core/Lines/CommonLine";
+import { LSPUtils } from "./LSPUtils";
+
 
 enum TokenType { None, Label, Variable, Defined, Macro, Keyword }
+enum VSCodeHightlightType { function, keyword, enumMember, struct, variable, operator }
 
 export class Hightlighting {
 
-	private readonly assembler;
-	private leagend!: vscode.SemanticTokensLegend;
+	private static leagend: vscode.SemanticTokensLegend;
 
-	constructor(assembler: Assembler) {
-		this.assembler = assembler;
+	static async Initialize() {
+		let temp: string[] = [];
+		for (let key in VSCodeHightlightType)
+			temp.push(key);
+
+		temp.splice(0, temp.length / 2);
+		Hightlighting.leagend = new vscode.SemanticTokensLegend(temp);
+
+		vscode.languages.registerDocumentRangeSemanticTokensProvider(
+			LSPUtils.assembler.config.FileExtension,
+			{ provideDocumentRangeSemanticTokens: Hightlighting.HightlightingDocument },
+			Hightlighting.leagend
+		);
+	}
+
+
+	private static HightlightingDocument(document: vscode.TextDocument, range: vscode.Range, token: vscode.CancellationToken) {
+		const tokenBuilder = new vscode.SemanticTokensBuilder(Hightlighting.leagend);
+
+		let lines = LSPUtils.assembler.GetUpdateLines(document.uri.fsPath);
+
+		for (let i = 0; i < lines.length; ++i) {
+			const line = lines[i];
+			const highlightingTokens = line.GetTokens?.();
+			if (highlightingTokens) {
+				for (let j = 0; j < highlightingTokens.length; ++j) {
+					const token = highlightingTokens[j];
+					switch (token.type) {
+						case HightlightType.Label:
+							tokenBuilder.push(token.token.line, token.token.start, token.token.text.length, VSCodeHightlightType.struct);
+							break;
+						case HightlightType.Defined:
+							tokenBuilder.push(token.token.line, token.token.start, token.token.text.length, VSCodeHightlightType.enumMember);
+							break;
+						case HightlightType.Macro:
+							tokenBuilder.push(token.token.line, token.token.start, token.token.text.length, VSCodeHightlightType.function);
+							break;
+						case HightlightType.Keyword:
+							tokenBuilder.push(token.token.line, token.token.start, token.token.text.length, VSCodeHightlightType.keyword);
+							break;
+					}
+				}
+			}
+
+		}
+
+		return tokenBuilder.build();
 	}
 
 	RegisterToken() {

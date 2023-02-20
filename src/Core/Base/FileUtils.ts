@@ -1,27 +1,12 @@
-import * as vscode from "vscode";
-import { Config } from "../Core/Base/Config";
+import { Config } from "./Config";
 
 export class FileUtils {
-
-	/**针对vscode的初始化文件接口 */
-
-	static Initialize() {
-		if (!vscode)
-			return;
-
-		FileUtils.ReadFile = async (filePath: string) => {
-			let uri = vscode.Uri.file(filePath);
-			let result = await vscode.workspace.fs.readFile(uri);
-			return result;
-		}
-
-	}
 
 	/**需要实现的接口 */
 
 	//#region 读取文件
 	/**
-	 * 读取文件
+	 * 读取文件（需要实现）
 	 * @param filePath 文件路径
 	 * @returns 文件的二进制
 	 */
@@ -30,7 +15,7 @@ export class FileUtils {
 
 	//#region 保存文件
 	/**
-	 * 保存文件
+	 * 保存文件（需要实现）
 	 * @param filePath 文件路径
 	 * @param data 文件二进制内容
 	 */
@@ -38,12 +23,16 @@ export class FileUtils {
 	//#endregion 保存文件
 
 	//#region 获取目录下所有文件和文件夹
+	/**
+	 * 获取目录下所有文件和文件夹（需要实现）
+	 * @param path 路径
+	 */
 	static GetFolderFiles: (path: string) => Promise<{ name: string, type: "folder" | "file" }[]>
 	//#endregion 获取目录下所有文件和文件夹
 
 	//#region 检查路径属性
 	/**
-	 * 检查路径属性
+	 * 检查路径属性（需要实现）
 	 * @param filePath 文件路径
 	 * @return 文件属性，path file none
 	 */
@@ -51,15 +40,26 @@ export class FileUtils {
 	//#endregion 检查路径属性
 
 	//#region 将字符串转换成Bytes
+	/**
+	 * 将字符串转换成Bytes（需要实现）
+	 * @param text 要转换的字符串
+	 */
 	static StringToBytes: (text: string) => Uint8Array;
 	//#endregion 将字符串转换成Bytes
 
 	//#region 将字节转换成字符串
+	/**
+	 * 将字节转换成字符串（需要实现）
+	 * @param data 需要转换的字节数组
+	 */
 	static BytesToString: (data: Uint8Array) => string;
 	//#endregion 将字节转换成字符串
 
 	//#region 显示消息
-	/**显示消息 */
+	/**
+	 * 显示消息（需要实现）
+	 * @param message 显示的信息
+	 */
 	static ShowMessage: (message: string) => void;
 	//#endregion 显示消息
 
