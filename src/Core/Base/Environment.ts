@@ -13,6 +13,7 @@ export class Environment {
 	allLabel = new Map<number, ILabel>();
 	allMacro = new Map<string, MacroLabel>();
 
+	/**所有编译行 */
 	allBaseLines = new Map<number, ICommonLine[]>();
 
 	/**临时标签 Key: 文件的fileHash */
@@ -55,9 +56,30 @@ export class Environment {
 		return this.highlightRanges.get(fileHash) ?? [];
 	}
 
-	ClearFileRange(fileHash: number) {
+	//#region 清除文件内的所有标记
+	ClearFile(fileHash: number) {
 		this.highlightRanges.set(fileHash, []);
+		//#region 清除标签记录
+		let labels = this.fileLabels.get(fileHash);
+		if (labels) {
+			labels.forEach((value) => {
+				this.allLabel.delete(value);
+
+				let labelTree = this.labelTrees.get(value)!;
+				labelTree.child
+
+			});
+			this.fileLabels.set(fileHash, new Set());
+		}
 	}
+
+	private ClearLabelTree(labelTreeHash: number) {
+		let labelTree = this.labelTrees.get(labelTreeHash);
+		if (!labelTree) return;
+		labelTree.parent
+
+	}
+	//#endregion 清除文件内的所有标记
 
 	UpdateMacroRegexString() {
 		if (this.allMacro.size === 0) {
@@ -71,5 +93,10 @@ export class Environment {
 		});
 		this.macroRegexString = this.macroRegexString.substring(0, this.macroRegexString.length - 1);
 		this.macroRegexString += ")(\\s+|$)";
+	}
+
+	AddAddress(offset: number) {
+		this.baseAddress += offset;
+		this.orgAddress += offset;
 	}
 }

@@ -2,7 +2,7 @@ import { SplitLine } from "../Base/Compiler";
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
-import { HightlightToken, HightlightType, ICommonLine } from "./CommonLine";
+import { HighlightToken, HighlightType, ICommonLine } from "./CommonLine";
 
 export interface IVariableLine extends ICommonLine {
 	splitLine?: SplitLine;
@@ -30,7 +30,7 @@ export class VariableLineUtils {
 	}
 
 	static GetTokens(this: IVariableLine) {
-		let result: HightlightToken[] = [];
+		let result: HighlightToken[] = [];
 
 		for (let i = 0; i < this.exprParts.length; ++i) {
 			const part = this.exprParts[i];

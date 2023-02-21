@@ -1,4 +1,4 @@
-import { ICommonLine, IUnknowLine, LineType } from "../Lines/CommonLine";
+import { ICommonLine, IUnknowLine, LineCompileType, LineType } from "../Lines/CommonLine";
 import { Utils } from "../Base/Utils";
 import { ILabel, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
@@ -42,7 +42,7 @@ export class MacroUtils {
 			expression: expression,
 			type: LineType.Macro,
 			orgText: option.allLines[option.lineIndex].orgText,
-			finished: false
+			compileType: LineCompileType.None
 		} as IMacroLine;
 		option.allLines[option.lineIndex] = macroLine;
 

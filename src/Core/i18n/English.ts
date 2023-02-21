@@ -13,5 +13,6 @@ export const English = {
 	"Command {0} can not use in Macro": "Command \"{0}\" can not use in Macro",
 	"Unmatched end of command {0}": "Unmatched end of command \"{0}\"",
 	"Command {0} can not use label": "Command \"{0}\" can not use label",
-	"Command arguments error": "Command arguments error"
+	"Command arguments error": "Command arguments error",
+	"Unknow original address": "Unknow original address",
 }

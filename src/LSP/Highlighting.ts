@@ -1,13 +1,10 @@
 import * as vscode from "vscode";
-import { Assembler } from "../Core/Assembler";
-import { HightlightType } from "../Core/Lines/CommonLine";
+import { HighlightToken, HighlightType } from "../Core/Lines/CommonLine";
 import { LSPUtils } from "./LSPUtils";
 
-
-enum TokenType { None, Label, Variable, Defined, Macro, Keyword }
 enum VSCodeHightlightType { function, keyword, enumMember, struct, variable, operator }
 
-export class Hightlighting {
+export class Highlighting {
 
 	private static leagend: vscode.SemanticTokensLegend;
 
@@ -17,39 +14,47 @@ export class Hightlighting {
 			temp.push(key);
 
 		temp.splice(0, temp.length / 2);
-		Hightlighting.leagend = new vscode.SemanticTokensLegend(temp);
+		Highlighting.leagend = new vscode.SemanticTokensLegend(temp);
 
 		vscode.languages.registerDocumentRangeSemanticTokensProvider(
 			LSPUtils.assembler.config.FileExtension,
-			{ provideDocumentRangeSemanticTokens: Hightlighting.HightlightingDocument },
-			Hightlighting.leagend
+			{ provideDocumentRangeSemanticTokens: Highlighting.HightlightingDocument },
+			Highlighting.leagend
 		);
 	}
 
 
-	private static HightlightingDocument(document: vscode.TextDocument, range: vscode.Range, token: vscode.CancellationToken) {
-		const tokenBuilder = new vscode.SemanticTokensBuilder(Hightlighting.leagend);
+	private static async HightlightingDocument(document: vscode.TextDocument, range: vscode.Range, token: vscode.CancellationToken) {
+
+		await LSPUtils.WaitTextUpdate();
+
+		const tokenBuilder = new vscode.SemanticTokensBuilder(Highlighting.leagend);
+		let saveToken: HighlightToken;
 
 		let lines = LSPUtils.assembler.GetUpdateLines(document.uri.fsPath);
+
+		const PushToken = (type: VSCodeHightlightType) => {
+			tokenBuilder.push(saveToken.token.line, saveToken.token.start, saveToken.token.text.length, type);
+		}
 
 		for (let i = 0; i < lines.length; ++i) {
 			const line = lines[i];
 			const highlightingTokens = line.GetTokens?.();
 			if (highlightingTokens) {
 				for (let j = 0; j < highlightingTokens.length; ++j) {
-					const token = highlightingTokens[j];
-					switch (token.type) {
-						case HightlightType.Label:
-							tokenBuilder.push(token.token.line, token.token.start, token.token.text.length, VSCodeHightlightType.struct);
+					saveToken = highlightingTokens[j];
+					switch (saveToken.type) {
+						case HighlightType.Label:
+							PushToken(VSCodeHightlightType.struct);
 							break;
-						case HightlightType.Defined:
-							tokenBuilder.push(token.token.line, token.token.start, token.token.text.length, VSCodeHightlightType.enumMember);
+						case HighlightType.Defined:
+							PushToken(VSCodeHightlightType.enumMember);
 							break;
-						case HightlightType.Macro:
-							tokenBuilder.push(token.token.line, token.token.start, token.token.text.length, VSCodeHightlightType.function);
+						case HighlightType.Macro:
+							PushToken(VSCodeHightlightType.function);
 							break;
-						case HightlightType.Keyword:
-							tokenBuilder.push(token.token.line, token.token.start, token.token.text.length, VSCodeHightlightType.keyword);
+						case HighlightType.Keyword:
+							PushToken(VSCodeHightlightType.keyword);
 							break;
 					}
 				}

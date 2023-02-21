@@ -2,7 +2,7 @@ import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
-import { HightlightToken, HightlightType } from "../Lines/CommonLine";
+import { HighlightToken, HighlightType, LineCompileType } from "../Lines/CommonLine";
 import { Commands, ICommandLine, ICommandTag } from "./Commands";
 
 export class Defined {
@@ -30,8 +30,6 @@ export class Defined {
 
 
 
-
-		line.GetTokens = Commands.GetTokens.bind(line);
 		return true;
 	}
 
@@ -45,7 +43,7 @@ export class Defined {
 		let label = LabelUtils.FindLabel(line.label!.token, option);
 		if (label && temp.success) {
 			label.value = temp.value;
-			line.finished = true;
+			line.compileType = LineCompileType.Error;
 			return true;
 		}
 		return false;

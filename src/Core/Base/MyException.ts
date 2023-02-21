@@ -53,4 +53,8 @@ export class MyException {
 	}
 	//#endregion 获取错误
 
+	static ClearFileExceptions(fileHash: number) {
+		MyException.allErrors.set(fileHash, new Map());
+	}
+
 }

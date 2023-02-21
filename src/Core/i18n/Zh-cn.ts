@@ -16,4 +16,5 @@ export const Chinese: LocalizationMsg = {
 	"Unmatched end of command {0}": "找不到匹配的结束命令",
 	"Command {0} can not use label": "命令 \"{0}\" 不支持标签",
 	"Command arguments error": "命令参数错误",
+	"Unknow original address": "未设定起始地址",
 }

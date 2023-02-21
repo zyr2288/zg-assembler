@@ -1,10 +1,11 @@
 import { Localization } from "../i18n/Localization";
-import { HightlightToken, HightlightType } from "../Lines/CommonLine";
+import { HighlightToken, HighlightType } from "../Lines/CommonLine";
 import { Compiler } from "./Compiler";
 import { LabelType, LabelUtils } from "./Label";
 import { MyException } from "./MyException";
 import { DecodeOption } from "./Options";
 import { Token } from "./Token";
+import { Utils } from "./Utils";
 
 //#region 算数优先级
 enum PriorityType {
@@ -44,7 +45,7 @@ enum PriorityType {
 
 //#region 表达式分割
 export interface ExpressionPart {
-	highlightingType: HightlightType;
+	highlightingType: HighlightType;
 	type: PriorityType;
 	token: Token;
 	value: number;
@@ -106,7 +107,7 @@ export class ExpressionUtils {
 	//#region 获取数字
 	/**获取数字 */
 	static GetNumber(number: string) {
-		let match = /^(?<hex>\$[0-9a-fA-F]+)|(?<decimal>\-?[0-9]+(\.[0-9]+)?)|(?<bin>\@[01]+)$/.exec(number);
+		let match = /(^(?<hex>\$[0-9a-fA-F]+)$)|(^(?<decimal>\-?[0-9]+(\.[0-9]+)?)$)|(^(?<bin>\@[01]+)$)/.exec(number);
 		let result = { success: !!match, value: 0 };
 		if (match?.groups?.hex) {
 			number = number.substring(1);
@@ -141,10 +142,13 @@ export class ExpressionUtils {
 			} else {
 				switch (temp.labelType) {
 					case LabelType.Defined:
-						part.highlightingType = HightlightType.Defined;
+						part.highlightingType = HighlightType.Defined;
 						break;
 					case LabelType.Label:
-						part.highlightingType = HightlightType.Label;
+						part.highlightingType = HighlightType.Label;
+						break;
+					case LabelType.Variable:
+						part.highlightingType = HighlightType.Variable;
 						break;
 				}
 			}
@@ -153,18 +157,27 @@ export class ExpressionUtils {
 	//#endregion 分析所有表达式小节并推送错误
 
 	//#region 获取表达式的值
+	/**
+	 * 获取表达式的值
+	 * @param allParts 所有已排列好的运算小节
+	 * @param analyseOption 分析选项
+	 * @param option 编译选项
+	 * @returns 计算结果
+	 */
 	static GetExpressionValue(allParts: ExpressionPart[], analyseOption: "tryValue" | "getValue", option?: DecodeOption) {
+		let tempPart = Utils.DeepClone(allParts);
 		const GetPart = (index: number) => {
 			if (index < 0 || index >= allParts.length)
 				return;
 
-			return allParts[index];
+			return tempPart[index];
 		}
+
 
 		let labelUnknow = false;
 		let result = { success: true, value: 0 };
-		for (let index = 0; index < allParts.length; index++) {
-			const element = allParts[index];
+		for (let index = 0; index < tempPart.length; index++) {
+			const element = tempPart[index];
 			if (element.type === PriorityType.Level_0_Sure)
 				continue;
 
@@ -226,7 +239,7 @@ export class ExpressionUtils {
 						break;
 				}
 				operation.type = PriorityType.Level_0_Sure;
-				allParts.splice(index - 1, 1);
+				tempPart.splice(index - 1, 1);
 				index -= 1;
 			} else {
 				if (!pre1 || !pre2) {
@@ -282,7 +295,7 @@ export class ExpressionUtils {
 				}
 
 				operation.type = PriorityType.Level_0_Sure;
-				allParts.splice(index - 2, 2);
+				tempPart.splice(index - 2, 2);
 				index -= 2;
 			}
 
@@ -294,15 +307,51 @@ export class ExpressionUtils {
 			result.success = false;
 
 		if (result.success)
-			result.value = allParts[0].value;
+			result.value = tempPart[0].value;
 
 		return result;
 	}
 	//#endregion 获取表达式的值
 
+	//#region 获取包含字符串的表达式值
+	/**
+	 * 获取包含字符串的表达式值
+	 * @param parts 小节
+	 * @param option 选项
+	 * @returns 结果
+	 */
+	static GetExpressionValues(parts: ExpressionPart[], option: DecodeOption) {
+		let strIndex = ExpressionUtils.CheckString(parts);
+
+		if (strIndex < 0) {
+			let temp3 = ExpressionUtils.GetExpressionValue(parts, "getValue", option);
+			return { success: temp3.success, values: [temp3.value] };
+		} else {
+			let tempWord = parts[strIndex].token.Copy();
+			let result = { success: false, values: <number[]>[] };
+
+			result.values.length = tempWord.length;
+			result.success = true;
+
+			for (let i = 0; i < tempWord.length; i++) {
+				parts[strIndex].type = PriorityType.Level_0_Sure;
+				parts[strIndex].value = tempWord.text.charCodeAt(i);
+				let temp3 = ExpressionUtils.GetExpressionValue(parts, "getValue", option);
+				if (!temp3.success) {
+					result.success = false;
+					break;
+				}
+
+				result.values[i] = temp3.value;
+			}
+			return result;
+		}
+	}
+	//#endregion 获取包含字符串的表达式值
+
 	//#region 将所有表达式部分转换成高亮Token
 	static GetHighlightingTokens(parts: ExpressionPart[][]) {
-		let result: HightlightToken[] = [];
+		let result: HighlightToken[] = [];
 		for (let i = 0; i < parts.length; ++i)
 			for (let j = 0; j < parts[i].length; ++j)
 				result.push({ token: parts[i][j].token, type: parts[i][j].highlightingType });
@@ -324,7 +373,7 @@ export class ExpressionUtils {
 
 		// 临时标签
 		if (LabelUtils.namelessLabelRegex.test(expression.text)) {
-			result.parts.push({ token: expression, type: PriorityType.Level_1_Label, value: 0, highlightingType: HightlightType.Label });
+			result.parts.push({ token: expression, type: PriorityType.Level_1_Label, value: 0, highlightingType: HighlightType.Label });
 			return result;
 		}
 
@@ -333,17 +382,22 @@ export class ExpressionUtils {
 		let tokens = expression.Split(regex, { saveToken: true });
 		let isLabel = true;
 
-		let part: ExpressionPart = { type: PriorityType.Level_0_Sure, token: {} as Token, value: 0, highlightingType: HightlightType.None };
+		let part: ExpressionPart = { type: PriorityType.Level_1_Label, token: {} as Token, value: 0, highlightingType: HighlightType.None };
 
 		let stringStart = - 1;
+
 		for (let i = 0; i < tokens.length; ++i) {
 			part.token = tokens[i];
+			if (part.token.isEmpty)
+				continue;
+
 			switch (part.token.text) {
 				case "\"":
 					if (stringStart < 0) {
 						stringStart = part.token.start;
 					} else {
 						part.token = expression.Substring(stringStart, part.token.start - stringStart);
+						part.type = PriorityType.Level_3_String;
 						stringStart = -1;
 					}
 					break;
@@ -434,7 +488,13 @@ export class ExpressionUtils {
 			}
 
 			result.parts.push(part);
-			part = { type: PriorityType.Level_0_Sure, token: {} as Token, value: 0, highlightingType: HightlightType.None };
+			part = { type: PriorityType.Level_0_Sure, token: {} as Token, value: 0, highlightingType: HighlightType.None };
+		}
+
+		if (result.success && isLabel) {
+			let errorMsg = Localization.GetMessage("Expression error");
+			MyException.PushException(result.parts[result.parts.length - 1].token, errorMsg);
+			result.success = false;
 		}
 
 		if (result.success) {
@@ -442,8 +502,8 @@ export class ExpressionUtils {
 			let right = new Token();
 			left.text = "(";
 			right.text = ")";
-			result.parts.unshift({ token: left, type: PriorityType.Level_4_Brackets, value: 0, highlightingType: HightlightType.None });
-			result.parts.push({ token: right, type: PriorityType.Level_4_Brackets, value: 0, highlightingType: HightlightType.None });
+			result.parts.unshift({ token: left, type: PriorityType.Level_4_Brackets, value: 0, highlightingType: HighlightType.None });
+			result.parts.push({ token: right, type: PriorityType.Level_4_Brackets, value: 0, highlightingType: HighlightType.None });
 		}
 
 		return result;
@@ -525,5 +585,21 @@ export class ExpressionUtils {
 		return result;
 	}
 	//#endregion 表达式优先级排序
+
+	//#region 获取字符串
+	/**检查表达式小节是否包含字符串 */
+	private static CheckString(parts: ExpressionPart[]) {
+		let index = -1
+		for (let i = 0; i < parts.length; i++) {
+			const part = parts[i];
+			if (part.type === PriorityType.Level_3_String) {
+				index = i;
+				break;
+			}
+
+		}
+		return index;
+	}
+	//#endregion 获取字符串
 
 }

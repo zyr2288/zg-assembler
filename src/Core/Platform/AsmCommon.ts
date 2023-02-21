@@ -146,7 +146,7 @@ export class AsmCommon {
 
 		if (!foundAddressType) {
 			let errorMsg = Localization.GetMessage("Instruction {0} do not support this addressing mode", instruction.text);
-			MyException.PushException(expression, errorMsg);
+			MyException.PushException(instruction, errorMsg);
 			return;
 		} else {
 			for (let i = 0; i < result.exprs.length; ++i) {

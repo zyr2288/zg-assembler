@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { Assembler } from "../Core/Assembler";
-import { Hightlighting } from "./Hightlighting";
+import { Highlighting } from "./Highlighting";
 import { IOImplementation } from "./IOImplementation";
 import { LSPUtils } from "./LSPUtils";
 import { UpdateFile } from "./UpdateFile";
@@ -18,8 +18,8 @@ export class LanguageServer {
 
 		const classes = [
 			IOImplementation,
+			Highlighting,
 			UpdateFile,
-			Hightlighting
 		];
 		for (let i = 0; i < classes.length; ++i) {
 			let temp = Reflect.get(classes[i], "Initialize");
@@ -32,8 +32,6 @@ export class LanguageServer {
 	private SetLanguage(language: string) {
 		this.assembler.localization.ChangeLanguage(language);
 	}
-
-
 
 	//#region 注册命令
 	private RegisterMyCommand() {

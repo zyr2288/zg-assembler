@@ -7,8 +7,10 @@ export enum TokenType {
 export class Token {
 
 	//#region 建立一个Token
-	static CreateToken(line: number, start: number, text: string) {
+	static CreateToken(fileHash: number, line: number, start: number, text: string) {
 		let token = new Token();
+
+		token.fileHash = fileHash;
 		token.line = line;
 		token.start = start;
 		token.text = text;
@@ -30,6 +32,7 @@ export class Token {
 	//#region 拷贝
 	Copy() {
 		let token = new Token();
+		token.fileHash = this.fileHash;
 		token.line = this.line;
 		token.start = this.start;
 		token.text = this.text;

@@ -2,16 +2,16 @@ import { SplitLine } from "../Base/Compiler";
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { MyException } from "../Base/MyException";
-import { DecodeOption } from "../Base/Options";
+import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Localization } from "../i18n/Localization";
-import { HightlightToken, HightlightType, ICommonLine, LineType } from "../Lines/CommonLine";
+import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
 import { BaseAndOrg } from "./BaseAndOrg";
 import { Defined } from "./Defined";
 
 interface CommandParams {
 	/**第一阶段，基础分析 */
-	FirstAnalyse?: (option: DecodeOption) => Promise<boolean> | boolean;
+	FirstAnalyse?: (option: CommandDecodeOption) => Promise<boolean> | boolean;
 	/**第二阶段 */
 	SecondAnalyse?: (option: DecodeOption) => Promise<boolean> | boolean;
 	/**第三阶段，分析标签 */
@@ -51,8 +51,10 @@ export interface ICommandLine extends ICommonLine {
 	command: Token;
 	/**表达式 */
 	expParts: ExpressionPart[][];
+	orgAddress: number;
+	baseAddress: number
 	/**结果 */
-	result?: number[];
+	result: number[];
 	/**附加数据 */
 	tag?: any;
 }
@@ -84,8 +86,14 @@ export class Commands {
 	//#region 第一次分析
 	static async FirstAnalyse(option: DecodeOption) {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
+
+		line.expParts = [];
+		line.command = line.splitLine!.comOrIntrs;
+		line.GetTokens = Commands.GetTokens.bind(line);
+
 		if (Commands.ignoreEndCom.has(line.command.text)) {
-			line.finished = true;
+			line.compileType = LineCompileType.Finished;
+			delete (line.splitLine);
 			return true;
 		}
 
@@ -106,7 +114,7 @@ export class Commands {
 				return false;
 			}
 
-			option.includeCommandLines = includeLines;
+			(option as CommandDecodeOption).includeCommandLines = includeLines;
 			for (let i = 1; i < includeLines.length; i++) {
 				Commands.AnalyseParams(option.allLines[includeLines[i].index] as ICommandLine);
 			}
@@ -115,6 +123,8 @@ export class Commands {
 		let args = Commands.AnalyseParams(line);
 		if (!args)
 			return false;
+
+		(option as CommandDecodeOption).expressions = args;
 
 		// 命令不允许有标签
 		if (line.splitLine?.label && !line.splitLine.label.isEmpty) {
@@ -132,9 +142,13 @@ export class Commands {
 			}
 		}
 
-		if (com.FirstAnalyse)
-			return await com.FirstAnalyse(option);
+		if (com.FirstAnalyse) {
+			let temp = await com.FirstAnalyse(option as CommandDecodeOption);
+			delete (line.splitLine);
+			return temp;
+		}
 
+		delete (line.splitLine);
 		return true;
 	}
 	//#endregion 第一次分析
@@ -186,7 +200,7 @@ export class Commands {
 		/**允许使用在Macro内，默认允许 */
 		ableMacro?: boolean
 		/**基础分析 */
-		firstAnalyse?: (option: DecodeOption) => Promise<boolean> | boolean,
+		firstAnalyse?: (option: CommandDecodeOption) => Promise<boolean> | boolean,
 		secondAnalyse?: (option: DecodeOption) => Promise<boolean> | boolean,
 		thirdAnalyse?: (baseLine: DecodeOption) => Promise<boolean> | boolean,
 		compile?: (option: DecodeOption) => Promise<boolean> | boolean,
@@ -223,15 +237,45 @@ export class Commands {
 
 	//#region 基础获取命令的高亮Token
 	static GetTokens(this: ICommandLine) {
-		let result: HightlightToken[] = [];
+		let result: HighlightToken[] = [];
 
 		if (this.label)
-			result.push({ token: this.label.token, type: HightlightType.Defined });
+			result.push({ token: this.label.token, type: HighlightType.Defined });
 
 		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
 		return result;
 	}
 	//#endregion 基础获取命令的高亮Token
+
+	//#region 第一次的通用分析，仅拆分表达式，仅针对只有一个参数的命令
+	/**
+	 * 第一次的通用分析，仅拆分表达式，仅针对只有一个参数的命令，将分割结果放入tag
+	 * @param option 通用选项
+	 */
+	static async FirstAnalyse_Common(option: CommandDecodeOption) {
+		let line = option.allLines[option.lineIndex] as ICommandLine;
+
+		for (let i = 0; i < option.expressions.length; ++i) {
+			let temp = ExpressionUtils.SplitAndSort(option.expressions[i]);
+			if (temp)
+				line.expParts[i] = temp;
+			else
+				line.compileType = LineCompileType.Error;
+		}
+
+		return true;
+	}
+	//#endregion 第一次的通用分析，仅拆分表达式，仅针对只有一个参数的命令
+
+	//#region 第三次的通用分析，仅对编译命令行的表达式小节分析
+	static async ThirdAnalyse_Common(option: DecodeOption) {
+		let line = option.allLines[option.lineIndex] as ICommandLine;
+		for (let i = 0; i < line.expParts.length; ++i) {
+			ExpressionUtils.CheckLabelsAndShowError(line.expParts[i], option);
+		}
+		return true;
+	}
+	//#endregion 第三次的通用分析，仅对编译命令行的表达式小节分析
 
 	/***** Private *****/
 
@@ -245,18 +289,20 @@ export class Commands {
 		let params = Commands.commandsParamsCount.get(line.command.text)!;
 		if (params.max === 0) {
 			if (!line.splitLine!.expression.isEmpty) {
-				let errorMsg = Localization.GetMessage("Macro arguments error");
+				let errorMsg = Localization.GetMessage("Command arguments error");
 				MyException.PushException(line.command, errorMsg);
+				line.compileType = LineCompileType.Error;
 				return;
 			}
 			return [line.splitLine!.expression.Copy()];
 		}
 
-		let count = params.max === -1 ? undefined : params.max;
+		let count = params.max === -1 ? undefined : params.max - 1;
 		let args = line.splitLine!.expression.Split(/(?=\"([^\"]*)\")\,/g, { count });
 		if (args[params.min - 1].isEmpty) {
-			let errorMsg = Localization.GetMessage("Macro arguments error");
+			let errorMsg = Localization.GetMessage("Command arguments error");
 			MyException.PushException(line.command, errorMsg);
+			line.compileType = LineCompileType.Error;
 			return;
 		}
 		return args;

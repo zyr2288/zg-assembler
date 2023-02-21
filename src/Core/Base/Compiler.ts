@@ -1,13 +1,14 @@
 import { Environment } from "./Environment";
 import { DecodeOption } from "./Options";
-import { IInstructionLine, Instruction } from "../Lines/Instruction";
-import { ICommonLine, IUnknowLine, LineType } from "../Lines/CommonLine";
+import { IInstructionLine, InstructionLine } from "../Lines/InstructionLine";
+import { ICommonLine, IUnknowLine, LineCompileType, LineType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "../Commands/Commands";
 import { MacroUtils } from "../Commands/Macro";
 import { LabelType, LabelUtils } from "./Label";
 import { Token } from "./Token";
 import { IVariableLine, VariableLineUtils } from "../Lines/VariableLine";
 import { Platform } from "../Platform/Platform";
+import { MyException } from "./MyException";
 
 export interface SplitLine {
 	label: Token;
@@ -32,8 +33,11 @@ export class Compiler {
 		for (let index = 0; index < files.length; ++index) {
 
 			let fileHash = Compiler.enviroment.SetFile(files[index].filePath);
-			Compiler.enviroment.ClearFileRange(fileHash);
-			let lines = Compiler.SplitTexts(files[index].text);
+
+			Compiler.ClearFile(fileHash);
+
+			Compiler.enviroment.ClearFile(fileHash);
+			let lines = Compiler.SplitTexts(fileHash, files[index].text);
 
 			Compiler.enviroment.allBaseLines.set(fileHash, lines);
 			option.allLines.push(...lines);
@@ -55,7 +59,7 @@ export class Compiler {
 			option.lineIndex = i;
 			switch (line.type) {
 				case LineType.Instruction:
-					Instruction.FirstAnalyse(option);
+					InstructionLine.FirstAnalyse(option);
 					break;
 				case LineType.Command:
 					Commands.FirstAnalyse(option);
@@ -75,6 +79,8 @@ export class Compiler {
 	static async SecondAnalyse(option: DecodeOption) {
 		for (let i = 0; i < option.allLines.length; i++) {
 			let line = option.allLines[i];
+			if (line.compileType === LineCompileType.Error)
+				continue;
 
 			option.lineIndex = i;
 			switch (line.type) {
@@ -106,13 +112,16 @@ export class Compiler {
 	static async ThirdAnalyse(option: DecodeOption) {
 		for (let i = 0; i < option.allLines.length; ++i) {
 			const line = option.allLines[i];
+			if (line.compileType === LineCompileType.Error)
+				continue;
 
 			option.lineIndex = i;
 			switch (line.type) {
 				case LineType.Instruction:
-					Instruction.ThirdAnalyse(option);
+					InstructionLine.ThirdAnalyse(option);
 					break;
 				case LineType.Command:
+					Commands.ThirdAnalyse(option);
 					break;
 				case LineType.Variable:
 					VariableLineUtils.ThirdAnalyse(option);
@@ -126,7 +135,7 @@ export class Compiler {
 
 	//#region 分解文本
 	/**分解文本 */
-	private static SplitTexts(text: string): ICommonLine[] {
+	private static SplitTexts(fileHash: number, text: string): ICommonLine[] {
 		let match: RegExpExecArray | null = null;
 		let tokens: Token[];
 		let newLine = {} as ICommonLine;
@@ -143,10 +152,10 @@ export class Compiler {
 
 			switch (lineType) {
 				case LineType.Command:
-					newLine = { type: LineType.Command } as ICommandLine;
+					newLine = { type: LineType.Command, result: [] as number[] } as ICommandLine;
 					break;
 				case LineType.Instruction:
-					newLine = { type: LineType.Instruction } as IInstructionLine;
+					newLine = { type: LineType.Instruction, result: [] as number[] } as IInstructionLine;
 					break;
 				case LineType.Variable:
 					newLine = { type: LineType.Variable } as IVariableLine;
@@ -155,7 +164,7 @@ export class Compiler {
 
 			// @ts-ignore
 			newLine.splitLine = splitLine;
-			newLine.finished = false;
+			newLine.compileType = LineCompileType.None;
 
 			if (!tokens[1].isEmpty)
 				result[result.length - 1].comment = tokens[1].text;
@@ -164,7 +173,7 @@ export class Compiler {
 
 		let allLines = text.split(/\r\n|\r|\n/);
 		for (let index = 0; index < allLines.length; ++index) {
-			newLine.orgText = Token.CreateToken(index, 0, allLines[index]);
+			newLine.orgText = Token.CreateToken(fileHash, index, 0, allLines[index]);
 
 			tokens = Compiler.GetContent(newLine.orgText);
 			if (tokens[0].isEmpty)
@@ -184,7 +193,7 @@ export class Compiler {
 					type: LineType.Unknow,
 					orgText: tokens[0],
 					comment: tokens[1].text,
-					finished: false
+					compileType: LineCompileType.None
 				} as IUnknowLine;
 			}
 
@@ -202,5 +211,13 @@ export class Compiler {
 	}
 	//#endregion 分割内容与注释
 
+	/***** Private *****/
+
+	//#region 清除文件
+	private static ClearFile(fileHash:number) {
+		MyException.ClearFileExceptions(fileHash);
+		Compiler.enviroment.ClearFile(fileHash);
+	}
+	//#endregion 清除文件
 
 }

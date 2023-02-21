@@ -54,6 +54,12 @@ export class LabelUtils {
 	/** Public */
 
 	//#region 创建标签
+	/**
+	 * 创建标签
+	 * @param token 标签Token
+	 * @param option 编译选项
+	 * @returns 
+	 */
 	static CreateLabel(token: Token, option: DecodeOption) {
 		if (token.isEmpty) return;
 

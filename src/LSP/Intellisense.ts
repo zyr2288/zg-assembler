@@ -19,7 +19,7 @@ export class Intellisense {
 		option: { trigger?: string }
 	) {
 
-		let line = Token.CreateToken(document.lineNumber, 0, document.lineText);
+		let line = Token.CreateToken(document.fileHash, document.lineNumber, 0, document.lineText);
 		let leftText = line.Substring(0, document.lineCurrect);
 
 		// 左边文本有忽略内容

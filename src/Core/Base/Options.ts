@@ -1,5 +1,6 @@
 import { MacroLabel } from "../Commands/Macro";
 import { ICommonLine } from "../Lines/CommonLine";
+import { Token } from "./Token";
 
 export interface SplitOption {
 	lineText: string;
@@ -10,6 +11,10 @@ export interface SplitOption {
 export interface DecodeOption {
 	macro?: MacroLabel;
 	allLines: ICommonLine[];
-	includeCommandLines?: { match: string, index: number }[];
 	lineIndex: number;
+}
+
+export interface CommandDecodeOption extends DecodeOption {
+	includeCommandLines?: { match: string, index: number }[];
+	expressions: Token[];
 }

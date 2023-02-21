@@ -15,8 +15,30 @@ export class UpdateFile {
 		UpdateFile.errorCollection ??= vscode.languages.createDiagnosticCollection(LSPUtils.assembler.config.FileExtension.language);
 
 		vscode.workspace.onDidChangeTextDocument(UpdateFile.ChangeDocument);
+		await UpdateFile.LoadAllFile();
 	}
 
+	/**载入所有工程文件 */
+	private static async LoadAllFile() {
+		if (!vscode.workspace.workspaceFolders)
+			return;
+
+		LSPUtils.fileUpdateFinished = false;
+		let files = await LSPUtils.GetWorkspaceFilterFile();
+
+		let tempFiles: { text: string, filePath: string }[] = [];
+		for (let i = 0; i < files.length; i++) {
+			let buffer = await LSPUtils.assembler.fileUtils.ReadFile(files[i].fsPath);
+			let text = LSPUtils.assembler.fileUtils.BytesToString(buffer);
+			tempFiles.push({ text, filePath: files[i].fsPath });
+		}
+		await LSPUtils.assembler.compiler.DecodeText(tempFiles);
+		LSPUtils.fileUpdateFinished = true;
+
+		UpdateFile.UpdateDiagnostic();
+	}
+
+	/**文档变更 */
 	private static ChangeDocument(event: vscode.TextDocumentChangeEvent) {
 		if (event.document.languageId !== LSPUtils.assembler.config.FileExtension.language)
 			return;
@@ -42,48 +64,53 @@ export class UpdateFile {
 			}
 		}
 
-		let index = this.updateFiles.findIndex((value) => {
+		let index = UpdateFile.updateFiles.findIndex((value) => {
 			return value.document.uri.fsPath === event.document.uri.fsPath;
 		});
 
 		if (index < 0)
-			this.updateFiles.push(event);
+			UpdateFile.updateFiles.push(event);
 
+		LSPUtils.fileUpdateFinished = false;
 		clearTimeout(UpdateFile.freashTreadId);
 		UpdateFile.freashTreadId = setTimeout(async () => {
+			let files: { text: string, filePath: string }[] = [];
 			for (let i = 0; i < UpdateFile.updateFiles.length; ++i) {
 				const file = UpdateFile.updateFiles[i];
-				await LSPUtils.assembler.compiler.DecodeText([{ text: file.document.getText(), filePath: file.document.uri.fsPath }]);
+				files.push({ text: file.document.getText(), filePath: file.document.uri.fsPath });
 			}
+			await LSPUtils.assembler.compiler.DecodeText(files);
 			UpdateFile.UpdateDiagnostic();
 			UpdateFile.updateFiles = [];
+			LSPUtils.fileUpdateFinished = true;
 		}, FreshTime);
 	}
 
 	/**更新错误 */
 	private static UpdateDiagnostic() {
 		let errors = LSPUtils.assembler.exceptions.GetExceptions();
-		this.errorCollection.clear();
+		UpdateFile.errorCollection.clear();
 		let result = new Map<string, vscode.Diagnostic[]>();
-		// for (let i = 0; i < errors.length; i++) {
-		// 	const error = errors[i];
-		// 	if (!result.has[error.filePath])
-		// 		result[error.filePath] = [];
 
-		// 	if (error.line < 0)
-		// 		continue;
+		for (let i = 0; i < errors.length; ++i) {
+			const error = errors[i];
+			let diagnostics = result.get(error.filePath);
+			if (!diagnostics) {
+				diagnostics = [];
+				result.set(error.filePath, diagnostics);
+			}
 
-		// 	let range = new vscode.Range(error.line, error.start, error.line, error.start + error.length);
-		// 	result[error.filePath].push(new vscode.Diagnostic(range, error.message));
-		// }
+			if (error.line < 0)
+				continue;
 
-		// for (let key in result) {
-		// 	if (key == "undefined")
-		// 		continue;
+			let range = new vscode.Range(error.line, error.start, error.line, error.start + error.length);
+			diagnostics.push(new vscode.Diagnostic(range, error.message));
+		}
 
-		// 	let uri = vscode.Uri.file(key);
-		// 	this.errorCollection.set(uri, result[key]);
-		// }
+		result.forEach((value, key, map) => {
+			let uri = vscode.Uri.file(key);
+			this.errorCollection.set(uri, value);
+		})
 	}
 
 }
