@@ -34,7 +34,7 @@ export class Platform {
 	private static UpdateRegex() {
 
 		Platform.uppperCaseRegexString = "(\\s+|^)(";
-		Platform.regexString = "(\\s+|^)(?<command>";
+		Platform.regexString = "((\\s+|^)(?<command>";
 		let temp:string;
 		for (let i = 0; i < Commands.allCommandNames.length; ++i) {
 			temp = Utils.TransformRegex(Commands.allCommandNames[i]) + "|";
@@ -56,7 +56,7 @@ export class Platform {
 		Platform.uppperCaseRegexString += ")(\\s+|$)";
 
 		Platform.regexString = Platform.regexString.substring(0, Platform.regexString.length - 1);
-		Platform.regexString += ")|(?<variable>\\=!\\=)(\\s+|$)"
+		Platform.regexString += ")(\\s+|$))|(?<variable>\\=)"
 	}
 	//#endregion 更新编译平台的正则表达式
 

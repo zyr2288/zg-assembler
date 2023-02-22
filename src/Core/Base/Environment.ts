@@ -1,5 +1,5 @@
 import { HightlightRange, ICommonLine } from "../Lines/CommonLine";
-import { ILabel, ILabelTree, INamelessLabelCollection } from "./Label";
+import { ILabel, ILabelTree, INamelessLabelCollection, LabelType } from "./Label";
 import { MacroLabel } from "../Commands/Macro";
 import { Utils } from "./Utils";
 
@@ -21,11 +21,11 @@ export class Environment {
 
 	/**标签树，key为 Label的Key，用于记忆标签层集关系 */
 	labelTrees = new Map<number, ILabelTree>();
-	/**用于记忆文件内macro */
-	macroTrees = new Map<number, string[]>();
 
 	/**文件标签，用于记忆文件内的所有标签 */
 	fileLabels = new Map<number, Set<number>>();
+	/**用于记忆文件内macro */
+	fileMacros = new Map<number, Set<string>>();
 
 	macroRegexString = "";
 
@@ -58,29 +58,47 @@ export class Environment {
 
 	//#region 清除文件内的所有标记
 	ClearFile(fileHash: number) {
+		// 清除高亮范围
 		this.highlightRanges.set(fileHash, []);
-		//#region 清除标签记录
+
+		// 清除标签记录
 		let labels = this.fileLabels.get(fileHash);
 		if (labels) {
 			labels.forEach((value) => {
-				this.allLabel.delete(value);
-
-				let labelTree = this.labelTrees.get(value)!;
-				labelTree.child
-
+				this.ClearLabelTree(value);
 			});
 			this.fileLabels.set(fileHash, new Set());
+		}
+
+		// 清除文件内的所有的自定义函数
+		let macros = this.fileMacros.get(fileHash);
+		if (macros) {
+			macros.forEach((value) => {
+				this.allMacro.delete(value);
+			});
+			this.fileMacros.set(fileHash, new Set());
 		}
 	}
 
 	private ClearLabelTree(labelTreeHash: number) {
 		let labelTree = this.labelTrees.get(labelTreeHash);
-		if (!labelTree) return;
-		labelTree.parent
+		if (!labelTree || labelTreeHash === 0)
+			return;
+
+		if (labelTree.child.size === 0) {
+			this.allLabel.delete(labelTreeHash);
+			labelTree = this.labelTrees.get(labelTree.parent)!;
+			labelTree.child.delete(labelTreeHash);
+			this.ClearLabelTree(labelTree.parent);
+		} else {
+			let label = this.allLabel.get(labelTreeHash)!;
+			label.labelType = LabelType.None;
+		}
 
 	}
 	//#endregion 清除文件内的所有标记
 
+	//#region 更新Macro的正则
 	UpdateMacroRegexString() {
 		if (this.allMacro.size === 0) {
 			this.macroRegexString = "";
@@ -94,6 +112,7 @@ export class Environment {
 		this.macroRegexString = this.macroRegexString.substring(0, this.macroRegexString.length - 1);
 		this.macroRegexString += ")(\\s+|$)";
 	}
+	//#endregion 更新Macro的正则
 
 	AddAddress(offset: number) {
 		this.baseAddress += offset;

@@ -8,6 +8,7 @@ import { Localization } from "../i18n/Localization";
 import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
 import { BaseAndOrg } from "./BaseAndOrg";
 import { Defined } from "./Defined";
+import { Message } from "./Message";
 
 interface CommandParams {
 	/**第一阶段，基础分析 */
@@ -70,7 +71,7 @@ export class Commands {
 
 	//#region 初始化
 	static Initialize() {
-		const classes = [BaseAndOrg, Defined];
+		const classes = [BaseAndOrg, Defined, Message];
 		for (let i = 0; i < classes.length; ++i) {
 			let func = Reflect.get(classes[i], "Initialize");
 			func();
@@ -89,6 +90,7 @@ export class Commands {
 
 		line.expParts = [];
 		line.command = line.splitLine!.comOrIntrs;
+		line.command.text = line.command.text.toUpperCase();
 		line.GetTokens = Commands.GetTokens.bind(line);
 
 		if (Commands.ignoreEndCom.has(line.command.text)) {
@@ -203,6 +205,7 @@ export class Commands {
 		firstAnalyse?: (option: CommandDecodeOption) => Promise<boolean> | boolean,
 		secondAnalyse?: (option: DecodeOption) => Promise<boolean> | boolean,
 		thirdAnalyse?: (baseLine: DecodeOption) => Promise<boolean> | boolean,
+		/**编译，返回true为错误 */
 		compile?: (option: DecodeOption) => Promise<boolean> | boolean,
 	}) {
 		let actionParams: CommandParams = {
@@ -240,7 +243,7 @@ export class Commands {
 		let result: HighlightToken[] = [];
 
 		if (this.label)
-			result.push({ token: this.label.token, type: HighlightType.Defined });
+			result.push({ token: this.label.token, type: HighlightType.Label });
 
 		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
 		return result;
@@ -297,8 +300,26 @@ export class Commands {
 			return [line.splitLine!.expression.Copy()];
 		}
 
-		let count = params.max === -1 ? undefined : params.max - 1;
-		let args = line.splitLine!.expression.Split(/(?=\"([^\"]*)\")\,/g, { count });
+		let args: Token[] = [];
+		let inString = false;
+		let char: string = "";
+		let lastChar: string = "";
+		let start = 0;
+
+		for (let i = 0, j = 0; i < line.splitLine!.expression.text.length && j < params.max; ++i) {
+			char = line.splitLine!.expression.text.charAt(i);
+			if (char === "\"" && lastChar !== "\\") {
+				inString = true;
+			} else if (char === "," && !inString) {
+				args.push(line.splitLine!.expression.Substring(start, i - start));
+				start = i + 1;
+				if (params.max > 0 && j >= params.max)
+					break;
+			}
+			lastChar = char;
+		}
+		args.push(line.splitLine!.expression.Substring(start));
+
 		if (args[params.min - 1].isEmpty) {
 			let errorMsg = Localization.GetMessage("Command arguments error");
 			MyException.PushException(line.command, errorMsg);

@@ -1,7 +1,7 @@
 import { Environment } from "./Environment";
 import { DecodeOption } from "./Options";
 import { IInstructionLine, InstructionLine } from "../Lines/InstructionLine";
-import { ICommonLine, IUnknowLine, LineCompileType, LineType } from "../Lines/CommonLine";
+import { HighlightType, ICommonLine, IOnlyLabel, LineCompileType, LineType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "../Commands/Commands";
 import { MacroUtils } from "../Commands/Macro";
 import { LabelType, LabelUtils } from "./Label";
@@ -95,8 +95,11 @@ export class Compiler {
 					} else {
 						option.allLines[i].type = LineType.OnlyLabel;
 						let label = LabelUtils.CreateLabel(option.allLines[i].orgText, option);
-						if (label)
+						if (label) {
 							label.labelType = LabelType.Label;
+							(option.allLines[i] as IOnlyLabel).label = label;
+							option.allLines[i].GetTokens = () => [{ token: label!.token, type: HighlightType.Label }];
+						}
 					}
 					break;
 				case LineType.Command:
@@ -194,7 +197,7 @@ export class Compiler {
 					orgText: tokens[0],
 					comment: tokens[1].text,
 					compileType: LineCompileType.None
-				} as IUnknowLine;
+				} as ICommonLine;
 			}
 
 			result.push(newLine);
@@ -214,7 +217,7 @@ export class Compiler {
 	/***** Private *****/
 
 	//#region 清除文件
-	private static ClearFile(fileHash:number) {
+	private static ClearFile(fileHash: number) {
 		MyException.ClearFileExceptions(fileHash);
 		Compiler.enviroment.ClearFile(fileHash);
 	}

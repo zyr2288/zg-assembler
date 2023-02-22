@@ -1,4 +1,5 @@
 import { Compiler } from "../Base/Compiler";
+import { ILabel } from "../Base/Label";
 import { MyException } from "../Base/MyException";
 import { Token } from "../Base/Token";
 import { ICommandLine } from "../Commands/Commands";
@@ -31,7 +32,8 @@ export interface HighlightToken {
 	token: Token;
 }
 
-export interface IUnknowLine extends ICommonLine {
+export interface IOnlyLabel extends ICommonLine {
+	label: ILabel;
 }
 
 export interface HightlightRange {

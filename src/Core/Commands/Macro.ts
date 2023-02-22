@@ -1,4 +1,4 @@
-import { ICommonLine, IUnknowLine, LineCompileType, LineType } from "../Lines/CommonLine";
+import { ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
 import { Utils } from "../Base/Utils";
 import { ILabel, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";

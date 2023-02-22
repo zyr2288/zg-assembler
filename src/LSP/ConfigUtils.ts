@@ -1,32 +1,29 @@
 import * as vscode from "vscode";
-import { Assembler } from "../Core/Assembler";
+import { LSPUtils } from "./LSPUtils";
 
 export class ConfigUtils {
 
-	private static assembler: Assembler;
-
-	static async Initialize(assembler: Assembler) {
-		ConfigUtils.assembler ??= assembler;
+	static async Initialize() {
 		await ConfigUtils.ReadConfig();
 	}
 
 	//#region 读取配置文件
 	static async ReadConfig() {
 		
-		let settingFile = ConfigUtils.assembler.fileUtils.Combine(
+		let settingFile = LSPUtils.assembler.fileUtils.Combine(
 			vscode.workspace.workspaceFolders![0].uri.fsPath,
 			".vscode",
 			"project-settings.json"
 		);
 
-		if (await ConfigUtils.assembler.fileUtils.PathType(settingFile) !== "file") {
-			let json = JSON.stringify(ConfigUtils.assembler.config.ProjectDefaultSetting);
-			let buffer = ConfigUtils.assembler.fileUtils.StringToBytes(json);
-			await ConfigUtils.assembler.fileUtils.SaveFile(settingFile, buffer);
+		if (await LSPUtils.assembler.fileUtils.PathType(settingFile) !== "file") {
+			let json = JSON.stringify(LSPUtils.assembler.config.ProjectDefaultSetting);
+			let buffer = LSPUtils.assembler.fileUtils.StringToBytes(json);
+			await LSPUtils.assembler.fileUtils.SaveFile(settingFile, buffer);
 		} else {
-			let buffer = await ConfigUtils.assembler.fileUtils.ReadFile(settingFile);
-			let json = ConfigUtils.assembler.fileUtils.BytesToString(buffer);
-			ConfigUtils.assembler.config.ReadConfigJson(json);
+			let buffer = await LSPUtils.assembler.fileUtils.ReadFile(settingFile);
+			let json = LSPUtils.assembler.fileUtils.BytesToString(buffer);
+			LSPUtils.assembler.config.ReadConfigJson(json);
 		}
 	}
 	//#endregion 读取配置文件

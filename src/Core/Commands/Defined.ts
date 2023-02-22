@@ -1,9 +1,8 @@
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
-import { ILabel, LabelUtils } from "../Base/Label";
-import { DecodeOption } from "../Base/Options";
-import { Token } from "../Base/Token";
+import { LabelType, LabelUtils } from "../Base/Label";
+import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { HighlightToken, HighlightType, LineCompileType } from "../Lines/CommonLine";
-import { Commands, ICommandLine, ICommandTag } from "./Commands";
+import { Commands, ICommandLine } from "./Commands";
 
 export class Defined {
 
@@ -17,38 +16,57 @@ export class Defined {
 		})
 	}
 
-	static FirstAnalyse_Def(option: DecodeOption) {
+	private static FirstAnalyse_Def(option: CommandDecodeOption) {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
+		line.label = LabelUtils.CreateLabel(option.expressions[0], option);
+		if (line.label) line.label.labelType = LabelType.Defined;
 
-		line.tag
+		let temp = ExpressionUtils.SplitAndSort(option.expressions[1]);
+		if (temp) line.expParts[0] = temp;
+
+		line.GetTokens = Defined.GetTokens.bind(line);
+		return true;
+	}
+
+	private static ThirdAnalyse_Def(option: DecodeOption) {
+		let line = option.allLines[option.lineIndex] as ICommandLine;
+		if (!line.label)
+			return true;
+
+		let temp = ExpressionUtils.CheckLabelsAndShowError(line.expParts[0], option);
+		if (!temp)
+			return true;
+
+		let temp2 = ExpressionUtils.GetExpressionValue(line.expParts[0], "tryValue", option);
+		if (temp2.success)
+			line.label.value = temp2.value;
 
 		return true;
 	}
 
-	static ThirdAnalyse_Def(option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as ICommandLine;
-
-
-
-		return true;
-	}
-
-	static Compile_Def(option: DecodeOption) {
+	private static Compile_Def(option: DecodeOption) {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
 
 		let tag = line.tag as ExpressionPart[];
-
 
 		let temp = ExpressionUtils.GetExpressionValue(tag, "getValue");
 		let label = LabelUtils.FindLabel(line.label!.token, option);
 		if (label && temp.success) {
 			label.value = temp.value;
-			line.compileType = LineCompileType.Error;
 			return true;
 		}
+		line.compileType = LineCompileType.Error;
 		return false;
 	}
 
+	private static GetTokens(this: ICommandLine) {
+		let result: HighlightToken[] = [];
 
+		if (this.label)
+			result.push({ token: this.label.token, type: HighlightType.Defined });
+
+		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
+		return result;
+	}
 
 }

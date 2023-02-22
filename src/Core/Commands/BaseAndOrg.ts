@@ -28,8 +28,7 @@ export class BaseAndOrg {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
 		let temp = ExpressionUtils.GetExpressionValue(line.expParts[0], "getValue", option);
 		if (temp.success && temp.value < 0) {
-			// let errorMsg = Localization.GetMessage("Command arguments error");
-			// MyException.PushException(line.expParts[0][0], errorMsg);
+			line.compileType = LineCompileType.Error;
 			return false;
 		}
 
@@ -41,12 +40,10 @@ export class BaseAndOrg {
 
 	private static Compile_Org(option: DecodeOption) {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
-		let tag = line.tag as ExpressionPart[];
 
-		let temp = ExpressionUtils.GetExpressionValue(tag, "getValue");
+		let temp = ExpressionUtils.GetExpressionValue(line.expParts[0], "getValue");
 		if (!temp.success || temp.value < 0) {
-			// let errorMsg = Localization.GetMessage("Command arguments error");
-			// MyException.PushException(line.expression, errorMsg);
+			line.compileType = LineCompileType.Error;
 			return false;
 		}
 

@@ -173,7 +173,10 @@ export class LabelUtils {
 				}
 			}
 		}
-		return;
+
+		let scope = word.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
+		let hash = LabelUtils.GetLebalHash(word.text, word.fileHash, scope);
+		return Compiler.enviroment.allLabel.get(hash);
 	}
 	//#endregion 查找标签
 

@@ -1,19 +1,18 @@
 import * as vscode from "vscode";
-import { HighlightToken, HighlightType } from "../Core/Lines/CommonLine";
+import { HighlightToken } from "../Core/Lines/CommonLine";
 import { LSPUtils } from "./LSPUtils";
 
-enum VSCodeHightlightType { function, keyword, enumMember, struct, variable, operator }
+enum VSCodeHightlightType { "label", "struct", "keyword", "macro", "enumMember", "variable" }
+
+// enum HighlightType {	None, Label, Keyword, Macro, Defined, Variable}
 
 export class Highlighting {
 
 	private static leagend: vscode.SemanticTokensLegend;
 
 	static async Initialize() {
-		let temp: string[] = [];
-		for (let key in VSCodeHightlightType)
-			temp.push(key);
+		let temp: string[] = ["label", "struct", "keyword", "macro", "enumMember", "variable"];
 
-		temp.splice(0, temp.length / 2);
 		Highlighting.leagend = new vscode.SemanticTokensLegend(temp);
 
 		vscode.languages.registerDocumentRangeSemanticTokensProvider(
@@ -23,43 +22,16 @@ export class Highlighting {
 		);
 	}
 
-
 	private static async HightlightingDocument(document: vscode.TextDocument, range: vscode.Range, token: vscode.CancellationToken) {
 
 		await LSPUtils.WaitTextUpdate();
 
 		const tokenBuilder = new vscode.SemanticTokensBuilder(Highlighting.leagend);
-		let saveToken: HighlightToken;
 
-		let lines = LSPUtils.assembler.GetUpdateLines(document.uri.fsPath);
-
-		const PushToken = (type: VSCodeHightlightType) => {
-			tokenBuilder.push(saveToken.token.line, saveToken.token.start, saveToken.token.text.length, type);
-		}
-
-		for (let i = 0; i < lines.length; ++i) {
-			const line = lines[i];
-			const highlightingTokens = line.GetTokens?.();
-			if (highlightingTokens) {
-				for (let j = 0; j < highlightingTokens.length; ++j) {
-					saveToken = highlightingTokens[j];
-					switch (saveToken.type) {
-						case HighlightType.Label:
-							PushToken(VSCodeHightlightType.struct);
-							break;
-						case HighlightType.Defined:
-							PushToken(VSCodeHightlightType.enumMember);
-							break;
-						case HighlightType.Macro:
-							PushToken(VSCodeHightlightType.function);
-							break;
-						case HighlightType.Keyword:
-							PushToken(VSCodeHightlightType.keyword);
-							break;
-					}
-				}
-			}
-
+		let highlightingTokens = LSPUtils.assembler.languageHelper.highlightingProvider.HighlightDocument(document.uri.fsPath);
+		for (let i = 0; i < highlightingTokens.length; ++i) {
+			const token = highlightingTokens[i];
+			tokenBuilder.push(token.line, token.start, token.length, token.type);
 		}
 
 		return tokenBuilder.build();

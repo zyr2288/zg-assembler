@@ -2,10 +2,12 @@ import { Compiler } from "./Base/Compiler";
 import { Config } from "./Base/Config";
 import { ExpressionUtils } from "./Base/ExpressionUtils";
 import { FileUtils } from "./Base/FileUtils";
+import { LabelUtils } from "./Base/Label";
 import { MyException } from "./Base/MyException";
 import { Utils } from "./Base/Utils";
 import { Commands } from "./Commands/Commands";
 import { Localization } from "./i18n/Localization";
+import { HighlightingProvider } from "./LanguageHelper/HighlightingProvider";
 import { Platform } from "./Platform/Platform";
 
 export class Assembler {
@@ -18,6 +20,11 @@ export class Assembler {
 	localization = Localization;
 	platform = Platform;
 	utils = Utils;
+	labelUtils = LabelUtils;
+
+	languageHelper = {
+		highlightingProvider: HighlightingProvider
+	};
 
 	constructor() {
 		ExpressionUtils.Initialize();

@@ -86,7 +86,7 @@ export class ExpressionUtils {
 	/**
 	 * 表达式分解与排序，并初步检查是否正确，不检查标签是否存在
 	 * @param expression 表达式
-	 * @returns 表达式小节
+	 * @returns 表达式小节，空为有误
 	 */
 	static SplitAndSort(expression: Token): ExpressionPart[] | undefined {
 		if (expression.isEmpty)
@@ -130,15 +130,17 @@ export class ExpressionUtils {
 	 * @returns 返回true为有错误
 	 */
 	static CheckLabelsAndShowError(parts: ExpressionPart[], option?: DecodeOption) {
+		let error = false;
 		for (let i = 0; i < parts.length; i++) {
 			const part = parts[i];
-			if (part.type != PriorityType.Level_1_Label)
+			if (part.type !== PriorityType.Level_1_Label)
 				continue;
 
 			let temp = LabelUtils.FindLabel(part.token, option);
 			if (!temp) {
 				let errorMsg = Localization.GetMessage("Label {0} not found", parts[i].token.text);
 				MyException.PushException(parts[i].token, errorMsg);
+				error = true;
 			} else {
 				switch (temp.labelType) {
 					case LabelType.Defined:
@@ -153,6 +155,7 @@ export class ExpressionUtils {
 				}
 			}
 		}
+		return error;
 	}
 	//#endregion 分析所有表达式小节并推送错误
 
@@ -167,12 +170,11 @@ export class ExpressionUtils {
 	static GetExpressionValue(allParts: ExpressionPart[], analyseOption: "tryValue" | "getValue", option?: DecodeOption) {
 		let tempPart = Utils.DeepClone(allParts);
 		const GetPart = (index: number) => {
-			if (index < 0 || index >= allParts.length)
+			if (index < 0 || index >= tempPart.length)
 				return;
 
 			return tempPart[index];
 		}
-
 
 		let labelUnknow = false;
 		let result = { success: true, value: 0 };
@@ -181,6 +183,7 @@ export class ExpressionUtils {
 			if (element.type === PriorityType.Level_0_Sure)
 				continue;
 
+			// 用于判断标签等
 			if (element.type < PriorityType.Level_4_Brackets && element.type >= 0) {
 				if (labelUnknow)
 					continue;
@@ -488,7 +491,7 @@ export class ExpressionUtils {
 			}
 
 			result.parts.push(part);
-			part = { type: PriorityType.Level_0_Sure, token: {} as Token, value: 0, highlightingType: HighlightType.None };
+			part = { type: PriorityType.Level_1_Label, token: {} as Token, value: 0, highlightingType: HighlightType.None };
 		}
 
 		if (result.success && isLabel) {

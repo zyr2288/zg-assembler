@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { Assembler } from "../Core/Assembler";
+import { DefinitionProvider } from "./DefinitionProvider";
 import { Highlighting } from "./Highlighting";
 import { IOImplementation } from "./IOImplementation";
 import { LSPUtils } from "./LSPUtils";
@@ -20,6 +21,7 @@ export class LanguageServer {
 			IOImplementation,
 			Highlighting,
 			UpdateFile,
+			DefinitionProvider
 		];
 		for (let i = 0; i < classes.length; ++i) {
 			let temp = Reflect.get(classes[i], "Initialize");
