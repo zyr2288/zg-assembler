@@ -1,5 +1,5 @@
 import { DecodeOption } from "../Base/Options";
-import { ICommonLine, LineType } from "./CommonLine";
+import { ICommonLine } from "./CommonLine";
 
 /**委托接口 */
 export interface IDelegateLine extends ICommonLine {

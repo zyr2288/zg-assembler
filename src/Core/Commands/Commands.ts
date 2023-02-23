@@ -1,11 +1,10 @@
-import { SplitLine } from "../Base/Compiler";
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { MyException } from "../Base/MyException";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
-import { Localization } from "../i18n/Localization";
-import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
+import { Localization } from "../I18n/Localization";
+import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType, SplitLine } from "../Lines/CommonLine";
 import { BaseAndOrg } from "./BaseAndOrg";
 import { Defined } from "./Defined";
 import { Message } from "./Message";
@@ -345,7 +344,7 @@ export class Commands {
 		let found = false;
 		for (let i = option.lineIndex + 1; i < option.allLines.length; i++) {
 			let line = option.allLines[i] as ICommandLine;
-			if (line.type != LineType.Command)
+			if (line.type !== LineType.Command)
 				continue;
 
 			if (line.command.text === startCommand) {

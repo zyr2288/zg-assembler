@@ -1,4 +1,4 @@
-import { Localization } from "../i18n/Localization";
+import { Localization } from "../I18n/Localization";
 import { HighlightToken, HighlightType } from "../Lines/CommonLine";
 import { Compiler } from "./Compiler";
 import { LabelType, LabelUtils } from "./Label";
@@ -606,3 +606,4 @@ export class ExpressionUtils {
 	//#endregion 获取字符串
 
 }
+

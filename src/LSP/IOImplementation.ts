@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import { TextDecoder, TextEncoder } from "util";
-import { Assembler } from "../Core/Assembler";
 import { LSPUtils } from "./LSPUtils";
 
 export class IOImplementation {

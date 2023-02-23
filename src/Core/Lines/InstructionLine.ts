@@ -1,12 +1,10 @@
-import { SplitLine } from "../Base/Compiler";
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
-import { MyException } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { IAddressingMode } from "../Platform/AsmCommon";
 import { Platform } from "../Platform/Platform";
-import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
+import { HighlightToken, HighlightType, ICommonLine, LineCompileType, SplitLine } from "./CommonLine";
 
 export interface IInstructionLine extends ICommonLine {
 	orgAddress: number;

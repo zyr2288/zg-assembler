@@ -1,9 +1,7 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
-import { MyException } from "../Base/MyException";
+import { ExpressionUtils } from "../Base/ExpressionUtils";
 import { DecodeOption } from "../Base/Options";
-import { Localization } from "../i18n/Localization";
-import { LineCompileType as LineCompileType } from "../Lines/CommonLine";
+import { LineCompileType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "./Commands";
 
 export class BaseAndOrg {

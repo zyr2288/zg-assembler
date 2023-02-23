@@ -1,8 +1,7 @@
-import { SplitLine } from "../Base/Compiler";
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
-import { CommonLineUtils, HighlightToken, HighlightType, ICommonLine } from "./CommonLine";
+import { HighlightToken, HighlightType, ICommonLine, SplitLine } from "./CommonLine";
 
 export interface IVariableLine extends ICommonLine {
 	splitLine?: SplitLine;

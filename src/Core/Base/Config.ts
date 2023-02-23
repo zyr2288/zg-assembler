@@ -111,5 +111,5 @@ export class Config {
 		}
 	}
 	//#endregion 读取配置文件
-	
+
 }

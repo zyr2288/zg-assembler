@@ -1,10 +1,14 @@
 import { Compiler } from "../Base/Compiler";
 import { Utils } from "../Base/Utils";
+import { HelperUtils } from "./HelperUtils";
 
 export class HighlightingProvider {
 
 	/**高亮文档 */
-	static HighlightDocument(filePath: string) {
+	static async HighlightDocument(filePath: string) {
+
+		await HelperUtils.WaitFileUpdateFinished();
+
 		let fileHash = Utils.GetHashcode(filePath);
 		let lines = Compiler.enviroment.allBaseLines.get(fileHash);
 		if (!lines)

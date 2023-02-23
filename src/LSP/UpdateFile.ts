@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
-import { Assembler } from "../Core/Assembler";
 import { LSPUtils } from "./LSPUtils";
+
 
 const FreshTime = 1000;
 
@@ -23,7 +23,6 @@ export class UpdateFile {
 		if (!vscode.workspace.workspaceFolders)
 			return;
 
-		LSPUtils.fileUpdateFinished = false;
 		let files = await LSPUtils.GetWorkspaceFilterFile();
 
 		let tempFiles: { text: string, filePath: string }[] = [];
@@ -32,14 +31,13 @@ export class UpdateFile {
 			let text = LSPUtils.assembler.fileUtils.BytesToString(buffer);
 			tempFiles.push({ text, filePath: files[i].fsPath });
 		}
-		await LSPUtils.assembler.compiler.DecodeText(tempFiles);
-		LSPUtils.fileUpdateFinished = true;
+		await LSPUtils.assembler.LoadAllFile(tempFiles);
 
 		UpdateFile.UpdateDiagnostic();
 	}
 
 	/**文档变更 */
-	private static ChangeDocument(event: vscode.TextDocumentChangeEvent) {
+	private static async ChangeDocument(event: vscode.TextDocumentChangeEvent) {
 		if (event.document.languageId !== LSPUtils.assembler.config.FileExtension.language)
 			return;
 
@@ -50,40 +48,32 @@ export class UpdateFile {
 				let lineNumber = value.range.start.line + total;
 				total--;
 				let content = event.document.lineAt(lineNumber).text;
-				let match = new RegExp(LSPUtils.assembler.platform.uppperCaseRegexString, "ig").exec(content);
 
-				if (match === null)
+				let match = LSPUtils.assembler.languageHelper.documentChange.AutoUpperCase(content);
+				if (!match)
 					return;
 
-				let range = new vscode.Range(lineNumber, match.index, lineNumber, match.index + match[0].length);
-				let editor = <vscode.TextEditor>vscode.window.activeTextEditor;
+				let range = new vscode.Range(lineNumber, match.index, lineNumber, match.index + match.length);
+				let editor = vscode.window.activeTextEditor!;
 				editor.edit((ee) => {
-					// @ts-ignore 目前只能替换一个，原因未知
-					ee.replace(range, match[0].toUpperCase());
+					ee.replace(range, match!.text);
 				});
 			}
 		}
 
-		let index = UpdateFile.updateFiles.findIndex((value) => {
-			return value.document.uri.fsPath === event.document.uri.fsPath;
-		});
-
-		if (index < 0)
-			UpdateFile.updateFiles.push(event);
-
-		LSPUtils.fileUpdateFinished = false;
-		clearTimeout(UpdateFile.freashTreadId);
-		UpdateFile.freashTreadId = setTimeout(async () => {
-			let files: { text: string, filePath: string }[] = [];
-			for (let i = 0; i < UpdateFile.updateFiles.length; ++i) {
-				const file = UpdateFile.updateFiles[i];
-				files.push({ text: file.document.getText(), filePath: file.document.uri.fsPath });
+		await LSPUtils.assembler.languageHelper.documentChange.WatchFileUpdate(event.document.getText(), event.document.uri.fsPath);
+		let diagnostic = LSPUtils.assembler.languageHelper.documentChange.GetDiagnostics();
+		UpdateFile.errorCollection.clear();
+		diagnostic.forEach((msgs, filePath) => {
+			let uri = vscode.Uri.file(filePath);
+			let dias: vscode.Diagnostic[] = [];
+			for (let i = 0; i < msgs.length; ++i) {
+				const msg = msgs[i];
+				let range = new vscode.Range(msg.line, msg.start, msg.line, msg.start + msg.length);
+				dias.push(new vscode.Diagnostic(range, msg.message));
 			}
-			await LSPUtils.assembler.compiler.DecodeText(files);
-			UpdateFile.UpdateDiagnostic();
-			UpdateFile.updateFiles = [];
-			LSPUtils.fileUpdateFinished = true;
-		}, FreshTime);
+			UpdateFile.errorCollection.set(uri, dias);
+		});
 	}
 
 	/**更新错误 */

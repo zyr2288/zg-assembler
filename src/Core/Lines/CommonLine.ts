@@ -3,8 +3,14 @@ import { ILabel } from "../Base/Label";
 import { MyException } from "../Base/MyException";
 import { Token } from "../Base/Token";
 import { ICommandLine } from "../Commands/Commands";
-import { Localization } from "../i18n/Localization";
+import { Localization } from "../I18n/Localization";
 import { IInstructionLine } from "./InstructionLine";
+
+export interface SplitLine {
+	label: Token;
+	comOrIntrs: Token;
+	expression: Token;
+}
 
 export enum LineType {
 	Unknow, Instruction, Command, Variable, Macro, OnlyLabel, Delegate
@@ -95,4 +101,5 @@ export class CommonLineUtils {
 		}
 	}
 	//#endregion 设定行结果值
+
 }

@@ -1,7 +1,7 @@
 import { English } from "./English";
 import { Chinese } from "./Zh-cn";
 
-export type LocalizationKey = keyof typeof English;
+type LocalizationKey = keyof typeof English;
 export type LocalizationMsg = Record<LocalizationKey, string>;
 
 export class Localization {
@@ -16,7 +16,7 @@ export class Localization {
 
 		let index = languages.indexOf(localization);
 		if (index < 0) index = 0;
-		
+
 		Localization.message = settingLanguages[index];
 	}
 
@@ -28,4 +28,4 @@ export class Localization {
 
 		return message;
 	}
-}
+} 

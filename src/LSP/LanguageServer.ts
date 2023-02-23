@@ -10,7 +10,11 @@ const FreshTime = 1000;
 
 export class LanguageServer {
 
-	private assembler = new Assembler();
+	private assembler: Assembler;
+
+	constructor() {
+		this.assembler = new Assembler();
+	}
 
 	async Initialize() {
 		LSPUtils.assembler = this.assembler;
@@ -32,21 +36,21 @@ export class LanguageServer {
 	}
 
 	private SetLanguage(language: string) {
-		this.assembler.localization.ChangeLanguage(language);
+		// this.assembler.localization.ChangeLanguage(language);
 	}
 
 	//#region 注册命令
 	private RegisterMyCommand() {
 
 		//#region 编译本文件
-		vscode.commands.registerTextEditorCommand(this.assembler.config.ExtensionCommandNames.CompliteThis, async () => {
-			if (!vscode.window.activeTextEditor)
-				return;
+		// vscode.commands.registerTextEditorCommand(this.assembler.config.ExtensionCommandNames.CompliteThis, async () => {
+		// 	if (!vscode.window.activeTextEditor)
+		// 		return;
 
-			let text = vscode.window.activeTextEditor.document.getText();
-			let filePath = vscode.window.activeTextEditor.document.uri.fsPath;
+		// 	let text = vscode.window.activeTextEditor.document.getText();
+		// 	let filePath = vscode.window.activeTextEditor.document.uri.fsPath;
 
-			this.assembler.compiler.DecodeText([{ text, filePath }]);
+			// this.assembler.compiler.DecodeText([{ text, filePath }]);
 			// this.StatueBarShowText(`$(sync~spin) 编译中...`);
 
 			// await this.ReadConfig();
@@ -65,11 +69,11 @@ export class LanguageServer {
 
 			// let showText = this.assembler.myException.errorLevel ? ` $(alert) 编译有错误` : ` $(check) 编译完成`;
 			// this.StatueBarShowText(showText, 3000);
-		});
+		// });
 		//#endregion 编译本文件
 
 		//#region 编译主文件
-		vscode.commands.registerTextEditorCommand(this.assembler.config.ExtensionCommandNames.CompliteMain, async () => {
+		// vscode.commands.registerTextEditorCommand(this.assembler.config.ExtensionCommandNames.CompliteMain, async () => {
 			// if (!vscode.workspace.workspaceFolders)
 			// 	return;
 
@@ -92,11 +96,11 @@ export class LanguageServer {
 
 			// let showText = this.assembler.myException.errorLevel ? ` $(alert) 编译有错误` : ` $(check) 编译完成`;
 			// this.StatueBarShowText(showText, 3000);
-		});
+		// });
 		//#endregion 编译主文件
 
 		//#region 查找路径命令
-		vscode.commands.registerTextEditorCommand(this.assembler.config.ExtensionCommandNames.GetThisFilePath, async (textEditor, edit, ...args: any[]) => {
+		// vscode.commands.registerTextEditorCommand(this.assembler.config.ExtensionCommandNames.GetThisFilePath, async (textEditor, edit, ...args: any[]) => {
 			// // 参数0 INCLUDE 或 INCBIN
 			// // 参数1 空则是第一次执行
 			// if (args[0] != ".INCLUDE" && args[0] != ".INCBIN")
@@ -110,7 +114,7 @@ export class LanguageServer {
 			// 	excludeFile: textEditor.document.fileName
 			// };
 			// vscode.commands.executeCommand("editor.action.triggerSuggest");
-		});
+		// });
 		//#endregion 查找路径命令
 
 	}

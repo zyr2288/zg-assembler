@@ -1,4 +1,4 @@
-import { MacroLabel } from "../Commands/Macro";
+import { IMacro } from "../Commands/Macro";
 import { ICommonLine } from "../Lines/CommonLine";
 import { Token } from "./Token";
 
@@ -9,7 +9,7 @@ export interface SplitOption {
 }
 
 export interface DecodeOption {
-	macro?: MacroLabel;
+	macro?: IMacro;
 	allLines: ICommonLine[];
 	lineIndex: number;
 }

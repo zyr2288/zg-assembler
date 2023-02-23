@@ -9,7 +9,7 @@ export class ConfigUtils {
 
 	//#region 读取配置文件
 	static async ReadConfig() {
-		
+
 		let settingFile = LSPUtils.assembler.fileUtils.Combine(
 			vscode.workspace.workspaceFolders![0].uri.fsPath,
 			".vscode",

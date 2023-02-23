@@ -1,12 +1,12 @@
-import { ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
-import { Utils } from "../Base/Utils";
-import { ILabel, LabelUtils } from "../Base/Label";
-import { Token } from "../Base/Token";
-import { DecodeOption } from "../Base/Options";
 import { Compiler } from "../Base/Compiler";
-import { MyException } from "../Base/MyException";
-import { Localization } from "../i18n/Localization";
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ILabel, LabelUtils } from "../Base/Label";
+import { MyException } from "../Base/MyException";
+import { DecodeOption } from "../Base/Options";
+import { Token } from "../Base/Token";
+import { Utils } from "../Base/Utils";
+import { Localization } from "../I18n/Localization";
+import { ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
 import { Commands } from "./Commands";
 
 export interface IMacroLine extends ICommonLine {
@@ -15,7 +15,7 @@ export interface IMacroLine extends ICommonLine {
 	expression: Token;
 }
 
-export class MacroLabel {
+export class IMacro {
 	name!: Token;
 	args: Token[] = [];
 	labels = new Map<number, ILabel>();
@@ -23,7 +23,7 @@ export class MacroLabel {
 	comment?: string;
 
 	GetCopy() {
-		return Utils.DeepClone<MacroLabel>(this);
+		return Utils.DeepClone<IMacro>(this);
 	}
 }
 
@@ -68,7 +68,7 @@ export class MacroUtils {
 
 }
 
-export class Macro {
+export class MacroCommand {
 	static Initialize() {
 		Commands.AddCommand({
 			name: ".MACRO",
@@ -81,11 +81,11 @@ export class Macro {
 		})
 	}
 
-	static FirstAnalyse(option:DecodeOption) {
+	static FirstAnalyse(option: DecodeOption) {
 
 	}
 
-	static ThirdAnalyse(option:DecodeOption) {
-		
+	static ThirdAnalyse(option: DecodeOption) {
+
 	}
 }

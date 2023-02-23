@@ -1,21 +1,14 @@
-import { Environment } from "./Environment";
-import { DecodeOption } from "./Options";
-import { IInstructionLine, InstructionLine } from "../Lines/InstructionLine";
-import { HighlightType, ICommonLine, IOnlyLabel, LineCompileType, LineType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "../Commands/Commands";
 import { MacroUtils } from "../Commands/Macro";
-import { LabelType, LabelUtils } from "./Label";
-import { Token } from "./Token";
+import { HighlightType, ICommonLine, IOnlyLabel, LineCompileType, LineType, SplitLine } from "../Lines/CommonLine";
+import { IInstructionLine, InstructionLine } from "../Lines/InstructionLine";
 import { IVariableLine, VariableLineUtils } from "../Lines/VariableLine";
 import { Platform } from "../Platform/Platform";
+import { Environment } from "./Environment";
+import { LabelType, LabelUtils } from "./Label";
 import { MyException } from "./MyException";
-
-export interface SplitLine {
-	label: Token;
-	comOrIntrs: Token;
-	expression: Token;
-}
-
+import { DecodeOption } from "./Options";
+import { Token } from "./Token";
 
 export class Compiler {
 
@@ -209,7 +202,7 @@ export class Compiler {
 
 	//#region 分割内容与注释
 	/**分割内容与注释 */
-	private static GetContent(token: Token) {
+	static GetContent(token: Token) {
 		return token.Split(/;[+-]?/, { count: 1 });
 	}
 	//#endregion 分割内容与注释
@@ -224,3 +217,4 @@ export class Compiler {
 	//#endregion 清除文件
 
 }
+
