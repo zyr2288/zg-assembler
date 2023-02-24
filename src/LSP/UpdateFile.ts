@@ -14,8 +14,8 @@ export class UpdateFile {
 	static async Initialize() {
 		UpdateFile.errorCollection ??= vscode.languages.createDiagnosticCollection(LSPUtils.assembler.config.FileExtension.language);
 
-		vscode.workspace.onDidChangeTextDocument(UpdateFile.ChangeDocument);
 		await UpdateFile.LoadAllFile();
+		vscode.workspace.onDidChangeTextDocument(UpdateFile.ChangeDocument);
 	}
 
 	/**载入所有工程文件 */

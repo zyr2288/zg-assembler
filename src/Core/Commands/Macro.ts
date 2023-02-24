@@ -71,10 +71,7 @@ export class MacroUtils {
 export class MacroCommand {
 	static Initialize() {
 		Commands.AddCommand({
-			name: ".MACRO",
-			end: ".ENDM",
-			min: 1,
-			max: -1,
+			name: ".MACRO", end: ".ENDM", min: 1, max: -1,
 			nested: false,
 			label: false,
 			ableMacro: false,

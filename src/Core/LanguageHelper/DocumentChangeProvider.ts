@@ -1,7 +1,7 @@
 import { Compiler } from "../Base/Compiler";
 import { MyException } from "../Base/MyException";
 import { Platform } from "../Platform/Platform";
-import { fileUpdateFinished } from "./HelperUtils";
+import { HelperUtils } from "./HelperUtils";
 
 const FreshTime = 1000;
 let freshThreadId: NodeJS.Timeout;
@@ -38,7 +38,7 @@ export class DocumentChangeProvider {
 	static async WatchFileUpdate(text: string, filePath: string): Promise<void> {
 		return new Promise((resolve, reject) => {
 			updateFiles.set(filePath, text);
-			// fileUpdateFinished = false;
+			HelperUtils.fileUpdateFinished = false;
 			clearTimeout(freshThreadId);
 			freshThreadId = setTimeout(async () => {
 				let files: { text: string, filePath: string }[] = [];
@@ -47,7 +47,7 @@ export class DocumentChangeProvider {
 				});
 				await Compiler.DecodeText(files);
 				DocumentChangeProvider.GetDiagnostics();
-				// fileUpdateFinished = true;
+				HelperUtils.fileUpdateFinished = true;
 				updateFiles.clear();
 				resolve();
 			}, FreshTime);

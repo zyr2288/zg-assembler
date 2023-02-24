@@ -5,6 +5,7 @@ import { Utils } from "../Base/Utils";
 import { Commands } from "../Commands/Commands";
 import { IMacro } from "../Commands/Macro";
 import { Platform } from "../Platform/Platform";
+import { HelperUtils } from "./HelperUtils";
 
 let fileCompletion: {
 	type: ".INCLUDE" | ".INCBIN",
@@ -102,10 +103,19 @@ export class IntellisenseProvider {
 		let line = Token.CreateToken(fileHash, document.lineNumber, 0, document.lineText);
 		let leftText = line.Substring(0, document.lineCurrect);
 
+		// 左侧忽略文本
 		if (ignoreWordStr.test(leftText.text))
 			return [];
 
+		let text = HelperUtils.GetWord(document.lineText, document.lineCurrect);
+		if (/[@\$]/g.test(text.text))
+			return [];
 
+		let type: CompletionRange = CompletionRange.Base;
+		let helperOption = { trigger: option.trigger, macro: undefined };
+
+		let word = Token.CreateToken(fileHash, document.lineNumber, text.startColumn, text.text);
+		let result = IntellisenseProvider.GetBaseHelper(type, word, helperOption);
 	}
 
 	static GetBaseHelper(type: CompletionRange, prefix: Token, option?: { macro?: IMacro, trigger?: string }) {

@@ -6,8 +6,10 @@ import { MyException } from "./Base/MyException";
 import { Utils } from "./Base/Utils";
 import { Commands } from "./Commands/Commands";
 import { DocumentChangeProvider } from "./LanguageHelper/DocumentChangeProvider";
+import { HelperUtils } from "./LanguageHelper/HelperUtils";
 import { HighlightingProvider } from "./LanguageHelper/HighlightingProvider";
 import { HoverProvider } from "./LanguageHelper/HoverProvider";
+import { IntellisenseProvider } from "./LanguageHelper/IntellisenseProvider";
 import { Platform } from "./Platform/Platform";
 
 export class Assembler {
@@ -26,6 +28,7 @@ export class Assembler {
 		highlightingProvider: HighlightingProvider,
 		documentChange: DocumentChangeProvider,
 		hoverProvider: HoverProvider,
+		intellisense: IntellisenseProvider,
 	};
 
 	constructor() {
@@ -35,7 +38,9 @@ export class Assembler {
 	}
 
 	async LoadAllFile(files: { text: string, filePath: string }[]) {
+		HelperUtils.fileUpdateFinished = false;
 		await Compiler.DecodeText(files);
+		HelperUtils.fileUpdateFinished = true;
 	}
 
 	GetUpdateLines(filePath: string) {
