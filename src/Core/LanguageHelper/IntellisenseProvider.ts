@@ -7,13 +7,6 @@ import { IMacro } from "../Commands/Macro";
 import { Platform } from "../Platform/Platform";
 import { HelperUtils } from "./HelperUtils";
 
-let fileCompletion: {
-	type: ".INCLUDE" | ".INCBIN",
-	path: string,
-	workFolder: string,
-	excludeFile: string,
-};
-
 const ignoreWordStr = /;|(^|\s+)(\.HEX|\.DBG|\.DWG|\.MACRO)(\s+|$)/ig;
 
 //#region 提示类型
@@ -83,20 +76,26 @@ export class Completion {
 
 export enum CompletionRange { None, Base, Label, Macro, Path }
 
-
 //#region 智能提示类
 export class IntellisenseProvider {
 
 	private static commandCompletions: Completion[] = [];
 	private static commandNotInMacroCompletions: Completion[] = [];
 	private static instructionCompletions: Completion[] = [];
+	private static fileCompletion: {
+		type: ".INCLUDE" | ".INCBIN",
+		path: string,
+		workFolder: string,
+		excludeFile: string,
+	};
+
 
 	static Intellisense(
-		document: { filePath: string, lineNumber: number, allText: string, currect: number, lineText: string, lineCurrect: number },
+		document: { filePath: string, lineNumber: number, currect: number, lineText: string, lineCurrect: number },
 		option: { trigger?: string }
 	) {
-		if (fileCompletion)
-			return;
+		if (IntellisenseProvider.fileCompletion)
+			return [];
 
 		let fileHash = Utils.GetHashcode(document.filePath);
 
@@ -111,11 +110,18 @@ export class IntellisenseProvider {
 		if (/[@\$]/g.test(text.text))
 			return [];
 
+		let match = new RegExp(Platform.regexString, "ig").exec(leftText.text);
+
 		let type: CompletionRange = CompletionRange.Base;
 		let helperOption = { trigger: option.trigger, macro: undefined };
 
+		if (match?.groups?.["command"] || match?.groups?.["instruction"]) {
+			type = CompletionRange.Label;
+		}
+
 		let word = Token.CreateToken(fileHash, document.lineNumber, text.startColumn, text.text);
 		let result = IntellisenseProvider.GetBaseHelper(type, word, helperOption);
+		return result;
 	}
 
 	static GetBaseHelper(type: CompletionRange, prefix: Token, option?: { macro?: IMacro, trigger?: string }) {
@@ -169,7 +175,10 @@ export class IntellisenseProvider {
 		IntellisenseProvider.instructionCompletions = [];
 		for (let i = 0; i < Platform.platform.instructions.length; ++i) {
 			const instruction = Platform.platform.instructions[i];
-			let completion = new Completion({ showText: instruction });
+			let completion = new Completion({
+				showText: instruction,
+				type: CompletionType.Instruction
+			});
 			IntellisenseProvider.instructionCompletions.push(completion);
 		}
 	}

@@ -45,13 +45,14 @@ export class UpdateFile {
 		for (let i = 0; i < event.contentChanges.length; ++i) {
 			const value = event.contentChanges[i];
 			if (value.text.match(/\r\n|\r|\n/)) {
-				let lineNumber = value.range.start.line + total;
-				total--;
+				let lineNumber = value.range.start.line;
 				let content = event.document.lineAt(lineNumber).text;
+
+				console.log(content);
 
 				let match = LSPUtils.assembler.languageHelper.documentChange.AutoUpperCase(content);
 				if (!match)
-					return;
+					continue;
 
 				let range = new vscode.Range(lineNumber, match.index, lineNumber, match.index + match.length);
 				let editor = vscode.window.activeTextEditor!;

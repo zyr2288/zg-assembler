@@ -52,6 +52,10 @@ export interface ExpressionPart {
 }
 //#endregion 表达式分割
 
+export enum ExpressionResult {
+	TryToGetResult, GetResultAndShowError
+}
+
 export class ExpressionUtils {
 
 	/**符号优先级 */
@@ -167,7 +171,7 @@ export class ExpressionUtils {
 	 * @param option 编译选项
 	 * @returns 计算结果
 	 */
-	static GetExpressionValue(allParts: ExpressionPart[], analyseOption: "tryValue" | "getValue", option?: DecodeOption) {
+	static GetExpressionValue(allParts: ExpressionPart[], analyseOption: ExpressionResult, option?: DecodeOption) {
 		let tempPart = Utils.DeepClone(allParts);
 		const GetPart = (index: number) => {
 			if (index < 0 || index >= tempPart.length)
@@ -201,7 +205,7 @@ export class ExpressionUtils {
 				} else {
 					let label = LabelUtils.FindLabel(element.token, option);
 					if (label?.value === undefined) {
-						if (analyseOption === "getValue") {
+						if (analyseOption === ExpressionResult.GetResultAndShowError) {
 							let errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
 							MyException.PushException(element.token, errorMsg);
 							result.success = false;
@@ -327,7 +331,7 @@ export class ExpressionUtils {
 		let strIndex = ExpressionUtils.CheckString(parts);
 
 		if (strIndex < 0) {
-			let temp3 = ExpressionUtils.GetExpressionValue(parts, "getValue", option);
+			let temp3 = ExpressionUtils.GetExpressionValue(parts, ExpressionResult.GetResultAndShowError, option);
 			return { success: temp3.success, values: [temp3.value] };
 		} else {
 			let tempWord = parts[strIndex].token.Copy();
@@ -339,7 +343,7 @@ export class ExpressionUtils {
 			for (let i = 0; i < tempWord.length; i++) {
 				parts[strIndex].type = PriorityType.Level_0_Sure;
 				parts[strIndex].value = tempWord.text.charCodeAt(i);
-				let temp3 = ExpressionUtils.GetExpressionValue(parts, "getValue", option);
+				let temp3 = ExpressionUtils.GetExpressionValue(parts, ExpressionResult.GetResultAndShowError, option);
 				if (!temp3.success) {
 					result.success = false;
 					break;

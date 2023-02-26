@@ -1,4 +1,5 @@
 import { ExpressionPart } from "../Base/ExpressionUtils";
+import { DecodeOption } from "../Base/Options";
 import { ICommandTag } from "./Commands";
 
 export interface IDataGroupTag extends ICommandTag {
@@ -11,5 +12,8 @@ export class DataGroup {
 
 	}
 
+	static FirstAnalyse_DataGroup(option:DecodeOption) {
+		
+	}
 
 }

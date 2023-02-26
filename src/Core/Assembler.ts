@@ -5,6 +5,7 @@ import { FileUtils } from "./Base/FileUtils";
 import { MyException } from "./Base/MyException";
 import { Utils } from "./Base/Utils";
 import { Commands } from "./Commands/Commands";
+import { Localization } from "./I18n/Localization";
 import { DocumentChangeProvider } from "./LanguageHelper/DocumentChangeProvider";
 import { HelperUtils } from "./LanguageHelper/HelperUtils";
 import { HighlightingProvider } from "./LanguageHelper/HighlightingProvider";
@@ -18,9 +19,9 @@ export class Assembler {
 	platform = Platform;
 	config = Config;
 	exceptions = MyException;
+	localization = Localization;
 	// expressionUtils = ExpressionUtils;
 	// compiler = assembler.Compiler.ZGAssembler.Compiler;
-	// localization = Localization;
 	// utils = Utils;
 	// labelUtils = LabelUtils;
 

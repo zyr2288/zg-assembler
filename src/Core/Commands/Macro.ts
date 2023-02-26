@@ -80,9 +80,10 @@ export class MacroCommand {
 
 	static FirstAnalyse(option: DecodeOption) {
 
+		Compiler.FirstAnalyse(option)
 	}
 
 	static ThirdAnalyse(option: DecodeOption) {
-
+		Compiler.ThirdAnalyse(option);
 	}
 }

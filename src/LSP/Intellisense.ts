@@ -1,11 +1,11 @@
 import * as vscode from "vscode";
 import { LSPUtils } from "./LSPUtils";
-interface FileCompletion {
-	type: ".INCLUDE" | ".INCBIN",
-	path: string,
-	workFolder: string,
-	excludeFile: string,
+
+//#region 提示类型
+enum CompletionType {
+	Instruction, Command, Macro, Label, MacroLabel, Folder, File
 }
+//#endregion 提示类型
 
 export class Intellisense {
 
@@ -14,10 +14,6 @@ export class Intellisense {
 			provideCompletionItems: Intellisense.ShowCompletion
 		}, ".", ":")
 	}
-
-	private static fileCompletion: FileCompletion;
-	private static readonly ignoreWordStr = /;|(^|\s+)(\.HEX|\.DBG|\.DWG|\.MACRO)(\s+|$)/ig;
-
 
 	private static async ShowCompletion(document: vscode.TextDocument,
 		position: vscode.Position,
@@ -36,8 +32,39 @@ export class Intellisense {
 		let option = {
 			trigger: context.triggerCharacter
 		}
-		LSPUtils.assembler.languageHelper.intellisense.Intellisense(doc, option);
+		let completions = LSPUtils.assembler.languageHelper.intellisense.Intellisense(doc, option);
 
-		return [];
+		let result: vscode.CompletionItem[] = [];
+		for (let i = 0; i < completions.length; ++i) {
+			const com = completions[i];
+			let newCom = new vscode.CompletionItem(com.showText);
+			newCom.insertText = com.insertText;
+			newCom.sortText = com.index.toString();
+			switch (com.type as CompletionType | undefined) {
+				case CompletionType.Command:
+					newCom.kind = vscode.CompletionItemKind.Method;
+					break;
+				case CompletionType.Instruction:
+					newCom.kind = vscode.CompletionItemKind.Keyword;
+					break;
+				case CompletionType.File:
+					newCom.kind = vscode.CompletionItemKind.File;
+					break;
+				case CompletionType.Folder:
+					newCom.kind = vscode.CompletionItemKind.Folder;
+					break;
+				case CompletionType.Label:
+					newCom.kind = vscode.CompletionItemKind.Struct;
+					break;
+				case CompletionType.Macro:
+					newCom.kind = vscode.CompletionItemKind.Function;
+					break;
+			}
+			result.push(newCom);
+		}
+
+
+		return result;
 	}
+
 }

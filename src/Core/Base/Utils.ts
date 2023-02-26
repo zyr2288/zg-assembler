@@ -56,9 +56,9 @@ export class Utils {
 			const value = object[i];
 			switch (typeof (value)) {
 				case "string":
-					for (var j = 0; j < value.length; j++) {
-						hash = ((hash << 5) - hash) + value.charCodeAt(i);
-						hash = hash & hash; // Convert to 32bit integer
+					for (var j = 0; j < value.length; ++j) {
+						hash = ((hash << 5) - hash) + value.charCodeAt(j);
+						hash &= hash; // Convert to 32bit integer
 					}
 					break;
 				case "number":
@@ -82,6 +82,17 @@ export class Utils {
 		return text.split("").reverse().join("")
 	}
 	//#endregion 翻转字符串
+
+	//#region 获取数字占用字节数
+	static GetNumberByteLength(value: number) {
+		let length = 0;
+		do {
+			value >>= 8;
+			length++;
+		} while (value != 0)
+		return length;
+	}
+	//#endregion 获取数字占用字节数
 
 }
 

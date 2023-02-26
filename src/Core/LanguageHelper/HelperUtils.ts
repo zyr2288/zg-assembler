@@ -1,4 +1,5 @@
 import { ExpressionUtils } from "../Base/ExpressionUtils";
+import { LabelUtils } from "../Base/Label";
 import { Utils } from "../Base/Utils";
 import { Platform } from "../Platform/Platform";
 
@@ -39,17 +40,17 @@ export class HelperUtils {
 			};
 		}
 
-		let regex = new RegExp(Platform.uppperCaseRegexString, "ig");
+		let regex = new RegExp(Platform.regexString, "ig");
 		let leftMatch = regex.exec(lineText.substring(0, currect));
 
-		regex = new RegExp(Platform.uppperCaseRegexString, "ig");
+		regex = new RegExp(Platform.regexString, "ig");
 		let rightMatch = regex.exec(lineText);
 
 		let temp: RegExpExecArray | null;
-		if (rightMatch && currect <= rightMatch.index && (temp = /^\s*(\++|\-+)/.exec(lineText.substring(0, rightMatch.index)))) {
+		if (rightMatch && currect <= rightMatch.index && (temp = LabelUtils.namelessLabelRegex.exec(lineText.substring(0, rightMatch.index)))) {
 			// 临时变量
 			return { startColumn: temp.index, text: temp[0], type: "var" };
-		} else if (leftMatch && (temp = /^\s*(\++|\-+)/.exec(lineText.substring(leftMatch.index + leftMatch[0].length))) != null) {
+		} else if (leftMatch && (temp = LabelUtils.namelessLabelRegex.exec(lineText.substring(leftMatch.index + leftMatch[0].length))) != null) {
 			// 临时变量
 			return { startColumn: leftMatch.index + leftMatch[0].length, text: temp[0], type: "var" };
 		} else {

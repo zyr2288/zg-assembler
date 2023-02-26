@@ -4,8 +4,6 @@ import { Platform } from "../Platform/Platform";
 import { HelperUtils } from "./HelperUtils";
 
 const FreshTime = 1000;
-let freshThreadId: NodeJS.Timeout;
-let updateFiles = new Map<string, string>();
 
 interface ErrorMessage {
 	line: number;
@@ -16,14 +14,17 @@ interface ErrorMessage {
 
 export class DocumentChangeProvider {
 
+	private static freshThreadId: NodeJS.Timeout;
+	private static updateFiles = new Map<string, string>();
+
 	/**
 	 * 指令自动大写
 	 * @param lineText 一行内容
 	 * @returns 
 	 */
 	static AutoUpperCase(lineText: string) {
-		let match = new RegExp(Platform.uppperCaseRegexString, "ig").exec(lineText);
-		if (!match)
+		let match = new RegExp(Platform.regexString, "ig").exec(lineText);
+		if (!match?.groups?.["command"] && !match?.groups?.["instruction"])
 			return;
 
 		return { index: match.index, length: match[0].length, text: match[0].toUpperCase() };
@@ -37,18 +38,18 @@ export class DocumentChangeProvider {
 	 */
 	static async WatchFileUpdate(text: string, filePath: string): Promise<void> {
 		return new Promise((resolve, reject) => {
-			updateFiles.set(filePath, text);
 			HelperUtils.fileUpdateFinished = false;
-			clearTimeout(freshThreadId);
-			freshThreadId = setTimeout(async () => {
+			DocumentChangeProvider.updateFiles.set(filePath, text);
+			clearTimeout(DocumentChangeProvider.freshThreadId);
+			DocumentChangeProvider.freshThreadId = setTimeout(async () => {
 				let files: { text: string, filePath: string }[] = [];
-				updateFiles.forEach((value, key) => {
+				DocumentChangeProvider.updateFiles.forEach((value, key) => {
 					files.push({ text: value, filePath: key });
 				});
 				await Compiler.DecodeText(files);
 				DocumentChangeProvider.GetDiagnostics();
 				HelperUtils.fileUpdateFinished = true;
-				updateFiles.clear();
+				DocumentChangeProvider.updateFiles.clear();
 				resolve();
 			}, FreshTime);
 		});

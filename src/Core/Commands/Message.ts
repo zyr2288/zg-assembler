@@ -1,4 +1,4 @@
-import { ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { DecodeOption } from "../Base/Options";
 import { LineCompileType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "./Commands";
@@ -31,7 +31,7 @@ export class Message {
 
 		line.compileType = LineCompileType.Finished;
 		for (let i = 0; i < line.expParts.length; ++i) {
-			let temp = ExpressionUtils.GetExpressionValue(line.expParts[i], "getValue", option);
+			let temp = ExpressionUtils.GetExpressionValue(line.expParts[i], ExpressionResult.GetResultAndShowError, option);
 			if (temp.success) {
 				values[i] = temp.value;
 			} else {

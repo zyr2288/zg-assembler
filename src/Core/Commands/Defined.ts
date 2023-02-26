@@ -1,4 +1,4 @@
-import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { LabelType, LabelUtils } from "../Base/Label";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { HighlightToken, HighlightType, LineCompileType } from "../Lines/CommonLine";
@@ -37,7 +37,7 @@ export class Defined {
 		if (!temp)
 			return true;
 
-		let temp2 = ExpressionUtils.GetExpressionValue(line.expParts[0], "tryValue", option);
+		let temp2 = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.TryToGetResult, option);
 		if (temp2.success)
 			line.label.value = temp2.value;
 
@@ -49,7 +49,7 @@ export class Defined {
 
 		let tag = line.tag as ExpressionPart[];
 
-		let temp = ExpressionUtils.GetExpressionValue(tag, "getValue");
+		let temp = ExpressionUtils.GetExpressionValue(tag, ExpressionResult.GetResultAndShowError);
 		let label = LabelUtils.FindLabel(line.label!.token, option);
 		if (label && temp.success) {
 			label.value = temp.value;

@@ -1,10 +1,14 @@
-import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
+import { Compiler } from "../Base/Compiler";
+import { Config } from "../Base/Config";
+import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
+import { MyException } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
+import { Utils } from "../Base/Utils";
 import { IAddressingMode } from "../Platform/AsmCommon";
 import { Platform } from "../Platform/Platform";
-import { HighlightToken, HighlightType, ICommonLine, LineCompileType, SplitLine } from "./CommonLine";
+import { CommonLineUtils, HighlightToken, HighlightType, ICommonLine, LineCompileType, SplitLine } from "./CommonLine";
 
 export interface IInstructionLine extends ICommonLine {
 	orgAddress: number;
@@ -64,6 +68,57 @@ export class InstructionLine {
 			ExpressionUtils.CheckLabelsAndShowError(line.exprParts[i]);
 	}
 	//#endregion 第三次分析，并检查表达式是否有误
+
+	//#region 编译汇编指令
+	static CompileInstruction(option: DecodeOption): void {
+		let line = option.allLines[option.lineIndex] as IInstructionLine;
+		Compiler.enviroment.SetAddress(line);
+
+		if (line.addressingMode.spProcess) {
+			line.addressingMode.spProcess(option);
+			Compiler.enviroment.AddAddress(line.result.length);
+			return;
+		}
+
+		if (!line.exprParts[0]) {
+			CommonLineUtils.SetResult(line, line.addressingMode.opCode[0]!, 0, line.addressingMode.opCodeLength[0]!);
+			line.compileType = LineCompileType.Finished;
+			Compiler.enviroment.AddAddress(line.result.length);
+			return;
+		}
+
+		let tryValue = Compiler.enviroment.compileTimes === Config.ProjectSetting.compileTimes ?
+			ExpressionResult.GetResultAndShowError :
+			ExpressionResult.TryToGetResult;
+		let temp = ExpressionUtils.GetExpressionValue(line.exprParts[0], tryValue, option);
+		if (!temp.success) {
+			let index = line.addressingMode.opCode.length - 1;
+			line.result.length = line.addressingMode.opCodeLength[index]! + index;
+		} else {
+			if (line.result.length != 0) {
+				let length = line.addressingMode.opCode.length;
+				CommonLineUtils.SetResult(line, temp.value, length, length - 1);
+			} else {
+				let length = Utils.GetNumberByteLength(temp.value);
+				if (!line.addressingMode.opCode[length]) {
+					for (let i = 0; i < line.addressingMode.opCode.length; ++i) {
+						if (!line.addressingMode.opCode[i])
+							continue;
+
+						length = i;
+						break;
+					}
+				}
+
+				CommonLineUtils.SetResult(line, temp.value, 0, line.addressingMode.opCode[length]!);
+				CommonLineUtils.SetResult(line, temp.value, line.addressingMode.opCodeLength[length]!, temp.value);
+			}
+		}
+
+		Compiler.enviroment.AddAddress(line.result.length);
+		return;
+	}
+	//#endregion 编译汇编指令
 
 	//#region 获取高亮Token
 	static GetToken(this: IInstructionLine) {
