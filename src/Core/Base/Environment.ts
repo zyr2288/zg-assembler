@@ -8,6 +8,7 @@ import { Utils } from "./Utils";
 export class Environment {
 
 	compileTimes = 0;
+	isCompile: boolean;
 
 	orgAddress: number = -1;
 	baseAddress: number = 0;
@@ -35,6 +36,10 @@ export class Environment {
 
 	private files = new Map<number, string>();
 	private highlightRanges = new Map<number, HighlightRange[]>();
+
+	constructor(isCompile: boolean) {
+		this.isCompile = isCompile;
+	}
 
 	//#region 获取文件Hash
 	GetFile(hash: number) {

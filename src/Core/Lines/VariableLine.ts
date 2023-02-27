@@ -1,4 +1,4 @@
-import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
 import { HighlightToken, HighlightType, ICommonLine, SplitLine } from "./CommonLine";
@@ -26,7 +26,9 @@ export class VariableLineUtils {
 
 	static ThirdAnalyse(option: DecodeOption) {
 		let line = option.allLines[option.lineIndex] as IVariableLine;
-		ExpressionUtils.CheckLabelsAndShowError(line.exprParts);
+		let temp = ExpressionUtils.GetExpressionValue(line.exprParts, ExpressionResult.TryToGetResult, option);
+		if (temp.success)
+			line.label.value = temp.value;
 
 		line.GetTokens = VariableLineUtils.GetTokens.bind(line);
 	}

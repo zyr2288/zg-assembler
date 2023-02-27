@@ -5,6 +5,7 @@ import { Utils } from "../Base/Utils";
 import { HelperUtils } from "./HelperUtils";
 
 export class HoverProvider {
+
 	static Hover(filePath: string, lineNumber: number, lineText: string, currect: number) {
 
 		let fileHash = Utils.GetHashcode(filePath);
@@ -12,8 +13,8 @@ export class HoverProvider {
 
 		let result = { value: undefined as number | undefined, comment: undefined as string | undefined };
 
-		const tokens = Compiler.GetContent(line);
-		let range = HelperUtils.GetWord(tokens[0].text, currect);
+		const { content } = Compiler.GetContent(line);
+		let range = HelperUtils.GetWord(content.text, currect);
 
 		if (range.type === "none")
 			return result;
@@ -26,9 +27,9 @@ export class HoverProvider {
 		if (range.type !== "var")
 			return result;
 
-		tokens[0].text = range.text;
-		tokens[0].start = currect - tokens[0].start;
-		let label = LabelUtils.FindLabel(tokens[0]);
+		content.text = range.text;
+		content.start = currect - content.start;
+		let label = LabelUtils.FindLabel(content);
 		if (label) {
 			result.value = label.value;
 			result.comment = label.comment;

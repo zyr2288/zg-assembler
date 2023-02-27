@@ -34,8 +34,8 @@ export class Defined {
 			return true;
 
 		let temp = ExpressionUtils.CheckLabelsAndShowError(line.expParts[0], option);
-		if (!temp)
-			return true;
+		if (temp)
+			return false;
 
 		let temp2 = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.TryToGetResult, option);
 		if (temp2.success)

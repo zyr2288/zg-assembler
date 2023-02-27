@@ -12,8 +12,8 @@ import { Token } from "./Token";
 
 export class Compiler {
 
-	private static compilerEnv = new Environment();
-	private static editorEnv = new Environment();
+	private static compilerEnv = new Environment(true);
+	private static editorEnv = new Environment(false);
 
 	static enviroment: Environment;
 
@@ -133,7 +133,7 @@ export class Compiler {
 	/**分解文本 */
 	private static SplitTexts(fileHash: number, text: string): ICommonLine[] {
 		let match: RegExpExecArray | null = null;
-		let tokens: Token[];
+		let tokens: Token[] = [];
 		let newLine = {} as ICommonLine;
 		let result: ICommonLine[] = [];
 
@@ -171,12 +171,13 @@ export class Compiler {
 		for (let index = 0; index < allLines.length; ++index) {
 			newLine.orgText = Token.CreateToken(fileHash, index, 0, allLines[index]);
 
-			tokens = Compiler.GetContent(newLine.orgText);
-			if (tokens[0].isEmpty)
+			const { content, comment } = Compiler.GetContent(newLine.orgText);
+			tokens = [content, comment];
+			if (content.isEmpty)
 				continue;
 
 			let regex = new RegExp(Platform.regexString, "i");
-			match = regex.exec(tokens[0].text);
+			match = regex.exec(content.text);
 
 			if (match?.groups?.["command"]) {
 				SaveToken(LineType.Command);
@@ -187,8 +188,8 @@ export class Compiler {
 			} else {
 				newLine = {
 					type: LineType.Unknow,
-					orgText: tokens[0],
-					comment: tokens[1].text,
+					orgText: content,
+					comment: comment.text,
 					compileType: LineCompileType.None
 				} as ICommonLine;
 			}
@@ -203,7 +204,8 @@ export class Compiler {
 	//#region 分割内容与注释
 	/**分割内容与注释 */
 	static GetContent(token: Token) {
-		return token.Split(/;[+-]?/, { count: 1 });
+		let temp = token.Split(/;[+-]?/, { count: 1 });
+		return { content: temp[0], comment: temp[1] };
 	}
 	//#endregion 分割内容与注释
 

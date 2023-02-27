@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
 import { MyException } from "../Base/MyException";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
@@ -18,13 +18,13 @@ export class Include {
 		Commands.AddCommand({
 			name: ".INCLUDE", min: 1,
 			firstAnalyse: Include.FirstAnalyse_Include,
-			compile: Include.Compile_Include
 		});
 
 		Commands.AddCommand({
 			name: ".INCBIN", min: 1, max: 3,
 			firstAnalyse: Include.FirstAnalyse_Incbin,
-			compile: Include.Compile_Include
+			thirdAnalyse: Commands.ThirdAnalyse_Common,
+			compile: Include.Compile_Incbin
 		});
 	}
 
@@ -32,6 +32,10 @@ export class Include {
 		let temp = await Include.ChechFile(option);
 		if (!temp.exsist)
 			return false;
+
+		if (Compiler.enviroment.isCompile) {
+
+		}
 
 		return true;
 	}
@@ -41,18 +45,41 @@ export class Include {
 		if (!temp.exsist)
 			return false;
 
-		
-			
+		let line = option.allLines[option.lineIndex] as ICommandLine;
+		line.tag = temp.path;
+		let temp2;
+		if (option.expressions[1] && (temp2 = ExpressionUtils.SplitAndSort(option.expressions[1])))
+			line.expParts[0] = temp2;
+
+		if (option.expressions[2] && (temp2 = ExpressionUtils.SplitAndSort(option.expressions[2])))
+			line.expParts[1] = temp2;
+
 		return true;
 	}
 
-	/**编译Include */
-	private static Compile_Include(option: DecodeOption) {
+	/**编译Incbin */
+	private static async Compile_Incbin(option: DecodeOption) {
+		let line = option.allLines[option.lineIndex] as ICommandLine;
+		let temp = await FileUtils.ReadFile(line.tag);
+
+		Compiler.enviroment.SetAddress(line);
+
+		let start = 0;
+		let result = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.GetResultAndShowError, option);
+		if (result.success)
+			start = result.value;
+
+		let length = temp.length;
+		result = ExpressionUtils.GetExpressionValue(line.expParts[1], ExpressionResult.GetResultAndShowError, option);
+		if (result.success)
+			length = result.value;
+
+		for (let i = start, j = 0; i < temp.length && j < length; ++i, ++j)
+			line.result[j] = temp[i];
+
+		Compiler.enviroment.AddAddress(line.result.length);
+		line.compileType = LineCompileType.Finished;
 		return true;
-	}
-
-	private static Compile_Incbin(option: DecodeOption) {
-
 	}
 
 	/**检查是否满足表达式 */
