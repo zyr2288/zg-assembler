@@ -7,6 +7,8 @@ import { Localization } from "../I18n/Localization";
 import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType, SplitLine } from "../Lines/CommonLine";
 import { BaseAndOrg } from "./BaseAndOrg";
 import { Defined } from "./Defined";
+import { Hexadecimal } from "./Hexadecimal";
+import { Include } from "./Include";
 import { Message } from "./Message";
 
 interface CommandParams {
@@ -70,7 +72,7 @@ export class Commands {
 
 	//#region 初始化
 	static Initialize() {
-		const classes = [BaseAndOrg, Defined, Message];
+		const classes = [BaseAndOrg, Defined, Message, Hexadecimal, Include];
 		for (let i = 0; i < classes.length; ++i) {
 			let func = Reflect.get(classes[i], "Initialize");
 			func();
@@ -308,7 +310,7 @@ export class Commands {
 		for (let i = 0, j = 0; i < line.splitLine!.expression.text.length && j < params.max; ++i) {
 			char = line.splitLine!.expression.text.charAt(i);
 			if (char === "\"" && lastChar !== "\\") {
-				inString = true;
+				inString = !inString;
 			} else if (char === "," && !inString) {
 				args.push(line.splitLine!.expression.Substring(start, i - start));
 				start = i + 1;
@@ -319,7 +321,7 @@ export class Commands {
 		}
 		args.push(line.splitLine!.expression.Substring(start));
 
-		if (args[params.min - 1].isEmpty) {
+		if (args.length < params.min || args[params.min - 1].isEmpty) {
 			let errorMsg = Localization.GetMessage("Command arguments error");
 			MyException.PushException(line.command, errorMsg);
 			line.compileType = LineCompileType.Error;

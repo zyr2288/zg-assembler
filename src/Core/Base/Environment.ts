@@ -102,8 +102,7 @@ export class Environment {
 
 		if (labelTree.child.size === 0) {
 			this.allLabel.delete(labelTreeHash);
-			labelTree = this.labelTrees.get(labelTree.parent)!;
-			labelTree.child.delete(labelTreeHash);
+			this.labelTrees.get(labelTree.parent)?.child.delete(labelTreeHash);
 			this.ClearLabelTree(labelTree.parent);
 		} else {
 			let label = this.allLabel.get(labelTreeHash)!;

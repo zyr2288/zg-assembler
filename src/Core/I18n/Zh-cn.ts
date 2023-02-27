@@ -17,4 +17,5 @@ export const Chinese: LocalizationMsg = {
 	"Command {0} can not use label": "命令 \"{0}\" 不支持标签",
 	"Command arguments error": "命令参数错误",
 	"Unknow original address": "未设定起始地址",
+	"File {0} is not exist":"文件 \"{0}\" 不存在",
 }

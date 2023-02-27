@@ -32,7 +32,7 @@ export class Assembler {
 		intellisense: IntellisenseProvider,
 	};
 
-	constructor() {
+	Initialize() {
 		ExpressionUtils.Initialize();
 		Commands.Initialize();
 		Platform.ChangePlatform("6502");

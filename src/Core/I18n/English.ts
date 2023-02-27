@@ -15,4 +15,5 @@ export const English = {
 	"Command {0} can not use label": "Command \"{0}\" can not use label",
 	"Command arguments error": "Command arguments error",
 	"Unknow original address": "Unknow original address",
+	"File {0} is not exist": "File \"{0}\" is not exist",
 }

@@ -21,7 +21,7 @@ export enum LabelType {
 	Label
 }
 
-enum LabelScope { Global, Local, Temporary, AllParent }
+export enum LabelScope { Global, Local, Temporary, AllParent }
 
 export interface ICommonLabel {
 	token: Token;
@@ -99,7 +99,8 @@ export class LabelUtils {
 		let type = token.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
 
 		let hash = LabelUtils.GetLebalHash(token.text, token.fileHash, type);
-		if (Compiler.enviroment.allLabel.has(hash)) {
+		let tempLabel = Compiler.enviroment.allLabel.get(hash);
+		if (tempLabel && tempLabel.labelType !== LabelType.None) {
 			let errorMsg = Localization.GetMessage("Label {0} is already defined", token.text);
 			MyException.PushException(token, errorMsg);
 			return;
@@ -182,6 +183,29 @@ export class LabelUtils {
 	}
 	//#endregion 查找标签
 
+	//#region 获取标签的Hash值
+	/**
+	 * 获取标签的Hash值
+	 * @param text 文本
+	 * @param fileHash 文件Hash
+	 * @param type 标签作用域
+	 * @param option 选项
+	 * @returns Hash值
+	 */
+	static GetLebalHash(text: string, fileHash: number, type: LabelScope) {
+		switch (type) {
+			case LabelScope.AllParent:
+				return 0;
+			case LabelScope.Global:
+				return Utils.GetHashcode(text);
+			case LabelScope.Local:
+				return Utils.GetHashcode(text, fileHash);
+			case LabelScope.Temporary:
+				return Utils.GetHashcode(text);
+		}
+	}
+	//#endregion 获取标签的Hash值
+
 	/** Private */
 
 	//#region 插入临时标签
@@ -220,6 +244,12 @@ export class LabelUtils {
 		let tokens = token.Split(/\./g);
 		let text = "";
 
+		if (tokens[0].isEmpty) {
+			tokens.splice(0, 1);
+			text += ".";
+		}
+
+
 		if (!Compiler.enviroment.fileLabels.has(token.fileHash))
 			Compiler.enviroment.fileLabels.set(token.fileHash, new Set());
 
@@ -230,7 +260,7 @@ export class LabelUtils {
 
 		let parentLabelTree = Compiler.enviroment.labelTrees.get(parentHash);
 		if (!parentLabelTree) {
-			parentLabelTree = { parent: parentHash, child: new Set() };
+			parentLabelTree = { parent: 0, child: new Set() };
 			Compiler.enviroment.labelTrees.set(parentHash, parentLabelTree);
 		}
 
@@ -250,8 +280,7 @@ export class LabelUtils {
 
 			text += tokens[index].text;
 			labelHash = LabelUtils.GetLebalHash(text, token.fileHash, type);
-			if (!fileLabelSet.has(labelHash))
-				fileLabelSet.add(labelHash);
+			fileLabelSet.add(labelHash);
 
 			// 查找label的trees是否创建
 			let labelTree = Compiler.enviroment.labelTrees.get(labelHash);
@@ -270,18 +299,16 @@ export class LabelUtils {
 					return;
 				}
 
-				result = { token: tokens[0], labelType: LabelType.Defined };
+				result = { token: tokens[0].Copy(), labelType: LabelType.Defined };
 				result.token.text = text;
 				Compiler.enviroment.allLabel.set(labelHash, result);
-			} else {
-				if (Compiler.enviroment.allLabel.has(labelHash))
-					continue;
-
-				result = { token: tokens[0], labelType: LabelType.None };
+			} else if (!Compiler.enviroment.allLabel.has(labelHash)) {
+				result = { token: tokens[0].Copy(), labelType: LabelType.None };
 				result.token.text = text;
 				Compiler.enviroment.allLabel.set(labelHash, result);
 			}
 
+			parentHash = labelHash;
 			parentLabelTree.child.add(labelHash);
 			parentLabelTree = labelTree;
 		}
@@ -310,28 +337,4 @@ export class LabelUtils {
 		return true;
 	}
 	//#endregion 检查标签是否合法，true合法
-
-	//#region 获取标签的Hash值
-	/**
-	 * 获取标签的Hash值
-	 * @param text 文本
-	 * @param fileHash 文件Hash
-	 * @param type 标签作用域
-	 * @param option 选项
-	 * @returns Hash值
-	 */
-	private static GetLebalHash(text: string, fileHash: number, type: LabelScope) {
-		switch (type) {
-			case LabelScope.AllParent:
-				return 0;
-			case LabelScope.Global:
-				return Utils.GetHashcode(text);
-			case LabelScope.Local:
-				return Utils.GetHashcode(text, fileHash);
-			case LabelScope.Temporary:
-				return Utils.GetHashcode(text);
-		}
-	}
-	//#endregion 获取标签的Hash值
-
 }

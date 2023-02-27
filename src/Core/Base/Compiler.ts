@@ -163,7 +163,7 @@ export class Compiler {
 			newLine.compileType = LineCompileType.None;
 
 			if (!tokens[1].isEmpty)
-				result[result.length - 1].comment = tokens[1].text;
+				newLine.comment = tokens[1].text;
 		}
 		//#endregion 保存行Token
 

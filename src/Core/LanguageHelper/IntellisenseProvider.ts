@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { LabelUtils } from "../Base/Label";
+import { LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Commands } from "../Commands/Commands";
@@ -10,8 +10,8 @@ import { HelperUtils } from "./HelperUtils";
 const ignoreWordStr = /;|(^|\s+)(\.HEX|\.DBG|\.DWG|\.MACRO)(\s+|$)/ig;
 
 //#region 提示类型
-export enum CompletionType {
-	Instruction, Command, Macro, Label, MacroLabel, Folder, File
+enum CompletionType {
+	Instruction, Command, Macro, Defined, Label, MacroLabel, Folder, File
 }
 //#endregion 提示类型
 
@@ -143,26 +143,42 @@ export class IntellisenseProvider {
 				break;
 
 			case CompletionRange.Label:
+				let labelScope = prefix.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
 				let index = prefix.text.lastIndexOf(".");
+
 				if (index > 0) {
 					prefix = prefix.Substring(0, index);
 				} else if (option?.macro) {
 					option.macro.labels.forEach((value, key) => {
 						let com = new Completion({ showText: value.token.text });
 						result.push(com);
-					})
+					});
+				} else {
+					prefix.text = "";
 				}
 
-				let label = LabelUtils.FindLabel(prefix);
-				let topLabel = Compiler.enviroment.labelTrees.get(0);
-				if (!label && index < 0 && topLabel) {
+				let labelHash = LabelUtils.GetLebalHash(prefix.text, prefix.fileHash, labelScope);
+				let topLabel = Compiler.enviroment.labelTrees.get(labelHash);
+				if (topLabel) {
 					topLabel.child.forEach((value) => {
 						let temp = Compiler.enviroment.allLabel.get(value);
-						if (temp) {
-							let item = new Completion({ showText: temp.token.text });
-							result.push(item);
+						if (!temp)
+							return;
+
+						let showText = temp.token.text.substring(index + 1);
+						let item = new Completion({ showText });
+						switch(temp.labelType) {
+							case LabelType.Defined:
+								item.type = CompletionType.Defined;
+								break;
+							case LabelType.Label:
+								item.type = CompletionType.Label;
+								break;
 						}
-					})
+
+
+						result.push(item);
+					});
 				}
 				break;
 		}

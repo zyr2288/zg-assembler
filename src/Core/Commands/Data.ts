@@ -3,6 +3,7 @@ import { DecodeOption } from "../Base/Options";
 import { CommonLineUtils, LineCompileType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "./Commands";
 
+/**.DB .DW .DL 命令 */
 export class Data {
 
 	static Initialize() {
@@ -17,14 +18,14 @@ export class Data {
 			name: ".DW", min: 1, max: -1,
 			firstAnalyse: Commands.FirstAnalyse_Common,
 			thirdAnalyse: Commands.ThirdAnalyse_Common,
-			compile: Data.Compile_DB
+			compile: Data.Compile_DW
 		});
 
 		Commands.AddCommand({
 			name: ".DL", min: 1, max: -1,
 			firstAnalyse: Commands.FirstAnalyse_Common,
 			thirdAnalyse: Commands.ThirdAnalyse_Common,
-			compile: Data.Compile_DB
+			compile: Data.Compile_DL
 		});
 	}
 

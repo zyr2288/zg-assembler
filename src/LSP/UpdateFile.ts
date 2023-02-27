@@ -41,15 +41,11 @@ export class UpdateFile {
 		if (event.document.languageId !== LSPUtils.assembler.config.FileExtension.language)
 			return;
 
-		let total = event.contentChanges.length - 1;
 		for (let i = 0; i < event.contentChanges.length; ++i) {
 			const value = event.contentChanges[i];
 			if (value.text.match(/\r\n|\r|\n/)) {
 				let lineNumber = value.range.start.line;
 				let content = event.document.lineAt(lineNumber).text;
-
-				console.log(content);
-
 				let match = LSPUtils.assembler.languageHelper.documentChange.AutoUpperCase(content);
 				if (!match)
 					continue;

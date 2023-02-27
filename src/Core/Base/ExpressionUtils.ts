@@ -141,7 +141,7 @@ export class ExpressionUtils {
 				continue;
 
 			let temp = LabelUtils.FindLabel(part.token, option);
-			if (!temp) {
+			if (!temp || temp.labelType === LabelType.None) {
 				let errorMsg = Localization.GetMessage("Label {0} not found", parts[i].token.text);
 				MyException.PushException(parts[i].token, errorMsg);
 				error = true;

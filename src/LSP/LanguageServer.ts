@@ -11,18 +11,16 @@ const FreshTime = 1000;
 
 export class LanguageServer {
 
-	private assembler: Assembler;
-
-	constructor() {
-		this.assembler = new Assembler();
-	}
+	private assembler!: Assembler;
 
 	async Initialize() {
-		LSPUtils.assembler = this.assembler;
-
+		LSPUtils.assembler = this.assembler = new Assembler();
+		await IOImplementation.Initialize();
+		
+		this.assembler.Initialize();
 		this.SetLanguage(vscode.env.language);
 
-		const classes = [IOImplementation, Highlighting, UpdateFile, DefinitionProvider, Intellisense];
+		const classes = [Highlighting, UpdateFile, DefinitionProvider, Intellisense];
 		for (let i = 0; i < classes.length; ++i) {
 			let temp = Reflect.get(classes[i], "Initialize");
 			await temp();

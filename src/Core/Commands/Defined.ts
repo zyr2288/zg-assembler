@@ -13,7 +13,7 @@ export class Defined {
 			firstAnalyse: Defined.FirstAnalyse_Def,
 			thirdAnalyse: Defined.ThirdAnalyse_Def,
 			compile: Defined.Compile_Def
-		})
+		});
 	}
 
 	private static FirstAnalyse_Def(option: CommandDecodeOption) {
