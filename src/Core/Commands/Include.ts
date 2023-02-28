@@ -31,19 +31,17 @@ export class Include {
 	private static async FirstAnalyse_Include(option: CommandDecodeOption) {
 		let temp = await Include.ChechFile(option);
 		if (!temp.exsist)
-			return false;
+			return;
 
 		if (Compiler.enviroment.isCompile) {
 
 		}
-
-		return true;
 	}
 
 	private static async FirstAnalyse_Incbin(option: CommandDecodeOption) {
 		let temp = await Include.ChechFile(option);
 		if (!temp.exsist)
-			return false;
+			return;
 
 		let line = option.allLines[option.lineIndex] as ICommandLine;
 		line.tag = temp.path;
@@ -54,7 +52,6 @@ export class Include {
 		if (option.expressions[2] && (temp2 = ExpressionUtils.SplitAndSort(option.expressions[2])))
 			line.expParts[1] = temp2;
 
-		return true;
 	}
 
 	/**编译Incbin */
@@ -62,7 +59,7 @@ export class Include {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
 		let temp = await FileUtils.ReadFile(line.tag);
 
-		Compiler.enviroment.SetAddress(line);
+		line.SetAddress();
 
 		let start = 0;
 		let result = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.GetResultAndShowError, option);
@@ -77,9 +74,8 @@ export class Include {
 		for (let i = start, j = 0; i < temp.length && j < length; ++i, ++j)
 			line.result[j] = temp[i];
 
-		Compiler.enviroment.AddAddress(line.result.length);
+		line.AddAddress();
 		line.compileType = LineCompileType.Finished;
-		return true;
 	}
 
 	/**检查是否满足表达式 */

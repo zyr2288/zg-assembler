@@ -1,3 +1,6 @@
+import { ICommandLine } from "../Commands/Commands";
+import { IInstructionLine } from "../Lines/InstructionLine";
+
 /**工具类 */
 export class Utils {
 

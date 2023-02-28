@@ -1,5 +1,6 @@
 import { Commands, ICommandLine } from "../Commands/Commands";
 import { MacroUtils } from "../Commands/Macro";
+import { Localization } from "../I18n/Localization";
 import { HighlightType, ICommonLine, IOnlyLabel, LineCompileType, LineType, SplitLine } from "../Lines/CommonLine";
 import { IInstructionLine, InstructionLine } from "../Lines/InstructionLine";
 import { IVariableLine, VariableLineUtils } from "../Lines/VariableLine";
@@ -138,6 +139,12 @@ export class Compiler {
 		let result: ICommonLine[] = [];
 
 		//#region 保存行Token
+		const BindActions = (line: IInstructionLine | ICommandLine) => {
+			line.AddAddress = Compiler.AddAddress.bind(line);
+			line.SetAddress = Compiler.SetAddress.bind(line);
+			line.SetResult = Compiler.SetResult.bind(line);
+		}
+
 		const SaveToken = (lineType: LineType) => {
 
 			let splitLine: SplitLine = {
@@ -149,9 +156,11 @@ export class Compiler {
 			switch (lineType) {
 				case LineType.Command:
 					newLine = { type: LineType.Command, result: [] as number[] } as ICommandLine;
+					BindActions(newLine as ICommandLine);
 					break;
 				case LineType.Instruction:
 					newLine = { type: LineType.Instruction, result: [] as number[] } as IInstructionLine;
+					BindActions(newLine as IInstructionLine);
 					break;
 				case LineType.Variable:
 					newLine = { type: LineType.Variable } as IVariableLine;
@@ -210,6 +219,53 @@ export class Compiler {
 	//#endregion 分割内容与注释
 
 	/***** Private *****/
+
+	//#region 行设定结果值
+	static SetResult(this: IInstructionLine | ICommandLine, value: number, index: number, length: number) {
+		this.result ??= [];
+
+		let temp = length;
+		let tempIndex = 0;
+		while (temp--) {
+			this.result[index + tempIndex] = 0;
+			tempIndex++;
+		}
+
+		while (length--) {
+			this.result[index] = value & 0xFF;
+			value >>= 8;
+			index++;
+		}
+	}
+	//#endregion 行设定结果值
+
+	//#region 设定起始地址
+	static SetAddress(this: IInstructionLine | ICommandLine) {
+		if (Compiler.enviroment.orgAddress < 0) {
+			let errorMsg = Localization.GetMessage("Unknow original address");
+			MyException.PushException(this.orgText, errorMsg);
+			return false;
+		}
+
+		if (this.orgAddress < 0) {
+			this.baseAddress = Compiler.enviroment.baseAddress;
+			this.orgAddress = Compiler.enviroment.orgAddress;
+		}
+		return true;
+	}
+	//#endregion 设定起始地址
+
+	//#region 给文件的地址增加偏移
+	static AddAddress(this: IInstructionLine | ICommandLine) {
+		if (this.orgAddress >= 0) {
+			Compiler.enviroment.orgAddress = this.orgAddress;
+			Compiler.enviroment.baseAddress = this.baseAddress;
+		}
+
+		Compiler.enviroment.baseAddress += this.result.length;
+		Compiler.enviroment.orgAddress += this.result.length;
+	}
+	//#endregion 给文件的地址增加偏移
 
 	//#region 清除文件
 	private static ClearFile(fileHash: number) {

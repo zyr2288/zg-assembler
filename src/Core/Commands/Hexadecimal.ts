@@ -25,10 +25,10 @@ export class Hexadecimal {
 			let errorMsg = Localization.GetMessage("Command arguments error");
 			MyException.PushException(token, errorMsg);
 			line.compileType = LineCompileType.Error;
-			return false;
+			return;
 		}
 
-		return true;
+		return;
 	}
 
 	private static Compile_Hex(option: DecodeOption) {
@@ -44,6 +44,6 @@ export class Hexadecimal {
 			}
 		}
 
-		return true;
+		return;
 	}
 }

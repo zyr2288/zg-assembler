@@ -6,20 +6,25 @@ import { Token } from "../Base/Token";
 import { Localization } from "../I18n/Localization";
 import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType, SplitLine } from "../Lines/CommonLine";
 import { BaseAndOrg } from "./BaseAndOrg";
+import { Data } from "./Data";
+import { DataGroupCommand } from "./DataGroup";
 import { Defined } from "./Defined";
 import { Hexadecimal } from "./Hexadecimal";
+import { IfCondition } from "./IfCondition";
 import { Include } from "./Include";
+import { MacroCommand } from "./Macro";
 import { Message } from "./Message";
+import { Repeat } from "./Repeat";
 
 interface CommandParams {
 	/**第一阶段，基础分析 */
-	FirstAnalyse?: (option: CommandDecodeOption) => Promise<boolean> | boolean;
+	FirstAnalyse?: (option: CommandDecodeOption) => Promise<void> | void;
 	/**第二阶段 */
-	SecondAnalyse?: (option: DecodeOption) => Promise<boolean> | boolean;
+	SecondAnalyse?: (option: DecodeOption) => Promise<void> | void;
 	/**第三阶段，分析标签 */
-	ThirdAnalyse?: (compileOption: DecodeOption) => Promise<boolean> | boolean;
+	ThirdAnalyse?: (compileOption: DecodeOption) => Promise<void> | void;
 	/**命令编译 */
-	CommandCompile?: (option: DecodeOption) => Promise<boolean> | boolean;
+	CommandCompile?: (option: DecodeOption) => Promise<void> | void;
 
 	startCommand: string;
 	includeCommand?: IncludeCommand[];
@@ -59,6 +64,13 @@ export interface ICommandLine extends ICommonLine {
 	result: number[];
 	/**附加数据 */
 	tag?: any;
+
+	/**设定结果值 */
+	SetResult: (value: number, index: number, length: number) => void;
+	/**地址增加偏移 */
+	AddAddress: () => void;
+	/**设定地址 */
+	SetAddress: () => boolean;
 }
 
 export class Commands {
@@ -72,7 +84,7 @@ export class Commands {
 
 	//#region 初始化
 	static Initialize() {
-		const classes = [BaseAndOrg, Defined, Message, Hexadecimal, Include];
+		const classes = [BaseAndOrg, Data, DataGroupCommand, Defined, Hexadecimal, IfCondition, Include, MacroCommand, Message, Repeat];
 		for (let i = 0; i < classes.length; ++i) {
 			let func = Reflect.get(classes[i], "Initialize");
 			func();
@@ -198,16 +210,16 @@ export class Commands {
 		min: number,
 		/**参数最大个数，-1为无限制 */
 		max?: number,
-		/**是否允许嵌套，默认允许 */
+		/**是否允许嵌套，不默认允许 */
 		nested?: boolean,
 		/**允许使用在Macro内，默认允许 */
 		ableMacro?: boolean
 		/**基础分析 */
-		firstAnalyse?: (option: CommandDecodeOption) => Promise<boolean> | boolean,
-		secondAnalyse?: (option: DecodeOption) => Promise<boolean> | boolean,
-		thirdAnalyse?: (baseLine: DecodeOption) => Promise<boolean> | boolean,
+		firstAnalyse?: (option: CommandDecodeOption) => Promise<void> | void,
+		secondAnalyse?: (option: DecodeOption) => Promise<void> | void,
+		thirdAnalyse?: (baseLine: DecodeOption) => Promise<void> | void,
 		/**编译，返回true为错误 */
-		compile?: (option: DecodeOption) => Promise<boolean> | boolean,
+		compile?: (option: DecodeOption) => Promise<void> | void,
 	}) {
 		let actionParams: CommandParams = {
 			FirstAnalyse: option.firstAnalyse,
@@ -267,7 +279,7 @@ export class Commands {
 				line.compileType = LineCompileType.Error;
 		}
 
-		return true;
+		return;
 	}
 	//#endregion 第一次的通用分析，仅拆分表达式，仅针对只有一个参数的命令
 
@@ -277,9 +289,19 @@ export class Commands {
 		for (let i = 0; i < line.expParts.length; ++i) {
 			ExpressionUtils.CheckLabelsAndShowError(line.expParts[i], option);
 		}
-		return true;
+		return;
 	}
 	//#endregion 第三次的通用分析，仅对编译命令行的表达式小节分析
+
+	//#region 将头尾行的所有行纳入
+	static CollectBaseLines(option: CommandDecodeOption) {
+		let start = option.includeCommandLines![0].index;
+		let end = option.includeCommandLines![1].index;
+		let tag = option.allLines.splice(start + 1, end - start);
+		tag.splice(tag.length - 1, 1);
+		return tag;
+	}
+	//#endregion 将头尾行的所有行纳入
 
 	/***** Private *****/
 
@@ -371,7 +393,7 @@ export class Commands {
 				break;
 			}
 
-			if (deep != 0 || !names?.includes(line.command.text))
+			if (deep !== 0 || !names?.includes(line.command.text))
 				continue;
 
 			result.push({ match: line.command.text, index: i });

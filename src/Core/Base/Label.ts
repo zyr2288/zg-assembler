@@ -206,6 +206,27 @@ export class LabelUtils {
 	}
 	//#endregion 获取标签的Hash值
 
+	//#region 检查标签是否合法，true合法
+	/**
+	 * 检查标签是否合法，true合法
+	 * @param word 要检查的文本
+	 * @param allowDot 允许逗号
+	 * @returns true为合法
+	 */
+	static CheckIllegal(word: Token, allowDot: boolean) {
+		if (allowDot) {
+			if (/(^\d)|\s|\+|\-|\*|\/|\>|\<|\=|\!|\~|#|&|\||%|\$/g.test(word.text)) {
+				return false;
+			}
+		} else {
+			if (/(^\d)|\s|\+|\-|\*|\/|\>|\<|\=|\!|\~|#|&|\||%|\$|\./g.test(word.text)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	//#endregion 检查标签是否合法，true合法
+
 	/** Private */
 
 	//#region 插入临时标签
@@ -317,24 +338,4 @@ export class LabelUtils {
 	}
 	//#endregion 分割标签并插入
 
-	//#region 检查标签是否合法，true合法
-	/**
-	 * 检查标签是否合法，true合法
-	 * @param word 要检查的文本
-	 * @param allowDot 允许逗号
-	 * @returns true为合法
-	 */
-	private static CheckIllegal(word: Token, allowDot: boolean) {
-		if (allowDot) {
-			if (/(^\d)|\s|\+|\-|\*|\/|\>|\<|\=|\!|\~|#|&|\||%|\$/g.test(word.text)) {
-				return false;
-			}
-		} else {
-			if (/(^\d)|\s|\+|\-|\*|\/|\>|\<|\=|\!|\~|#|&|\||%|\$|\./g.test(word.text)) {
-				return false;
-			}
-		}
-		return true;
-	}
-	//#endregion 检查标签是否合法，true合法
 }

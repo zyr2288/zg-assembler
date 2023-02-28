@@ -8,7 +8,7 @@ import { Token } from "./Token";
 import { Utils } from "./Utils";
 
 //#region 算数优先级
-enum PriorityType {
+export enum PriorityType {
 	Level_0_Sure = -1,
 	/**标签、数字 */
 	Level_1_Label,
@@ -327,11 +327,11 @@ export class ExpressionUtils {
 	 * @param option 选项
 	 * @returns 结果
 	 */
-	static GetExpressionValues(parts: ExpressionPart[], option: DecodeOption) {
+	static GetExpressionValues(parts: ExpressionPart[], analyseOption: ExpressionResult, option: DecodeOption) {
 		let strIndex = ExpressionUtils.CheckString(parts);
 
 		if (strIndex < 0) {
-			let temp3 = ExpressionUtils.GetExpressionValue(parts, ExpressionResult.GetResultAndShowError, option);
+			let temp3 = ExpressionUtils.GetExpressionValue(parts, analyseOption, option);
 			return { success: temp3.success, values: [temp3.value] };
 		} else {
 			let tempWord = parts[strIndex].token.Copy();
@@ -343,7 +343,7 @@ export class ExpressionUtils {
 			for (let i = 0; i < tempWord.length; i++) {
 				parts[strIndex].type = PriorityType.Level_0_Sure;
 				parts[strIndex].value = tempWord.text.charCodeAt(i);
-				let temp3 = ExpressionUtils.GetExpressionValue(parts, ExpressionResult.GetResultAndShowError, option);
+				let temp3 = ExpressionUtils.GetExpressionValue(parts, analyseOption, option);
 				if (!temp3.success) {
 					result.success = false;
 					break;

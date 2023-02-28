@@ -1,8 +1,11 @@
 import { ICommandLine } from "../Commands/Commands";
+import { IDataGroup } from "../Commands/DataGroup";
 import { IMacro } from "../Commands/Macro";
+import { Localization } from "../I18n/Localization";
 import { HightlightRange as HighlightRange, ICommonLine } from "../Lines/CommonLine";
 import { IInstructionLine } from "../Lines/InstructionLine";
 import { ILabel, ILabelTree, INamelessLabelCollection, LabelType } from "./Label";
+import { MyException } from "./MyException";
 import { Utils } from "./Utils";
 
 export class Environment {
@@ -17,6 +20,8 @@ export class Environment {
 	/**所有标签 Key: Label的Hash值 */
 	allLabel = new Map<number, ILabel>();
 	allMacro = new Map<string, IMacro>();
+	/**所有数据组 Key: Label的Hash值 */
+	allDataGroup = new Map<number, IDataGroup>();
 
 	/**所有编译行 */
 	allBaseLines = new Map<number, ICommonLine[]>();
@@ -107,6 +112,7 @@ export class Environment {
 
 		if (labelTree.child.size === 0) {
 			this.allLabel.delete(labelTreeHash);
+			this.allDataGroup.delete(labelTreeHash);
 			this.labelTrees.get(labelTree.parent)?.child.delete(labelTreeHash);
 			this.ClearLabelTree(labelTree.parent);
 		} else {
@@ -132,19 +138,5 @@ export class Environment {
 		this.macroRegexString += ")(\\s+|$)";
 	}
 	//#endregion 更新Macro的正则
-
-	//#region 设定起始地址
-	SetAddress(line: IInstructionLine | ICommandLine) {
-		line.baseAddress = this.baseAddress;
-		line.orgAddress = this.orgAddress;
-	}
-	//#endregion 设定起始地址
-
-	//#region 给文件的地址增加偏移
-	AddAddress(offset: number) {
-		this.baseAddress += offset;
-		this.orgAddress += offset;
-	}
-	//#endregion 给文件的地址增加偏移
 
 }

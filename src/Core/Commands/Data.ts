@@ -1,6 +1,9 @@
-import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
+import { Compiler } from "../Base/Compiler";
+import { Config } from "../Base/Config";
+import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { DecodeOption } from "../Base/Options";
-import { CommonLineUtils, LineCompileType } from "../Lines/CommonLine";
+import { Utils } from "../Base/Utils";
+import { LineCompileType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "./Commands";
 
 /**.DB .DW .DL 命令 */
@@ -30,30 +33,33 @@ export class Data {
 	}
 
 	private static Compile_DB(option: DecodeOption) {
-		return Data.Compile_Data(1, option);
+		Data.Compile_Data(1, option);
 	}
 
 	private static Compile_DW(option: DecodeOption) {
-		return Data.Compile_Data(2, option);
+		Data.Compile_Data(2, option);
 	}
 
 	private static Compile_DL(option: DecodeOption) {
-		return Data.Compile_Data(4, option);
+		Data.Compile_Data(4, option);
 	}
 
 	private static Compile_Data(dataLength: number, option: DecodeOption) {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
 
-		if (!CommonLineUtils.AddressSet(line))
-			return false;
+		if (!line.SetAddress())
+			return;
 
 		line.compileType = LineCompileType.Finished;
 		line.result ??= [];
 		let index = 0;
+		let finalCompile = Compiler.enviroment.compileTimes >= Config.ProjectSetting.compileTimes ?
+			ExpressionResult.GetResultAndShowError :
+			ExpressionResult.TryToGetResult;
 
 		for (let i = 0; i < line.expParts.length; i++) {
 			const part: ExpressionPart[] = line.expParts[i]
-			let temp = ExpressionUtils.GetExpressionValues(part, option);
+			let temp = ExpressionUtils.GetExpressionValues(part, finalCompile, option);
 			if (!temp.success) {
 				line.compileType = LineCompileType.None;
 				line.result.length += temp.values.length * dataLength;
@@ -65,13 +71,13 @@ export class Data {
 					// 	return false;
 					// }
 
-					CommonLineUtils.SetResult(line, temp.values[j], index, dataLength);
+					line.SetResult(temp.values[j], index, dataLength);
 				}
 			}
 			index += dataLength;
 		}
 
-		CommonLineUtils.AddressAdd(line);
-		return true;
+		line.AddAddress();
+		return;
 	}
 }

@@ -22,26 +22,31 @@ export class Defined {
 		if (line.label) line.label.labelType = LabelType.Defined;
 
 		let temp = ExpressionUtils.SplitAndSort(option.expressions[1]);
-		if (temp) line.expParts[0] = temp;
+		if (temp)
+			line.expParts[0] = temp;
+		else
+			line.compileType = LineCompileType.Error;
 
 		line.GetTokens = Defined.GetTokens.bind(line);
-		return true;
+		return;
 	}
 
 	private static ThirdAnalyse_Def(option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as ICommandLine;
+		const line = option.allLines[option.lineIndex] as ICommandLine;
 		if (!line.label)
-			return true;
+			return;
 
 		let temp = ExpressionUtils.CheckLabelsAndShowError(line.expParts[0], option);
-		if (temp)
-			return false;
+		if (temp) {
+			line.compileType = LineCompileType.Error;
+			return;
+		}
 
 		let temp2 = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.TryToGetResult, option);
 		if (temp2.success)
 			line.label.value = temp2.value;
 
-		return true;
+		return;
 	}
 
 	private static Compile_Def(option: DecodeOption) {
@@ -53,10 +58,10 @@ export class Defined {
 		let label = LabelUtils.FindLabel(line.label!.token, option);
 		if (label && temp.success) {
 			label.value = temp.value;
-			return true;
+			return;
 		}
 		line.compileType = LineCompileType.Error;
-		return false;
+		return;
 	}
 
 	private static GetTokens(this: ICommandLine) {

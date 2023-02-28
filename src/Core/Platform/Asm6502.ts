@@ -5,7 +5,6 @@ export class Asm6502 extends AsmCommon {
 	constructor() {
 		super();
 		this.Initialize();
-
 		this.UpdateInstructions();
 	}
 
@@ -29,34 +28,25 @@ export class Asm6502 extends AsmCommon {
 		for (let i = 0; i < ins1.length; ++i)
 			this.AddInstruction(ins1[i], { opCode: [opCode1[i]] });
 
+		const ins2 = [
+			"LDA", "LDX", "LDY", "STA", "STX", "STY",
+			"ADC"
+		];
 
-			
-		this.AddInstruction("LDA", { addressingMode: "#[exp]", opCode: [, 0xA9] });
-		this.AddInstruction("LDA", { addressingMode: "[exp],X", opCode: [, 0xB5, 0xBD] });
-		this.AddInstruction("LDA", { addressingMode: "[exp],Y", opCode: [, , 0xB9] });
-		this.AddInstruction("LDA", { addressingMode: "([exp],X)", opCode: [, 0xA1] });
-		this.AddInstruction("LDA", { addressingMode: "([exp]),Y", opCode: [, 0xB1] });
-		this.AddInstruction("LDA", { addressingMode: "[exp]", opCode: [, 0xA5, 0xAD] });
+		const addressingMode2 = [
+			"#[exp]", "[exp],X", "[exp],Y", "([exp],X)", "([exp]),Y", "[exp]"
+		];
 
-		this.AddInstruction("LDX", { addressingMode: "#[exp]", opCode: [, 0xA2] });
-		this.AddInstruction("LDX", { addressingMode: "[exp],Y", opCode: [, 0xB6, 0xBE] });
-		this.AddInstruction("LDX", { addressingMode: "[exp]", opCode: [, 0xA6, 0xAE] });
-
-		this.AddInstruction("LDY", { addressingMode: "#[exp]", opCode: [, 0xA0] });
-		this.AddInstruction("LDY", { addressingMode: "[exp],X", opCode: [, 0xB4, 0xBC] });
-		this.AddInstruction("LDY", { addressingMode: "[exp]", opCode: [, 0xA4, 0xAC] });
-
-		this.AddInstruction("STA", { addressingMode: "[exp],X", opCode: [, 0x95, 0x9D] });
-		this.AddInstruction("STA", { addressingMode: "[exp],Y", opCode: [, , 0x99] });
-		this.AddInstruction("STA", { addressingMode: "([exp],X)", opCode: [, 0x81] });
-		this.AddInstruction("STA", { addressingMode: "([exp]),Y", opCode: [, 0x91] });
-		this.AddInstruction("STA", { addressingMode: "[exp]", opCode: [, 0x85, 0x8D] });
-
-		this.AddInstruction("STX", { addressingMode: "[exp],Y", opCode: [, 0x96] });
-		this.AddInstruction("STX", { addressingMode: "[exp]", opCode: [, 0x86, 0x8E] });
-
-		this.AddInstruction("STY", { addressingMode: "[exp],X", opCode: [, 0x94] });
-		this.AddInstruction("STY", { addressingMode: "[exp]", opCode: [, 0x84, 0x8C] });
+		const opCode2 = [
+			// "#[exp]",   "[exp],X",      "[exp],Y",      "([exp],X)",   "([exp]),Y",   "[exp]"
+			   [0xA9],     [0xB5, 0xBD],   [-1, 0xB9],     [0xA1],        [0xB1],        [0xA5, 0xAD],          //LDA
+			   [0xA2],      null,          [0xB6, 0xBE],    null,          null,         [0xA6, 0xAE],          //LDX
+			   [0xA0],     [0xB4, 0xBC],    null,           null,          null,         [0xA4, 0xAC],          //LDY
+			    null,      [0x95, 0x9D],   [-1, 0x99],     [0x81],        [0x91],        [0x85, 0x8D],          //STA
+			    null,       null,          [0x96],         [0x86, 0x8E],   null,          null,                 //STX
+			    null,      [0x94],          null,           null,          null,         [0x84, 0x8C]           //STY
+			   [0x69],     [0x75, 0x7D],   [-1, 0x79]
+		];
 
 	}
 }

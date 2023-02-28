@@ -27,13 +27,13 @@ export class BaseAndOrg {
 		let temp = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.GetResultAndShowError, option);
 		if (temp.success && temp.value < 0) {
 			line.compileType = LineCompileType.Error;
-			return false;
+			return;
 		}
 
 		line.compileType = LineCompileType.Finished;
 		Compiler.enviroment.baseAddress = temp.value;
 		Compiler.enviroment.addressOffset = Compiler.enviroment.baseAddress - Compiler.enviroment.orgAddress;
-		return true;
+		return;
 	}
 
 	private static Compile_Org(option: DecodeOption) {
@@ -42,7 +42,7 @@ export class BaseAndOrg {
 		let temp = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.GetResultAndShowError);
 		if (!temp.success || temp.value < 0) {
 			line.compileType = LineCompileType.Error;
-			return false;
+			return;
 		}
 
 		line.compileType = LineCompileType.Finished;
@@ -55,6 +55,6 @@ export class BaseAndOrg {
 		}
 		// GlobalVar.env.addressOffset = GlobalVar.env.baseAddress - GlobalVar.env.originalAddress;
 
-		return true;
+		return;
 	}
 }

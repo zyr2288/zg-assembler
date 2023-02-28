@@ -20,7 +20,7 @@ export class Message {
 			if (ExpressionUtils.CheckLabelsAndShowError(line.expParts[i], option))
 				line.compileType = LineCompileType.Error;
 
-		return true;
+		return;
 	}
 
 	private static Compiler_Msg(option: DecodeOption) {
@@ -30,6 +30,9 @@ export class Message {
 		let notSuccess = false;
 
 		line.compileType = LineCompileType.Finished;
+
+		
+
 		for (let i = 0; i < line.expParts.length; ++i) {
 			let temp = ExpressionUtils.GetExpressionValue(line.expParts[i], ExpressionResult.GetResultAndShowError, option);
 			if (temp.success) {
@@ -39,8 +42,6 @@ export class Message {
 				notSuccess = true;
 			}
 		}
-
-		return !notSuccess;
 	}
 
 }

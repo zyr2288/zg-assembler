@@ -8,7 +8,7 @@ import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { IAddressingMode } from "../Platform/AsmCommon";
 import { Platform } from "../Platform/Platform";
-import { CommonLineUtils, HighlightToken, HighlightType, ICommonLine, LineCompileType, SplitLine } from "./CommonLine";
+import { HighlightToken, HighlightType, ICommonLine, LineCompileType, SplitLine } from "./CommonLine";
 
 export interface IInstructionLine extends ICommonLine {
 	orgAddress: number;
@@ -19,6 +19,12 @@ export interface IInstructionLine extends ICommonLine {
 	exprParts: ExpressionPart[][];
 	addressingMode: IAddressingMode;
 	result: number[];
+	/**设定结果值 */
+	SetResult: (value: number, index: number, length: number) => void;
+	/**地址增加偏移 */
+	AddAddress: () => void;
+	/**设定地址 */
+	SetAddress: () => boolean;
 }
 
 export class InstructionLine {
@@ -72,18 +78,18 @@ export class InstructionLine {
 	//#region 编译汇编指令
 	static CompileInstruction(option: DecodeOption): void {
 		let line = option.allLines[option.lineIndex] as IInstructionLine;
-		Compiler.enviroment.SetAddress(line);
+		line.SetAddress();
 
 		if (line.addressingMode.spProcess) {
 			line.addressingMode.spProcess(option);
-			Compiler.enviroment.AddAddress(line.result.length);
+			line.AddAddress();
 			return;
 		}
 
 		if (!line.exprParts[0]) {
-			CommonLineUtils.SetResult(line, line.addressingMode.opCode[0]!, 0, line.addressingMode.opCodeLength[0]!);
+			line.SetResult(line.addressingMode.opCode[0]!, 0, line.addressingMode.opCodeLength[0]!);
 			line.compileType = LineCompileType.Finished;
-			Compiler.enviroment.AddAddress(line.result.length);
+			line.AddAddress();
 			return;
 		}
 
@@ -97,7 +103,7 @@ export class InstructionLine {
 		} else {
 			if (line.result.length != 0) {
 				let length = line.addressingMode.opCode.length;
-				CommonLineUtils.SetResult(line, temp.value, length, length - 1);
+				line.SetResult(temp.value, length, length - 1);
 			} else {
 				let length = Utils.GetNumberByteLength(temp.value);
 				if (!line.addressingMode.opCode[length]) {
@@ -110,12 +116,12 @@ export class InstructionLine {
 					}
 				}
 
-				CommonLineUtils.SetResult(line, temp.value, 0, line.addressingMode.opCode[length]!);
-				CommonLineUtils.SetResult(line, temp.value, line.addressingMode.opCodeLength[length]!, temp.value);
+				line.SetResult(temp.value, 0, line.addressingMode.opCode[length]!);
+				line.SetResult(temp.value, line.addressingMode.opCodeLength[length]!, temp.value);
 			}
 		}
 
-		Compiler.enviroment.AddAddress(line.result.length);
+		line.AddAddress();
 		return;
 	}
 	//#endregion 编译汇编指令
@@ -140,8 +146,4 @@ export class InstructionLine {
 	}
 	//#endregion 获取高亮Token
 
-	static SetResult(line: IInstructionLine, value: number, index: number, length: number) {
-		line.result ??= [];
-
-	}
 }
