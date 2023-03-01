@@ -1,5 +1,3 @@
-import { SupportPlatform } from "../Platform/Platform";
-
 export class Config {
 	static readonly FileExtension = {
 		scheme: "file",
@@ -23,7 +21,7 @@ export class Config {
 	static readonly InProject = true;
 
 	static readonly ProjectDefaultSetting = {
-		platform: "6502" as SupportPlatform,
+		platform: "6502",
 		intellisense: true,
 		argumentOutOfRangeError: true,
 		entry: "main.asm",

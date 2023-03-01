@@ -1,8 +1,6 @@
 import { Compiler } from "../Base/Compiler";
-import { Config } from "../Base/Config";
 import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { DecodeOption } from "../Base/Options";
-import { Utils } from "../Base/Utils";
 import { LineCompileType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "./Commands";
 
@@ -53,9 +51,7 @@ export class Data {
 		line.compileType = LineCompileType.Finished;
 		line.result ??= [];
 		let index = 0;
-		let finalCompile = Compiler.enviroment.compileTimes >= Config.ProjectSetting.compileTimes ?
-			ExpressionResult.GetResultAndShowError :
-			ExpressionResult.TryToGetResult;
+		let finalCompile = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
 
 		for (let i = 0; i < line.expParts.length; i++) {
 			const part: ExpressionPart[] = line.expParts[i]

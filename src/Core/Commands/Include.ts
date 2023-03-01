@@ -33,7 +33,7 @@ export class Include {
 		if (!temp.exsist)
 			return;
 
-		if (Compiler.enviroment.isCompile) {
+		if (Compiler.enviroment.isCompileEnv) {
 
 		}
 	}

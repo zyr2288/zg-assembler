@@ -49,22 +49,22 @@ export class Asm6502 extends AsmCommon {
 
 		const opCode2 = [
 			// "#[exp]",    "[exp],X",      "[exp],Y",      "([exp],X)",   "([exp]),Y",   "[exp]"
-			   [[0xA9],     [0xB5, 0xBD],   [-1, 0xB9],     [0xA1],        [0xB1],        [0xA5, 0xAD]],          //LDA
-			   [[0xA2],      null,          [0xB6, 0xBE],    null,          null,         [0xA6, 0xAE]],          //LDX
-			   [[0xA0],     [0xB4, 0xBC],    null,           null,          null,         [0xA4, 0xAC]],          //LDY
-			   [ null,      [0x95, 0x9D],   [-1, 0x99],     [0x81],        [0x91],        [0x85, 0x8D]],          //STA
-			   [ null,       null,          [0x96],          null,          null,          null       ],          //STX
-			   [ null,      [0x94],          null,           null,          null,         [0x84, 0x8C]],          //STY
-			   [[0x69],     [0x75, 0x7D],   [-1, 0x79],     [0x61],        [0x71],        [0x65, 0x6D]],          //ADC
-			   [[0xE9],     [0xF5, 0xFD],   [-1, 0xF9],     [0xE1],        [0xF1],        [0xE5, 0xED]],          //SBC
-			   [[0x29],     [0x35, 0x3D],   [-1, 0x39],     [0x21],        [0x31],        [0x25, 0x2D]],          //AND
-			   [[0x49],     [0x55, 0x5D],   [-1, 0x59],     [0x41],        [0x51],        [0x45, 0x4D]],          //EOR
-			   [[0x09],     [0x15, 0x1D],   [-1, 0x19],     [0x01],        [0x11],        [0x05, 0x0D]],          //ORA
-			   [[0xC9],     [0xD5, 0xDD],   [-1, 0xD9],     [0xC1],        [0xD1],        [0xC5, 0xCD]],          //CMP
-			   [[0xE0],      null,           null,           null,          null,         [0xE4, 0xEC]],          //CPX
-			   [ null,       null,           null,           null,          null,         [0x24, 0x2C]],          //BIT
-			   [ null,      [0xF6, 0xFE],    null,           null,          null,         [0xE6, 0xEE]],          //INC
-			   [ null,      [0xD6, 0xDE],    null,           null,          null,         [0xC6, 0xCE]],          //DEC
+			[[0xA9], [0xB5, 0xBD], [-1, 0xB9], [0xA1], [0xB1], [0xA5, 0xAD]],          //LDA
+			[[0xA2], null, [0xB6, 0xBE], null, null, [0xA6, 0xAE]],          //LDX
+			[[0xA0], [0xB4, 0xBC], null, null, null, [0xA4, 0xAC]],          //LDY
+			[null, [0x95, 0x9D], [-1, 0x99], [0x81], [0x91], [0x85, 0x8D]],          //STA
+			[null, null, [0x96], null, null, null],          //STX
+			[null, [0x94], null, null, null, [0x84, 0x8C]],          //STY
+			[[0x69], [0x75, 0x7D], [-1, 0x79], [0x61], [0x71], [0x65, 0x6D]],          //ADC
+			[[0xE9], [0xF5, 0xFD], [-1, 0xF9], [0xE1], [0xF1], [0xE5, 0xED]],          //SBC
+			[[0x29], [0x35, 0x3D], [-1, 0x39], [0x21], [0x31], [0x25, 0x2D]],          //AND
+			[[0x49], [0x55, 0x5D], [-1, 0x59], [0x41], [0x51], [0x45, 0x4D]],          //EOR
+			[[0x09], [0x15, 0x1D], [-1, 0x19], [0x01], [0x11], [0x05, 0x0D]],          //ORA
+			[[0xC9], [0xD5, 0xDD], [-1, 0xD9], [0xC1], [0xD1], [0xC5, 0xCD]],          //CMP
+			[[0xE0], null, null, null, null, [0xE4, 0xEC]],          //CPX
+			[null, null, null, null, null, [0x24, 0x2C]],          //BIT
+			[null, [0xF6, 0xFE], null, null, null, [0xE6, 0xEE]],          //INC
+			[null, [0xD6, 0xDE], null, null, null, [0xC6, 0xCE]],          //DEC
 		];
 
 		for (let i = 0; i < instructions.length; ++i) {
@@ -112,9 +112,7 @@ export class Asm6502 extends AsmCommon {
 
 	private ConditionBranch(option: DecodeOption) {
 		const line = option.allLines[option.lineIndex] as IInstructionLine;
-		let tryValue = Compiler.enviroment.compileTimes === Config.ProjectSetting.compileTimes ?
-			ExpressionResult.GetResultAndShowError :
-			ExpressionResult.TryToGetResult;
+		let tryValue = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
 		let tempValue = ExpressionUtils.GetExpressionValue(line.exprParts[0], tryValue, option);
 		if (!tempValue.success) {
 			line.result.length = 2;

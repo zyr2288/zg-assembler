@@ -7,8 +7,6 @@ import { Asm65816 } from "./Asm65816";
 import { AsmCommon } from "./AsmCommon";
 import { AsmGBZ80 } from "./AsmGBZ80";
 
-export type SupportPlatform = "6502" | "65816" | "gbz80";
-
 /**平台 */
 export class Platform {
 
@@ -16,8 +14,8 @@ export class Platform {
 	/**匹配编译器命令，编译指令，等式字符串，匹配结果 command instruction variable */
 	static regexString: string;
 
-	/**改变编译平台 */
-	static ChangePlatform(platform: SupportPlatform) {
+	/**改变编译平台，目前有 6502 65816 gbz80 */
+	static ChangePlatform(platform: string) {
 		switch (platform) {
 			case "6502":
 				Platform.platform = new Asm6502();

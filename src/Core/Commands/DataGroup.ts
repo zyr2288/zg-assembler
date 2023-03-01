@@ -6,7 +6,7 @@ import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { LineCompileType } from "../Lines/CommonLine";
-import { Commands, ICommandLine, ICommandTag } from "./Commands";
+import { Commands, ICommandLine } from "./Commands";
 
 export class IDataGroup {
 	label!: ILabel;
@@ -132,9 +132,7 @@ export class DataGroupCommand {
 		line.compileType = LineCompileType.Finished;
 
 		let index = 0;
-		let finalCompile = Compiler.enviroment.compileTimes >= Config.ProjectSetting.compileTimes ?
-			ExpressionResult.GetResultAndShowError :
-			ExpressionResult.TryToGetResult;
+		let finalCompile = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
 
 		for (let i = 0; i < line.expParts.length; i++) {
 			const lex = line.expParts[i];

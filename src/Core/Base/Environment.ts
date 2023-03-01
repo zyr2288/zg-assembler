@@ -1,17 +1,13 @@
-import { ICommandLine } from "../Commands/Commands";
 import { IDataGroup } from "../Commands/DataGroup";
 import { IMacro } from "../Commands/Macro";
-import { Localization } from "../I18n/Localization";
 import { HightlightRange as HighlightRange, ICommonLine } from "../Lines/CommonLine";
-import { IInstructionLine } from "../Lines/InstructionLine";
 import { ILabel, ILabelTree, INamelessLabelCollection, LabelType } from "./Label";
-import { MyException } from "./MyException";
 import { Utils } from "./Utils";
 
 export class Environment {
 
-	compileTimes = 0;
-	isCompile: boolean;
+	isCompileEnv: boolean;
+	compiling: boolean = false;
 
 	orgAddress: number = -1;
 	baseAddress: number = 0;
@@ -43,7 +39,7 @@ export class Environment {
 	private highlightRanges = new Map<number, HighlightRange[]>();
 
 	constructor(isCompile: boolean) {
-		this.isCompile = isCompile;
+		this.isCompileEnv = isCompile;
 	}
 
 	//#region 获取文件Hash

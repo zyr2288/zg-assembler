@@ -5,7 +5,9 @@ import { HighlightType, ICommonLine, IOnlyLabel, LineCompileType, LineType, Spli
 import { IInstructionLine, InstructionLine } from "../Lines/InstructionLine";
 import { IVariableLine, VariableLineUtils } from "../Lines/VariableLine";
 import { Platform } from "../Platform/Platform";
+import { Config } from "./Config";
 import { Environment } from "./Environment";
+import { ExpressionResult, ExpressionUtils } from "./ExpressionUtils";
 import { LabelType, LabelUtils } from "./Label";
 import { MyException } from "./MyException";
 import { DecodeOption } from "./Options";
@@ -13,24 +15,28 @@ import { Token } from "./Token";
 
 export class Compiler {
 
+	static compiling: boolean = false;
+	static compileTimes: number = 0
+	static enviroment: Environment;
+	static isLastCompile: boolean = false;
 	private static compilerEnv = new Environment(true);
 	private static editorEnv = new Environment(false);
-
-	static enviroment: Environment;
 
 	//#region 解析文本
 	static async DecodeText(files: { text: string, filePath: string }[]) {
 
-		Compiler.enviroment = Compiler.editorEnv;
+		await Compiler.WaitCompileFinished();
 
+		Compiler.compiling = true;
+		Compiler.enviroment = Compiler.editorEnv;
 		let option: DecodeOption = { allLines: [], lineIndex: 0 };
 		for (let index = 0; index < files.length; ++index) {
 
 			let fileHash = Compiler.enviroment.SetFile(files[index].filePath);
 
-			Compiler.ClearFile(fileHash);
-
+			MyException.ClearFileExceptions(fileHash);
 			Compiler.enviroment.ClearFile(fileHash);
+
 			let lines = Compiler.SplitTexts(fileHash, files[index].text);
 
 			Compiler.enviroment.allBaseLines.set(fileHash, lines);
@@ -40,16 +46,44 @@ export class Compiler {
 		await Compiler.FirstAnalyse(option);
 		await Compiler.SecondAnalyse(option);
 		await Compiler.ThirdAnalyse(option);
+		Compiler.compiling = false;
+
 	}
 	//#endregion 解析文本
 
-	static async CompileText(filePath: string) {
+	//#region 编译所有文本
+	static async CompileText(filePath: string, text: string) {
+
+		await Compiler.WaitCompileFinished();
+
+		Compiler.compiling = true;
 		Compiler.enviroment = Compiler.compilerEnv;
 		let option: DecodeOption = { allLines: [], lineIndex: 0 };
 
 		let fileHash = Compiler.enviroment.SetFile(filePath);
+		MyException.ClearAll();
+		Compiler.enviroment.ClearAll();
 
+		let lines = Compiler.SplitTexts(fileHash, text);
+		Compiler.enviroment.allBaseLines.set(fileHash, lines);
+		option.allLines.push(...lines);
+
+		await Compiler.FirstAnalyse(option);
+		await Compiler.SecondAnalyse(option);
+		await Compiler.ThirdAnalyse(option);
+
+		Compiler.isLastCompile = false;
+		Compiler.compileTimes = 0;
+		while (Compiler.compileTimes < Config.ProjectSetting.compileTimes) {
+			if (Compiler.compileTimes === Config.ProjectSetting.compileTimes - 1)
+				Compiler.isLastCompile = true;
+
+			await Compiler.CompileResult(option);
+			++Compiler.compileTimes;
+		}
+		Compiler.compiling = false;
 	}
+	//#endregion 编译所有文本
 
 	//#region 第一次分析
 	/**第一次分析 */
@@ -138,6 +172,48 @@ export class Compiler {
 	}
 	//#endregion 第三次分析
 
+	//#region 编译结果
+	static async CompileResult(option: DecodeOption) {
+		let isFinal = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
+		for (let i = 0; i < option.allLines.length; ++i) {
+			const line = option.allLines[i];
+			if (line.compileType === LineCompileType.Finished)
+				continue;
+
+			if (line.compileType === LineCompileType.Error) {
+				Compiler.compileTimes = Config.ProjectSetting.compileTimes;
+				break;
+			}
+
+			option.lineIndex = i;
+			switch (line.type) {
+				case LineType.Instruction:
+					InstructionLine.CompileInstruction(option);
+					break;
+				case LineType.Command:
+					await Commands.CompileCommands(option);
+					break;
+				case LineType.OnlyLabel:
+					const onlyLabelLine = option.allLines[i] as IOnlyLabel;
+					onlyLabelLine.label.value = Compiler.enviroment.orgAddress;
+					onlyLabelLine.compileType = LineCompileType.Finished;
+					break;
+				case LineType.Variable:
+					const varLine = option.allLines[i] as IVariableLine;
+					let result = ExpressionUtils.GetExpressionValue(varLine.exprParts, isFinal, option);
+					if (result.success) {
+						varLine.label.value = result.value;
+						varLine.compileType = LineCompileType.Finished;
+					}
+					break;
+				case LineType.Macro:
+					break;
+			}
+			i = option.lineIndex;
+		}
+	}
+	//#endregion 编译结果
+
 	//#region 分解文本
 	/**分解文本 */
 	private static SplitTexts(fileHash: number, text: string): ICommonLine[] {
@@ -224,7 +300,7 @@ export class Compiler {
 		let temp = token.Split(/;[+-]?/, { count: 1 });
 		return { content: temp[0], comment: temp[1] };
 	}
-	//#endregion 分割内容与注释
+	//#endregion 分割内容与注
 
 	/***** Private *****/
 
@@ -275,12 +351,18 @@ export class Compiler {
 	}
 	//#endregion 给文件的地址增加偏移
 
-	//#region 清除文件
-	private static ClearFile(fileHash: number) {
-		MyException.ClearFileExceptions(fileHash);
-		Compiler.enviroment.ClearFile(fileHash);
+	//#region 等待编译结束
+	private static WaitCompileFinished(): Promise<void> {
+		return new Promise((resolve, reject) => {
+			let temp = setInterval(() => {
+				if (!Compiler.compiling) {
+					clearInterval(temp);
+					resolve();
+				}
+			}, 200);
+		});
 	}
-	//#endregion 清除文件
+	//#endregion 等待编译结束
 
 }
 

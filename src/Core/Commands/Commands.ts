@@ -190,6 +190,15 @@ export class Commands {
 	}
 	//#endregion 第三次分析
 
+	//#region 编译命令
+	/**编译命令 */
+	static async CompileCommands(option: DecodeOption) {
+		const line = option.allLines[option.lineIndex] as ICommandLine;
+		const com = Commands.allCommands.get(line.command.text);
+		await com?.CommandCompile?.(option);
+	}
+	//#endregion 编译命令
+
 	//#region 增加命令
 	/**
 	 * 增加命令
