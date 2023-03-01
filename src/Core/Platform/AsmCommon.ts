@@ -12,10 +12,13 @@ export interface IAddressingMode {
 }
 
 export interface AddressOption {
+	spProcess?: (option: DecodeOption) => void;
 	/**寻址模式，可用正则表达式 或例如：([exp]),Y */
 	addressingMode?: string,
 	/**操作码，后续寻址模式长度为 index，例如 LDA #nn，寻址长度为 1byte，所以 0xA9 的下标为1 */
 	opCode: Array<number | undefined>;
+	/**操作码长度，不输入则系统自动判断 */
+	opCodeLength?: Array<number | undefined>;
 }
 
 export class AsmCommon {
@@ -31,14 +34,12 @@ export class AsmCommon {
 
 	ClearAll() {
 		this.allInstructions.clear();
-		// @ts-ignore
-		this.allOperationWord = undefined;
 	}
 
 	UpdateInstructions() {
 		this.instructions = [];
-		this.allInstructions.forEach((value, key, map) => {
-			this.instructions.push(key);
+		this.allInstructions.forEach((addressingMode, instruction, map) => {
+			this.instructions.push(instruction);
 		});
 	}
 
@@ -78,12 +79,20 @@ export class AsmCommon {
 		}
 
 		type.opCode = option.opCode;
-		for (let i = 0; i < type.opCode.length; ++i) {
-			if (!type.opCode[i])
-				continue;
+		type.spProcess = option.spProcess;
 
-			type.opCodeLength[i] = Utils.GetNumberByteLength(type.opCode[i]!);
+		if (!option.opCodeLength) {
+			for (let i = 0; i < type.opCode.length; ++i) {
+				if (type.opCode[i] === undefined)
+					continue;
+
+				type.opCodeLength[i] = Utils.GetNumberByteLength(type.opCode[i]!);
+			}
+		} else {
+			type.opCodeLength = option.opCodeLength;
 		}
+
+
 		index.push(type);
 	}
 	//#endregion 添加基础指令

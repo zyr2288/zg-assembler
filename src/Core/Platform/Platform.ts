@@ -5,8 +5,9 @@ import { IntellisenseProvider } from "../LanguageHelper/IntellisenseProvider";
 import { Asm6502 } from "./Asm6502";
 import { Asm65816 } from "./Asm65816";
 import { AsmCommon } from "./AsmCommon";
+import { AsmGBZ80 } from "./AsmGBZ80";
 
-export type SupportPlatform = "6502" | "65816";
+export type SupportPlatform = "6502" | "65816" | "gbz80";
 
 /**平台 */
 export class Platform {
@@ -23,6 +24,9 @@ export class Platform {
 				break;
 			case "65816":
 				Platform.platform = new Asm65816();
+				break;
+			case "gbz80":
+				Platform.platform = new AsmGBZ80();
 				break;
 			default:
 				const errorMsg = Localization.GetMessage("Unsupport platform {0}", platform);

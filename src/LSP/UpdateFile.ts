@@ -14,12 +14,11 @@ export class UpdateFile {
 	static async Initialize() {
 		UpdateFile.errorCollection ??= vscode.languages.createDiagnosticCollection(LSPUtils.assembler.config.FileExtension.language);
 
-		await UpdateFile.LoadAllFile();
 		vscode.workspace.onDidChangeTextDocument(UpdateFile.ChangeDocument);
 	}
 
 	/**载入所有工程文件 */
-	private static async LoadAllFile() {
+	static async LoadAllFile() {
 		if (!vscode.workspace.workspaceFolders)
 			return;
 

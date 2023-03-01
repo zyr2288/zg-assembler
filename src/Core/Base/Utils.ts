@@ -26,7 +26,12 @@ export class Utils {
 
 	//#region 转义可使用正则的字符串
 	static TransformRegex(source: string) {
-		return source.replace(".", "\\.").replace(",", "\\,").replace("(", "\\(").replace(")", "\\)");;
+		return source.replace(".", "\\.")
+			.replace(",", "\\,")
+			.replace("(", "\\(")
+			.replace(")", "\\)")
+			.replace("-", "\\-")
+			.replace("+", "\\+");
 	}
 	//#endregion 转义可使用正则的字符串
 

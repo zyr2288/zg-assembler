@@ -23,7 +23,7 @@ export class Compiler {
 
 		Compiler.enviroment = Compiler.editorEnv;
 
-		let option: DecodeOption = { allLines: [], lineIndex: 0, };
+		let option: DecodeOption = { allLines: [], lineIndex: 0 };
 		for (let index = 0; index < files.length; ++index) {
 
 			let fileHash = Compiler.enviroment.SetFile(files[index].filePath);
@@ -42,6 +42,14 @@ export class Compiler {
 		await Compiler.ThirdAnalyse(option);
 	}
 	//#endregion 解析文本
+
+	static async CompileText(filePath: string) {
+		Compiler.enviroment = Compiler.compilerEnv;
+		let option: DecodeOption = { allLines: [], lineIndex: 0 };
+
+		let fileHash = Compiler.enviroment.SetFile(filePath);
+
+	}
 
 	//#region 第一次分析
 	/**第一次分析 */

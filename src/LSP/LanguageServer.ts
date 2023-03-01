@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { Assembler } from "../Core/Assembler";
+import { ConfigUtils } from "./ConfigUtils";
 import { DefinitionProvider } from "./DefinitionProvider";
 import { Highlighting } from "./Highlighting";
 import { HoverProvider } from "./HoverProvider";
@@ -21,13 +22,18 @@ export class LanguageServer {
 		this.assembler.Initialize();
 		this.SetLanguage(vscode.env.language);
 
-		const classes = [Highlighting, UpdateFile, DefinitionProvider, Intellisense, HoverProvider];
+		const classes = [ConfigUtils, Highlighting, UpdateFile, DefinitionProvider, Intellisense, HoverProvider];
 		for (let i = 0; i < classes.length; ++i) {
 			let temp = Reflect.get(classes[i], "Initialize");
 			await temp();
 		}
 
+		UpdateFile.LoadAllFile();
 		this.RegisterMyCommand();
+	}
+
+	ChangePlatform() {
+
 	}
 
 	private SetLanguage(language: string) {

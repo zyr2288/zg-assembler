@@ -123,6 +123,21 @@ export class Environment {
 	}
 	//#endregion 清除文件内的所有标记
 
+	//#region 清除所有标记
+	ClearAll() {
+		this.orgAddress = -1;
+		this.baseAddress = 0;
+		this.addressOffset = 0;
+		this.allLabel.clear();
+		this.allMacro.clear();
+		this.allBaseLines.clear();
+		this.allDataGroup.clear();
+		this.namelessLabel.clear();
+		this.fileLabels.clear();
+		this.fileMacros.clear();
+	}
+	//#endregion 清除所有标记
+
 	//#region 更新Macro的正则
 	UpdateMacroRegexString() {
 		if (this.allMacro.size === 0) {

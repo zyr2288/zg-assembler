@@ -16,4 +16,5 @@ export const English = {
 	"Command arguments error": "Command arguments error",
 	"Unknow original address": "Unknow original address",
 	"File {0} is not exist": "File \"{0}\" is not exist",
+	"Argument out of range": "Argument out of range",
 }

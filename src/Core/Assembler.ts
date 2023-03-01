@@ -38,6 +38,7 @@ export class Assembler {
 		Platform.ChangePlatform("6502");
 	}
 
+
 	async LoadAllFile(files: { text: string, filePath: string }[]) {
 		HelperUtils.fileUpdateFinished = false;
 		await Compiler.DecodeText(files);
