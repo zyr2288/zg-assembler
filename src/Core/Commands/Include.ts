@@ -4,7 +4,7 @@ import { FileUtils } from "../Base/FileUtils";
 import { MyException } from "../Base/MyException";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { Localization } from "../I18n/Localization";
-import { LineCompileType } from "../Lines/CommonLine";
+import { LineCompileType, LineType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "./Commands";
 
 export class Include {
@@ -29,21 +29,36 @@ export class Include {
 	}
 
 	private static async FirstAnalyse_Include(option: CommandDecodeOption) {
+		const line = option.allLines[option.lineIndex] as ICommandLine;
 		let temp = await Include.ChechFile(option);
-		if (!temp.exsist)
+		if (!temp.exsist) {
+			line.compileType = LineCompileType.Error;
+			return;
+		}
+
+		if (!Compiler.enviroment.isCompileEnv)
 			return;
 
-		if (Compiler.enviroment.isCompileEnv) {
-
+		const hash = Compiler.enviroment.SetFile(temp.path);
+		const data = await FileUtils.ReadFile(temp.path);
+		let text = FileUtils.BytesToString(data);
+		let allLines = Compiler.SplitTexts(hash, text);
+		option.allLines.splice(option.lineIndex + 1, 0, ...allLines);
+		if (line.label) {
+			line.type = LineType.OnlyLabel;
+		} else {
+			line.compileType = LineCompileType.Finished;
 		}
 	}
 
 	private static async FirstAnalyse_Incbin(option: CommandDecodeOption) {
-		let temp = await Include.ChechFile(option);
-		if (!temp.exsist)
+		const line = option.allLines[option.lineIndex] as ICommandLine;
+		const temp = await Include.ChechFile(option);
+		if (!temp.exsist) {
+			line.compileType = LineCompileType.Error;
 			return;
+		}
 
-		let line = option.allLines[option.lineIndex] as ICommandLine;
 		line.tag = temp.path;
 		let temp2;
 		if (option.expressions[1] && (temp2 = ExpressionUtils.SplitAndSort(option.expressions[1])))

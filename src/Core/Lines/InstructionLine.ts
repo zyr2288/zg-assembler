@@ -1,8 +1,6 @@
 import { Compiler } from "../Base/Compiler";
-import { Config } from "../Base/Config";
 import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
-import { MyException } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
@@ -77,7 +75,7 @@ export class InstructionLine {
 
 	//#region 编译汇编指令
 	static CompileInstruction(option: DecodeOption): void {
-		let line = option.allLines[option.lineIndex] as IInstructionLine;
+		const line = option.allLines[option.lineIndex] as IInstructionLine;
 		line.SetAddress();
 
 		if (line.addressingMode.spProcess) {
@@ -93,9 +91,7 @@ export class InstructionLine {
 			return;
 		}
 
-		let tryValue = Compiler.enviroment.compileTimes === Config.ProjectSetting.compileTimes ?
-			ExpressionResult.GetResultAndShowError :
-			ExpressionResult.TryToGetResult;
+		const tryValue = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
 		let temp = ExpressionUtils.GetExpressionValue(line.exprParts[0], tryValue, option);
 		if (!temp.success) {
 			let index = line.addressingMode.opCode.length - 1;
@@ -116,13 +112,12 @@ export class InstructionLine {
 					}
 				}
 
-				line.SetResult(temp.value, 0, line.addressingMode.opCode[length]!);
-				line.SetResult(temp.value, line.addressingMode.opCodeLength[length]!, temp.value);
+				line.SetResult(line.addressingMode.opCode[length]!, 0, line.addressingMode.opCodeLength[length]!);
+				line.SetResult(temp.value, line.addressingMode.opCodeLength[length]!, length);
 			}
 		}
 
 		line.AddAddress();
-		return;
 	}
 	//#endregion 编译汇编指令
 

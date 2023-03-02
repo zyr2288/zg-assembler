@@ -37,7 +37,7 @@ export class Intellisense {
 		};
 		let option = {
 			trigger: context.triggerCharacter
-		}
+		};
 		let completions = LSPUtils.assembler.languageHelper.intellisense.Intellisense(doc, option);
 
 		let result: vscode.CompletionItem[] = [];

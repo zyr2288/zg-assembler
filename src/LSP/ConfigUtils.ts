@@ -3,10 +3,6 @@ import { LSPUtils } from "./LSPUtils";
 
 export class ConfigUtils {
 
-	static async Initialize() {
-		await ConfigUtils.ReadConfig();
-	}
-
 	//#region 读取配置文件
 	static async ReadConfig() {
 		let settingFile = LSPUtils.assembler.fileUtils.Combine(

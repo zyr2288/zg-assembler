@@ -24,8 +24,8 @@ export class AsmGBZ80 extends AsmCommon {
 			[0x67, 0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66],		//H
 			[0x6F, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E],		//L
 		];
-		for (let i = 0; i < addressingMode2.length; ++i) {
-			for (let j = 0; j < addressingMode2.length - 1; ++j) {
+		for (let i = 0; i < addressingMode2.length - 1; ++i) {
+			for (let j = 0; j < addressingMode2.length; ++j) {
 				let mode = `${addressingMode2[i]},${addressingMode2[j]}`;
 				this.AddInstruction("LD", { addressingMode: mode, opCode: [LDOpcodes1[i][j]] });
 			}

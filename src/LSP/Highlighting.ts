@@ -1,11 +1,9 @@
 import * as vscode from "vscode";
 import { LSPUtils } from "./LSPUtils";
 
-enum VSCodeHightlightType { "label", "struct", "keyword", "macro", "enumMember", "variable" }
-
 // enum HighlightType {	None, Label, Keyword, Macro, Defined, Variable}
 
-const VSCodeHighlight = ["label", "struct", "keyword", "macro", "enumMember", "variable"];
+const VSCodeHighlight = ["label", "struct", "keyword", "function", "enumMember", "variable"];
 
 export class Highlighting {
 

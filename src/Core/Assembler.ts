@@ -32,10 +32,15 @@ export class Assembler {
 		intellisense: IntellisenseProvider,
 	};
 
+	compiler = {
+		DecodeText: Compiler.DecodeText,
+		CompileText: Compiler.CompileText
+	}
+
 	Initialize() {
 		ExpressionUtils.Initialize();
 		Commands.Initialize();
-		Platform.ChangePlatform("6502");
+		Platform.ChangePlatform(Config.ProjectSetting.platform);
 	}
 
 

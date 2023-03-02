@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { ConfigUtils } from "./ConfigUtils";
 import { LSPUtils } from "./LSPUtils";
 
 
@@ -7,14 +8,13 @@ const FreshTime = 1000;
 /**更新文件的自动大写以及监视文件改动更新 Label以及错误等 */
 export class UpdateFile {
 
-	private static updateFiles: vscode.TextDocumentChangeEvent[] = [];
-	private static freashTreadId?: NodeJS.Timeout;
 	private static errorCollection: vscode.DiagnosticCollection;
 
 	static async Initialize() {
 		UpdateFile.errorCollection ??= vscode.languages.createDiagnosticCollection(LSPUtils.assembler.config.FileExtension.language);
 
 		vscode.workspace.onDidChangeTextDocument(UpdateFile.ChangeDocument);
+		UpdateFile.WatchFile();
 	}
 
 	/**载入所有工程文件 */
@@ -96,7 +96,56 @@ export class UpdateFile {
 		result.forEach((value, key, map) => {
 			let uri = vscode.Uri.file(key);
 			this.errorCollection.set(uri, value);
-		})
+		});
 	}
 
+	//#region 监视文件
+	/**监视文件，改动等 */
+	private static WatchFile() {
+		if (!vscode.workspace.workspaceFolders)
+			return;
+
+		let rp = new vscode.RelativePattern(
+			vscode.workspace.workspaceFolders![0],
+			`{**/*.${LSPUtils.assembler.config.FileExtension.extension},.vscode/${LSPUtils.assembler.config.ConfigFile}}`
+		);
+
+		const watcher = vscode.workspace.createFileSystemWatcher(rp, false, false, false);
+
+		// watcher.onDidDelete(async (e) => {
+		// 	if (e.fsPath == LSPUtils.assembler.config.ConfigFile)
+		// 		return;
+
+		// 	LSPUtils.assembler.baseHelper.ClearFile(e.fsPath);
+		// 	let uri = vscode.Uri.file(e.fsPath);
+		// 	this.errorCollection.delete(uri);
+		// });
+
+		watcher.onDidChange(async (e) => {
+			let path = await LSPUtils.assembler.fileUtils.GetFileName(e.fsPath);
+			if (path == LSPUtils.assembler.config.ConfigFile) {
+				let data = await LSPUtils.assembler.fileUtils.ReadFile(e.fsPath);
+				let json = LSPUtils.assembler.fileUtils.BytesToString(data);
+
+				let platform = LSPUtils.assembler.config.ProjectSetting.platform;
+				LSPUtils.assembler.config.ReadConfigJson(json);
+				if (platform === LSPUtils.assembler.config.ProjectSetting.platform)
+					return;
+
+				LSPUtils.assembler.platform.ChangePlatform(LSPUtils.assembler.config.ProjectSetting.platform);
+			}
+		});
+
+		// watcher.onDidCreate(async (e) => {
+		// 	let tempFiles = await this.GetWorkspaceFilterFile();
+		// 	let searchFiles = tempFiles.map(value => value.fsPath);
+		// 	if (searchFiles.includes(e.fsPath)) {
+		// 		let buffer = await this.assembler.fileUtils.ReadFile(e.fsPath);
+		// 		let text = this.assembler.fileUtils.BytesToString(buffer);
+		// 		await this.assembler.compile.DecodeText([{ text, filePath: e.fsPath }]);
+		// 	}
+		// });
+	}
+
+	//#endregion 监视文件
 }

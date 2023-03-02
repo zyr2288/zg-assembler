@@ -17,6 +17,8 @@ interface ErrorMsg {
 
 export class MyException {
 
+	static get hasError() { return MyException.allErrors.size !== 0; }
+
 	/**key1是fileHash key2是word的key */
 	private static allErrors = new Map<number, Map<number, ErrorMsg>>();
 

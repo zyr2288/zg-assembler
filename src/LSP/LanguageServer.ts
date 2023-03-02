@@ -14,15 +14,19 @@ const FreshTime = 1000;
 export class LanguageServer {
 
 	private assembler!: Assembler;
+	private statusBarItem?: vscode.StatusBarItem;
+	private statusTimer?: NodeJS.Timeout;
 
 	async Initialize() {
+		this.StatueBarShowText(" $(sync~spin) 正在载入汇编插件");
+
 		LSPUtils.assembler = this.assembler = new Assembler();
 		await IOImplementation.Initialize();
-		
+		await ConfigUtils.ReadConfig();
 		this.assembler.Initialize();
 		this.SetLanguage(vscode.env.language);
 
-		const classes = [ConfigUtils, Highlighting, UpdateFile, DefinitionProvider, Intellisense, HoverProvider];
+		const classes = [Highlighting, UpdateFile, DefinitionProvider, Intellisense, HoverProvider];
 		for (let i = 0; i < classes.length; ++i) {
 			let temp = Reflect.get(classes[i], "Initialize");
 			await temp();
@@ -30,10 +34,8 @@ export class LanguageServer {
 
 		UpdateFile.LoadAllFile();
 		this.RegisterMyCommand();
-	}
 
-	ChangePlatform() {
-
+		this.StatueBarShowText(" $(check) 载入完成", 3000);
 	}
 
 	private SetLanguage(language: string) {
@@ -44,33 +46,32 @@ export class LanguageServer {
 	private RegisterMyCommand() {
 
 		//#region 编译本文件
-		// vscode.commands.registerTextEditorCommand(this.assembler.config.ExtensionCommandNames.CompliteThis, async () => {
-		// 	if (!vscode.window.activeTextEditor)
-		// 		return;
+		vscode.commands.registerTextEditorCommand(this.assembler.config.ExtensionCommandNames.CompliteThis, async () => {
+			if (!vscode.window.activeTextEditor)
+				return;
 
-		// 	let text = vscode.window.activeTextEditor.document.getText();
-		// 	let filePath = vscode.window.activeTextEditor.document.uri.fsPath;
+			this.StatueBarShowText(` $(sync~spin) 编译中...`, 0);
 
-		// this.assembler.compiler.DecodeText([{ text, filePath }]);
-		// this.StatueBarShowText(`$(sync~spin) 编译中...`);
+			let text = vscode.window.activeTextEditor.document.getText();
+			let filePath = vscode.window.activeTextEditor.document.uri.fsPath;
 
-		// await this.ReadConfig();
+			await ConfigUtils.ReadConfig();
 
-		// let text = vscode.window.activeTextEditor.document.getText();
-		// let filePath = vscode.window.activeTextEditor.document.uri.fsPath;
+			let result = await LSPUtils.assembler.compiler.CompileText(filePath, text);
+			console.log(result);
+			// this.StatueBarShowText(`$(sync~spin) 编译中...`);
 
-		// let result = await this.assembler.compiler.DecodeText(text, filePath);
-		// this.UpdateDiagnostic();
+			//this.UpdateDiagnostic();
 
-		// await this.OutputResult(result!, {
-		// 	toFile: this.assembler.config.ProjectSetting.outputSingleFile,
-		// 	copy: this.assembler.config.ProjectSetting.copyToClipboard,
-		// 	patchFile: this.assembler.config.ProjectSetting.patchFile
-		// });
+			// await this.OutputResult(result!, {
+			// 	toFile: this.assembler.config.ProjectSetting.outputSingleFile,
+			// 	copy: this.assembler.config.ProjectSetting.copyToClipboard,
+			// 	patchFile: this.assembler.config.ProjectSetting.patchFile
+			// });
 
-		// let showText = this.assembler.myException.errorLevel ? ` $(alert) 编译有错误` : ` $(check) 编译完成`;
-		// this.StatueBarShowText(showText, 3000);
-		// });
+			let showText = LSPUtils.assembler.exceptions.hasError ? ` $(alert) 编译有错误` : ` $(check) 编译完成`;
+			this.StatueBarShowText(showText, 3000);
+		});
 		//#endregion 编译本文件
 
 		//#region 编译主文件
@@ -121,4 +122,17 @@ export class LanguageServer {
 	}
 	//#endregion 注册命令
 
+	private StatueBarShowText(text: string, timer = 3000) {
+		if (this.statusTimer)
+			clearTimeout(this.statusTimer);
+
+		if (!this.statusBarItem)
+			this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+
+		this.statusBarItem.text = text;
+		this.statusBarItem.show();
+
+		if (timer > 0)
+			this.statusTimer = setTimeout(() => { this.statusBarItem?.hide(); }, timer);
+	}
 }

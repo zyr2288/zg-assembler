@@ -56,4 +56,60 @@ export class LSPUtils {
 	}
 	//#endregion 讲结果值运算成其他进制
 
+	//#region 结果值输出
+	static async OutputResult(result: number[], option: { toFile?: string, patchFile?: string, toClipboard?: string }) {
+		let buffer = new Uint8Array(result);
+
+		if (option?.toFile) {
+			if (!vscode.workspace.workspaceFolders)
+				return;
+
+			let filePath = this.assembler.fileUtils.Combine(vscode.workspace.workspaceFolders[0].uri.fsPath, option.toFile);
+			this.assembler.fileUtils.SaveFile(filePath, buffer);
+		}
+
+		if (option?.toClipboard) {
+			let temp = LSPUtils.GetResultString(result);
+			vscode.env.clipboard.writeText(temp);
+		}
+
+		if (option?.patchFile) {
+			if (!vscode.workspace.workspaceFolders)
+				return;
+
+			let filePath = this.assembler.fileUtils.Combine(vscode.workspace.workspaceFolders[0].uri.fsPath, option.patchFile);
+			if (await this.assembler.fileUtils.PathType(filePath) != "file")
+				return;
+
+			let fileBuffer = await this.assembler.fileUtils.ReadFile(filePath);
+			for (let i = 0; i < result.length; i++) {
+				if (result[i] == undefined)
+					continue;
+
+				fileBuffer[i] = result[i];
+			}
+		}
+	}
+	//#endregion 结果值输出
+
+	//#region 获取编译的String
+	private static GetResultString(data: number[]) {
+		let result = "";
+		for (let i = 0; i < data.length; i++) {
+			const d = data[i];
+			if (d === undefined) {
+				result += "00 ";
+			} else {
+				let temp = d.toString(16);
+				temp = temp.toUpperCase();
+				if (temp.length < 2)
+					temp = "0" + temp;
+
+				result += temp + " ";
+			}
+		}
+		return result;
+	}
+	//#endregion 获取编译的String
+
 }

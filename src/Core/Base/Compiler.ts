@@ -10,7 +10,8 @@ import { Environment } from "./Environment";
 import { ExpressionResult, ExpressionUtils } from "./ExpressionUtils";
 import { LabelType, LabelUtils } from "./Label";
 import { MyException } from "./MyException";
-import { DecodeOption } from "./Options";
+import { CommandDecodeOption, DecodeOption } from "./Options";
+import { ResultUtils } from "./ResultUtils";
 import { Token } from "./Token";
 
 export class Compiler {
@@ -52,6 +53,11 @@ export class Compiler {
 	//#endregion 解析文本
 
 	//#region 编译所有文本
+	/**
+	 * 
+	 * @param filePath 
+	 * @param text 
+	 */
 	static async CompileText(filePath: string, text: string) {
 
 		await Compiler.WaitCompileFinished();
@@ -82,6 +88,8 @@ export class Compiler {
 			++Compiler.compileTimes;
 		}
 		Compiler.compiling = false;
+
+		return ResultUtils.GetResult(option.allLines);
 	}
 	//#endregion 编译所有文本
 
@@ -91,14 +99,22 @@ export class Compiler {
 
 		for (let i = 0; i < option.allLines.length; ++i) {
 			const line = option.allLines[i];
+			if (line.compileType == LineCompileType.Error || line.compileType === LineCompileType.Finished)
+				continue;
 
 			option.lineIndex = i;
 			switch (line.type) {
 				case LineType.Instruction:
+					const instructionLine = line as IInstructionLine;
+					instructionLine.orgAddress = -1;
+					instructionLine.baseAddress = 0;
 					InstructionLine.FirstAnalyse(option);
 					break;
 				case LineType.Command:
-					Commands.FirstAnalyse(option);
+					const commandLine = line as IInstructionLine;
+					commandLine.orgAddress = -1;
+					commandLine.baseAddress = 0;
+					Commands.FirstAnalyse(option as CommandDecodeOption);
 					break;
 				case LineType.Variable:
 					VariableLineUtils.FirstAnalyse(option);
@@ -115,7 +131,7 @@ export class Compiler {
 	static async SecondAnalyse(option: DecodeOption) {
 		for (let i = 0; i < option.allLines.length; i++) {
 			let line = option.allLines[i];
-			if (line.compileType === LineCompileType.Error)
+			if (line.compileType === LineCompileType.Error || line.compileType === LineCompileType.Finished)
 				continue;
 
 			option.lineIndex = i;
@@ -151,7 +167,7 @@ export class Compiler {
 	static async ThirdAnalyse(option: DecodeOption) {
 		for (let i = 0; i < option.allLines.length; ++i) {
 			const line = option.allLines[i];
-			if (line.compileType === LineCompileType.Error)
+			if (line.compileType === LineCompileType.Error || line.compileType === LineCompileType.Finished)
 				continue;
 
 			option.lineIndex = i;
@@ -216,7 +232,7 @@ export class Compiler {
 
 	//#region 分解文本
 	/**分解文本 */
-	private static SplitTexts(fileHash: number, text: string): ICommonLine[] {
+	static SplitTexts(fileHash: number, text: string): ICommonLine[] {
 		let match: RegExpExecArray | null = null;
 		let tokens: Token[] = [];
 		let newLine = {} as ICommonLine;

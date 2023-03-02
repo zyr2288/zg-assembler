@@ -80,7 +80,7 @@ export class Commands {
 	/**命令的参数个数最小与最大，key是命令 */
 	private static commandsParamsCount = new Map<string, { min: number, max: number }>();
 	private static allCommands = new Map<string, CommandParams>();
-	private static ignoreEndCom = new Set<string>();
+	private static ignoreEndCom = new Map<string, string>();
 
 	//#region 初始化
 	static Initialize() {
@@ -92,79 +92,57 @@ export class Commands {
 
 		Commands.allCommandNames = [];
 		Commands.allCommands.forEach((value, key, map) => {
-			Commands.allCommandNames.push(key)
+			Commands.allCommandNames.push(key);
+			if (value.endCommand && !Commands.allCommandNames.includes(value.endCommand))
+				Commands.allCommandNames.push(value.endCommand);
 		});
 	}
 	//#endregion 初始化
 
 	//#region 第一次分析
-	static async FirstAnalyse(option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as ICommandLine;
+	static async FirstAnalyse(option: CommandDecodeOption) {
+		const line = option.allLines[option.lineIndex] as ICommandLine;
 
-		line.expParts = [];
-		line.command = line.splitLine!.comOrIntrs;
-		line.command.text = line.command.text.toUpperCase();
-		line.GetTokens = Commands.GetTokens.bind(line);
+		Commands.LineInitialize(line, option);
+		if (line.compileType === LineCompileType.Error)
+			return;
 
-		if (Commands.ignoreEndCom.has(line.command.text)) {
-			line.compileType = LineCompileType.Finished;
-			delete (line.splitLine);
-			return true;
-		}
-
-		let com = Commands.allCommands.get(line.command.text)!;
-		if (option.macro && !com.enableInMacro) {
-			let errorMsg = Localization.GetMessage("Command {0} can not use in Macro", line.command.text);
+		// 不应找到未配对的行
+		let temp = Commands.ignoreEndCom.get(line.command.text);
+		if (temp) {
+			line.compileType = LineCompileType.Error;
+			let errorMsg = Localization.GetMessage("Unmatched end of command {0}", line.command.text);
 			MyException.PushException(line.command, errorMsg);
-			return false;
+			return;
 		}
 
-		// 寻找匹配结尾
+		const com = Commands.allCommands.get(line.command.text)!;
 		if (com.endCommand) {
 			let includeLines = Commands.FindNextMatchCommand(com.startCommand, com.endCommand, com.nested, option, com.includeCommand);
-			if (includeLines.length === 0) {
-				let errorMsg = Localization.GetMessage("Unmatched end of command {0}", line.command.text);
+			if (includeLines.length == 0) {
+				line.compileType = LineCompileType.Error;
+				let errorMsg = Localization.GetMessage("Unmatched end of command {0}", com.endCommand);
 				MyException.PushException(line.command, errorMsg);
 				option.lineIndex = option.allLines.length - 1;
-				return false;
+				return;
 			}
 
-			(option as CommandDecodeOption).includeCommandLines = includeLines;
+			option.includeCommandLines = includeLines;
 			for (let i = 1; i < includeLines.length; i++) {
-				Commands.AnalyseParams(option.allLines[includeLines[i].index] as ICommandLine);
+				const tempLine = option.allLines[includeLines[i].index] as ICommandLine;
+				Commands.LineInitialize(tempLine, option);
+				Commands.SplitParams(tempLine);
+				tempLine.compileType = LineCompileType.Finished;
+				delete (tempLine.splitLine);
 			}
 		}
 
-		let args = Commands.AnalyseParams(line);
-		if (!args)
-			return false;
+		let args = Commands.SplitParams(line);
+		if (!args) return;
 
-		(option as CommandDecodeOption).expressions = args;
-
-		// 命令不允许有标签
-		if (line.splitLine?.label && !line.splitLine.label.isEmpty) {
-			if (!com.enableLabel) {
-				let errorMsg = Localization.GetMessage("Unmatched end of command {0}", line.command.text);
-				MyException.PushException(line.splitLine.label, errorMsg);
-				delete (line.label);
-				return false;
-			} else {
-				let label = LabelUtils.CreateLabel(line.splitLine.label, option);
-				if (label) {
-					label.labelType = LabelType.Label;
-					line.label = label;
-				}
-			}
-		}
-
-		if (com.FirstAnalyse) {
-			let temp = await com.FirstAnalyse(option as CommandDecodeOption);
-			delete (line.splitLine);
-			return temp;
-		}
-
+		option.expressions = args;
+		com.FirstAnalyse?.(option);
 		delete (line.splitLine);
-		return true;
 	}
 	//#endregion 第一次分析
 
@@ -246,8 +224,7 @@ export class Commands {
 		Commands.commandsParamsCount.set(option.name, { min: option.min, max: option.max ?? option.min });
 		if (option.end) {
 			Commands.commandsParamsCount.set(option.end, { min: 0, max: 0 });
-			if (option.ignoreEnd && !Commands.ignoreEndCom.has(option.end))
-				Commands.ignoreEndCom.add(option.end);
+			if (option.end) Commands.ignoreEndCom.set(option.end, option.name);
 		}
 
 		if (option.includes) {
@@ -314,50 +291,95 @@ export class Commands {
 
 	/***** Private *****/
 
+	//#region 初始化行内容
+	/**
+	 * 初始化行内容
+	 * @param option 
+	 * @returns 
+	 */
+	private static LineInitialize(line: ICommandLine, option: DecodeOption) {
+
+		line.expParts = [];
+		line.command = line.splitLine!.comOrIntrs;
+		line.command.text = line.command.text.toUpperCase();
+		line.GetTokens = Commands.GetTokens.bind(line);
+
+		const com = Commands.allCommands.get(line.command.text)!;
+
+		// 不允许在Macro内的命令检查
+		if (option.macro && !com.enableInMacro) {
+			let errorMsg = Localization.GetMessage("Command {0} can not use in Macro", line.command.text);
+			MyException.PushException(line.command, errorMsg);
+			return;
+		}
+
+		// 命令不允许有标签
+		if (line.splitLine?.label && !line.splitLine.label.isEmpty) {
+			if (!com.enableLabel) {
+				let errorMsg = Localization.GetMessage("Unmatched end of command {0}", line.command.text);
+				MyException.PushException(line.splitLine.label, errorMsg);
+				delete (line.label);
+			} else {
+				let label = LabelUtils.CreateLabel(line.splitLine.label, option);
+				if (label) {
+					label.labelType = LabelType.Label;
+					line.label = label;
+				}
+			}
+		}
+	}
+	//#endregion 初始化行内容
+
 	//#region 分析参数是否满足，并做最大分割
 	/**
 	 * 分析参数是否满足，并做最大分割
 	 * @param line 一行命令
 	 * @returns 是否满足
 	 */
-	private static AnalyseParams(line: ICommandLine) {
+	private static SplitParams(line: ICommandLine) {
 		let params = Commands.commandsParamsCount.get(line.command.text)!;
-		if (params.max === 0) {
-			if (!line.splitLine!.expression.isEmpty) {
-				let errorMsg = Localization.GetMessage("Command arguments error");
-				MyException.PushException(line.command, errorMsg);
-				line.compileType = LineCompileType.Error;
-				return;
-			}
-			return [line.splitLine!.expression.Copy()];
-		}
-
 		let args: Token[] = [];
-		let inString = false;
-		let char: string = "";
-		let lastChar: string = "";
-		let start = 0;
 
-		for (let i = 0, j = 0; i < line.splitLine!.expression.text.length && j < params.max; ++i) {
-			char = line.splitLine!.expression.text.charAt(i);
-			if (char === "\"" && lastChar !== "\\") {
-				inString = !inString;
-			} else if (char === "," && !inString) {
-				args.push(line.splitLine!.expression.Substring(start, i - start));
-				start = i + 1;
-				if (params.max > 0 && j >= params.max)
-					break;
+		if (!line.splitLine!.expression.isEmpty) {
+			let inString = false;
+			let char: string = "";
+			let lastChar: string = "";
+			let start = 0;
+
+			for (let i = 0, j = 0; i < line.splitLine!.expression.text.length; ++i) {
+				char = line.splitLine!.expression.text.charAt(i);
+				if (char === "\"" && lastChar !== "\\") {
+					inString = !inString;
+				} else if (char === "," && !inString) {
+					args.push(line.splitLine!.expression.Substring(start, i - start));
+					start = i + 1;
+					if (params.max > 0 && j >= params.max)
+						break;
+				}
+				lastChar = char;
 			}
-			lastChar = char;
+			args.push(line.splitLine!.expression.Substring(start));
 		}
-		args.push(line.splitLine!.expression.Substring(start));
 
-		if (args.length < params.min || args[params.min - 1].isEmpty) {
+
+		if (args.length < params.min || (params.max !== -1 && args.length > params.max)) {
 			let errorMsg = Localization.GetMessage("Command arguments error");
 			MyException.PushException(line.command, errorMsg);
 			line.compileType = LineCompileType.Error;
 			return;
 		}
+
+		for (let i = 0; i < args.length; ++i) {
+			if (args[i].isEmpty) {
+				let errorMsg = Localization.GetMessage("Command arguments error");
+				MyException.PushException(line.command, errorMsg);
+				line.compileType = LineCompileType.Error;
+			}
+		}
+
+		if (line.compileType === LineCompileType.Error)
+			return;
+
 		return args;
 	}
 	//#endregion 分析参数是否满足，并做最大分割
@@ -365,7 +387,9 @@ export class Commands {
 	//#region 查找下一个命令
 	/**
 	 * 查找下一个命令
+	 * @param startCommand 起始命令
 	 * @param endCommand 结束命令
+	 * @param nested 是否允许嵌套
 	 * @param option 编译选项
 	 * @param includes 包含的命令
 	 * @returns 找到每一个匹配的行
@@ -380,10 +404,11 @@ export class Commands {
 			if (line.type !== LineType.Command)
 				continue;
 
-			if (line.command.text === startCommand) {
+			const commandToken = line.splitLine!.comOrIntrs;
+			if (commandToken.text === startCommand) {
 				if (!nested) {
-					let errorMsg = Localization.GetMessage("Command {0} do not support nesting", line.command.text);
-					MyException.PushException(line.command, errorMsg);
+					let errorMsg = Localization.GetMessage("Command {0} do not support nesting", commandToken.text);
+					MyException.PushException(commandToken, errorMsg);
 					continue;
 				}
 
@@ -392,20 +417,22 @@ export class Commands {
 				continue;
 			}
 
-			if (line.command.text === endCommand) {
+			if (commandToken.text === endCommand) {
 				if (deep > 0) {
 					deep--;
 					continue;
 				}
-				result.push({ match: line.command.text, index: i });
+				result.push({ match: commandToken.text, index: i });
+				line.compileType = LineCompileType.Finished;
 				found = true;
 				break;
 			}
 
-			if (deep !== 0 || !names?.includes(line.command.text))
+			if (deep !== 0 || !names?.includes(commandToken.text))
 				continue;
 
-			result.push({ match: line.command.text, index: i });
+			result.push({ match: commandToken.text, index: i });
+			line.compileType = LineCompileType.Finished;
 		}
 		if (found)
 			result.unshift({ match: startCommand, index: option.lineIndex });

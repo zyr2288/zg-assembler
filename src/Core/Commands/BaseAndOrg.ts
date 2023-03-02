@@ -33,7 +33,6 @@ export class BaseAndOrg {
 		line.compileType = LineCompileType.Finished;
 		Compiler.enviroment.baseAddress = temp.value;
 		Compiler.enviroment.addressOffset = Compiler.enviroment.baseAddress - Compiler.enviroment.orgAddress;
-		return;
 	}
 
 	private static Compile_Org(option: DecodeOption) {
@@ -55,6 +54,5 @@ export class BaseAndOrg {
 		}
 		// GlobalVar.env.addressOffset = GlobalVar.env.baseAddress - GlobalVar.env.originalAddress;
 
-		return;
 	}
 }

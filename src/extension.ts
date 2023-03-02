@@ -1,6 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { HelperUtils } from './Core/LanguageHelper/HelperUtils';
 import { LanguageServer } from './LSP/LanguageServer';
 
 // this method is called when your extension is activated
@@ -31,9 +32,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
 	// context.subscriptions.push(disposable);
+	try {
+		var server = new LanguageServer();
+		await server.Initialize();
+	} catch (e) {
+		console.log(e);
+	}
 
-	var server = new LanguageServer();
-	await server.Initialize();
 	// server.SetLanguage()
 
 }
