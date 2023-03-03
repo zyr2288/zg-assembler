@@ -1,5 +1,4 @@
 import { Compiler } from "../Base/Compiler";
-import { Config } from "../Base/Config";
 import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { MyException } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";

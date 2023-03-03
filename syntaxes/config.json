@@ -1,0 +1,24 @@
+{
+	"$schema": "http://json-schema.org/schema",
+	"type": "object",
+	"description": "Assembler configurations",
+	"patternProperties": {
+		"platform": {
+			"enum": ["6502", "65816", "gbz80"],
+			"description": "Target Platform"
+		},
+		"intellisense": { "type": "boolean", "default": true },
+		"entry": { "type": "string", "default": "main.asm" },
+		"compileTimes": { "type": "number", "default": 2 },
+		"outputEntryFile": { "type": "string" },
+		"outputSingleFile": { "type": "string" },
+		"copyToClipboard": {
+			"type": "boolean",
+			"description": "Copy result bytes to clipboard"
+		},
+		"patchFile": { "type": "string", "default": "" },
+		"includes": { "type": "array", "default": "**/*.asm", "items": { "type": "string" } },
+		"excludes": { "type": "array", "default": "", "items": { "type": "string" } }
+	},
+	"required": ["platform", "intellisense", "entry", "compileTimes", "outputEntryFile", "outputSingleFile", "copyToClipboard", "patchFile", "includes", "excludes"]
+}

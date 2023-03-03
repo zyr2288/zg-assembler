@@ -6,6 +6,7 @@ import { MyException } from "./Base/MyException";
 import { Utils } from "./Base/Utils";
 import { Commands } from "./Commands/Commands";
 import { Localization } from "./I18n/Localization";
+import { DefinitionProvider } from "./LanguageHelper/DefinitionProvider";
 import { DocumentChangeProvider } from "./LanguageHelper/DocumentChangeProvider";
 import { HelperUtils } from "./LanguageHelper/HelperUtils";
 import { HighlightingProvider } from "./LanguageHelper/HighlightingProvider";
@@ -30,6 +31,7 @@ export class Assembler {
 		documentChange: DocumentChangeProvider,
 		hoverProvider: HoverProvider,
 		intellisense: IntellisenseProvider,
+		definition: DefinitionProvider
 	};
 
 	compiler = {

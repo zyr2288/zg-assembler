@@ -57,10 +57,10 @@ export class LSPUtils {
 	//#endregion 讲结果值运算成其他进制
 
 	//#region 结果值输出
-	static async OutputResult(result: number[], option: { toFile?: string, patchFile?: string, toClipboard?: string }) {
+	static async OutputResult(result: number[], option: { toFile?: string, patchFile?: string, toClipboard?: boolean }) {
 		let buffer = new Uint8Array(result);
 
-		if (option?.toFile) {
+		if (option.toFile) {
 			if (!vscode.workspace.workspaceFolders)
 				return;
 
@@ -68,22 +68,22 @@ export class LSPUtils {
 			this.assembler.fileUtils.SaveFile(filePath, buffer);
 		}
 
-		if (option?.toClipboard) {
+		if (option.toClipboard) {
 			let temp = LSPUtils.GetResultString(result);
 			vscode.env.clipboard.writeText(temp);
 		}
 
-		if (option?.patchFile) {
+		if (option.patchFile) {
 			if (!vscode.workspace.workspaceFolders)
 				return;
 
 			let filePath = this.assembler.fileUtils.Combine(vscode.workspace.workspaceFolders[0].uri.fsPath, option.patchFile);
-			if (await this.assembler.fileUtils.PathType(filePath) != "file")
+			if (await this.assembler.fileUtils.PathType(filePath) !== "file")
 				return;
 
 			let fileBuffer = await this.assembler.fileUtils.ReadFile(filePath);
 			for (let i = 0; i < result.length; i++) {
-				if (result[i] == undefined)
+				if (result[i] === undefined)
 					continue;
 
 				fileBuffer[i] = result[i];
@@ -95,9 +95,13 @@ export class LSPUtils {
 	//#region 获取编译的String
 	private static GetResultString(data: number[]) {
 		let result = "";
+		let start = true;
 		for (let i = 0; i < data.length; i++) {
 			const d = data[i];
 			if (d === undefined) {
+				if (start)
+					continue;
+
 				result += "00 ";
 			} else {
 				let temp = d.toString(16);
@@ -106,6 +110,7 @@ export class LSPUtils {
 					temp = "0" + temp;
 
 				result += temp + " ";
+				start = false;
 			}
 		}
 		return result;

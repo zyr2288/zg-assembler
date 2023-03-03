@@ -215,11 +215,11 @@ export class LabelUtils {
 	 */
 	static CheckIllegal(word: Token, allowDot: boolean) {
 		if (allowDot) {
-			if (/(^\d)|\s|\+|\-|\*|\/|\>|\<|\=|\!|\~|#|&|\||%|\$/g.test(word.text)) {
+			if (/(^\d)|\s|\,|\+|\-|\*|\/|\>|\<|\=|\!|\~|#|&|\||%|\$/g.test(word.text)) {
 				return false;
 			}
 		} else {
-			if (/(^\d)|\s|\+|\-|\*|\/|\>|\<|\=|\!|\~|#|&|\||%|\$|\./g.test(word.text)) {
+			if (/(^\d)|\s|\,|\+|\-|\*|\/|\>|\<|\=|\!|\~|#|&|\||%|\$|\./g.test(word.text)) {
 				return false;
 			}
 		}

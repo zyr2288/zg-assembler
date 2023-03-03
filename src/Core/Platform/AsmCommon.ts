@@ -6,6 +6,7 @@ import { Localization } from "../I18n/Localization";
 
 export interface IAddressingMode {
 	addressType: string[];
+	addressingMode?: string;
 	opCode: Array<number | undefined>;
 	opCodeLength: Array<number | undefined>;
 	spProcess?: (option: DecodeOption) => void;
@@ -26,7 +27,7 @@ export class AsmCommon {
 	/**所有汇编指令 */
 	instructions!: string[];
 	/**Key为 Instruction，例如：LDA */
-	private allInstructions: Map<string, IAddressingMode[]> = new Map();
+	allInstructions: Map<string, IAddressingMode[]> = new Map();
 
 	constructor() {
 		this.ClearAll();
@@ -52,7 +53,7 @@ export class AsmCommon {
 			this.allInstructions.set(operation, index);
 		}
 
-		let type: IAddressingMode = { addressType: [] as string[], opCode: [], opCodeLength: [] };
+		let type: IAddressingMode = { addressingMode: option.addressingMode, addressType: [] as string[], opCode: [], opCodeLength: [] };
 		if (option.addressingMode) {
 			let match;
 			let start = 0;

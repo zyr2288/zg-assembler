@@ -23,7 +23,6 @@ export class Config {
 	static readonly ProjectDefaultSetting = {
 		platform: "6502",
 		intellisense: true,
-		argumentOutOfRangeError: true,
 		entry: "main.asm",
 		compileTimes: 2,
 		outputEntryFile: "",
@@ -37,7 +36,6 @@ export class Config {
 	static ProjectSetting: typeof Config.ProjectDefaultSetting = {
 		platform: "6502",
 		intellisense: true,
-		argumentOutOfRangeError: true,
 		entry: "main.asm",
 		compileTimes: 2,
 		outputEntryFile: "",
@@ -58,9 +56,6 @@ export class Config {
 
 		if (typeof (Config.ProjectSetting.intellisense) !== "boolean")
 			Config.ProjectSetting.intellisense = true;
-
-		if (typeof (Config.ProjectSetting.argumentOutOfRangeError) !== "boolean")
-			Config.ProjectSetting.argumentOutOfRangeError = true;
 
 		if (typeof (Config.ProjectSetting.entry) !== "string")
 			Config.ProjectSetting.entry = "";

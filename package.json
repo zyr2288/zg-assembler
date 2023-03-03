@@ -58,6 +58,12 @@
 				}
 			]
 		},
+		"jsonValidation": [
+			{
+				"fileMatch": "/.vscode/project-settings.json",
+				"url": "./syntaxes/config.json"
+			}
+		],
 		"configurationDefaults": {
 			"[zg-assembly]": {
 				"editor.wordBasedSuggestions": false,
@@ -94,7 +100,6 @@
 		"webpack-cli": "^4.9.2"
 	},
 	"dependencies": {
-		"@vscode/l10n": "^0.0.10",
-		"peggy": "^2.0.1"
+		"@vscode/l10n": "^0.0.10"
 	}
 }

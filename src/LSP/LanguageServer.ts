@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { Assembler } from "../Core/Assembler";
+import { AssCommands } from "./AssCommands";
 import { ConfigUtils } from "./ConfigUtils";
 import { DefinitionProvider } from "./DefinitionProvider";
 import { Highlighting } from "./Highlighting";
@@ -26,7 +27,7 @@ export class LanguageServer {
 		this.assembler.Initialize();
 		this.SetLanguage(vscode.env.language);
 
-		const classes = [Highlighting, UpdateFile, DefinitionProvider, Intellisense, HoverProvider];
+		const classes = [Highlighting, UpdateFile, DefinitionProvider, Intellisense, HoverProvider, AssCommands];
 		for (let i = 0; i < classes.length; ++i) {
 			let temp = Reflect.get(classes[i], "Initialize");
 			await temp();
@@ -58,16 +59,12 @@ export class LanguageServer {
 			await ConfigUtils.ReadConfig();
 
 			let result = await LSPUtils.assembler.compiler.CompileText(filePath, text);
-			console.log(result);
-			// this.StatueBarShowText(`$(sync~spin) 编译中...`);
 
-			//this.UpdateDiagnostic();
-
-			// await this.OutputResult(result!, {
-			// 	toFile: this.assembler.config.ProjectSetting.outputSingleFile,
-			// 	copy: this.assembler.config.ProjectSetting.copyToClipboard,
-			// 	patchFile: this.assembler.config.ProjectSetting.patchFile
-			// });
+			await LSPUtils.OutputResult(result!, {
+				toFile: LSPUtils.assembler.config.ProjectSetting.outputSingleFile,
+				toClipboard: LSPUtils.assembler.config.ProjectSetting.copyToClipboard,
+				patchFile: LSPUtils.assembler.config.ProjectSetting.patchFile
+			});
 
 			let showText = LSPUtils.assembler.exceptions.hasError ? ` $(alert) 编译有错误` : ` $(check) 编译完成`;
 			this.StatueBarShowText(showText, 3000);

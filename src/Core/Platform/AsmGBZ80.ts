@@ -126,7 +126,7 @@ export class AsmGBZ80 extends AsmCommon {
 		this.AddInstruction("RET", { addressingMode: "Z", opCode: [0xC8] });
 		this.AddInstruction("RET", { addressingMode: "NC", opCode: [0xD0] });
 		this.AddInstruction("RET", { addressingMode: "C", opCode: [0xD8] });
-		this.NoAddModes([["RET", 0xC9],["RETI", 0xD9]]);
+		this.NoAddModes([["RET", 0xC9], ["RETI", 0xD9]]);
 	}
 
 

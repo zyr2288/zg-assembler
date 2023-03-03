@@ -17,12 +17,9 @@ enum CompletionType {
 
 //#region 提示项
 export class Completion {
-	static CopyList(all: Completion[], exclude?: string[]) {
+	static CopyList(all: Completion[]) {
 		let result: Completion[] = [];
 		for (let i = 0; i < all.length; i++) {
-			if (exclude?.includes(all[i].showText))
-				continue;
-
 			result.push(all[i]);
 		}
 		return result;
@@ -38,12 +35,17 @@ export class Completion {
 	 * @param option.type showText 提示类型，默认空
 	 * @param option.tag showText 附加数据
 	 */
-	constructor(option: { showText: string, insertText?: string, index?: number, comment?: string, type?: CompletionType, tag?: any }) {
+	constructor(option: {
+		showText: string, insertText?: string,
+		index?: number, comment?: string,
+		type?: CompletionType, child?: Completion[], tag?: any
+	}) {
 		this.showText = option.showText;
 		this.insertText = option.insertText ?? option.showText;
 		this.index = option.index ?? 0;
 		this.comment = option.comment;
 		this.type = option.type;
+		this.child = option.child;
 		this.tag = option.tag;
 	}
 	//#endregion 构造函数
@@ -60,21 +62,17 @@ export class Completion {
 	type?: CompletionType;
 	/**附加数据 */
 	tag?: any;
+	/**智能提示后续项目 */
+	child?: Completion[];
 
 	Copy() {
-		let completion = new Completion({
-			showText: this.showText,
-			insertText: this.insertText,
-			index: this.index,
-			comment: this.comment,
-			type: this.type
-		});
+		let completion = Utils.DeepClone<Completion>(this);
 		return completion;
 	}
 }
 //#endregion 提示项
 
-export enum CompletionRange { None, Base, Label, Macro, Path }
+export enum CompletionRange { None, Base, Label, Macro, Path, AddressingMode }
 
 //#region 智能提示类
 export class IntellisenseProvider {
@@ -115,8 +113,17 @@ export class IntellisenseProvider {
 		let type: CompletionRange = CompletionRange.Base;
 		let helperOption = { trigger: option.trigger, macro: undefined };
 
-		if (match?.groups?.["command"] || match?.groups?.["instruction"]) {
+		if (match?.groups?.["command"]) {
 			type = CompletionRange.Label;
+
+		} else if (match?.groups?.["instruction"]) {
+			if (option.trigger === " " && leftText.text.substring(match.index + match[0].length).length === 0) {
+				type = CompletionRange.AddressingMode;
+				text.startColumn = match.index + text.startColumn;
+				text.text = match.groups["instruction"]!.toUpperCase();
+			} else {
+				type = CompletionRange.Label;
+			}
 		}
 
 		let word = Token.CreateToken(fileHash, document.lineNumber, text.startColumn, text.text);
@@ -126,22 +133,37 @@ export class IntellisenseProvider {
 
 	static GetBaseHelper(type: CompletionRange, prefix: Token, option?: { macro?: IMacro, trigger?: string }) {
 		let result: Completion[] = [];
-
 		switch (type) {
+
+			// 基础提示
 			case CompletionRange.Base:
-				if (option?.trigger === ".") {
-					result = Completion.CopyList(
-						option.macro ? IntellisenseProvider.commandNotInMacroCompletions : IntellisenseProvider.commandCompletions
-					);
-				} else {
-					result.push(...Completion.CopyList(IntellisenseProvider.instructionCompletions));
-					Compiler.enviroment.allMacro.forEach((value, key) => {
-						let com = new Completion({ showText: key });
-						result.push(com);
-					});
+				switch (option?.trigger) {
+					case " ":
+						break;
+					case ".":
+						result = Completion.CopyList(
+							option.macro ? IntellisenseProvider.commandNotInMacroCompletions : IntellisenseProvider.commandCompletions
+						);
+						break;
+					default:
+						result = Completion.CopyList(IntellisenseProvider.instructionCompletions);
+						Compiler.enviroment.allMacro.forEach((value, key) => {
+							let com = new Completion({ showText: key });
+							result.push(com);
+						});
 				}
 				break;
 
+			// 获取寻址模式
+			case CompletionRange.AddressingMode:
+				let instructions = IntellisenseProvider.GetInstructionAddressingModes(prefix.text);
+				if (!instructions)
+					break;
+
+				result = instructions;
+				break;
+
+			// 标签模式
 			case CompletionRange.Label:
 				let labelScope = prefix.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
 				let index = prefix.text.lastIndexOf(".");
@@ -167,7 +189,7 @@ export class IntellisenseProvider {
 
 						let showText = temp.token.text.substring(index + 1);
 						let item = new Completion({ showText });
-						switch(temp.labelType) {
+						switch (temp.labelType) {
 							case LabelType.Defined:
 								item.type = CompletionType.Defined;
 								break;
@@ -193,6 +215,7 @@ export class IntellisenseProvider {
 			const instruction = Platform.platform.instructions[i];
 			let completion = new Completion({
 				showText: instruction,
+				insertText: instruction,
 				type: CompletionType.Instruction
 			});
 			IntellisenseProvider.instructionCompletions.push(completion);
@@ -214,6 +237,28 @@ export class IntellisenseProvider {
 
 	}
 
+	/**获取汇编指令地址模式 */
+	static GetInstructionAddressingModes(instruction: string) {
+		const modes = Platform.platform.allInstructions.get(instruction)
+		if (!modes)
+			return;
+
+		let completions: Completion[] = [];
+		for (let j = 0; j < modes.length; ++j) {
+			let com = new Completion({ showText: "" });
+			if (!modes[j].addressingMode) {
+				com.showText = "(Empty)";
+				com.insertText = "\n";
+				com.index = 0;
+			} else {
+				com.showText = modes[j].addressingMode!;
+				com.insertText = modes[j].addressingMode!;
+				com.index = 1;
+			}
+			completions.push(com);
+		}
+		return completions;
+	}
 
 }
 //#endregion 智能提示类
