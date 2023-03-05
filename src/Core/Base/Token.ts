@@ -57,7 +57,7 @@ export class Token {
 				start = match.index + match[0].length;
 
 				if (option?.saveToken)
-					result.push(this.Substring(match.index, match.length));
+					result.push(this.Substring(match.index, match[0].length));
 			}
 
 			let temp = this.Substring(start);
@@ -71,7 +71,7 @@ export class Token {
 				index++;
 
 				if (option?.saveToken)
-					result.push(this.Substring(match.index, match.length));
+					result.push(this.Substring(match.index, match[0].length));
 			}
 
 			while (index <= option.count) {

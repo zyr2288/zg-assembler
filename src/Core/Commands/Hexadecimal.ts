@@ -1,4 +1,4 @@
-import { MyException } from "../Base/MyException";
+import { MyDiagnostic } from "../Base/MyException";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Localization } from "../I18n/Localization";
@@ -23,7 +23,7 @@ export class Hexadecimal {
 
 		if (!/^[ 0-9a-fA-F]+$/.test(token.text)) {
 			let errorMsg = Localization.GetMessage("Command arguments error");
-			MyException.PushException(token, errorMsg);
+			MyDiagnostic.PushException(token, errorMsg);
 			line.compileType = LineCompileType.Error;
 			return;
 		}

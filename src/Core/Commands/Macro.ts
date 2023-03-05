@@ -1,7 +1,7 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
-import { MyException } from "../Base/MyException";
+import { MyDiagnostic } from "../Base/MyException";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
@@ -56,7 +56,7 @@ export class MacroUtils {
 
 		if (parts.length != macro.params.length) {
 			let errorMsg = Localization.GetMessage("Macro arguments error");
-			MyException.PushException(macroToken, errorMsg);
+			MyDiagnostic.PushException(macroToken, errorMsg);
 			return;
 		}
 
@@ -82,14 +82,14 @@ export class MacroUtils {
 
 		if (new RegExp(Platform.regexString, "ig").test(name.text)) {
 			let errorMsg = Localization.GetMessage("Label {0} illegal", name.text);
-			MyException.PushException(name, errorMsg);
+			MyDiagnostic.PushException(name, errorMsg);
 			return;
 		}
 
 		let hash = Utils.GetHashcode(name.text);
 		if (Compiler.enviroment.allLabel.has(hash) || Compiler.enviroment.allMacro.has(name.text)) {
 			let errorMsg = Localization.GetMessage("Label {0} is already defined", name.text);
-			MyException.PushException(name, errorMsg);
+			MyDiagnostic.PushException(name, errorMsg);
 			return;
 		}
 
@@ -103,7 +103,7 @@ export class MacroUtils {
 				let hash = Utils.GetHashcode(part.text);
 				if (macro.paramsHashs.has(hash)) {
 					let errorMsg = Localization.GetMessage("Label {0} is already defined", part.text);
-					MyException.PushException(part, errorMsg);
+					MyDiagnostic.PushException(part, errorMsg);
 					continue;
 				}
 				macro.paramsHashs.add(hash);

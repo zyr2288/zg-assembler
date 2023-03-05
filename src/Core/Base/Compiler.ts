@@ -9,7 +9,7 @@ import { Config } from "./Config";
 import { Environment } from "./Environment";
 import { ExpressionResult, ExpressionUtils } from "./ExpressionUtils";
 import { LabelType, LabelUtils } from "./Label";
-import { MyException } from "./MyException";
+import { MyDiagnostic } from "./MyException";
 import { CommandDecodeOption, DecodeOption } from "./Options";
 import { ResultUtils } from "./ResultUtils";
 import { Token } from "./Token";
@@ -35,7 +35,7 @@ export class Compiler {
 
 			let fileHash = Compiler.enviroment.SetFile(files[index].filePath);
 
-			MyException.ClearFileExceptions(fileHash);
+			MyDiagnostic.ClearFileExceptions(fileHash);
 			Compiler.enviroment.ClearFile(fileHash);
 
 			let lines = Compiler.SplitTexts(fileHash, files[index].text);
@@ -60,14 +60,14 @@ export class Compiler {
 	 */
 	static async CompileText(filePath: string, text: string) {
 
-		await Compiler.WaitCompileFinished();
+		// await Compiler.WaitCompileFinished();
 
 		Compiler.compiling = true;
 		Compiler.enviroment = Compiler.compilerEnv;
 		let option: DecodeOption = { allLines: [], lineIndex: 0 };
 
 		let fileHash = Compiler.enviroment.SetFile(filePath);
-		MyException.ClearAll();
+		MyDiagnostic.ClearAll();
 		Compiler.enviroment.ClearAll();
 
 		let lines = Compiler.SplitTexts(fileHash, text);
@@ -321,21 +321,36 @@ export class Compiler {
 	/***** Private *****/
 
 	//#region 行设定结果值
+	/**
+	 * 行设定结果值
+	 * @param this 当前行
+	 * @param value 设定值
+	 * @param index 设定的起始位置
+	 * @param length 设定长度
+	 * @returns 返回设定的值
+	 */
 	static SetResult(this: IInstructionLine | ICommandLine, value: number, index: number, length: number) {
 		this.result ??= [];
 
 		let temp = length;
 		let tempIndex = 0;
+
 		while (temp--) {
 			this.result[index + tempIndex] = 0;
 			tempIndex++;
 		}
 
+		let setResult = 0;
+		let offset = 0;
 		while (length--) {
 			this.result[index] = value & 0xFF;
+			setResult |= this.result[index] << offset;
 			value >>= 8;
+			offset += 8;
 			index++;
 		}
+
+		return setResult;
 	}
 	//#endregion 行设定结果值
 
@@ -343,7 +358,7 @@ export class Compiler {
 	static SetAddress(this: IInstructionLine | ICommandLine) {
 		if (Compiler.enviroment.orgAddress < 0) {
 			let errorMsg = Localization.GetMessage("Unknow original address");
-			MyException.PushException(this.orgText, errorMsg);
+			MyDiagnostic.PushException(this.orgText, errorMsg);
 			return false;
 		}
 

@@ -3,7 +3,7 @@ import { HighlightToken, HighlightType } from "../Lines/CommonLine";
 import { Compiler } from "./Compiler";
 import { Config } from "./Config";
 import { LabelType, LabelUtils } from "./Label";
-import { MyException } from "./MyException";
+import { MyDiagnostic } from "./MyException";
 import { DecodeOption } from "./Options";
 import { Token } from "./Token";
 import { Utils } from "./Utils";
@@ -144,7 +144,7 @@ export class ExpressionUtils {
 			let temp = LabelUtils.FindLabel(part.token, option);
 			if (!temp || temp.labelType === LabelType.None) {
 				let errorMsg = Localization.GetMessage("Label {0} not found", parts[i].token.text);
-				MyException.PushException(parts[i].token, errorMsg);
+				MyDiagnostic.PushException(parts[i].token, errorMsg);
 				error = true;
 			} else {
 				switch (temp.labelType) {
@@ -208,7 +208,7 @@ export class ExpressionUtils {
 					if (label?.value === undefined) {
 						if (analyseOption === ExpressionResult.GetResultAndShowError) {
 							let errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
-							MyException.PushException(element.token, errorMsg);
+							MyDiagnostic.PushException(element.token, errorMsg);
 							result.success = false;
 							break;
 						}
@@ -228,7 +228,7 @@ export class ExpressionUtils {
 				if (!pre2) {
 					result.success = false;
 					let errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
-					MyException.PushException(element.token, errorMsg);
+					MyDiagnostic.PushException(element.token, errorMsg);
 					break;
 				}
 
@@ -253,7 +253,7 @@ export class ExpressionUtils {
 				if (!pre1 || !pre2) {
 					result.success = false;
 					let errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
-					MyException.PushException(element.token, errorMsg);
+					MyDiagnostic.PushException(element.token, errorMsg);
 					break;
 				}
 
@@ -367,6 +367,31 @@ export class ExpressionUtils {
 		return result;
 	}
 	//#endregion 将所有表达式部分转换成高亮Token
+
+	//#region 拼合ExpressionPart成Token
+	static CombineExpressionPart(parts: ExpressionPart[]) {
+		let tempToken = { start: parts[0].token.start, end: parts[0].token.start + parts[0].token.length };
+
+		for (let i = 1; i < parts.length; ++i) {
+			const part = parts[i];
+			
+			if (part.token.start < tempToken.start)
+				tempToken.start = part.token.start;
+
+			let temp = part.token.start + part.token.text.length;
+			if (temp > tempToken.end)
+				tempToken.end = temp;
+
+		}
+
+		let token = parts[0].token.Copy();
+		token.start = tempToken.start;
+		token.text = " ";
+		token.text = token.text.repeat(tempToken.end - tempToken.start);
+
+		return token;
+	}
+	//#endregion 拼合ExpressionPart成Token
 
 	/** Private */
 
@@ -491,7 +516,7 @@ export class ExpressionUtils {
 
 			if (!result.success) {
 				let errorMsg = Localization.GetMessage("Expression error");
-				MyException.PushException(part.token, errorMsg);
+				MyDiagnostic.PushException(part.token, errorMsg);
 				break;
 			}
 
@@ -501,7 +526,7 @@ export class ExpressionUtils {
 
 		if (result.success && isLabel) {
 			let errorMsg = Localization.GetMessage("Expression error");
-			MyException.PushException(result.parts[result.parts.length - 1].token, errorMsg);
+			MyDiagnostic.PushException(result.parts[result.parts.length - 1].token, errorMsg);
 			result.success = false;
 		}
 
@@ -550,7 +575,7 @@ export class ExpressionUtils {
 							let lex = stack.pop();
 							if (!lex) {
 								let erroMsg = Localization.GetMessage("Expression error");
-								MyException.PushException(part.token, erroMsg);
+								MyDiagnostic.PushException(part.token, erroMsg);
 								result.success = false;
 								break;
 							} else if (lex.type === PriorityType.Level_4_Brackets) {
@@ -565,7 +590,7 @@ export class ExpressionUtils {
 						let top = stack.pop();
 						if (!top) {
 							let erroMsg = Localization.GetMessage("Expression error");
-							MyException.PushException(part.token, erroMsg);
+							MyDiagnostic.PushException(part.token, erroMsg);
 							result.success = false;
 							break;
 						}

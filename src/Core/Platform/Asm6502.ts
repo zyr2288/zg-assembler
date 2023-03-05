@@ -1,6 +1,6 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
-import { MyException } from "../Base/MyException";
+import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Localization } from "../I18n/Localization";
 import { LineCompileType } from "../Lines/CommonLine";
@@ -43,28 +43,28 @@ export class Asm6502 extends AsmCommon {
 		];
 
 		let addressingMode = [
-			"#[exp]", "[exp],X", "[exp],Y", "([exp],X)", "([exp]),Y", "[exp]"
+			"#[exp]", "([exp],X)", "([exp]),Y", "[exp],X", "[exp],Y", "[exp]"
 		];
 
 		const opCode2 = [
-			//"#[exp]",    "[exp],X",      "[exp],Y",      "([exp],X)",   "([exp]),Y",   "[exp]"
-			[[0xA9],       [0xB5, 0xBD],   [-1, 0xB9],     [0xA1],        [0xB1],        [0xA5, 0xAD]],          //LDA
-			[[0xA2],        null,          [0xB6, 0xBE],    null,          null,         [0xA6, 0xAE]],          //LDX
-			[[0xA0],       [0xB4, 0xBC],    null,           null,          null,         [0xA4, 0xAC]],          //LDY
-			[ null,        [0x95, 0x9D],   [-1, 0x99],     [0x81],        [0x91],        [0x85, 0x8D]],          //STA
-			[ null,         null,          [0x96],          null,          null,          null       ],          //STX
-			[ null,        [0x94],          null,           null,          null,         [0x84, 0x8C]],          //STY
-			[[0x69],       [0x75, 0x7D],   [-1, 0x79],     [0x61],        [0x71],        [0x65, 0x6D]],          //ADC
-			[[0xE9],       [0xF5, 0xFD],   [-1, 0xF9],     [0xE1],        [0xF1],        [0xE5, 0xED]],          //SBC
-			[[0x29],       [0x35, 0x3D],   [-1, 0x39],     [0x21],        [0x31],        [0x25, 0x2D]],          //AND
-			[[0x49],       [0x55, 0x5D],   [-1, 0x59],     [0x41],        [0x51],        [0x45, 0x4D]],          //EOR
-			[[0x09],       [0x15, 0x1D],   [-1, 0x19],     [0x01],        [0x11],        [0x05, 0x0D]],          //ORA
-			[[0xC9],       [0xD5, 0xDD],   [-1, 0xD9],     [0xC1],        [0xD1],        [0xC5, 0xCD]],          //CMP
-			[[0xE0],        null,           null,           null,          null,         [0xE4, 0xEC]],          //CPX
-			[[0xC0],        null,           null,           null,          null,         [0xC4, 0xCC]],          //CPY
-			[ null,         null,           null,           null,          null,         [0x24, 0x2C]],          //BIT
-			[ null,        [0xF6, 0xFE],    null,           null,          null,         [0xE6, 0xEE]],          //INC
-			[ null,        [0xD6, 0xDE],    null,           null,          null,         [0xC6, 0xCE]]           //DEC
+			//"#[exp]",    "([exp],X)",   "([exp]),Y",   "[exp],X",      "[exp],Y",      "[exp]"                
+			[[0xA9],       [0xA1],        [0xB1],        [0xB5, 0xBD],   [-1, 0xB9],     [0xA5, 0xAD]],             //LDA
+			[[0xA2],        null,          null,          null,          [0xB6, 0xBE],   [0xA6, 0xAE]],             //LDX
+			[[0xA0],        null,          null,         [0xB4, 0xBC],    null,          [0xA4, 0xAC]],             //LDY
+			[ null,        [0x81],        [0x91],        [0x95, 0x9D],   [-1, 0x99],     [0x85, 0x8D]],             //STA
+			[ null,         null,          null,          null,          [0x96],         [0x86, 0x8E]],             //STX
+			[ null,         null,          null,         [0x94],          null,          [0x84, 0x8C]],             //STY
+			[[0x69],       [0x61],        [0x71],        [0x75, 0x7D],   [-1, 0x79],     [0x65, 0x6D]],             //ADC
+			[[0xE9],       [0xE1],        [0xF1],        [0xF5, 0xFD],   [-1, 0xF9],     [0xE5, 0xED]],             //SBC
+			[[0x29],       [0x21],        [0x31],        [0x35, 0x3D],   [-1, 0x39],     [0x25, 0x2D]],             //AND
+			[[0x49],       [0x41],        [0x51],        [0x55, 0x5D],   [-1, 0x59],     [0x45, 0x4D]],             //EOR
+			[[0x09],       [0x01],        [0x11],        [0x15, 0x1D],   [-1, 0x19],     [0x05, 0x0D]],             //ORA
+			[[0xC9],       [0xC1],        [0xD1],        [0xD5, 0xDD],   [-1, 0xD9],     [0xC5, 0xCD]],             //CMP
+			[[0xE0],        null,          null,          null,           null,          [0xE4, 0xEC]],             //CPX
+			[[0xC0],        null,          null,          null,           null,          [0xC4, 0xCC]],             //CPY
+			[ null,         null,          null,          null,           null,          [0x24, 0x2C]],             //BIT
+			[ null,         null,          null,         [0xF6, 0xFE],    null,          [0xE6, 0xEE]],             //INC
+			[ null,         null,          null,         [0xD6, 0xDE],    null,          [0xC6, 0xCE]],             //DEC
 		];
 
 		for (let i = 0; i < instructions.length; ++i) {
@@ -103,6 +103,7 @@ export class Asm6502 extends AsmCommon {
 
 		this.AddInstruction("JMP", { addressingMode: "([exp])", opCode: [, , 0x6C] });
 		this.AddInstruction("JMP", { addressingMode: "[exp]", opCode: [, , 0x4C] });
+		this.AddInstruction("JSR", { addressingMode: "[exp]", opCode: [, , 0x20] });
 
 		instructions = ["BPL", "BMI", "BVC", "BVS", "BCC", "BCS", "BNE", "BEQ"];
 		const opcode4 = [0x10, 0x30, 0x50, 0x70, 0x90, 0xB0, 0xD0, 0xF0];
@@ -124,7 +125,7 @@ export class Asm6502 extends AsmCommon {
 		if (temp > 127 || temp < -128) {
 			line.compileType = LineCompileType.Error;
 			let errorMsg = Localization.GetMessage("Argument out of range")
-			MyException.PushException(line.instruction, errorMsg);
+			MyDiagnostic.PushException(line.instruction, errorMsg);
 			return;
 		}
 

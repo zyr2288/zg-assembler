@@ -1,7 +1,7 @@
 import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
-import { HighlightToken, HighlightType, ICommonLine, SplitLine } from "./CommonLine";
+import { HighlightToken, HighlightType, ICommonLine, LineCompileType, SplitLine } from "./CommonLine";
 
 export interface IVariableLine extends ICommonLine {
 	splitLine?: SplitLine;
@@ -16,6 +16,8 @@ export class VariableLineUtils {
 		if (label) {
 			line.label = label;
 			line.label.labelType = LabelType.Variable;
+		} else {
+			line.compileType = LineCompileType.Error;
 		}
 
 		let parts = ExpressionUtils.SplitAndSort(line.splitLine!.expression);

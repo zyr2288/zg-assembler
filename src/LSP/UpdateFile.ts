@@ -73,8 +73,8 @@ export class UpdateFile {
 	}
 
 	/**更新错误 */
-	private static UpdateDiagnostic() {
-		let errors = LSPUtils.assembler.exceptions.GetExceptions();
+	static UpdateDiagnostic() {
+		let errors = LSPUtils.assembler.diagnostic.GetExceptions();
 		UpdateFile.errorCollection.clear();
 		let result = new Map<string, vscode.Diagnostic[]>();
 
@@ -91,6 +91,24 @@ export class UpdateFile {
 
 			let range = new vscode.Range(error.line, error.start, error.line, error.start + error.length);
 			diagnostics.push(new vscode.Diagnostic(range, error.message));
+		}
+
+		if (LSPUtils.assembler.config.ProjectSetting.outOfRangeWarning) {
+			errors = LSPUtils.assembler.diagnostic.GetWarnings();
+			for (let i = 0; i < errors.length; ++i) {
+				const warning = errors[i];
+				let diagnostic = result.get(warning.filePath);
+				if (!diagnostic) {
+					diagnostic = [];
+					result.set(warning.filePath, diagnostic);
+				}
+	
+				if (warning.line < 0)
+					continue;
+	
+				let range = new vscode.Range(warning.line, warning.start, warning.line, warning.start + warning.length);
+				diagnostic.push(new vscode.Diagnostic(range, warning.message, vscode.DiagnosticSeverity.Warning));
+			}
 		}
 
 		result.forEach((value, key, map) => {
@@ -123,7 +141,7 @@ export class UpdateFile {
 
 		watcher.onDidChange(async (e) => {
 			let path = await LSPUtils.assembler.fileUtils.GetFileName(e.fsPath);
-			if (path == LSPUtils.assembler.config.ConfigFile) {
+			if (path === LSPUtils.assembler.config.ConfigFile) {
 				let data = await LSPUtils.assembler.fileUtils.ReadFile(e.fsPath);
 				let json = LSPUtils.assembler.fileUtils.BytesToString(data);
 

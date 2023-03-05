@@ -2,7 +2,7 @@ import { Compiler } from "./Compiler";
 import { Token } from "./Token";
 import { Utils } from "./Utils";
 
-export interface OutErrorMsg {
+export interface OutDiagnosticMsg {
 	filePath: string;
 	line: number;
 	start: number;
@@ -10,25 +10,26 @@ export interface OutErrorMsg {
 	message: string;
 }
 
-interface ErrorMsg {
+interface DiagnosticMsg {
 	word: Token;
 	msg: string;
 }
 
-export class MyException {
+export class MyDiagnostic {
 
-	static get hasError() { return MyException.allErrors.size !== 0; }
+	static get hasError() { return MyDiagnostic.allErrors.size !== 0; }
 
 	/**key1是fileHash key2是word的key */
-	private static allErrors = new Map<number, Map<number, ErrorMsg>>();
+	private static allErrors = new Map<number, Map<number, DiagnosticMsg>>();
+	private static allWarning = new Map<number, Map<number, DiagnosticMsg>>();
 
 	//#region 添加错误
 	/**添加错误 */
 	static PushException(token: Token, msg: string) {
-		let fileErrors = MyException.allErrors.get(token.fileHash);
+		let fileErrors = MyDiagnostic.allErrors.get(token.fileHash);
 		if (!fileErrors) {
 			fileErrors = new Map();
-			MyException.allErrors.set(token.fileHash, fileErrors);
+			MyDiagnostic.allErrors.set(token.fileHash, fileErrors);
 		}
 
 		let errorHash = Utils.GetHashcode(token.line, token.start);
@@ -39,8 +40,8 @@ export class MyException {
 	//#region 获取错误
 	/**获取所有错误 */
 	static GetExceptions() {
-		let errors: OutErrorMsg[] = [];
-		MyException.allErrors.forEach((errorMap, fileHash) => {
+		let errors: OutDiagnosticMsg[] = [];
+		MyDiagnostic.allErrors.forEach((errorMap, fileHash) => {
 			errorMap.forEach((errorMsg, wordHash) => {
 				errors.push({
 					filePath: Compiler.enviroment.GetFile(fileHash),
@@ -55,12 +56,45 @@ export class MyException {
 	}
 	//#endregion 获取错误
 
+	//#region 添加警告
+	static PushWarning(token: Token, msg: string) {
+		let fileWarnings = MyDiagnostic.allWarning.get(token.fileHash);
+		if (!fileWarnings) {
+			fileWarnings = new Map();
+			MyDiagnostic.allWarning.set(token.fileHash, fileWarnings);
+		}
+
+		let warningHash = Utils.GetHashcode(token.line, token.start);
+		fileWarnings.set(warningHash, { word: token, msg });
+	}
+	//#endregion 添加警告
+
+	//#region 获取警告
+	/**获取所有错误 */
+	static GetWarnings() {
+		let warnings: OutDiagnosticMsg[] = [];
+		MyDiagnostic.allWarning.forEach((warningMap, fileHash) => {
+			warningMap.forEach((warningMsg, wordHash) => {
+				warnings.push({
+					filePath: Compiler.enviroment.GetFile(fileHash),
+					line: warningMsg.word.line,
+					start: warningMsg.word.start,
+					length: warningMsg.word.text.length,
+					message: warningMsg.msg
+				});
+			});
+		});
+		return warnings;
+	}
+	//#endregion 获取警告
+
 	static ClearFileExceptions(fileHash: number) {
-		MyException.allErrors.set(fileHash, new Map());
+		MyDiagnostic.allErrors.set(fileHash, new Map());
+		MyDiagnostic.allWarning.set(fileHash, new Map());
 	}
 
 	static ClearAll() {
-		MyException.allErrors.clear();
+		MyDiagnostic.allErrors.clear();
 	}
 
 }

@@ -1,10 +1,13 @@
 {
 	"name": "zg-assembler",
 	"displayName": "ZG Assembler",
-	"description": "",
+	"description": "A simple assembler for 6502/65816/gbz80",
 	"version": "0.2.1",
 	"engines": {
-		"vscode": "^1.64.0"
+		"vscode": "^1.67.0"
+	},
+	"repository": {
+		"url": "https://github.com/zyr2288/zg-assembler/"
 	},
 	"preview": true,
 	"author": {
@@ -17,6 +20,7 @@
 	"activationEvents": [
 		"onLanguage:zg-assembly"
 	],
+	"icon": "syntaxes/chip.png",
 	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [

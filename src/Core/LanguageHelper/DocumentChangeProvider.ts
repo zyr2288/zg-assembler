@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { MyException } from "../Base/MyException";
+import { MyDiagnostic } from "../Base/MyException";
 import { Platform } from "../Platform/Platform";
 import { HelperUtils } from "./HelperUtils";
 
@@ -56,7 +56,7 @@ export class DocumentChangeProvider {
 	}
 
 	static GetDiagnostics() {
-		let errors = MyException.GetExceptions();
+		let errors = MyDiagnostic.GetExceptions();
 		let result = new Map<string, ErrorMessage[]>();
 		for (let i = 0; i < errors.length; ++i) {
 			const error = errors[i];

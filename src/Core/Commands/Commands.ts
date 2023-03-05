@@ -1,6 +1,6 @@
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
-import { MyException } from "../Base/MyException";
+import { MyDiagnostic } from "../Base/MyException";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Localization } from "../I18n/Localization";
@@ -66,7 +66,7 @@ export interface ICommandLine extends ICommonLine {
 	tag?: any;
 
 	/**设定结果值 */
-	SetResult: (value: number, index: number, length: number) => void;
+	SetResult: (value: number, index: number, length: number) => number;
 	/**地址增加偏移 */
 	AddAddress: () => void;
 	/**设定地址 */
@@ -93,6 +93,9 @@ export class Commands {
 		Commands.allCommandNames = [];
 		Commands.allCommands.forEach((value, key, map) => {
 			Commands.allCommandNames.push(key);
+			if (value.includeCommand)
+			Commands.allCommandNames.push(...value.includeCommand.map(v => v.name));
+
 			if (value.endCommand && !Commands.allCommandNames.includes(value.endCommand))
 				Commands.allCommandNames.push(value.endCommand);
 		});
@@ -111,8 +114,8 @@ export class Commands {
 		let temp = Commands.ignoreEndCom.get(line.command.text);
 		if (temp) {
 			line.compileType = LineCompileType.Error;
-			let errorMsg = Localization.GetMessage("Unmatched end of command {0}", line.command.text);
-			MyException.PushException(line.command, errorMsg);
+			let errorMsg = Localization.GetMessage("Unmatched command {0}", line.command.text);
+			MyDiagnostic.PushException(line.command, errorMsg);
 			return;
 		}
 
@@ -121,8 +124,8 @@ export class Commands {
 			let includeLines = Commands.FindNextMatchCommand(com.startCommand, com.endCommand, com.nested, option, com.includeCommand);
 			if (includeLines.length == 0) {
 				line.compileType = LineCompileType.Error;
-				let errorMsg = Localization.GetMessage("Unmatched end of command {0}", com.endCommand);
-				MyException.PushException(line.command, errorMsg);
+				let errorMsg = Localization.GetMessage("Unmatched command {0}", com.endCommand);
+				MyDiagnostic.PushException(line.command, errorMsg);
 				option.lineIndex = option.allLines.length - 1;
 				return;
 			}
@@ -309,15 +312,15 @@ export class Commands {
 		// 不允许在Macro内的命令检查
 		if (option.macro && !com.enableInMacro) {
 			let errorMsg = Localization.GetMessage("Command {0} can not use in Macro", line.command.text);
-			MyException.PushException(line.command, errorMsg);
+			MyDiagnostic.PushException(line.command, errorMsg);
 			return;
 		}
 
 		// 命令不允许有标签
 		if (line.splitLine?.label && !line.splitLine.label.isEmpty) {
 			if (!com.enableLabel) {
-				let errorMsg = Localization.GetMessage("Unmatched end of command {0}", line.command.text);
-				MyException.PushException(line.splitLine.label, errorMsg);
+				let errorMsg = Localization.GetMessage("Unmatched command {0}", line.command.text);
+				MyDiagnostic.PushException(line.splitLine.label, errorMsg);
 				delete (line.label);
 			} else {
 				let label = LabelUtils.CreateLabel(line.splitLine.label, option);
@@ -364,7 +367,7 @@ export class Commands {
 
 		if (args.length < params.min || (params.max !== -1 && args.length > params.max)) {
 			let errorMsg = Localization.GetMessage("Command arguments error");
-			MyException.PushException(line.command, errorMsg);
+			MyDiagnostic.PushException(line.command, errorMsg);
 			line.compileType = LineCompileType.Error;
 			return;
 		}
@@ -372,7 +375,7 @@ export class Commands {
 		for (let i = 0; i < args.length; ++i) {
 			if (args[i].isEmpty) {
 				let errorMsg = Localization.GetMessage("Command arguments error");
-				MyException.PushException(line.command, errorMsg);
+				MyDiagnostic.PushException(line.command, errorMsg);
 				line.compileType = LineCompileType.Error;
 			}
 		}
@@ -408,7 +411,7 @@ export class Commands {
 			if (commandToken.text === startCommand) {
 				if (!nested) {
 					let errorMsg = Localization.GetMessage("Command {0} do not support nesting", commandToken.text);
-					MyException.PushException(commandToken, errorMsg);
+					MyDiagnostic.PushException(commandToken, errorMsg);
 					continue;
 				}
 

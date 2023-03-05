@@ -2,7 +2,7 @@ import { Compiler } from "./Base/Compiler";
 import { Config } from "./Base/Config";
 import { ExpressionUtils } from "./Base/ExpressionUtils";
 import { FileUtils } from "./Base/FileUtils";
-import { MyException } from "./Base/MyException";
+import { MyDiagnostic } from "./Base/MyException";
 import { Utils } from "./Base/Utils";
 import { Commands } from "./Commands/Commands";
 import { Localization } from "./I18n/Localization";
@@ -19,7 +19,7 @@ export class Assembler {
 	fileUtils = FileUtils;
 	platform = Platform;
 	config = Config;
-	exceptions = MyException;
+	diagnostic = MyDiagnostic;
 	localization = Localization;
 	// expressionUtils = ExpressionUtils;
 	// compiler = assembler.Compiler.ZGAssembler.Compiler;
@@ -57,3 +57,6 @@ export class Assembler {
 		return Compiler.enviroment.allBaseLines.get(hash) ?? [];
 	}
 }
+
+//@ts-ignore
+globalThis.zgassembler = Assembler;

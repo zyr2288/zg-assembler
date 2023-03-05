@@ -15,11 +15,9 @@ const FreshTime = 1000;
 export class LanguageServer {
 
 	private assembler!: Assembler;
-	private statusBarItem?: vscode.StatusBarItem;
-	private statusTimer?: NodeJS.Timeout;
 
 	async Initialize() {
-		this.StatueBarShowText(" $(sync~spin) 正在载入汇编插件");
+		LSPUtils.StatueBarShowText(" $(sync~spin) 正在载入汇编插件");
 
 		LSPUtils.assembler = this.assembler = new Assembler();
 		await IOImplementation.Initialize();
@@ -34,9 +32,8 @@ export class LanguageServer {
 		}
 
 		UpdateFile.LoadAllFile();
-		this.RegisterMyCommand();
 
-		this.StatueBarShowText(" $(check) 载入完成", 3000);
+		LSPUtils.StatueBarShowText(" $(check) 载入完成", 3000);
 	}
 
 	private SetLanguage(language: string) {
@@ -45,31 +42,6 @@ export class LanguageServer {
 
 	//#region 注册命令
 	private RegisterMyCommand() {
-
-		//#region 编译本文件
-		vscode.commands.registerTextEditorCommand(this.assembler.config.ExtensionCommandNames.CompliteThis, async () => {
-			if (!vscode.window.activeTextEditor)
-				return;
-
-			this.StatueBarShowText(` $(sync~spin) 编译中...`, 0);
-
-			let text = vscode.window.activeTextEditor.document.getText();
-			let filePath = vscode.window.activeTextEditor.document.uri.fsPath;
-
-			await ConfigUtils.ReadConfig();
-
-			let result = await LSPUtils.assembler.compiler.CompileText(filePath, text);
-
-			await LSPUtils.OutputResult(result!, {
-				toFile: LSPUtils.assembler.config.ProjectSetting.outputSingleFile,
-				toClipboard: LSPUtils.assembler.config.ProjectSetting.copyToClipboard,
-				patchFile: LSPUtils.assembler.config.ProjectSetting.patchFile
-			});
-
-			let showText = LSPUtils.assembler.exceptions.hasError ? ` $(alert) 编译有错误` : ` $(check) 编译完成`;
-			this.StatueBarShowText(showText, 3000);
-		});
-		//#endregion 编译本文件
 
 		//#region 编译主文件
 		// vscode.commands.registerTextEditorCommand(this.assembler.config.ExtensionCommandNames.CompliteMain, async () => {
@@ -118,18 +90,4 @@ export class LanguageServer {
 
 	}
 	//#endregion 注册命令
-
-	private StatueBarShowText(text: string, timer = 3000) {
-		if (this.statusTimer)
-			clearTimeout(this.statusTimer);
-
-		if (!this.statusBarItem)
-			this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
-
-		this.statusBarItem.text = text;
-		this.statusBarItem.show();
-
-		if (timer > 0)
-			this.statusTimer = setTimeout(() => { this.statusBarItem?.hide(); }, timer);
-	}
 }

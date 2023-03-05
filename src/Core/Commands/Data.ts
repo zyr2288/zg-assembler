@@ -1,6 +1,9 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
+import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
+import { Utils } from "../Base/Utils";
+import { Localization } from "../I18n/Localization";
 import { LineCompileType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "./Commands";
 
@@ -67,7 +70,13 @@ export class Data {
 					// 	return false;
 					// }
 
-					line.SetResult(temp.values[j], index, dataLength);
+					let tempLength = Utils.GetNumberByteLength(temp.values[j]);
+					let tempValue = line.SetResult(temp.values[j], index, dataLength);
+					if (tempLength > dataLength || temp.values[j] < 0) {
+						let errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.values[j], tempValue);
+						let token = ExpressionUtils.CombineExpressionPart(part);
+						MyDiagnostic.PushWarning(token, errorMsg);
+					}
 				}
 			}
 			index += dataLength;

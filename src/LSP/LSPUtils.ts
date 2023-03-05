@@ -11,6 +11,8 @@ export interface WordType {
 export class LSPUtils {
 
 	static assembler: Assembler;
+	private static statusBarItem?: vscode.StatusBarItem;
+	private static statusTimer?: NodeJS.Timeout;
 
 	//#region 获取工作目录下所筛选出的文件
 	static async GetWorkspaceFilterFile() {
@@ -116,5 +118,19 @@ export class LSPUtils {
 		return result;
 	}
 	//#endregion 获取编译的String
+
+	static StatueBarShowText(text: string, timer = 3000) {
+		if (LSPUtils.statusTimer)
+			clearTimeout(LSPUtils.statusTimer);
+
+		if (!LSPUtils.statusBarItem)
+			LSPUtils.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+
+		LSPUtils.statusBarItem.text = text;
+		LSPUtils.statusBarItem.show();
+
+		if (timer > 0)
+			LSPUtils.statusTimer = setTimeout(() => { LSPUtils.statusBarItem?.hide(); }, timer);
+	}
 
 }

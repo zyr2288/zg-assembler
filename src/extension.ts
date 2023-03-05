@@ -20,8 +20,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	// 	vscode.window.showInformationMessage('Hello World from test!');
 	// 	Platform.ChangePlatform("6502");
 
-
-
 	// 	let document = vscode.window.activeTextEditor!.document;
 	// 	Compiler.DecodeText([{ text: document.getText(), filePath: document.uri.fsPath }]);
 	// 	// PeggyTest.Test(text);
@@ -34,6 +32,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		await server.Initialize();
 	} catch (e) {
 		console.log(e);
+		throw e;
 	}
 
 	// server.SetLanguage()

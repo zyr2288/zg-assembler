@@ -1,7 +1,7 @@
 import { Localization } from "../I18n/Localization";
 import { Compiler } from "./Compiler";
 import { ExpressionUtils } from "./ExpressionUtils";
-import { MyException } from "./MyException";
+import { MyDiagnostic } from "./MyException";
 import { DecodeOption } from "./Options";
 import { Token } from "./Token";
 import { Utils } from "./Utils";
@@ -71,7 +71,7 @@ export class LabelUtils {
 		if (LabelUtils.namelessLabelRegex.test(token.text)) {
 			if (option?.macro) {
 				let errorMsg = Localization.GetMessage("Can not use nameless label in Macro");
-				MyException.PushException(token, errorMsg);
+				MyDiagnostic.PushException(token, errorMsg);
 				return;
 			}
 
@@ -82,7 +82,7 @@ export class LabelUtils {
 
 		if (!LabelUtils.CheckIllegal(token, !option.macro)) {
 			let errorMsg = Localization.GetMessage("Label {0} illegal", token.text);
-			MyException.PushException(token, errorMsg);
+			MyDiagnostic.PushException(token, errorMsg);
 			return;
 		}
 
@@ -91,7 +91,7 @@ export class LabelUtils {
 			let hash = Utils.GetHashcode(token.text);
 			if (option.macro.labels.has(hash) || option.macro.name.text === token.text) {
 				let errorMsg = Localization.GetMessage("Label {0} is already defined", token.text);
-				MyException.PushException(token, errorMsg);
+				MyDiagnostic.PushException(token, errorMsg);
 				return;
 			}
 		}
@@ -102,7 +102,7 @@ export class LabelUtils {
 		let tempLabel = Compiler.enviroment.allLabel.get(hash);
 		if (tempLabel && tempLabel.labelType !== LabelType.None) {
 			let errorMsg = Localization.GetMessage("Label {0} is already defined", token.text);
-			MyException.PushException(token, errorMsg);
+			MyDiagnostic.PushException(token, errorMsg);
 			return;
 		}
 
@@ -132,19 +132,26 @@ export class LabelUtils {
 			let collection = Compiler.enviroment.namelessLabel.get(word.fileHash);
 			if (!collection) {
 				let errorMsg = Localization.GetMessage("Label {0} not found", word.text);
-				MyException.PushException(word, errorMsg);
+				MyDiagnostic.PushException(word, errorMsg);
 				return;
 			}
 
-			let labels = match.groups?.["minus"] ? collection.upLabels : collection.downLabels;
-
-			for (let i = 0; i < labels.length; ++i) {
-				if (labels[i].token.length == count && labels[i].token.line < word.line)
-					return labels[i];
+			if (match.groups?.["minus"]) {
+				let labels = collection.upLabels;
+				for (let i = 0; i < labels.length; ++i) {
+					if (labels[i].token.length == count && labels[i].token.line < word.line)
+						return labels[i];
+				}
+			} else {
+				let labels = collection.downLabels;
+				for (let i = 0; i < labels.length; ++i) {
+					if (labels[i].token.length == count && labels[i].token.line > word.line)
+						return labels[i];
+				}
 			}
 
 			let errorMsg = Localization.GetMessage("Label {0} not found", word.text);
-			MyException.PushException(word, errorMsg);
+			MyDiagnostic.PushException(word, errorMsg);
 			return;
 		}
 
@@ -160,7 +167,7 @@ export class LabelUtils {
 			let part = word.Split(/\:/g, { count: 2 });
 			if (part[0].isEmpty || part[1].isEmpty) {
 				let errorMsg = Localization.GetMessage("Label {0} not found", word.text);
-				MyException.PushException(word, errorMsg);
+				MyDiagnostic.PushException(word, errorMsg);
 				return;
 			}
 
@@ -171,7 +178,7 @@ export class LabelUtils {
 					index = temp.value;
 				} else {
 					let errorMsg = Localization.GetMessage("Label {0} not found", part[2].text);
-					MyException.PushException(part[2], errorMsg);
+					MyDiagnostic.PushException(part[2], errorMsg);
 					return;
 				}
 			}
@@ -295,7 +302,7 @@ export class LabelUtils {
 
 			if (tokens[index].isEmpty) {
 				let errorMsg = Localization.GetMessage("Label {0} illegal", token.text);
-				MyException.PushException(token, errorMsg);
+				MyDiagnostic.PushException(token, errorMsg);
 				return;
 			}
 
@@ -316,7 +323,7 @@ export class LabelUtils {
 			if (index === lastIndex) {
 				if (result?.labelType === LabelType.Defined || result?.labelType === LabelType.Label) {
 					let errorMsg = Localization.GetMessage("Label {0} is already defined", tokens[index].text);
-					MyException.PushException(token, errorMsg);
+					MyDiagnostic.PushException(token, errorMsg);
 					return;
 				}
 

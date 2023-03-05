@@ -28,7 +28,6 @@ export class Defined {
 			line.compileType = LineCompileType.Error;
 
 		line.GetTokens = Defined.GetTokens.bind(line);
-		return;
 	}
 
 	private static ThirdAnalyse_Def(option: DecodeOption) {
@@ -46,7 +45,6 @@ export class Defined {
 		if (temp2.success)
 			line.label.value = temp2.value;
 
-		return;
 	}
 
 	private static Compile_Def(option: DecodeOption) {

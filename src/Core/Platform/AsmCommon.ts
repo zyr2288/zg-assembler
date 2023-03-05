@@ -1,4 +1,4 @@
-import { MyException } from "../Base/MyException";
+import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
@@ -103,7 +103,7 @@ export class AsmCommon {
 		let addressTypes = this.allInstructions.get(instruction.text.toUpperCase());
 		if (!addressTypes) {
 			let errorMsg = Localization.GetMessage("Unknow instruction {0}", instruction.text);
-			MyException.PushException(instruction, errorMsg);
+			MyDiagnostic.PushException(instruction, errorMsg);
 			return;
 		}
 
@@ -165,13 +165,13 @@ export class AsmCommon {
 
 		if (!foundAddressType) {
 			let errorMsg = Localization.GetMessage("Instruction {0} do not support this addressing mode", instruction.text);
-			MyException.PushException(instruction, errorMsg);
+			MyDiagnostic.PushException(instruction, errorMsg);
 			return;
 		} else {
 			for (let i = 0; i < result.exprs.length; ++i) {
 				if (result.exprs[i].isEmpty) {
 					let errorMsg = Localization.GetMessage("Expression error");
-					MyException.PushException(result.exprs[i], errorMsg);
+					MyDiagnostic.PushException(result.exprs[i], errorMsg);
 					return;
 				}
 			}

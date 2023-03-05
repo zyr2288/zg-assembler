@@ -1,7 +1,7 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
-import { MyException } from "../Base/MyException";
+import { MyDiagnostic } from "../Base/MyException";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { Localization } from "../I18n/Localization";
 import { LineCompileType, LineType } from "../Lines/CommonLine";
@@ -10,8 +10,9 @@ import { Commands, ICommandLine } from "./Commands";
 export class Include {
 
 	static Initialize() {
+		
 		if (!FileUtils.ReadFile) {
-			console.error("读文件接口尚未实现");
+			console.error("File interface not implemented");
 			return;
 		}
 
@@ -105,7 +106,7 @@ export class Include {
 
 		if (!Include.CheckString(option.expressions[0].text)) {
 			let errorMsg = Localization.GetMessage("Command arguments error");
-			MyException.PushException(option.expressions[0], errorMsg);
+			MyDiagnostic.PushException(option.expressions[0], errorMsg);
 			line.compileType = LineCompileType.Error;
 			return result;
 		}
@@ -123,7 +124,7 @@ export class Include {
 		result.exsist = (await FileUtils.PathType(result.path)) === "file";
 		if (!result.exsist) {
 			let errorMsg = Localization.GetMessage("File {0} is not exist", option.expressions[0].text);
-			MyException.PushException(option.expressions[0], errorMsg);
+			MyDiagnostic.PushException(option.expressions[0], errorMsg);
 		}
 		return result;
 	}

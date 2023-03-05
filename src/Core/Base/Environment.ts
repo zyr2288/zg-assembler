@@ -113,7 +113,8 @@ export class Environment {
 			this.ClearLabelTree(labelTree.parent);
 		} else {
 			let label = this.allLabel.get(labelTreeHash)!;
-			label.labelType = LabelType.None;
+			if (label)
+				label.labelType = LabelType.None;
 		}
 
 	}

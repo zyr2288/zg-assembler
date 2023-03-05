@@ -1,6 +1,6 @@
-import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { LabelUtils } from "../Base/Label";
-import { MyException } from "../Base/MyException";
+import { MyDiagnostic } from "../Base/MyException";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { Localization } from "../I18n/Localization";
 import { LineCompileType } from "../Lines/CommonLine";
@@ -9,6 +9,7 @@ import { Commands, ICommandLine } from "./Commands";
 interface ConfidentLine {
 	index: number;
 	confident: boolean;
+	expParts?: ExpressionPart[];
 }
 
 export class IfCondition {
@@ -45,16 +46,18 @@ export class IfCondition {
 		let index = 0;
 		let commands = [".ELSEIF", ".ELSE", ".ENDIF"];
 
-		let tag: ConfidentLine[] = [{ index: result[0].index, confident: false }];
+		let tag: ConfidentLine[] = [{ index: result[0].index, confident: false, expParts: [] }];
 		for (let i = 1; i < result.length; i++) {
-			let temp = commands.indexOf(result[i].match);
-			if (temp < index)
-				continue;
+			const tempLine = option.allLines[result[i].index] as ICommandLine;
+			switch (tempLine.command.text) {
+				case ".ELSEIF":
+					break;
+				case ".ELSE":
+				case ".ENDIF":
+					break;
+			}
 
-			if (temp === 1)
-				index++;
-
-			tag.push({ index: result[i].index, confident: false });
+			tag.push({ index: result[i].index, confident: false, expParts: [] });
 		}
 
 		line.tag = tag;
@@ -68,7 +71,7 @@ export class IfCondition {
 			if (tempLine.command.text !== ".ELSE") {
 				if (!tempLine.expParts[0]) {
 					let errorMsg = Localization.GetMessage("Command arguments error");
-					MyException.PushException(tempLine.command, errorMsg);
+					MyDiagnostic.PushException(tempLine.command, errorMsg);
 					tempLine.compileType = LineCompileType.Error;
 				}
 

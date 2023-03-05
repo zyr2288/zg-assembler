@@ -13,10 +13,11 @@ export const Chinese: LocalizationMsg = {
 	"Macro arguments error": "自定义函数参数错误",
 	"Command {0} do not support nesting": "命令 \"{0}\" 不支持嵌套",
 	"Command {0} can not use in Macro": "命令 \"{0}\" 不能使用在自定义函数内",
-	"Unmatched end of command {0}": "找不到匹配的结束命令",
+	"Unmatched command {0}": "找不到匹配的命令 \"{0}\"",
 	"Command {0} can not use label": "命令 \"{0}\" 不支持标签",
 	"Command arguments error": "命令参数错误",
 	"Unknow original address": "未设定起始地址",
-	"File {0} is not exist":"文件 \"{0}\" 不存在",
+	"File {0} is not exist": "文件 \"{0}\" 不存在",
 	"Argument out of range": "参数超出范围",
+	"Expression result is {0}, but compile result is {1}": "表达式结果为 \"{0}\", 最终编译结果值为 \"{1}\"",
 }

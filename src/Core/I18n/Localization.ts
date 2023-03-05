@@ -21,10 +21,10 @@ export class Localization {
 	}
 
 	/**输出信息格式化 */
-	static GetMessage(msg: LocalizationKey, ...args: string[]) {
+	static GetMessage(msg: LocalizationKey, ...args: Array<string | number>) {
 		let message = Localization.message[msg];
 		for (let i = 0; i < args.length; ++i)
-			message = message.replace(`{${i}}`, args[i]);
+			message = message.replace(`{${i}}`, args[i].toString());
 
 		return message;
 	}

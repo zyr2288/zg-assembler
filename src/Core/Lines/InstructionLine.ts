@@ -1,9 +1,11 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
+import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
+import { Localization } from "../I18n/Localization";
 import { IAddressingMode } from "../Platform/AsmCommon";
 import { Platform } from "../Platform/Platform";
 import { HighlightToken, HighlightType, ICommonLine, LineCompileType, SplitLine } from "./CommonLine";
@@ -18,7 +20,7 @@ export interface IInstructionLine extends ICommonLine {
 	addressingMode: IAddressingMode;
 	result: number[];
 	/**设定结果值 */
-	SetResult: (value: number, index: number, length: number) => void;
+	SetResult: (value: number, index: number, length: number) => number;
 	/**地址增加偏移 */
 	AddAddress: () => void;
 	/**设定地址 */
@@ -74,6 +76,7 @@ export class InstructionLine {
 	//#endregion 第三次分析，并检查表达式是否有误
 
 	//#region 编译汇编指令
+	/**编译汇编指令 */
 	static CompileInstruction(option: DecodeOption): void {
 		const line = option.allLines[option.lineIndex] as IInstructionLine;
 		line.SetAddress();
@@ -84,9 +87,9 @@ export class InstructionLine {
 			return;
 		}
 
+		line.compileType = LineCompileType.Finished;
 		if (!line.exprParts[0]) {
 			line.SetResult(line.addressingMode.opCode[0]!, 0, line.addressingMode.opCodeLength[0]!);
-			line.compileType = LineCompileType.Finished;
 			line.AddAddress();
 			return;
 		}
@@ -96,12 +99,13 @@ export class InstructionLine {
 		if (!temp.success) {
 			let index = line.addressingMode.opCode.length - 1;
 			line.result.length = line.addressingMode.opCodeLength[index]! + index;
+			line.compileType = LineCompileType.None;
 		} else {
+			let orgLength: number, length: number;
+			orgLength = length = Utils.GetNumberByteLength(temp.value);
 			if (line.result.length != 0) {
-				let length = line.addressingMode.opCode.length;
-				line.SetResult(temp.value, length, length - 1);
+				length = line.result.length - 1;
 			} else {
-				let length = Utils.GetNumberByteLength(temp.value);
 				if (!line.addressingMode.opCode[length]) {
 					for (let i = 0; i < line.addressingMode.opCode.length; ++i) {
 						if (!line.addressingMode.opCode[i])
@@ -111,9 +115,15 @@ export class InstructionLine {
 						break;
 					}
 				}
+			}
 
-				line.SetResult(line.addressingMode.opCode[length]!, 0, line.addressingMode.opCodeLength[length]!);
-				line.SetResult(temp.value, line.addressingMode.opCodeLength[length]!, length);
+			line.SetResult(line.addressingMode.opCode[length]!, 0, line.addressingMode.opCodeLength[length]!);
+			let tempValue = line.SetResult(temp.value, line.addressingMode.opCodeLength[length]!, length);
+
+			if (orgLength > length || temp.value < 0) {
+				let errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.value, tempValue);
+				let token = ExpressionUtils.CombineExpressionPart(line.exprParts[0]);
+				MyDiagnostic.PushWarning(token, errorMsg);
 			}
 		}
 
