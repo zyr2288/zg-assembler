@@ -60,7 +60,7 @@ export class Compiler {
 	 */
 	static async CompileText(filePath: string, text: string) {
 
-		// await Compiler.WaitCompileFinished();
+		await Compiler.WaitCompileFinished();
 
 		Compiler.compiling = true;
 		Compiler.enviroment = Compiler.compilerEnv;
