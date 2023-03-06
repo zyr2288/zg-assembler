@@ -145,6 +145,7 @@ export class MacroUtils {
 
 }
 
+/**Macro命令分析 */
 export class MacroCommand {
 
 	static Initialize() {
