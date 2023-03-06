@@ -30,6 +30,8 @@ export class UpdateFile {
 			let text = LSPUtils.assembler.fileUtils.BytesToString(buffer);
 			tempFiles.push({ text, filePath: files[i].fsPath });
 		}
+
+		await LSPUtils.WaitingCompileFinished();
 		await LSPUtils.assembler.LoadAllFile(tempFiles);
 
 		UpdateFile.UpdateDiagnostic();

@@ -1,3 +1,4 @@
+import { LSPUtils } from "../../LSP/LSPUtils";
 import { Compiler } from "../Base/Compiler";
 import { MyDiagnostic } from "../Base/MyException";
 import { Platform } from "../Platform/Platform";
@@ -46,6 +47,7 @@ export class DocumentChangeProvider {
 				DocumentChangeProvider.updateFiles.forEach((value, key) => {
 					files.push({ text: value, filePath: key });
 				});
+				await LSPUtils.WaitingCompileFinished();
 				await Compiler.DecodeText(files);
 				DocumentChangeProvider.GetDiagnostics();
 				HelperUtils.fileUpdateFinished = true;

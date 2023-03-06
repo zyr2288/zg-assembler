@@ -21,7 +21,10 @@ export class VariableLineUtils {
 		}
 
 		let parts = ExpressionUtils.SplitAndSort(line.splitLine!.expression);
-		if (parts) line.exprParts = parts;
+		if (parts)
+			line.exprParts = parts;
+		else
+			line.compileType = LineCompileType.Error;
 
 		delete (line.splitLine);
 	}

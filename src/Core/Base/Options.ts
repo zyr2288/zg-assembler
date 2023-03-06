@@ -16,5 +16,4 @@ export interface DecodeOption {
 
 export interface CommandDecodeOption extends DecodeOption {
 	includeCommandLines?: { match: string, index: number }[];
-	expressions: Token[];
 }

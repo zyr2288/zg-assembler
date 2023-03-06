@@ -159,9 +159,10 @@ export class MacroCommand {
 
 	private static async FirstAnalyse(option: CommandDecodeOption) {
 		const line = option.allLines[option.lineIndex] as ICommandLine;
-		let name = option.expressions[0];
-		option.expressions.splice(0, 1);
-		let macro = MacroUtils.CreateMacro(name, option.expressions);
+		let expressions: Token[] = line.tag;
+		let name = expressions[0];
+		expressions.splice(0, 1);
+		let macro = MacroUtils.CreateMacro(name, expressions);
 		if (!macro) {
 			line.compileType = LineCompileType.Error;
 			return;

@@ -35,6 +35,7 @@ export class Assembler {
 	};
 
 	compiler = {
+		compiling: this.compiling,
 		DecodeText: Compiler.DecodeText,
 		CompileText: Compiler.CompileText
 	}
@@ -56,6 +57,11 @@ export class Assembler {
 		let hash = Utils.GetHashcode(filePath);
 		return Compiler.enviroment.allBaseLines.get(hash) ?? [];
 	}
+
+	private get compiling() {
+		return Compiler.compiling;
+	}
+
 }
 
 //@ts-ignore

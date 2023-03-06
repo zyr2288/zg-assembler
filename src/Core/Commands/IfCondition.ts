@@ -2,14 +2,15 @@ import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/Expre
 import { LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
+import { Token } from "../Base/Token";
 import { Localization } from "../I18n/Localization";
 import { LineCompileType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "./Commands";
 
 interface ConfidentLine {
 	index: number;
+	line: ICommandLine;
 	confident: boolean;
-	expParts?: ExpressionPart[];
 }
 
 export class IfCondition {
@@ -46,18 +47,30 @@ export class IfCondition {
 		let index = 0;
 		let commands = [".ELSEIF", ".ELSE", ".ENDIF"];
 
-		let tag: ConfidentLine[] = [{ index: result[0].index, confident: false, expParts: [] }];
+		let tag: ConfidentLine[] = [{ index: result[0].index, line, confident: false }];
+		IfCondition.SplitExpression(line);
+
 		for (let i = 1; i < result.length; i++) {
-			const tempLine = option.allLines[result[i].index] as ICommandLine;
-			switch (tempLine.command.text) {
-				case ".ELSEIF":
+			let lineIndex = result[i].index;
+			const tempLine = option.allLines[lineIndex] as ICommandLine;
+			let searchIndex = commands.indexOf(tempLine.command.text);
+			if (searchIndex < index)
+				continue;
+
+			switch (searchIndex) {
+				case 0:
+					IfCondition.SplitExpression(tempLine);
 					break;
-				case ".ELSE":
-				case ".ENDIF":
+				case 1:
+					index = 2;
 					break;
 			}
-
-			tag.push({ index: result[i].index, confident: false, expParts: [] });
+			tag.push({
+				index: lineIndex,
+				line: option.allLines[lineIndex] as ICommandLine,
+				confident: false
+			});
+			option.allLines[lineIndex].compileType = LineCompileType.Finished;
 		}
 
 		line.tag = tag;
@@ -67,20 +80,10 @@ export class IfCondition {
 		const line = option.allLines[option.lineIndex] as ICommandLine;
 		let tag: ConfidentLine[] = line.tag;
 		for (let i = 0; i < tag.length - 1; i++) {
-			const tempLine = option.allLines[tag[i].index] as ICommandLine;
-			if (tempLine.command.text !== ".ELSE") {
-				if (!tempLine.expParts[0]) {
-					let errorMsg = Localization.GetMessage("Command arguments error");
-					MyDiagnostic.PushException(tempLine.command, errorMsg);
-					tempLine.compileType = LineCompileType.Error;
-				}
-
-				continue;
-			}
-
-			ExpressionUtils.CheckLabelsAndShowError(tempLine.expParts[0]);
+			const tempLine = tag[i].line as ICommandLine;
+			if (tempLine.expParts[0] && ExpressionUtils.CheckLabelsAndShowError(tempLine.expParts[0]))
+				tempLine.compileType = LineCompileType.Error;
 		}
-		return;
 	}
 
 	private static async Compile_If(option: DecodeOption) {
@@ -89,14 +92,13 @@ export class IfCondition {
 		let tag: ConfidentLine[] = line.tag;
 
 		for (let i = 0; i < tag.length - 1; i++) {
-			const tempLine = option.allLines[tag[i].index] as ICommandLine;
+			const tempLine = tag[i].line as ICommandLine;
 			if (tempLine.command.text === ".ELSE") {
 				tag[i].confident = true;
 				break;
 			}
 
-			let expParts = i == 0 ? tempLine.tag[1] : tempLine.tag;
-			let value = ExpressionUtils.GetExpressionValue(expParts, ExpressionResult.GetResultAndShowError, option);
+			let value = ExpressionUtils.GetExpressionValue(tempLine.expParts[0], ExpressionResult.GetResultAndShowError, option);
 			if (value.success && value.value) {
 				tag[i].confident = true;
 				break;
@@ -115,20 +117,24 @@ export class IfCondition {
 		let index = 0;
 		let commands = [".ELSE", ".ENDIF"];
 
-		let tag: ConfidentLine[] = [{ index: result[0].index, confident: false }];
+		let tag: ConfidentLine[] = [{ index: result[0].index, line, confident: false }];
 		for (let i = 1; i < result.length; i++) {
-			let temp = commands.indexOf(result[i].match);
+			const tempLine = option.allLines[result[i].index] as ICommandLine;
+			let temp = commands.indexOf(tempLine.command.text);
 			if (temp < index)
 				continue;
 
 			if (temp === 0)
-				index++;
+				index = 1;
 
-			tag.push({ index: result[i].index, confident: false });
+			tag.push({
+				line: tempLine,
+				index: result[i].index,
+				confident: false
+			});
 		}
 
 		line.tag = tag;
-		return;
 	}
 
 	private static Compile_IfDef(option: DecodeOption) {
@@ -161,20 +167,42 @@ export class IfCondition {
 	}
 	//#endregion IFDEF IFNDEF 命令
 
+	//#region 移除行
 	/**
 	 * 移除行
 	 * @param option 
-	 * @param indexs 
+	 * @param lines 
 	 */
-	private static RemoveBaseLines(option: DecodeOption, indexs: ConfidentLine[]) {
-		option.allLines.splice(indexs[indexs.length - 1].index, 1);
-		for (let i = indexs.length - 2; i >= 0; i--) {
-			if (!indexs[i].confident)
-				option.allLines.splice(indexs[i].index, indexs[i + 1].index - indexs[i].index);
-			else
-				option.allLines.splice(indexs[i].index, 1);
+	private static RemoveBaseLines(option: DecodeOption, lines: ConfidentLine[]) {
+		option.allLines.splice(lines[lines.length - 1].index, 1);
+		for (let i = lines.length - 2; i >= 0; --i) {
+			const line = lines[i];
+			if (line.confident) {
+				option.allLines.splice(line.index, 1);
+			} else {
+				option.allLines.splice(line.index, lines[i + 1].index - line.index);
+			}
 		}
 		option.lineIndex--;
 	}
+	//#endregion 移除行
+
+	//#region 分析行表达式
+	private static SplitExpression(line: ICommandLine) {
+		if (line.compileType === LineCompileType.Error) {
+			delete (line.tag);
+			return;
+		}
+
+		let expression: Token[] = line.tag;
+		let temp = ExpressionUtils.SplitAndSort(expression[0]);
+		if (temp)
+			line.expParts[0] = temp;
+		else
+			line.compileType = LineCompileType.Error;
+
+		delete (line.tag);
+	}
+	//#endregion 分析行表达式
 
 }

@@ -18,12 +18,12 @@ export class Hexadecimal {
 
 	private static FirstAnalyse_Hex(option: CommandDecodeOption) {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
-		let token = option.expressions[0];
-		line.tag = token;
+		let expressions: Token[] = line.tag;
+		line.tag = expressions[0];
 
-		if (!/^[ 0-9a-fA-F]+$/.test(token.text)) {
+		if (!/^[ 0-9a-fA-F]+$/.test(expressions[0].text)) {
 			let errorMsg = Localization.GetMessage("Command arguments error");
-			MyDiagnostic.PushException(token, errorMsg);
+			MyDiagnostic.PushException(expressions[0], errorMsg);
 			line.compileType = LineCompileType.Error;
 			return;
 		}

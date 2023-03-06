@@ -26,7 +26,8 @@ export class Compiler {
 	//#region 解析文本
 	static async DecodeText(files: { text: string, filePath: string }[]) {
 
-		await Compiler.WaitCompileFinished();
+		if (Compiler.compiling)
+			return;
 
 		Compiler.compiling = true;
 		Compiler.enviroment = Compiler.editorEnv;
@@ -60,7 +61,8 @@ export class Compiler {
 	 */
 	static async CompileText(filePath: string, text: string) {
 
-		await Compiler.WaitCompileFinished();
+		if (Compiler.compiling)
+			return;
 
 		Compiler.compiling = true;
 		Compiler.enviroment = Compiler.compilerEnv;
@@ -381,19 +383,6 @@ export class Compiler {
 		Compiler.enviroment.orgAddress += this.result.length;
 	}
 	//#endregion 给文件的地址增加偏移
-
-	//#region 等待编译结束
-	private static WaitCompileFinished(): Promise<void> {
-		return new Promise((resolve, reject) => {
-			let temp = setInterval(() => {
-				if (!Compiler.compiling) {
-					clearInterval(temp);
-					resolve();
-				}
-			}, 200);
-		});
-	}
-	//#endregion 等待编译结束
 
 }
 

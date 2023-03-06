@@ -57,8 +57,9 @@ export class DataGroupCommand {
 
 	private static FirstAnalyse_DataGroup(option: CommandDecodeOption) {
 		const line = option.allLines[option.lineIndex] as ICommandLine;
+		let expressions: Token[] = line.tag;
 		let lines = Commands.CollectBaseLines(option);
-		let label = LabelUtils.CreateLabel(option.expressions[0], option);
+		let label = LabelUtils.CreateLabel(expressions[0], option);
 		if (!label) {
 			line.compileType = LineCompileType.Error;
 			return;

@@ -3,6 +3,7 @@ import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
 import { MyDiagnostic } from "../Base/MyException";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
+import { Token } from "../Base/Token";
 import { Localization } from "../I18n/Localization";
 import { LineCompileType, LineType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "./Commands";
@@ -10,7 +11,7 @@ import { Commands, ICommandLine } from "./Commands";
 export class Include {
 
 	static Initialize() {
-		
+
 		if (!FileUtils.ReadFile) {
 			console.error("File interface not implemented");
 			return;
@@ -54,6 +55,8 @@ export class Include {
 
 	private static async FirstAnalyse_Incbin(option: CommandDecodeOption) {
 		const line = option.allLines[option.lineIndex] as ICommandLine;
+		let expressions: Token[] = line.tag;
+
 		const temp = await Include.ChechFile(option);
 		if (!temp.exsist) {
 			line.compileType = LineCompileType.Error;
@@ -62,10 +65,10 @@ export class Include {
 
 		line.tag = temp.path;
 		let temp2;
-		if (option.expressions[1] && (temp2 = ExpressionUtils.SplitAndSort(option.expressions[1])))
+		if (expressions[1] && (temp2 = ExpressionUtils.SplitAndSort(expressions[1])))
 			line.expParts[0] = temp2;
 
-		if (option.expressions[2] && (temp2 = ExpressionUtils.SplitAndSort(option.expressions[2])))
+		if (expressions[2] && (temp2 = ExpressionUtils.SplitAndSort(expressions[2])))
 			line.expParts[1] = temp2;
 
 	}
@@ -102,16 +105,17 @@ export class Include {
 	/**检查文件是否存在 */
 	private static async ChechFile(option: CommandDecodeOption) {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
+		let expressions: Token[] = line.tag;
 		let result = { exsist: false, path: "" };
 
-		if (!Include.CheckString(option.expressions[0].text)) {
+		if (!Include.CheckString(expressions[0].text)) {
 			let errorMsg = Localization.GetMessage("Command arguments error");
-			MyDiagnostic.PushException(option.expressions[0], errorMsg);
+			MyDiagnostic.PushException(expressions[0], errorMsg);
 			line.compileType = LineCompileType.Error;
 			return result;
 		}
 
-		let token = option.expressions[0].Substring(1, option.expressions[0].length - 2);
+		let token = expressions[0].Substring(1, expressions[0].length - 2);
 		if (await FileUtils.PathType(token.text) === "file") {
 			result.exsist = true;
 			result.path = token.text;
@@ -123,8 +127,8 @@ export class Include {
 
 		result.exsist = (await FileUtils.PathType(result.path)) === "file";
 		if (!result.exsist) {
-			let errorMsg = Localization.GetMessage("File {0} is not exist", option.expressions[0].text);
-			MyDiagnostic.PushException(option.expressions[0], errorMsg);
+			let errorMsg = Localization.GetMessage("File {0} is not exist", expressions[0].text);
+			MyDiagnostic.PushException(expressions[0], errorMsg);
 		}
 		return result;
 	}

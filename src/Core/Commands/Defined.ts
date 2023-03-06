@@ -1,6 +1,7 @@
 import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { LabelType, LabelUtils } from "../Base/Label";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
+import { Token } from "../Base/Token";
 import { HighlightToken, HighlightType, LineCompileType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "./Commands";
 
@@ -17,11 +18,12 @@ export class Defined {
 	}
 
 	private static FirstAnalyse_Def(option: CommandDecodeOption) {
-		let line = option.allLines[option.lineIndex] as ICommandLine;
-		line.label = LabelUtils.CreateLabel(option.expressions[0], option);
+		const line = option.allLines[option.lineIndex] as ICommandLine;
+		let expressions: Token[] = line.tag;
+		line.label = LabelUtils.CreateLabel(expressions[0], option);
 		if (line.label) line.label.labelType = LabelType.Defined;
 
-		let temp = ExpressionUtils.SplitAndSort(option.expressions[1]);
+		let temp = ExpressionUtils.SplitAndSort(expressions[1]);
 		if (temp)
 			line.expParts[0] = temp;
 		else

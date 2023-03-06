@@ -1,5 +1,6 @@
 import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
+import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { LineCompileType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "./Commands";
@@ -17,9 +18,10 @@ export class Repeat {
 
 	private static FirstAnalyse(option: CommandDecodeOption) {
 		const line = option.allLines[option.lineIndex] as ICommandLine;
+		let expressions: Token[] = line.tag;
 		line.tag = option.includeCommandLines![1].index - option.includeCommandLines![0].index;
 
-		let temp = ExpressionUtils.SplitAndSort(option.expressions[0]);
+		let temp = ExpressionUtils.SplitAndSort(expressions[0]);
 		if (temp)
 			line.expParts[0] = temp;
 		else

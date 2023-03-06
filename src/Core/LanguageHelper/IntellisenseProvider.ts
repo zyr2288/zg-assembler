@@ -225,16 +225,14 @@ export class IntellisenseProvider {
 	/**添加所有编译器命令 */
 	static UpdateCommandCompletions() {
 
-		for (let i = 0; i < Commands.allCommandNames.length; ++i) {
-			const command = Commands.allCommandNames[i];
+		Commands.allCommandNames.forEach(value => {
 			let completion = new Completion({
-				showText: command,
-				insertText: command.substring(1),
+				showText: value,
+				insertText: value.substring(1),
 				type: CompletionType.Command
 			});
 			IntellisenseProvider.commandCompletions.push(completion);
-		}
-
+		});
 	}
 
 	/**获取汇编指令地址模式 */

@@ -40,10 +40,10 @@ export class Platform {
 
 		Platform.regexString = "((\\s+|^)((?<command>";
 		let temp: string;
-		for (let i = 0; i < Commands.allCommandNames.length; ++i) {
-			temp = Utils.TransformRegex(Commands.allCommandNames[i]) + "|";
+		Commands.allCommandNames.forEach((value) => {
+			temp = Utils.TransformRegex(value) + "|";
 			Platform.regexString += temp;
-		}
+		});
 
 		Platform.regexString = Platform.regexString.substring(0, Platform.regexString.length - 1);
 		Platform.regexString += ")|";

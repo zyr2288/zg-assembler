@@ -119,6 +119,7 @@ export class LSPUtils {
 	}
 	//#endregion 获取编译的String
 
+	//#region 状态栏显示文本
 	static StatueBarShowText(text: string, timer = 3000) {
 		if (LSPUtils.statusTimer)
 			clearTimeout(LSPUtils.statusTimer);
@@ -132,5 +133,19 @@ export class LSPUtils {
 		if (timer > 0)
 			LSPUtils.statusTimer = setTimeout(() => { LSPUtils.statusBarItem?.hide(); }, timer);
 	}
+	//#endregion 状态栏显示文本
+
+	//#region 等待编译完成
+	static async WaitingCompileFinished(): Promise<void> {
+		return new Promise((resolve, reject) => {
+			let temp = setInterval(() => {
+				if (!LSPUtils.assembler.compiler.compiling) {
+					clearInterval(temp);
+					resolve();
+				}
+			}, 200);
+		});
+	}
+	//#endregion 等待编译完成
 
 }

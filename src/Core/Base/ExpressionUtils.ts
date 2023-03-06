@@ -410,7 +410,7 @@ export class ExpressionUtils {
 			return result;
 		}
 
-		let regex = /((?<!\\)")|\(|\)|\!=|==|\>\>|\>=|\<\<|\<=|\>|\<|\+|\-|\*|\/|%|&&|&|\|\||\||\^/g;
+		let regex = /((?<!\\)")|\(|\)|\!=|==|\>\>|\>=|\<\<|\<=|\>|\<|=|\+|\-|\*|\/|%|&&|&|\|\||\||\^/g;
 
 		let tokens = expression.Split(regex, { saveToken: true });
 		let isLabel = true;
@@ -503,6 +503,11 @@ export class ExpressionUtils {
 
 					part.type = ExpressionUtils.onlyOnePriority.get(part.token.text)!;
 					isLabel = true;
+					break;
+				case "=":
+					let errorMsg = Localization.GetMessage("Expression error");
+					MyDiagnostic.PushException(part.token, errorMsg);
+					result.success = false;
 					break;
 				default:
 					if (!isLabel) {
