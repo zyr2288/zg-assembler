@@ -2,14 +2,21 @@
 	"scopeName": "source.asm.zg-assembly",
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
 	"patterns": [
-		{ "include": "#keywords" },
+		{ "include": "#comment" },
 		{ "include": "#strings" },
 		{ "include": "#asmCommand" },
-		{ "include": "#comment" },
+		{ "include": "#defined" },
+		{ "include": "#dataGroup" },
+		{ "include": "#function" },
 		{ "include": "#number" },
-		{ "include": "#operator" }
+		{ "include": "#variable" }
 	],
 	"repository": {
+		"comment": {
+			"name": "comment.base",
+			"begin": ";",
+			"end": "$"
+		},
 		"strings": {
 			"name": "string.quoted.double.zg-assembly",
 			"begin": "\"",
@@ -23,7 +30,40 @@
 		},
 		"asmCommand": {
 			"name": "keyword.other.zg-assembly.commands",
-			"match": "(?i)(^|\\s+)(\\.BASE|\\.ORG|\\.DEF|\\.IF|\\.INCLUDE|\\.INCBIN|\\.ELSEIF|\\.ELSE|\\.ENDIF|\\.IFDEF|\\.IFNDEF|\\.DB|\\.DW|\\.DL|\\.DBG|\\.DWG|\\.DLG|\\.ENDD|\\.REPEAT|\\.ENDR|\\.MACRO|\\.ENDM|\\.MSG)\\s+"
+			"match": "(?i)(^|\\s+)(\\.BASE|\\.ORG|\\.IF|\\.INCLUDE|\\.INCBIN|\\.ELSEIF|\\.ELSE|\\.ENDIF|\\.IFDEF|\\.IFNDEF|\\.DB|\\.DW|\\.DL|\\.ENDD|\\.REPEAT|\\.ENDR|\\.ENDM|\\.MSG)\\s+"
+		},
+		"defined": {
+			"name": "keyword.other.zg-assembly.commands",
+			"begin": "(?i)(^|\\s+)\\.DEF\\s+",
+			"end": "(?=\\,|;)|$",
+			"patterns": [
+				{
+					"name": "variable.other.enummember",
+					"match": "[^,]+"
+				}
+			]
+		},
+		"dataGroup": {
+			"name": "keyword.other.zg-assembly.commands",
+			"begin": "(?i)(^|\\s+)(\\.DBG|\\.DWG|\\.DLG)\\s+",
+			"end": "(?=;)|$",
+			"patterns": [
+				{
+					"name": "entity.name.class",
+					"match": "[^;]+"
+				}
+			]
+		},
+		"function": {
+			"name": "keyword.other.zg-assembly.commands",
+			"begin": "(?i)(^|\\s+)\\.MACRO\\s+",
+			"end": "(?=\\,|;)|$",
+			"patterns": [
+				{
+					"name": "entity.name.function",
+					"match": "[^,]+"
+				}
+			]
 		},
 		"number": {
 			"patterns": [
@@ -40,26 +80,21 @@
 					"match": "\\b[0-9]+\\b"
 				},
 				{
-					"name": "keyword.other.zg-assembly",
-					"begin": "(?i)\\.HEX\\s+",
-					"end": "(?=(;.*))|$",
+					"name": "keyword.other.zg-assembly.commands",
+					"begin": "(?i)(^|\\s+)\\.HEX\\s+",
+					"end": "(?=;)|$",
 					"patterns": [
 						{
 							"name": "constant.numeric.hex.zg-assembly",
-							"match": "[0-9a-fA-F\\s+]+"
+							"match": "[0-9a-fA-F ]+"
 						}
 					]
 				}
 			]
 		},
-		"operator": {
+		"variable": {
 			"name": "variable.name.zg-assembly",
 			"match": "[^\\+\\-\\*\\/\\>\\<\\(\\)\\,\\#\\=\\!\\[\\]\\&\\|]"
-		},
-		"comment": {
-			"name": "comment.base",
-			"begin": ";",
-			"end": "$"
 		}
 	}
 }

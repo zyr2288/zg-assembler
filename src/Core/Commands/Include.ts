@@ -78,7 +78,7 @@ export class Include {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
 		let temp = await FileUtils.ReadFile(line.tag);
 
-		line.SetAddress();
+		Compiler.SetAddress(line);
 
 		let start = 0;
 		let result = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.GetResultAndShowError, option);
@@ -93,7 +93,7 @@ export class Include {
 		for (let i = start, j = 0; i < temp.length && j < length; ++i, ++j)
 			line.result[j] = temp[i];
 
-		line.AddAddress();
+		Compiler.AddAddress(line);
 		line.compileType = LineCompileType.Finished;
 	}
 

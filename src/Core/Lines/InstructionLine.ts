@@ -19,12 +19,6 @@ export interface IInstructionLine extends ICommonLine {
 	exprParts: ExpressionPart[][];
 	addressingMode: IAddressingMode;
 	result: number[];
-	/**设定结果值 */
-	SetResult: (value: number, index: number, length: number) => number;
-	/**地址增加偏移 */
-	AddAddress: () => void;
-	/**设定地址 */
-	SetAddress: () => boolean;
 }
 
 export class InstructionLine {
@@ -71,7 +65,7 @@ export class InstructionLine {
 	static ThirdAnalyse(option: DecodeOption): void {
 		let line = option.allLines[option.lineIndex] as IInstructionLine;
 		for (let i = 0; i < line.exprParts.length; ++i)
-			ExpressionUtils.CheckLabelsAndShowError(line.exprParts[i]);
+			ExpressionUtils.CheckLabelsAndShowError(line.exprParts[i], option);
 	}
 	//#endregion 第三次分析，并检查表达式是否有误
 
@@ -79,18 +73,18 @@ export class InstructionLine {
 	/**编译汇编指令 */
 	static CompileInstruction(option: DecodeOption): void {
 		const line = option.allLines[option.lineIndex] as IInstructionLine;
-		line.SetAddress();
+		Compiler.SetAddress(line);
 
 		if (line.addressingMode.spProcess) {
 			line.addressingMode.spProcess(option);
-			line.AddAddress();
+			Compiler.AddAddress(line);
 			return;
 		}
 
 		line.compileType = LineCompileType.Finished;
 		if (!line.exprParts[0]) {
-			line.SetResult(line.addressingMode.opCode[0]!, 0, line.addressingMode.opCodeLength[0]!);
-			line.AddAddress();
+			Compiler.SetResult(line, line.addressingMode.opCode[0]!, 0, line.addressingMode.opCodeLength[0]!);
+			Compiler.AddAddress(line);
 			return;
 		}
 
@@ -103,7 +97,7 @@ export class InstructionLine {
 		} else {
 			let orgLength: number, length: number;
 			orgLength = length = Utils.GetNumberByteLength(temp.value);
-			if (line.result.length != 0) {
+			if (line.result.length !== 0) {
 				length = line.result.length - 1;
 			} else {
 				if (!line.addressingMode.opCode[length]) {
@@ -117,8 +111,9 @@ export class InstructionLine {
 				}
 			}
 
-			line.SetResult(line.addressingMode.opCode[length]!, 0, line.addressingMode.opCodeLength[length]!);
-			let tempValue = line.SetResult(temp.value, line.addressingMode.opCodeLength[length]!, length);
+			let opCodeLength = line.addressingMode.opCodeLength[length]!;
+			Compiler.SetResult(line, line.addressingMode.opCode[length]!, 0, opCodeLength);
+			let tempValue = Compiler.SetResult(line, temp.value, opCodeLength, length);
 
 			if (orgLength > length || temp.value < 0) {
 				let errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.value, tempValue);
@@ -127,7 +122,7 @@ export class InstructionLine {
 			}
 		}
 
-		line.AddAddress();
+		Compiler.AddAddress(line);
 	}
 	//#endregion 编译汇编指令
 

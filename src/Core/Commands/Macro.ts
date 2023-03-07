@@ -11,16 +11,21 @@ import { Platform } from "../Platform/Platform";
 import { Commands, ICommandLine } from "./Commands";
 
 export interface IMacroLine extends ICommonLine {
+	orgAddress: number;
+	baseAddress: number;
 	label?: ILabel;
 	macro: IMacro;
 	args: ExpressionPart[][];
 	expression: Token;
+	result: number[];
 }
 
 export class IMacro {
 	name!: Token;
-	params: ILabel[] = [];
-	paramsHashs = new Set<number>();
+
+	params = new Map<number, ILabel>();
+	paramHashIndex: number[] = [];
+
 	labels = new Map<number, ILabel>();
 	lines: ICommonLine[] = [];
 	comment?: string;
@@ -39,14 +44,17 @@ export class MacroUtils {
 			LabelUtils.CreateLabel(labelToken, option);
 
 		let macro = Compiler.enviroment.allMacro.get(macroToken.text)!;
+		// @ts-ignore
 		let macroLine = {
 			macro: macro,
 			args: [],
 			expression: expression,
 			type: LineType.Macro,
 			orgText: option.allLines[option.lineIndex].orgText,
-			compileType: LineCompileType.None
+			compileType: LineCompileType.None,
 		} as IMacroLine;
+
+		macroLine.GetTokens = () => [{ token: macroToken, type: HighlightType.Macro }];
 		option.allLines[option.lineIndex] = macroLine;
 
 		let parts: Token[] = [];
@@ -54,7 +62,7 @@ export class MacroUtils {
 			parts = expression.Split(/\,/g);
 		}
 
-		if (parts.length != macro.params.length) {
+		if (parts.length != macro.params.size) {
 			let errorMsg = Localization.GetMessage("Macro arguments error");
 			MyDiagnostic.PushException(macroToken, errorMsg);
 			return;
@@ -98,22 +106,31 @@ export class MacroUtils {
 		if (params.length !== 0) {
 			for (let i = 0; i < params.length; ++i) {
 				let part = params[i];
-				let label: ILabel = { token: part, labelType: LabelType.Defined };
+				let label: ILabel = { token: part, labelType: LabelType.Variable };
+				if (!LabelUtils.CheckIllegal(part, false)) {
+					let errorMsg = Localization.GetMessage("Label {0} illegal", part.text);
+					MyDiagnostic.PushException(part, errorMsg);
+					continue;
+				}
 
 				let hash = Utils.GetHashcode(part.text);
-				if (macro.paramsHashs.has(hash)) {
+				if (macro.params.has(hash)) {
 					let errorMsg = Localization.GetMessage("Label {0} is already defined", part.text);
 					MyDiagnostic.PushException(part, errorMsg);
 					continue;
 				}
-				macro.paramsHashs.add(hash);
-				macro.params.push(label);
+				macro.params.set(hash, label);
+				macro.paramHashIndex.push(hash);
 			}
 
 		}
 
 		Compiler.enviroment.allMacro.set(name.text, macro);
-		let allSet = Compiler.enviroment.fileMacros.get(name.fileHash) ?? new Set();
+		let allSet = Compiler.enviroment.fileMacros.get(name.fileHash);
+		if (!allSet) {
+			allSet = new Set();
+			Compiler.enviroment.fileMacros.set(name.fileHash, allSet);
+		}
 		allSet.add(name.text);
 
 		Compiler.enviroment.UpdateMacroRegexString();
@@ -133,12 +150,15 @@ export class MacroUtils {
 		for (let i = 0; i < line.args.length; ++i) {
 			let result = ExpressionUtils.GetExpressionValue(line.args[i], ExpressionResult.GetResultAndShowError, option);
 			if (result.success) {
-				macro.params[i].value = result.value;
+				macro.params.get(macro.paramHashIndex[i])!.value = result.value;
 			}
 		}
 
-		let tempOption: DecodeOption = { allLines: macro.lines, lineIndex: 0, macro: macro };
+		// 编译完成并加入结果行
+		let tempOption: DecodeOption = { allLines: macro.lines, lineIndex: 0, macro };
 		await Compiler.CompileResult(tempOption);
+		option.allLines.splice(option.lineIndex + 1, 0, ...macro.lines);
+
 		line.compileType = LineCompileType.Finished;
 	}
 	//#endregion 编译自定义函数
@@ -163,6 +183,7 @@ export class MacroCommand {
 		let expressions: Token[] = line.tag;
 		let name = expressions[0];
 		expressions.splice(0, 1);
+
 		let macro = MacroUtils.CreateMacro(name, expressions);
 		if (!macro) {
 			line.compileType = LineCompileType.Error;
@@ -170,16 +191,24 @@ export class MacroCommand {
 		}
 
 		line.tag = macro;
+		line.GetTokens = MacroCommand.GetToken.bind(line);
 
 		macro.comment = line.comment;
 		macro.lines = Commands.CollectBaseLines(option);
+		Compiler.enviroment.SetRange(line.command.fileHash, {
+			type: "Macro",
+			key: macro.name.text,
+			start: option.includeCommandLines![0].index,
+			end: option.includeCommandLines![1].index,
+		});
+
 		line.tag = macro;
 		let tempOption: DecodeOption = {
 			allLines: macro.lines,
 			lineIndex: 0,
 			macro: macro
 		};
-		line.GetTokens = MacroCommand.GetToken.bind(line);
+
 		await Compiler.FirstAnalyse(tempOption);
 	}
 
@@ -209,8 +238,11 @@ export class MacroCommand {
 		let macro: IMacro = this.tag;
 		let result: HighlightToken[] = [];
 
-		result.push({ token: macro.name, type: HighlightType.Macro });
-
+		for (let i = 0; i < macro.lines.length; ++i) {
+			let tokens = macro.lines[i].GetTokens?.();
+			if (tokens)
+				result.push(...tokens);
+		}
 		return result;
 	}
 }

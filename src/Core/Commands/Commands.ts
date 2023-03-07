@@ -64,13 +64,6 @@ export interface ICommandLine extends ICommonLine {
 	result: number[];
 	/**附加数据 */
 	tag?: any;
-
-	/**设定结果值 */
-	SetResult: (value: number, index: number, length: number) => number;
-	/**地址增加偏移 */
-	AddAddress: () => void;
-	/**设定地址 */
-	SetAddress: () => boolean;
 }
 
 export class Commands {

@@ -39,6 +39,7 @@ export interface IOnlyLabel extends ICommonLine {
 
 export interface HightlightRange {
 	type: "DataGroup" | "Macro";
+	key: string;
 	start: number;
 	end: number;
 }

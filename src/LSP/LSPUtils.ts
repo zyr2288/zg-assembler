@@ -11,6 +11,8 @@ export interface WordType {
 export class LSPUtils {
 
 	static assembler: Assembler;
+	static fileUpdateFinished = true;
+
 	private static statusBarItem?: vscode.StatusBarItem;
 	private static statusTimer?: NodeJS.Timeout;
 
@@ -139,7 +141,7 @@ export class LSPUtils {
 	static async WaitingCompileFinished(): Promise<void> {
 		return new Promise((resolve, reject) => {
 			let temp = setInterval(() => {
-				if (!LSPUtils.assembler.compiler.compiling) {
+				if (LSPUtils.fileUpdateFinished) {
 					clearInterval(temp);
 					resolve();
 				}

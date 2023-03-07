@@ -21,10 +21,9 @@ export class Highlighting {
 	}
 
 	private static async HightlightingDocument(document: vscode.TextDocument, range: vscode.Range, token: vscode.CancellationToken) {
-
 		const tokenBuilder = new vscode.SemanticTokensBuilder(Highlighting.leagend);
-
-		let highlightingTokens = await LSPUtils.assembler.languageHelper.highlightingProvider.HighlightDocument(document.uri.fsPath);
+		await LSPUtils.WaitingCompileFinished();
+		let highlightingTokens = LSPUtils.assembler.languageHelper.highlightingProvider.HighlightDocument(document.uri.fsPath);
 		for (let i = 0; i < highlightingTokens.length; ++i) {
 			const token = highlightingTokens[i];
 			tokenBuilder.push(token.line, token.start, token.length, token.type);
@@ -32,4 +31,6 @@ export class Highlighting {
 
 		return tokenBuilder.build();
 	}
+
+
 }

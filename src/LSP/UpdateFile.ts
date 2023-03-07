@@ -1,13 +1,13 @@
 import * as vscode from "vscode";
-import { ConfigUtils } from "./ConfigUtils";
 import { LSPUtils } from "./LSPUtils";
-
 
 const FreshTime = 1000;
 
 /**更新文件的自动大写以及监视文件改动更新 Label以及错误等 */
 export class UpdateFile {
 
+	private static fileUpdateThreadId: NodeJS.Timer;
+	private static updateFiles = new Map<string, string>();
 	private static errorCollection: vscode.DiagnosticCollection;
 
 	static async Initialize() {
@@ -31,9 +31,7 @@ export class UpdateFile {
 			tempFiles.push({ text, filePath: files[i].fsPath });
 		}
 
-		await LSPUtils.WaitingCompileFinished();
-		await LSPUtils.assembler.LoadAllFile(tempFiles);
-
+		await LSPUtils.assembler.compiler.DecodeText(tempFiles);
 		UpdateFile.UpdateDiagnostic();
 	}
 
@@ -59,19 +57,21 @@ export class UpdateFile {
 			}
 		}
 
-		await LSPUtils.assembler.languageHelper.documentChange.WatchFileUpdate(event.document.getText(), event.document.uri.fsPath);
-		let diagnostic = LSPUtils.assembler.languageHelper.documentChange.GetDiagnostics();
-		UpdateFile.errorCollection.clear();
-		diagnostic.forEach((msgs, filePath) => {
-			let uri = vscode.Uri.file(filePath);
-			let dias: vscode.Diagnostic[] = [];
-			for (let i = 0; i < msgs.length; ++i) {
-				const msg = msgs[i];
-				let range = new vscode.Range(msg.line, msg.start, msg.line, msg.start + msg.length);
-				dias.push(new vscode.Diagnostic(range, msg.message));
-			}
-			UpdateFile.errorCollection.set(uri, dias);
-		});
+		UpdateFile.updateFiles.set(event.document.uri.fsPath, event.document.getText());
+
+		LSPUtils.fileUpdateFinished = false;
+		clearTimeout(UpdateFile.fileUpdateThreadId);
+		UpdateFile.fileUpdateThreadId = setTimeout(async () => {
+			let files: { text: string, filePath: string }[] = [];
+			UpdateFile.updateFiles.forEach((text, filePath) => {
+				files.push({ text, filePath });
+			});
+			await LSPUtils.assembler.compiler.DecodeText(files);
+			UpdateFile.UpdateDiagnostic();
+			UpdateFile.updateFiles.clear();
+			LSPUtils.fileUpdateFinished = true;
+		}, FreshTime);
+
 	}
 
 	/**更新错误 */
@@ -104,10 +104,10 @@ export class UpdateFile {
 					diagnostic = [];
 					result.set(warning.filePath, diagnostic);
 				}
-	
+
 				if (warning.line < 0)
 					continue;
-	
+
 				let range = new vscode.Range(warning.line, warning.start, warning.line, warning.start + warning.length);
 				diagnostic.push(new vscode.Diagnostic(range, warning.message, vscode.DiagnosticSeverity.Warning));
 			}

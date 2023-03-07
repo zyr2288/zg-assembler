@@ -360,9 +360,13 @@ export class ExpressionUtils {
 	//#region 将所有表达式部分转换成高亮Token
 	static GetHighlightingTokens(parts: ExpressionPart[][]) {
 		let result: HighlightToken[] = [];
-		for (let i = 0; i < parts.length; ++i)
-			for (let j = 0; j < parts[i].length; ++j)
-				result.push({ token: parts[i][j].token, type: parts[i][j].highlightingType });
+		for (let i = 0; i < parts.length; ++i){
+			for (let j = 0; j < parts[i].length; ++j) {
+				if (parts[i][j].type === PriorityType.Level_1_Label)
+					result.push({ token: parts[i][j].token, type: parts[i][j].highlightingType });
+			}
+		}
+
 
 		return result;
 	}

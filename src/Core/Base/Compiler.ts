@@ -1,5 +1,5 @@
 import { Commands, ICommandLine } from "../Commands/Commands";
-import { MacroUtils } from "../Commands/Macro";
+import { IMacroLine, MacroUtils } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
 import { HighlightType, ICommonLine, IOnlyLabel, LineCompileType, LineType, SplitLine } from "../Lines/CommonLine";
 import { IInstructionLine, InstructionLine } from "../Lines/InstructionLine";
@@ -41,15 +41,14 @@ export class Compiler {
 
 			let lines = Compiler.SplitTexts(fileHash, files[index].text);
 
-			Compiler.enviroment.allBaseLines.set(fileHash, lines);
 			option.allLines.push(...lines);
+			Compiler.enviroment.allBaseLines.set(fileHash, option.allLines);
 		}
 
 		await Compiler.FirstAnalyse(option);
 		await Compiler.SecondAnalyse(option);
 		await Compiler.ThirdAnalyse(option);
 		Compiler.compiling = false;
-
 	}
 	//#endregion 解析文本
 
@@ -73,8 +72,8 @@ export class Compiler {
 		Compiler.enviroment.ClearAll();
 
 		let lines = Compiler.SplitTexts(fileHash, text);
-		Compiler.enviroment.allBaseLines.set(fileHash, lines);
 		option.allLines.push(...lines);
+		Compiler.enviroment.allBaseLines.set(fileHash, option.allLines);
 
 		await Compiler.FirstAnalyse(option);
 		await Compiler.SecondAnalyse(option);
@@ -95,142 +94,7 @@ export class Compiler {
 	}
 	//#endregion 编译所有文本
 
-	//#region 第一次分析
-	/**第一次分析 */
-	static async FirstAnalyse(option: DecodeOption) {
-
-		for (let i = 0; i < option.allLines.length; ++i) {
-			const line = option.allLines[i];
-			if (line.compileType == LineCompileType.Error || line.compileType === LineCompileType.Finished)
-				continue;
-
-			option.lineIndex = i;
-			switch (line.type) {
-				case LineType.Instruction:
-					const instructionLine = line as IInstructionLine;
-					instructionLine.orgAddress = -1;
-					instructionLine.baseAddress = 0;
-					InstructionLine.FirstAnalyse(option);
-					break;
-				case LineType.Command:
-					const commandLine = line as IInstructionLine;
-					commandLine.orgAddress = -1;
-					commandLine.baseAddress = 0;
-					Commands.FirstAnalyse(option as CommandDecodeOption);
-					break;
-				case LineType.Variable:
-					VariableLineUtils.FirstAnalyse(option);
-					break;
-			}
-
-			i = option.lineIndex;
-		}
-
-	}
-	//#endregion 第一次分析
-
-	//#region 第二次分析
-	static async SecondAnalyse(option: DecodeOption) {
-		for (let i = 0; i < option.allLines.length; i++) {
-			let line = option.allLines[i];
-			if (line.compileType === LineCompileType.Error || line.compileType === LineCompileType.Finished)
-				continue;
-
-			option.lineIndex = i;
-			switch (line.type) {
-				case LineType.Unknow:
-					let match = new RegExp(Compiler.enviroment.macroRegexString).exec(line.orgText.text);
-					let macroName = match?.groups?.["macro"];
-					if (macroName) {
-						let pre = line.orgText.Substring(0, match!.index);
-						let currect = line.orgText.Substring(match!.index, match![0].length);
-						let after = line.orgText.Substring(match!.index + match![0].length);
-						MacroUtils.MatchMacroLine(pre, currect, after, option);
-					} else {
-						option.allLines[i].type = LineType.OnlyLabel;
-						let label = LabelUtils.CreateLabel(option.allLines[i].orgText, option);
-						if (label) {
-							label.labelType = LabelType.Label;
-							(option.allLines[i] as IOnlyLabel).label = label;
-							option.allLines[i].GetTokens = () => [{ token: label!.token, type: HighlightType.Label }];
-						}
-					}
-					break;
-				case LineType.Command:
-					await Commands.SecondAnalyse(option);
-					break;
-			}
-			i = option.lineIndex;
-		}
-	}
-	//#endregion 第二次分析
-
-	//#region 第三次分析
-	static async ThirdAnalyse(option: DecodeOption) {
-		for (let i = 0; i < option.allLines.length; ++i) {
-			const line = option.allLines[i];
-			if (line.compileType === LineCompileType.Error || line.compileType === LineCompileType.Finished)
-				continue;
-
-			option.lineIndex = i;
-			switch (line.type) {
-				case LineType.Instruction:
-					InstructionLine.ThirdAnalyse(option);
-					break;
-				case LineType.Command:
-					Commands.ThirdAnalyse(option);
-					break;
-				case LineType.Variable:
-					VariableLineUtils.ThirdAnalyse(option);
-					break;
-				case LineType.Macro:
-					break;
-			}
-		}
-	}
-	//#endregion 第三次分析
-
-	//#region 编译结果
-	static async CompileResult(option: DecodeOption) {
-		let isFinal = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
-		for (let i = 0; i < option.allLines.length; ++i) {
-			const line = option.allLines[i];
-			if (line.compileType === LineCompileType.Finished)
-				continue;
-
-			if (line.compileType === LineCompileType.Error) {
-				Compiler.compileTimes = Config.ProjectSetting.compileTimes;
-				break;
-			}
-
-			option.lineIndex = i;
-			switch (line.type) {
-				case LineType.Instruction:
-					InstructionLine.CompileInstruction(option);
-					break;
-				case LineType.Command:
-					await Commands.CompileCommands(option);
-					break;
-				case LineType.OnlyLabel:
-					const onlyLabelLine = option.allLines[i] as IOnlyLabel;
-					onlyLabelLine.label.value = Compiler.enviroment.orgAddress;
-					onlyLabelLine.compileType = LineCompileType.Finished;
-					break;
-				case LineType.Variable:
-					const varLine = option.allLines[i] as IVariableLine;
-					let result = ExpressionUtils.GetExpressionValue(varLine.exprParts, isFinal, option);
-					if (result.success) {
-						varLine.label.value = result.value;
-						varLine.compileType = LineCompileType.Finished;
-					}
-					break;
-				case LineType.Macro:
-					break;
-			}
-			i = option.lineIndex;
-		}
-	}
-	//#endregion 编译结果
+	/***** 分割与分析 *****/
 
 	//#region 分解文本
 	/**分解文本 */
@@ -241,12 +105,6 @@ export class Compiler {
 		let result: ICommonLine[] = [];
 
 		//#region 保存行Token
-		const BindActions = (line: IInstructionLine | ICommandLine) => {
-			line.AddAddress = Compiler.AddAddress.bind(line);
-			line.SetAddress = Compiler.SetAddress.bind(line);
-			line.SetResult = Compiler.SetResult.bind(line);
-		}
-
 		const SaveToken = (lineType: LineType) => {
 
 			let splitLine: SplitLine = {
@@ -257,12 +115,12 @@ export class Compiler {
 
 			switch (lineType) {
 				case LineType.Command:
-					newLine = { type: LineType.Command, result: [] as number[] } as ICommandLine;
-					BindActions(newLine as ICommandLine);
+					newLine = { type: LineType.Command } as ICommandLine;
+					Compiler.LineInitialize(newLine as ICommandLine);
 					break;
 				case LineType.Instruction:
-					newLine = { type: LineType.Instruction, result: [] as number[] } as IInstructionLine;
-					BindActions(newLine as IInstructionLine);
+					newLine = { type: LineType.Instruction } as IInstructionLine;
+					Compiler.LineInitialize(newLine as IInstructionLine);
 					break;
 				case LineType.Variable:
 					newLine = { type: LineType.Variable } as IVariableLine;
@@ -312,6 +170,96 @@ export class Compiler {
 	}
 	//#endregion 分解文本
 
+	//#region 第一次分析
+	/**第一次分析 */
+	static async FirstAnalyse(option: DecodeOption) {
+
+		for (let i = 0; i < option.allLines.length; ++i) {
+			const line = option.allLines[i];
+			if (line.compileType == LineCompileType.Error || line.compileType === LineCompileType.Finished)
+				continue;
+
+			option.lineIndex = i;
+			switch (line.type) {
+				case LineType.Instruction:
+					InstructionLine.FirstAnalyse(option);
+					break;
+				case LineType.Command:
+					Commands.FirstAnalyse(option as CommandDecodeOption);
+					break;
+				case LineType.Variable:
+					VariableLineUtils.FirstAnalyse(option);
+					break;
+			}
+
+			i = option.lineIndex;
+		}
+
+	}
+	//#endregion 第一次分析
+
+	//#region 第二次分析
+	static async SecondAnalyse(option: DecodeOption) {
+		for (let i = 0; i < option.allLines.length; i++) {
+			let line = option.allLines[i];
+			if (line.compileType === LineCompileType.Error || line.compileType === LineCompileType.Finished)
+				continue;
+
+			option.lineIndex = i;
+			switch (line.type) {
+				case LineType.Unknow:
+					let match = new RegExp(Compiler.enviroment.macroRegexString).exec(line.orgText.text);
+					let macroName = match?.groups?.["macro"];
+					if (macroName) {
+						let pre = line.orgText.Substring(0, match!.index);
+						let currect = line.orgText.Substring(match!.index, match![0].length);
+						let after = line.orgText.Substring(match!.index + match![0].length);
+						MacroUtils.MatchMacroLine(pre, currect, after, option);
+						Compiler.LineInitialize(option.allLines[i] as IMacroLine);
+					} else {
+						option.allLines[i].type = LineType.OnlyLabel;
+						let label = LabelUtils.CreateLabel(option.allLines[i].orgText, option);
+						if (label) {
+							label.labelType = LabelType.Label;
+							(option.allLines[i] as IOnlyLabel).label = label;
+							option.allLines[i].GetTokens = () => [{ token: label!.token, type: HighlightType.Label }];
+						}
+					}
+					break;
+				case LineType.Command:
+					await Commands.SecondAnalyse(option);
+					break;
+			}
+			i = option.lineIndex;
+		}
+	}
+	//#endregion 第二次分析
+
+	//#region 第三次分析
+	static async ThirdAnalyse(option: DecodeOption) {
+		for (let i = 0; i < option.allLines.length; ++i) {
+			const line = option.allLines[i];
+			if (line.compileType === LineCompileType.Error || line.compileType === LineCompileType.Finished)
+				continue;
+
+			option.lineIndex = i;
+			switch (line.type) {
+				case LineType.Instruction:
+					InstructionLine.ThirdAnalyse(option);
+					break;
+				case LineType.Command:
+					Commands.ThirdAnalyse(option);
+					break;
+				case LineType.Variable:
+					VariableLineUtils.ThirdAnalyse(option);
+					break;
+				case LineType.Macro:
+					break;
+			}
+		}
+	}
+	//#endregion 第三次分析
+
 	//#region 分割内容与注释
 	/**分割内容与注释 */
 	static GetContent(token: Token) {
@@ -320,33 +268,80 @@ export class Compiler {
 	}
 	//#endregion 分割内容与注
 
-	/***** Private *****/
+	/***** 编译结果 *****/
+
+	//#region 编译结果
+	/**
+	 * 编译结果
+	 * @param option 
+	 */
+	static async CompileResult(option: DecodeOption) {
+		let isFinal = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
+		for (let i = 0; i < option.allLines.length; ++i) {
+			const line = option.allLines[i];
+			if (line.compileType === LineCompileType.Finished)
+				continue;
+
+			if (line.compileType === LineCompileType.Error) {
+				Compiler.compileTimes = Config.ProjectSetting.compileTimes;
+				break;
+			}
+
+			option.lineIndex = i;
+			switch (line.type) {
+				case LineType.Instruction:
+					InstructionLine.CompileInstruction(option);
+					break;
+				case LineType.Command:
+					await Commands.CompileCommands(option);
+					break;
+				case LineType.OnlyLabel:
+					const onlyLabelLine = option.allLines[i] as IOnlyLabel;
+					onlyLabelLine.label.value = Compiler.enviroment.orgAddress;
+					onlyLabelLine.compileType = LineCompileType.Finished;
+					break;
+				case LineType.Variable:
+					const varLine = option.allLines[i] as IVariableLine;
+					let result = ExpressionUtils.GetExpressionValue(varLine.exprParts, isFinal, option);
+					if (result.success) {
+						varLine.label.value = result.value;
+						varLine.compileType = LineCompileType.Finished;
+					}
+					break;
+				case LineType.Macro:
+					MacroUtils.CompileMacroLine(option);
+					break;
+			}
+			i = option.lineIndex;
+		}
+	}
+	//#endregion 编译结果
 
 	//#region 行设定结果值
 	/**
 	 * 行设定结果值
-	 * @param this 当前行
+	 * @param line 当前行
 	 * @param value 设定值
 	 * @param index 设定的起始位置
 	 * @param length 设定长度
 	 * @returns 返回设定的值
 	 */
-	static SetResult(this: IInstructionLine | ICommandLine, value: number, index: number, length: number) {
-		this.result ??= [];
+	static SetResult(line: IInstructionLine | ICommandLine | IMacroLine, value: number, index: number, length: number) {
+		line.result ??= [];
 
 		let temp = length;
 		let tempIndex = 0;
 
 		while (temp--) {
-			this.result[index + tempIndex] = 0;
+			line.result[index + tempIndex] = 0;
 			tempIndex++;
 		}
 
 		let setResult = 0;
 		let offset = 0;
 		while (length--) {
-			this.result[index] = value & 0xFF;
-			setResult |= this.result[index] << offset;
+			line.result[index] = value & 0xFF;
+			setResult |= line.result[index] << offset;
 			value >>= 8;
 			offset += 8;
 			index++;
@@ -357,32 +352,46 @@ export class Compiler {
 	//#endregion 行设定结果值
 
 	//#region 设定起始地址
-	static SetAddress(this: IInstructionLine | ICommandLine) {
+	static SetAddress(line: IInstructionLine | ICommandLine | IMacroLine) {
 		if (Compiler.enviroment.orgAddress < 0) {
 			let errorMsg = Localization.GetMessage("Unknow original address");
-			MyDiagnostic.PushException(this.orgText, errorMsg);
+			MyDiagnostic.PushException(line.orgText, errorMsg);
 			return false;
 		}
 
-		if (this.orgAddress < 0) {
-			this.baseAddress = Compiler.enviroment.baseAddress;
-			this.orgAddress = Compiler.enviroment.orgAddress;
+		if (line.orgAddress < 0) {
+			line.baseAddress = Compiler.enviroment.baseAddress;
+			line.orgAddress = Compiler.enviroment.orgAddress;
 		}
 		return true;
 	}
 	//#endregion 设定起始地址
 
 	//#region 给文件的地址增加偏移
-	static AddAddress(this: IInstructionLine | ICommandLine) {
-		if (this.orgAddress >= 0) {
-			Compiler.enviroment.orgAddress = this.orgAddress;
-			Compiler.enviroment.baseAddress = this.baseAddress;
+	static AddAddress(line: IInstructionLine | ICommandLine | IMacroLine) {
+		if (line.orgAddress >= 0) {
+			Compiler.enviroment.orgAddress = line.orgAddress;
+			Compiler.enviroment.baseAddress = line.baseAddress;
 		}
 
-		Compiler.enviroment.baseAddress += this.result.length;
-		Compiler.enviroment.orgAddress += this.result.length;
+		Compiler.enviroment.baseAddress += line.result.length;
+		Compiler.enviroment.orgAddress += line.result.length;
 	}
 	//#endregion 给文件的地址增加偏移
+
+	/***** Private *****/
+
+	//#region 绑定行命令
+	/**
+	 * 绑定行命令
+	 * @param line 
+	 */
+	private static LineInitialize = (line: IInstructionLine | ICommandLine | IMacroLine) => {
+		line.orgAddress = -1;
+		line.baseAddress = 0;
+		line.result ??= [];
+	}
+	//#endregion 绑定行命令
 
 }
 

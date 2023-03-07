@@ -8,7 +8,7 @@ export class BaseAndOrg {
 
 	static Initialize() {
 		Commands.AddCommand({
-			name: ".BASE", min: 1,
+			name: ".BASE", min: 1, 
 			firstAnalyse: Commands.FirstAnalyse_Common,
 			thirdAnalyse: Commands.ThirdAnalyse_Common,
 			compile: BaseAndOrg.Compile_Base

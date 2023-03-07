@@ -1,13 +1,10 @@
 import { Compiler } from "../Base/Compiler";
 import { Utils } from "../Base/Utils";
-import { HelperUtils } from "./HelperUtils";
 
 export class HighlightingProvider {
 
 	/**高亮文档 */
-	static async HighlightDocument(filePath: string) {
-
-		await HelperUtils.WaitFileUpdateFinished();
+	static HighlightDocument(filePath: string) {
 
 		let fileHash = Utils.GetHashcode(filePath);
 		let lines = Compiler.enviroment.allBaseLines.get(fileHash);
@@ -20,7 +17,7 @@ export class HighlightingProvider {
 		for (let i = 0; i < lines.length; ++i) {
 			const line = lines[i];
 			const highlightingTokens = line.GetTokens?.();
-			if (highlightingTokens) {
+			if (highlightingTokens && highlightingTokens.length != 0) {
 				for (let j = 0; j < highlightingTokens.length; ++j) {
 					saveToken = highlightingTokens[j];
 					result.push({

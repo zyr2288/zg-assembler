@@ -99,6 +99,7 @@ export class Environment {
 		}
 
 		this.allBaseLines.delete(fileHash);
+		this.highlightRanges.delete(fileHash);
 	}
 
 	private ClearLabelTree(labelTreeHash: number) {

@@ -129,8 +129,8 @@ export class Asm6502 extends AsmCommon {
 			return;
 		}
 
-		line.SetResult(line.addressingMode.opCode[1]!, 0, 1);
-		line.SetResult(temp & 0xFF, 1, 1);
+		Compiler.SetResult(line, line.addressingMode.opCode[1]!, 0, 1);
+		Compiler.SetResult(line, temp & 0xFF, 1, 1);
 		line.compileType = LineCompileType.Finished;
 	}
 }

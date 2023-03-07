@@ -10,7 +10,7 @@ export class DefinitionProvider {
 		)
 	}
 
-	private static async Definition(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
+	private static Definition(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
 		let result: vscode.Location[] = [];
 
 		let temp = LSPUtils.assembler.languageHelper.definition.GetLabelPosition(

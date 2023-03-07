@@ -67,8 +67,8 @@ export class Defined {
 	private static GetTokens(this: ICommandLine) {
 		let result: HighlightToken[] = [];
 
-		if (this.label)
-			result.push({ token: this.label.token, type: HighlightType.Defined });
+		// if (this.label)
+		// 	result.push({ token: this.label.token, type: HighlightType.Defined });
 
 		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
 		return result;

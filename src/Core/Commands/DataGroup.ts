@@ -2,9 +2,11 @@ import { Compiler } from "../Base/Compiler";
 import { Config } from "../Base/Config";
 import { ExpressionResult, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
 import { ILabel, LabelScope, LabelUtils } from "../Base/Label";
+import { MyDiagnostic } from "../Base/MyException";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
+import { Localization } from "../I18n/Localization";
 import { LineCompileType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "./Commands";
 
@@ -124,7 +126,7 @@ export class DataGroupCommand {
 
 	private static Compile_DataGroup(option: DecodeOption, dataLength: number) {
 		const line = option.allLines[option.lineIndex] as ICommandLine;
-		line.SetAddress();
+		Compiler.SetAddress(line);
 		let label = LabelUtils.FindLabel(line.label!.token);
 		if (label!.value == undefined)
 			label!.value = Compiler.enviroment.orgAddress;
@@ -141,20 +143,18 @@ export class DataGroupCommand {
 			if (!temp.success) {
 				break;
 			} else {
-				// let byteLength = Utils.DataByteLength(temp.value);
-				// if (byteLength > dataLength) {
-				// 	let token = LexerUtils.CombineLexToToken(lex);
-				// 	MyException.PushException(token, ErrorType.ArgumentOutofRange, ErrorLevel.ShowAndBreak);
-				// 	line.errorLine = true;
-				// 	break;
-				// }
-
-				line.SetResult(temp.value, index, dataLength);
+				let byteLength = Utils.GetNumberByteLength(temp.value);
+				let tempValue = Compiler.SetResult(line, temp.value, index, dataLength);
+				if (temp.value < 0 || byteLength > dataLength) {
+					let token = ExpressionUtils.CombineExpressionPart(lex);
+					let errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.value, tempValue);
+					MyDiagnostic.PushWarning(token, errorMsg);
+				}
 			}
 			index += dataLength;
 		}
 
-		line.AddAddress();
+		Compiler.AddAddress(line);
 	}
 
 }

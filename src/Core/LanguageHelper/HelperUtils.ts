@@ -15,8 +15,6 @@ export interface WordType {
 
 export class HelperUtils {
 
-	static fileUpdateFinished = false;
-
 	//#region 获取光标所在字符
 	/**
 	 * 获取光标所在字符
@@ -120,18 +118,5 @@ export class HelperUtils {
 		return result;
 	}
 	//#endregion 获取Label注释以及值
-
-	//#region 等待文件更新完成
-	static WaitFileUpdateFinished(): Promise<void> {
-		return new Promise((resolve, rejects) => {
-			let temp = setInterval(() => {
-				if (HelperUtils.fileUpdateFinished) {
-					clearInterval(temp);
-					resolve();
-				}
-			}, 200);
-		})
-	}
-	//#endregion 等待文件更新完成
 
 }

@@ -35,6 +35,7 @@ export class Assembler {
 	};
 
 	compiler = {
+		/**true为正在编译中 */
 		compiling: this.compiling,
 		DecodeText: Compiler.DecodeText,
 		CompileText: Compiler.CompileText
@@ -44,13 +45,6 @@ export class Assembler {
 		ExpressionUtils.Initialize();
 		Commands.Initialize();
 		Platform.ChangePlatform(Config.ProjectSetting.platform);
-	}
-
-
-	async LoadAllFile(files: { text: string, filePath: string }[]) {
-		HelperUtils.fileUpdateFinished = false;
-		await Compiler.DecodeText(files);
-		HelperUtils.fileUpdateFinished = true;
 	}
 
 	GetUpdateLines(filePath: string) {

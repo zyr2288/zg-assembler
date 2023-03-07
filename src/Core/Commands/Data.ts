@@ -48,11 +48,10 @@ export class Data {
 	private static Compile_Data(dataLength: number, option: DecodeOption) {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
 
-		if (!line.SetAddress())
+		if (!Compiler.SetAddress(line))
 			return;
 
 		line.compileType = LineCompileType.Finished;
-		line.result ??= [];
 		let index = 0;
 		let finalCompile = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
 
@@ -64,14 +63,8 @@ export class Data {
 				line.result.length += temp.values.length * dataLength;
 			} else {
 				for (let j = 0; j < temp.values.length; j++) {
-					// let byteLength = Utils.DataByteLength(temp.values[j]);
-					// if (Config.ProjectSetting.argumentOutOfRangeError && byteLength > dataLength) {
-					// 	MyException.PushException(part[j].token, ErrorType.ArgumentOutofRange, ErrorLevel.ShowAndBreak);
-					// 	return false;
-					// }
-
 					let tempLength = Utils.GetNumberByteLength(temp.values[j]);
-					let tempValue = line.SetResult(temp.values[j], index, dataLength);
+					let tempValue = Compiler.SetResult(line, temp.values[j], index, dataLength);
 					if (tempLength > dataLength || temp.values[j] < 0) {
 						let errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.values[j], tempValue);
 						let token = ExpressionUtils.CombineExpressionPart(part);
@@ -82,7 +75,7 @@ export class Data {
 			index += dataLength;
 		}
 
-		line.AddAddress();
+		Compiler.AddAddress(line);
 		return;
 	}
 }

@@ -100,7 +100,7 @@ export class LabelUtils {
 
 		let hash = LabelUtils.GetLebalHash(token.text, token.fileHash, type);
 		let tempLabel = Compiler.enviroment.allLabel.get(hash);
-		if (tempLabel && tempLabel.labelType !== LabelType.None) {
+		if ((tempLabel && tempLabel.labelType !== LabelType.None) || Compiler.enviroment.allMacro.has(token.text)) {
 			let errorMsg = Localization.GetMessage("Label {0} is already defined", token.text);
 			MyDiagnostic.PushException(token, errorMsg);
 			return;
@@ -158,8 +158,9 @@ export class LabelUtils {
 		// 函数内标签
 		if (option?.macro) {
 			let hash = Utils.GetHashcode(word.text);
-			let label = option.macro.labels.get(hash);
-			if (label) return label;
+			let label = option.macro.params.get(hash) ?? option.macro.labels.get(hash);
+			if (label) 
+				return label;
 		}
 
 		// 数组下标
