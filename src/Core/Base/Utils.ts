@@ -1,5 +1,4 @@
-import { ICommandLine } from "../Commands/Commands";
-import { IInstructionLine } from "../Lines/InstructionLine";
+import { Token } from "./Token";
 
 /**工具类 */
 export class Utils {
@@ -101,6 +100,43 @@ export class Utils {
 		return length;
 	}
 	//#endregion 获取数字占用字节数
+
+	//#region 用逗号分隔参数
+	/**
+	 * 用逗号分隔参数
+	 * @param token 要分割的Token
+	 * @param option.count 分割次数
+	 * @returns 
+	 */
+	static SplitWithComma(token: Token, option?: { count?: number }) {
+		let result: Token[] = [];
+
+		let inString = false;
+		let char: string = "";
+		let lastChar: string = "";
+		let start = 0;
+
+		if (option?.count === 0)
+			return [token];
+
+		for (let i = 0, j = 0; i < token.text.length; ++i) {
+			char = token.text.charAt(i);
+			if (char === "\"" && lastChar !== "\\") {
+				inString = !inString;
+			} else if (char === "," && !inString) {
+				result.push(token.Substring(start, i - start));
+				start = i + 1;
+				if (option?.count && ++j >= option?.count)
+					break;
+
+			}
+			lastChar = char;
+		}
+		result.push(token.Substring(start));
+
+		return result;
+	}
+	//#endregion 用逗号分隔参数
 
 }
 

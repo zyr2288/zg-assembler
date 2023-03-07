@@ -84,4 +84,4 @@ const coreConfig = {
 	},
 }
 
-module.exports = [extensionConfig, coreConfig];
+module.exports = [extensionConfig];

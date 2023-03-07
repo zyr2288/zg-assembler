@@ -1,7 +1,6 @@
 import { Localization } from "../I18n/Localization";
 import { HighlightToken, HighlightType } from "../Lines/CommonLine";
 import { Compiler } from "./Compiler";
-import { Config } from "./Config";
 import { LabelType, LabelUtils } from "./Label";
 import { MyDiagnostic } from "./MyException";
 import { DecodeOption } from "./Options";

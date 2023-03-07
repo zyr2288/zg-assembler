@@ -10,13 +10,13 @@ import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType }
 import { Platform } from "../Platform/Platform";
 import { Commands, ICommandLine } from "./Commands";
 
+/**自定义函数行 */
 export interface IMacroLine extends ICommonLine {
 	orgAddress: number;
 	baseAddress: number;
 	label?: ILabel;
 	macro: IMacro;
 	args: ExpressionPart[][];
-	expression: Token;
 	result: number[];
 }
 
@@ -44,11 +44,10 @@ export class MacroUtils {
 			LabelUtils.CreateLabel(labelToken, option);
 
 		let macro = Compiler.enviroment.allMacro.get(macroToken.text)!;
-		// @ts-ignore
+		// @ts-ignore 
 		let macroLine = {
 			macro: macro,
 			args: [],
-			expression: expression,
 			type: LineType.Macro,
 			orgText: option.allLines[option.lineIndex].orgText,
 			compileType: LineCompileType.None,
@@ -58,12 +57,11 @@ export class MacroUtils {
 		option.allLines[option.lineIndex] = macroLine;
 
 		let parts: Token[] = [];
-		if (!expression.isEmpty) {
-			parts = expression.Split(/\,/g);
-		}
+		if (!expression.isEmpty)
+			parts = Utils.SplitWithComma(expression);
 
-		if (parts.length != macro.params.size) {
-			let errorMsg = Localization.GetMessage("Macro arguments error");
+		if (parts.length !== macro.params.size) {
+			let errorMsg = Localization.GetMessage("Macro arguments count is {0}, but got {1}", macro.params.size, parts.length);
 			MyDiagnostic.PushException(macroToken, errorMsg);
 			return;
 		}
@@ -162,6 +160,14 @@ export class MacroUtils {
 		line.compileType = LineCompileType.Finished;
 	}
 	//#endregion 编译自定义函数
+
+	//#region 第三次分析
+	static ThirdAnalyse(option: DecodeOption) {
+		const line = option.allLines[option.lineIndex] as IMacroLine;
+		for (let i = 0; i < line.args.length; ++i)
+			ExpressionUtils.CheckLabelsAndShowError(line.args[i], option);
+	}
+	//#endregion 第三次分析
 
 }
 

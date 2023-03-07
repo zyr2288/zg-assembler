@@ -3,6 +3,7 @@ import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
+import { Utils } from "../Base/Utils";
 import { Localization } from "../I18n/Localization";
 import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType, SplitLine } from "../Lines/CommonLine";
 import { BaseAndOrg } from "./BaseAndOrg";
@@ -332,27 +333,8 @@ export class Commands {
 		let params = Commands.commandsParamsCount.get(line.command.text)!;
 		let args: Token[] = [];
 
-		if (!line.splitLine!.expression.isEmpty) {
-			let inString = false;
-			let char: string = "";
-			let lastChar: string = "";
-			let start = 0;
-
-			for (let i = 0, j = 0; i < line.splitLine!.expression.text.length; ++i) {
-				char = line.splitLine!.expression.text.charAt(i);
-				if (char === "\"" && lastChar !== "\\") {
-					inString = !inString;
-				} else if (char === "," && !inString) {
-					args.push(line.splitLine!.expression.Substring(start, i - start));
-					start = i + 1;
-					if (params.max > 0 && j >= params.max)
-						break;
-				}
-				lastChar = char;
-			}
-			args.push(line.splitLine!.expression.Substring(start));
-		}
-
+		if (!line.splitLine!.expression.isEmpty)
+			args = Utils.SplitWithComma(line.splitLine!.expression);
 
 		if (args.length < params.min || (params.max !== -1 && args.length > params.max)) {
 			let errorMsg = Localization.GetMessage("Command arguments error");
