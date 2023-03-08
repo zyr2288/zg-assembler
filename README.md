@@ -1,8 +1,8 @@
 # Zeng Ge's Assembler
 
-(简体中文)[./doc/README-zhcn.md]
+[简体中文](./doc/README-zhcn.md)
 
-* An extensible compiler for VSCode, supporting `6502` `65816` (Special thanks Thirteen) `gbz80`.
+* An extensible compiler for [VSCode](https://code.visualstudio.com/), supporting `6502` `65816` (Special thanks Thirteen) `gbz80`.
 
 * When the assembly file is opened, a `project-settings.json` file is created in the `.vscode` directory.
 
