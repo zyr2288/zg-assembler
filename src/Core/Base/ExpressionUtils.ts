@@ -420,21 +420,26 @@ export class ExpressionUtils {
 
 		let part: ExpressionPart = { type: PriorityType.Level_1_Label, token: {} as Token, value: 0, highlightingType: HighlightType.None };
 
-		let stringStart = - 1;
+		let stringStart = -1;
 
 		for (let i = 0; i < tokens.length; ++i) {
 			part.token = tokens[i];
 			if (part.token.isEmpty)
 				continue;
 
+			if (stringStart > 0 && part.token.text != "\"")
+				continue;
+
 			switch (part.token.text) {
 				case "\"":
 					if (stringStart < 0) {
 						stringStart = part.token.start;
+						continue;
 					} else {
-						part.token = expression.Substring(stringStart, part.token.start - stringStart);
+						part.token = expression.Substring(stringStart - expression.start + 1, part.token.start - stringStart - 1);
 						part.type = PriorityType.Level_3_String;
 						stringStart = -1;
+						isLabel = false;
 					}
 					break;
 				case "(":

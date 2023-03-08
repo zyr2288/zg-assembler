@@ -62,10 +62,18 @@ export class DataGroupCommand {
 		let expressions: Token[] = line.tag;
 		let lines = Commands.CollectBaseLines(option);
 		let label = LabelUtils.CreateLabel(expressions[0], option);
+
 		if (!label) {
 			line.compileType = LineCompileType.Error;
 			return;
 		}
+
+		Compiler.enviroment.SetRange(line.command.fileHash, {
+			type: "DataGroup",
+			key: label.token.text,
+			start: option.includeCommandLines![0].index,
+			end: option.includeCommandLines![1].index
+		});
 
 		let scope = label.token.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
 		let hash = LabelUtils.GetLebalHash(label.token.text, label.token.fileHash, scope);

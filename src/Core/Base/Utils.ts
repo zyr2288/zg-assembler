@@ -138,5 +138,31 @@ export class Utils {
 	}
 	//#endregion 用逗号分隔参数
 
+	//#region 讲结果值运算成其他进制
+	/**
+	 * 讲结果值运算成其他进制
+	 * @param value 要运算的值
+	 * @returns 2 10 16进制结果
+	 */
+	static ConvertValue(value: number) {
+		let result = { bin: "", dec: "", hex: "" };
+
+		let temp = value;
+		do {
+			let temp2 = (temp & 0xFF).toString(2);
+			let array = temp2.padStart(8, "0").split("");
+			array.splice(4, 0, " ");
+			temp2 = array.join("");
+			result.bin = " " + temp2 + result.bin;
+			temp >>= 8;
+		} while (temp != 0)
+		result.bin = result.bin.substring(1);
+		result.dec = value.toString();
+		result.hex = value.toString(16).toUpperCase();
+
+		return result;
+	}
+	//#endregion 讲结果值运算成其他进制
+
 }
 

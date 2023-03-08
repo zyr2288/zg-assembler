@@ -16,7 +16,8 @@ export interface IMacroLine extends ICommonLine {
 	baseAddress: number;
 	label?: ILabel;
 	macro: IMacro;
-	args: ExpressionPart[][];
+	macroToken: Token;
+	expParts: ExpressionPart[][];
 	result: number[];
 }
 
@@ -44,16 +45,18 @@ export class MacroUtils {
 			LabelUtils.CreateLabel(labelToken, option);
 
 		let macro = Compiler.enviroment.allMacro.get(macroToken.text)!;
+
 		// @ts-ignore 
 		let macroLine = {
 			macro: macro,
-			args: [],
+			macroToken,
+			expParts: [],
 			type: LineType.Macro,
 			orgText: option.allLines[option.lineIndex].orgText,
 			compileType: LineCompileType.None,
 		} as IMacroLine;
 
-		macroLine.GetTokens = () => [{ token: macroToken, type: HighlightType.Macro }];
+		macroLine.GetTokens = MacroUtils.GetToken.bind(macroLine);
 		option.allLines[option.lineIndex] = macroLine;
 
 		let parts: Token[] = [];
@@ -69,7 +72,7 @@ export class MacroUtils {
 		let temp: ExpressionPart[] | undefined;
 		for (let i = 0; i < parts.length; ++i) {
 			if (temp = ExpressionUtils.SplitAndSort(parts[i]))
-				macroLine.args[i] = temp;
+				macroLine.expParts[i] = temp;
 		}
 
 	}
@@ -145,8 +148,8 @@ export class MacroUtils {
 		}
 
 		let macro: IMacro = line.macro.GetCopy();
-		for (let i = 0; i < line.args.length; ++i) {
-			let result = ExpressionUtils.GetExpressionValue(line.args[i], ExpressionResult.GetResultAndShowError, option);
+		for (let i = 0; i < line.expParts.length; ++i) {
+			let result = ExpressionUtils.GetExpressionValue(line.expParts[i], ExpressionResult.GetResultAndShowError, option);
 			if (result.success) {
 				macro.params.get(macro.paramHashIndex[i])!.value = result.value;
 			}
@@ -161,13 +164,16 @@ export class MacroUtils {
 	}
 	//#endregion 编译自定义函数
 
-	//#region 第三次分析
-	static ThirdAnalyse(option: DecodeOption) {
-		const line = option.allLines[option.lineIndex] as IMacroLine;
-		for (let i = 0; i < line.args.length; ++i)
-			ExpressionUtils.CheckLabelsAndShowError(line.args[i], option);
+	/***** Private *****/
+
+	static GetToken(this: IMacroLine) {
+		let result: HighlightToken[] = [];
+
+		result.push({ token: this.macroToken, type: HighlightType.Macro });
+		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
+
+		return result;
 	}
-	//#endregion 第三次分析
 
 }
 

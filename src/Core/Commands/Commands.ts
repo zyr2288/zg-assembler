@@ -284,18 +284,14 @@ export class Commands {
 			else
 				line.compileType = LineCompileType.Error;
 		}
-
-		return;
 	}
 	//#endregion 第一次的通用分析，仅拆分表达式，仅针对只有一个参数的命令
 
 	//#region 第三次的通用分析，仅对编译命令行的表达式小节分析
 	static async ThirdAnalyse_Common(option: DecodeOption) {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
-		for (let i = 0; i < line.expParts.length; ++i) {
+		for (let i = 0; i < line.expParts.length; ++i)
 			ExpressionUtils.CheckLabelsAndShowError(line.expParts[i], option);
-		}
-		return;
 	}
 	//#endregion 第三次的通用分析，仅对编译命令行的表达式小节分析
 

@@ -254,6 +254,7 @@ export class Compiler {
 					VariableLineUtils.ThirdAnalyse(option);
 					break;
 				case LineType.Macro:
+					Commands.ThirdAnalyse_Common(option);
 					break;
 			}
 		}

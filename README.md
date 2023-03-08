@@ -1,18 +1,21 @@
 # Zeng Ge's Assembler
 
-An assembler for `6502` `65816` `gb-z80`(Special thanks Thirteen).
+(简体中文)[./doc/README-zhcn.md]
 
-When the assembly file is opened, the `project-settings.json` file is created in the `.vscode` directory.
+* An extensible compiler for VSCode, supporting `6502` `65816` (Special thanks Thirteen) `gbz80`.
+
+* When the assembly file is opened, a `project-settings.json` file is created in the `.vscode` directory.
+
 ```json
 {
-    "platform": "6502",
+    "platform": "6502",            // Target Platform
     "intellisense": true,
-    "outOfRangeWarning": true,
+    "outOfRangeWarning": true,     // Compile result out-of-bounds warning
     "entry": "main.asm",
     "compileTimes": 2,
     "outputEntryFile": "",
     "outputSingleFile": "",
-    "copyToClipboard": true,
+    "copyToClipboard": true,       // Copy result bytes to the clipboard
     "patchFile": "",               // It will rewrite patch file
     "includes": ["**/*.asm"],
     "excludes": []
@@ -20,26 +23,32 @@ When the assembly file is opened, the `project-settings.json` file is created in
 ```
 
 ## Features
+
 ### Compile
-Click the right mouse button under the editor, “编译本文件” means "compile this file", “编译入口文件” means "compile entry file".
+
+* In the editor under `.asm` file, right click on the mouse and the compile menu will appear.
+
 
 ### Label
-You can use sub labels, such as `player.x` `player.y`.
-Press vscode's Find Definition shortcut key (default F12) to find the label definition location directly.
 
-![sub labels](https://github.com/zyr2288/zg-assembler/blob/main/test/sub-label.gif)
+* You can use sub labels, such as `player.x` `player.y`.
+
+* Press vscode's Find Definition shortcut key (default F12) to find the label definition location directly.
+
 
 ### Local label
-If a label is starting with "." (dot), then the label is valid only for this file.
+
+* If a label is starting with "." (dot), then the label is valid only for this file.
+
 
 ### Folding
-The folding function starts with `;+` and ends with `;-`.
 
-![folding](https://github.com/zyr2288/zg-assembler/blob/main/test/folding.gif)
+* The folding function starts with `;+` and ends with `;-`.
+
 
 ### Nameless label
-Labels are one or more '+' or '-' characters are nameless labels.
-For example:
+
+* Labels are one or more '+' or '-' characters are nameless labels.
 ```
 --      LDA $2002
         BPL --
@@ -52,47 +61,76 @@ For example:
         ; AD 02 20 10 FB A5 00 F0 05 10 06 4C 00 90 4C 00 80 4C 00 A0 
 ```
 
+
+### Special Operator
+
+* \> and < have special meanings, for example >$1234 takes the high ($12) and <$1234 takes the low ($34).
+
+* \* has a special meaning when not used as a multiplication sign, it means currect line original address. e.g. `.ORG *`.
+
+---
+
+
 ## Compiler commands (example of 6502)
-### `.BASE`
-> Note: The compilation is from top to bottom. Some variables should be know for first compilation.
 
-Set the generated file address. The default is `.BASE 0`, here is not the same as `.ORG`.
 
-For example: If set `.BASE $10`, the file will write from `$10`.
+### `.BASE` **baseAddress**
 
-> Note: If you use the `.BASE` command, after the `.ORG` command, otherwise the compilation will error.
----
-### `.ORG`
-Set the start compilation address, for example: `.ORG $8000`, the compilation will start from `$8000`. It can also be used to `.ORG *` start compilation from the current address. However, you must know the current address, otherwise the compiler will report an error.
+* Set the generated file address, the default is `.BASE 0`, it is not same as `.ORG`.
 
-> Note: If you use the `.BASE` command, after the `.ORG` command, otherwise the compilation will error.
----
-### `.DEF`
-Define a constant, for example: `.DEF idefined $12`
-> Note: `temp = $12` can also be defined, but it can be repeated.
----
-### `.DB`
-Represents bytes. Multiple arguments are separated by commas. If the byte is greater than $ FF (255), the compiler will report an error.
+* For example, if `.BASE $10`, the generated file will be written from `$10`, and the previous `$F` address will be `0`.
 
-For example:
-```
-    .DB $40, 40, @01010010, >address
-```
----
-### `.DW`
-Represents double-byte, first low and then high. If the double byte is greater than $ FFFF (65535), the compiler will report an error.
+> Note: Compile top-down, some variables need to be assigned for the first compile, if the first compile is unknown then compile is not successful.
 
-For example:
-```
-    .DW $40, 60000, @01010101, address
-```
----
-### `.DL`
-Represents four byte, same as `.DW`
+> Note: If you use the `.BASE` command, it comes after `.ORG`, otherwise it compiles incorrectly.
 
 ---
-### `.DBG` `.DWG` `.DLG`, `.ENDD`
-Data group, get the data index.
+
+
+### `.ORG` **originalAddress**
+
+* Set the start compile address, e.g. `.ORG $8000`, then the compile will start at $8000.
+
+* You can also use `.ORG *`, which means compilation will start from the current address. But the current address has to be known, otherwise the compiler reports an error.
+
+* Note: If you use the `.BASE` command, it comes after `.ORG`, otherwise it compiles with an error.
+
+---
+
+
+### `.DEF` **name, expression**
+
+* Define a constant, for example: `.DEF idefined, $12`
+
+> Note: `temp = $12` can also be defined, but it can be re-value.
+
+---
+
+
+### `.DB` **data1 [, data2...]**
+
+* A series of 1-byte data
+
+---
+
+
+### `.DW` **data1 [, data2...]**
+
+* A series of 2-byte data
+
+---
+
+
+### `.DL` **data1 [, data2...]**
+
+* A series of 4-byte data
+
+---
+
+
+### [`.DBG` \ `.DWG` \ `.DLG`] `.ENDD`
+
+* Data group, get the data index.
 
 For example:
 ```
@@ -106,19 +144,27 @@ For example:
     LDA data:.data3     ;A5 02
     LDA data:.data1:1   ;A5 03
 ```
+
 ---
+
+
 ### `.HEX`
-Compact way of laying out a table of hex values. Only raw hex values are allowed, no expressions. Spaces can be used to separate numbers.
+
+* A hexadecimal string, can be separated by spaces.
 
 For example:
 ```
     .HEX 12 34567 89
 ```
-The compilation result: `12 34 56 07 89`
+
+* The compilation result: `12 34 56 07 89`
 
 ---
+
+
 ### `.IF` `.ELSEIF` `.ELSE` `.ENDIF`
-Process a block of code if an expression is true.
+
+* Process a block of code if an expression is true.
 
 > Note: Must know the parameters value.
 
@@ -134,37 +180,58 @@ For example:
     ...
     .ENDIF
 ```
+
 ---
-### `.IFDEF` `.IFNDEF`
-Process a block of code if a symbol has been defined / not defined.
+
+
+### [`.IFDEF` \ `.IFNDEF`] `.ELSE` `.ENDIF`
+
+* Process a block of code if a label has been defined / not defined.
+
 --
-### `.INCBIN`
+
+
+### `.INCBIN` **filePath [, fileStartPosition, readLength]**
+
 You can read the binary content of the reference file. Please fill in the relative path of the file in the double quotes.
 
 For example:
 ```
-    .INCBIN "Folder\file.bin"
+    .INCBIN "Folder\file.bin", 0, 100
 ```
+
 ---
+
+
 ### `.INCLUDE`
-You can quote the file, please fill in the relative path of the file in double quotes. If there are also reference files in the reference file, please fill in relative to the main compilation file path. E.g:
+
+* You can quote the file, please fill in the relative path of the file in double quotes. If there are also reference files in the reference file, please fill in relative to the main compilation file path. E.g:
+
 ```
     .INCLUDE "Folder\file.asm"
 ```
+
 ---
-### `.MACRO` `.ENDM`
-Define a macro. Macro arguments are comma separated.
+
+
+### `.MACRO` **name [, arg1, arg2...]** `.ENDM`
+
+* Define a macro. Macro arguments are comma separated.
+
+> Note: Arguments shoud get the value at first compilation.
+
+> Note: All labels in macro are local labels, please do not use them outside the macro.
 
 For example:
-> Note： There is no limit to the number of parameters, and there can be no parameters. The parameters are separated by commas.
+
 ```
-    .MACRO name param1, param2, param3... 
+    .MACRO name, param1, param2, param3... 
     ...
     .ENDM
 ```
-Call the function: name param1, param2, param3...
 
 Example 1:
+
 ```
     .MACRO TXY
     TXA
@@ -173,11 +240,11 @@ Example 1:
 
     TXY
 ```
-The compilation result:`8A A8`
+* The compilation result:`8A A8`
 
 Example 2:
 ```
-    .MACRO test a,b
+    .MACRO test, a, b
     .IF 3 == a
     LDA 3
     .ELSEIF 4 == a
@@ -195,11 +262,15 @@ Example 2:
     test 5,4
     test 5,5
 ```
-The compilation result:`A5 03 A6 04 A5 06 85 06 A4 05`
+
+* The compilation result:`A5 03 A6 04 A5 06 85 06 A4 05`
 
 ---
-### `.REPEAT` `.ENDR`
-Repeat a block of code a specified number of times.
+
+
+### `.REPEAT` **repeatTimes** `.ENDR`
+
+* Repeat a block of code a specified number of times.
 
 For example:
 ```
@@ -210,6 +281,25 @@ For example:
     .ENDR
     .ENDR
 ```
-The compilation result is same as:`NOP ASL ASL ASL NOP ASL ASL ASL`
+* The compilation result is same as:`NOP ASL ASL ASL NOP ASL ASL ASL`
 
 ---
+
+
+### `.MSG` **message [, arg1, arg2...]**
+
+* Out put a message.
+
+```
+	.ORG $8000
+	.DEF test1, 10
+	.DEF test2, 11
+	.MSG "测试案例 {0}, ${1}, @{0}", test1, test2
+```
+
+* 这里输出的信息是：
+
+```
+	文件 xxx.asm 第 4 行
+	测试案例 10, $B, @0000 1010
+```
