@@ -7,6 +7,12 @@ import { Asm65816 } from "./Asm65816";
 import { AsmCommon } from "./AsmCommon";
 import { AsmGBZ80 } from "./AsmGBZ80";
 
+export const MatchNames = {
+	command: "command",
+	instruction: "instruction",
+	variable: "variable"
+}
+
 /**平台 */
 export class Platform {
 
@@ -38,7 +44,7 @@ export class Platform {
 	//#region 更新编译平台的正则表达式
 	private static UpdateRegex() {
 
-		Platform.regexString = "((\\s+|^)((?<command>";
+		Platform.regexString = `((\\s+|^)((?<${MatchNames.command}>`;
 		let temp: string;
 		Commands.allCommandNames.forEach((value) => {
 			temp = Utils.TransformRegex(value) + "|";
@@ -48,7 +54,7 @@ export class Platform {
 		Platform.regexString = Platform.regexString.substring(0, Platform.regexString.length - 1);
 		Platform.regexString += ")|";
 
-		Platform.regexString += "(?<instruction>";
+		Platform.regexString += `(?<${MatchNames.instruction}>`;
 		let instructions = Platform.platform.instructions;
 		for (let i = 0; i < instructions.length; ++i) {
 			temp = Utils.TransformRegex(instructions[i]) + "|";
@@ -56,7 +62,7 @@ export class Platform {
 		}
 
 		Platform.regexString = Platform.regexString.substring(0, Platform.regexString.length - 1);
-		Platform.regexString += "))(\\s+|$))|(?<variable>\\=)"
+		Platform.regexString += `))(\\s+|$))|(?<${MatchNames.variable}>\\=)`;
 	}
 	//#endregion 更新编译平台的正则表达式
 

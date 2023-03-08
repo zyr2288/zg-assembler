@@ -30,10 +30,6 @@ export class IMacro {
 	labels = new Map<number, ILabel>();
 	lines: ICommonLine[] = [];
 	comment?: string;
-
-	GetCopy() {
-		return Utils.DeepClone<IMacro>(this);
-	}
 }
 
 export class MacroUtils {
@@ -147,7 +143,7 @@ export class MacroUtils {
 			delete (line.label);		// 删除，不再编译
 		}
 
-		let macro: IMacro = line.macro.GetCopy();
+		let macro: IMacro = Utils.DeepClone(line.macro);
 		for (let i = 0; i < line.expParts.length; ++i) {
 			let result = ExpressionUtils.GetExpressionValue(line.expParts[i], ExpressionResult.GetResultAndShowError, option);
 			if (result.success) {
@@ -166,6 +162,7 @@ export class MacroUtils {
 
 	/***** Private *****/
 
+	//#region 获取自定义函数高亮Token
 	static GetToken(this: IMacroLine) {
 		let result: HighlightToken[] = [];
 
@@ -174,6 +171,7 @@ export class MacroUtils {
 
 		return result;
 	}
+	//#endregion 获取自定义函数高亮Token
 
 }
 

@@ -1,10 +1,11 @@
 import { Compiler } from "../Base/Compiler";
+import { FileUtils } from "../Base/FileUtils";
 import { LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Commands } from "../Commands/Commands";
 import { IMacro } from "../Commands/Macro";
-import { Platform } from "../Platform/Platform";
+import { MatchNames, Platform } from "../Platform/Platform";
 import { HelperUtils } from "./HelperUtils";
 
 const ignoreWordStr = /;|(^|\s+)(\.HEX|\.DBG|\.DWG|\.MACRO)(\s+|$)/ig;
@@ -72,9 +73,21 @@ export class Completion {
 }
 //#endregion 提示项
 
+interface HightlightRange {
+	type: "DataGroup" | "Macro";
+	key: string;
+	start: number;
+	end: number;
+}
+
+interface IntellisenseLineType {
+	type: "none" | "command" | "instruction" | "variable";
+	matchRange: [number, number];
+}
+
 export enum CompletionRange { None, Base, Label, Macro, Path, AddressingMode }
 
-//#region 智能提示类
+/**智能提示类 */
 export class IntellisenseProvider {
 
 	private static commandCompletions: Completion[] = [];
@@ -87,154 +100,85 @@ export class IntellisenseProvider {
 		excludeFile: string,
 	};
 
-
-	static Intellisense(
-		document: { filePath: string, lineNumber: number, currect: number, lineText: string, lineCurrect: number },
-		option: { trigger?: string }
-	) {
+	//#region 智能提示
+	/**
+	 * 智能提示
+	 * @param document 文本
+	 * @param option 
+	 * @returns 
+	 */
+	static Intellisense(filePath: string, lineNumber: number, lineText: string, lineCurrect: number, trigger?: string): Completion[] {
 		if (IntellisenseProvider.fileCompletion)
 			return [];
 
-		let fileHash = Utils.GetHashcode(document.filePath);
-
-		let line = Token.CreateToken(fileHash, document.lineNumber, 0, document.lineText);
-		let leftText = line.Substring(0, document.lineCurrect);
-
-		// 左侧忽略文本
-		if (ignoreWordStr.test(leftText.text))
+		const fileHash = Utils.GetHashcode(filePath);
+		const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
+		const prefix = line.Substring(0, lineCurrect);
+		if (ignoreWordStr.test(prefix.text))
 			return [];
 
-		let text = HelperUtils.GetWord(document.lineText, document.lineCurrect);
-		if (/[@\$]/g.test(text.text))
-			return [];
+		let ranges = Compiler.enviroment.GetRange(fileHash);
+		let rangeType = undefined;
+		for (let i = 0; i < ranges.length; ++i) {
+			if (lineNumber < ranges[i].start || lineNumber > ranges[i].end)
+				continue;
 
-		let match = new RegExp(Platform.regexString, "ig").exec(leftText.text);
-
-		let type: CompletionRange = CompletionRange.Base;
-		let helperOption = { trigger: option.trigger, macro: undefined };
-
-		if (match?.groups?.["command"]) {
-			type = CompletionRange.Label;
-
-		} else if (match?.groups?.["instruction"]) {
-			if (option.trigger === " " && leftText.text.substring(match.index + match[0].length).length === 0) {
-				type = CompletionRange.AddressingMode;
-				text.startColumn = match.index + text.startColumn;
-				text.text = match.groups["instruction"]!.toUpperCase();
-			} else {
-				type = CompletionRange.Label;
-			}
+			rangeType = ranges[i];
+			break;
 		}
 
-		let word = Token.CreateToken(fileHash, document.lineNumber, text.startColumn, text.text);
-		let result = IntellisenseProvider.GetBaseHelper(type, word, helperOption);
-		return result;
+		switch (rangeType?.type) {
+			case "DataGroup":
+				return IntellisenseProvider.GetLabel(fileHash, prefix.text);
+			case "Macro":
+				break;
+		}
+
+		let tempMatch = IntellisenseProvider.BaseSplit(lineText);
+		if (tempMatch.type === "none" || lineCurrect < tempMatch.matchRange[0]) 
+			return IntellisenseProvider.GetEmptyLineHelper({ fileHash, range: rangeType, trigger: trigger });
+		
+		if (lineCurrect > tempMatch.matchRange[1]) {
+			
+		}
+
+		return [];
 	}
+	//#endregion 智能提示
 
-	static GetBaseHelper(type: CompletionRange, prefix: Token, option?: { macro?: IMacro, trigger?: string }) {
-		let result: Completion[] = [];
-		switch (type) {
 
-			// 基础提示
-			case CompletionRange.Base:
-				switch (option?.trigger) {
-					case " ":
-						break;
-					case ".":
-						result = Completion.CopyList(
-							option.macro ? IntellisenseProvider.commandNotInMacroCompletions : IntellisenseProvider.commandCompletions
-						);
-						break;
-					default:
-						result = Completion.CopyList(IntellisenseProvider.instructionCompletions);
-						Compiler.enviroment.allMacro.forEach((value, key) => {
-							let com = new Completion({ showText: key });
-							result.push(com);
-						});
+
+	//#region 获取基础帮助
+	/**
+	 * 获取基础帮助，此对于空行
+	 * @param trigger 触发字符串
+	 */
+	private static GetEmptyLineHelper(option: { fileHash: number, range?: HightlightRange, trigger?: string }): Completion[] {
+		switch (option.trigger) {
+			case " ":
+			case ":":
+				return [];
+			case ".":
+				if (!option.range) {
+					return IntellisenseProvider.commandCompletions;
+				} else if (option.range.type === "DataGroup") {
+					return IntellisenseProvider.GetLabel(option.fileHash, "")
 				}
-				break;
+			default:
+				if (option.range?.type === "Macro") {
 
-			// 获取寻址模式
-			case CompletionRange.AddressingMode:
-				let instructions = IntellisenseProvider.GetInstructionAddressingModes(prefix.text);
-				if (!instructions)
-					break;
-
-				result = instructions;
-				break;
-
-			// 标签模式
-			case CompletionRange.Label:
-				let labelScope = prefix.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
-				let index = prefix.text.lastIndexOf(".");
-
-				if (index > 0) {
-					prefix = prefix.Substring(0, index);
-				} else if (option?.macro) {
-					option.macro.labels.forEach((value, key) => {
-						let com = new Completion({ showText: value.token.text });
-						result.push(com);
-					});
+				} else if (option.range?.type === "DataGroup") {
+					return IntellisenseProvider.GetLabel(option.fileHash, "");
 				} else {
-					prefix.text = "";
+					return IntellisenseProvider.instructionCompletions;
 				}
-
-				let labelHash = LabelUtils.GetLebalHash(prefix.text, prefix.fileHash, labelScope);
-				let topLabel = Compiler.enviroment.labelTrees.get(labelHash);
-				if (topLabel) {
-					topLabel.child.forEach((value) => {
-						let temp = Compiler.enviroment.allLabel.get(value);
-						if (!temp)
-							return;
-
-						let showText = temp.token.text.substring(index + 1);
-						let item = new Completion({ showText });
-						switch (temp.labelType) {
-							case LabelType.Defined:
-								item.type = CompletionType.Defined;
-								break;
-							case LabelType.Label:
-								item.type = CompletionType.Label;
-								break;
-						}
-
-
-						result.push(item);
-					});
-				}
-				break;
 		}
 
-		return result;
+		return [];
 	}
+	//#endregion 获取基础帮助
 
-	/**添加所有汇编命令 */
-	static UpdateInstrucionCompletions() {
-		IntellisenseProvider.instructionCompletions = [];
-		for (let i = 0; i < Platform.platform.instructions.length; ++i) {
-			const instruction = Platform.platform.instructions[i];
-			let completion = new Completion({
-				showText: instruction,
-				insertText: instruction,
-				type: CompletionType.Instruction
-			});
-			IntellisenseProvider.instructionCompletions.push(completion);
-		}
-	}
-
-	/**添加所有编译器命令 */
-	static UpdateCommandCompletions() {
-
-		Commands.allCommandNames.forEach(value => {
-			let completion = new Completion({
-				showText: value,
-				insertText: value.substring(1),
-				type: CompletionType.Command
-			});
-			IntellisenseProvider.commandCompletions.push(completion);
-		});
-	}
-
+	//#region 获取汇编指令地址模式
 	/**获取汇编指令地址模式 */
 	static GetInstructionAddressingModes(instruction: string) {
 		const modes = Platform.platform.allInstructions.get(instruction)
@@ -257,6 +201,165 @@ export class IntellisenseProvider {
 		}
 		return completions;
 	}
+	//#endregion 获取汇编指令地址模式
+
+	//#region 获取文件帮助
+	/**获取文件帮助 */
+	static async GetFileHelper(root: string, isTop: boolean) {
+
+		let completions: Completion[] = [];
+		if (!FileUtils.ReadFile)
+			return [];
+
+		if (!isTop) {
+			let com = new Completion({ showText: "../", index: 0 });
+			com.type = CompletionType.Folder;
+			completions.push(com);
+		}
+
+		let files = await FileUtils.GetFolderFiles(root);
+		for (let i = 0; i < files.length; ++i) {
+			let com = new Completion({ showText: "" });
+			switch (files[i].type) {
+
+				case "folder":
+					com.index = 1;
+					com.type = CompletionType.Folder;
+					break;
+
+				case "file":
+					com.index = 2;
+					com.type = CompletionType.File;
+					break;
+
+			}
+			com.showText = files[i].name;
+			com.insertText = files[i].name;
+			completions.push(com);
+		}
+
+		return completions;
+	}
+	//#endregion 获取文件帮助
+
+	//#region 获取Label
+	/**
+	 * 获取Label
+	 * @param fileHash 文件Hash
+	 * @param prefix 前缀
+	 * @param macro 自定义函数
+	 * @returns 
+	 */
+	private static GetLabel(fileHash: number, prefix: string, macro?: IMacro): Completion[] {
+		let labelHashes = Compiler.enviroment.fileLabels.get(fileHash);
+		if (!labelHashes)
+			return [];
+
+		let result: Completion[] = [];
+		let labelScope = prefix.startsWith(".") ? LabelScope.Local : LabelScope.Global;
+		let index = prefix.lastIndexOf(".");
+
+		if (index > 0) {
+			prefix = prefix.substring(0, index);
+		} else if (macro) {
+			macro.labels.forEach((label, key) => {
+				let com = new Completion({ showText: label.token.text });
+				result.push(com);
+			});
+		} else {
+			prefix = "";
+		}
+
+		let labelHash = LabelUtils.GetLebalHash(prefix, fileHash, labelScope);
+		let topLabel = Compiler.enviroment.labelTrees.get(labelHash);
+		if (topLabel) {
+			topLabel.child.forEach((labelHash) => {
+				let temp = Compiler.enviroment.allLabel.get(labelHash);
+				if (!temp)
+					return [];
+
+				let showText = temp.token.text.substring(index + 1);
+				let item = new Completion({ showText });
+				switch (temp.labelType) {
+					case LabelType.Defined:
+						item.type = CompletionType.Defined;
+						break;
+					case LabelType.Label:
+						item.type = CompletionType.Label;
+						break;
+				}
+				result.push(item);
+			});
+		}
+
+		return result;
+	}
+	//#endregion 获取Label
+
+	/***** 更新基础帮助 *****/
+
+	//#region 更新所有汇编指令
+	/**更新所有汇编指令 */
+	static UpdateInstrucionCompletions() {
+		IntellisenseProvider.instructionCompletions = [];
+		for (let i = 0; i < Platform.platform.instructions.length; ++i) {
+			const instruction = Platform.platform.instructions[i];
+			let completion = new Completion({
+				showText: instruction,
+				insertText: instruction,
+				type: CompletionType.Instruction
+			});
+			IntellisenseProvider.instructionCompletions.push(completion);
+		}
+	}
+	//#endregion 更新所有汇编指令
+
+	//#region 更新所有编译器命令
+	/**更新所有编译器命令 */
+	static UpdateCommandCompletions() {
+
+		Commands.allCommandNames.forEach(value => {
+			let completion = new Completion({
+				showText: value,
+				insertText: value.substring(1),
+				type: CompletionType.Command
+			});
+			IntellisenseProvider.commandCompletions.push(completion);
+		});
+	}
+	//#endregion 更新所有编译器命令
+
+	//#region 基础分割行
+	/**
+	 * 基础分割行
+	 * @param lineText 一行文本
+	 * @returns 分割结果
+	 */
+	private static BaseSplit(lineText: string) {
+		let result: IntellisenseLineType = { type: "none", matchRange: [0, 0] };
+		let match = new RegExp(Platform.regexString, "ig").exec(lineText);
+		let matchText = "";
+		if (match?.groups?.[MatchNames.command]) {
+			result.type = "command";
+			matchText = match.groups[MatchNames.command];
+		} else if (match?.groups?.[MatchNames.instruction]) {
+			result.type = "instruction";
+			matchText = match.groups[MatchNames.instruction];
+		} else if ((match?.groups?.[MatchNames.variable])) {
+			result.type = "variable"
+		}
+
+		if (match) {
+			result.matchRange = [match.index, match.index + match[0].length];
+			let index = match[0].indexOf(matchText);
+			if (index >= 0) {
+				index += match.index;
+				result.matchRange = [index, index + matchText.length];
+			}
+		}
+
+		return result;
+	}
+	//#endregion 基础分割行
 
 }
-//#endregion 智能提示类

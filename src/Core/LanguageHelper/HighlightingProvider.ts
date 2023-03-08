@@ -14,8 +14,7 @@ export class HighlightingProvider {
 		let result: { line: number, start: number, length: number, type: number }[] = [];
 		let saveToken;
 
-		for (let i = 0; i < lines.length; ++i) {
-			const line = lines[i];
+		lines.forEach(line => {
 			const highlightingTokens = line.GetTokens?.();
 			if (highlightingTokens && highlightingTokens.length != 0) {
 				for (let j = 0; j < highlightingTokens.length; ++j) {
@@ -28,8 +27,7 @@ export class HighlightingProvider {
 					});
 				}
 			}
-
-		}
+		});
 		return result;
 	}
 }

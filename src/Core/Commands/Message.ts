@@ -24,7 +24,8 @@ export class Message {
 		const line = option.allLines[option.lineIndex] as ICommandLine;
 		if (line.expParts[0]?.length !== 1 || line.expParts[0][0].type !== PriorityType.Level_3_String) {
 			let errorMsg = Localization.GetMessage("Command arguments error");
-			MyDiagnostic.PushException(line.command, errorMsg);
+			let token = ExpressionUtils.CombineExpressionPart(line.expParts[0]);
+			MyDiagnostic.PushException(token, errorMsg);
 			line.compileType = LineCompileType.Error;
 		}
 	}
@@ -39,20 +40,15 @@ export class Message {
 	}
 
 	private static Compiler_Msg(option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as ICommandLine;
-
+		const line = option.allLines[option.lineIndex] as ICommandLine;
 		line.tag ??= [];
-		let notSuccess = false;
-
 		line.compileType = LineCompileType.Finished;
-
 		for (let i = 1; i < line.expParts.length; ++i) {
 			let temp = ExpressionUtils.GetExpressionValue(line.expParts[i], ExpressionResult.GetResultAndShowError, option);
-			if (temp.success && !line.tag) {
-				line.tag[i] = temp.value;
+			if (temp.success) {
+				line.tag[i - 1] ??= temp.value;
 			} else {
 				line.compileType = LineCompileType.None;
-				notSuccess = true;
 			}
 		}
 
@@ -85,7 +81,5 @@ export class Message {
 		}
 		result += text.substring(start);
 		Message.ShowMessage?.(result);
-
 	}
-
 }

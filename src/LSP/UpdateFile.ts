@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { ConfigUtils } from "./ConfigUtils";
 import { LSPUtils } from "./LSPUtils";
 
 const FreshTime = 1000;
@@ -25,7 +26,7 @@ export class UpdateFile {
 		let files = await LSPUtils.GetWorkspaceFilterFile();
 
 		let tempFiles: { text: string, filePath: string }[] = [];
-		for (let i = 0; i < files.length; i++) {
+		for (let i = 0; i < files.length; ++i) {
 			let buffer = await LSPUtils.assembler.fileUtils.ReadFile(files[i].fsPath);
 			let text = LSPUtils.assembler.fileUtils.BytesToString(buffer);
 			tempFiles.push({ text, filePath: files[i].fsPath });
@@ -131,41 +132,66 @@ export class UpdateFile {
 		);
 
 		const watcher = vscode.workspace.createFileSystemWatcher(rp, false, false, false);
-
-		// watcher.onDidDelete(async (e) => {
-		// 	if (e.fsPath == LSPUtils.assembler.config.ConfigFile)
-		// 		return;
-
-		// 	LSPUtils.assembler.baseHelper.ClearFile(e.fsPath);
-		// 	let uri = vscode.Uri.file(e.fsPath);
-		// 	this.errorCollection.delete(uri);
-		// });
-
-		watcher.onDidChange(async (e) => {
-			let path = await LSPUtils.assembler.fileUtils.GetFileName(e.fsPath);
-			if (path === LSPUtils.assembler.config.ConfigFile) {
-				let data = await LSPUtils.assembler.fileUtils.ReadFile(e.fsPath);
-				let json = LSPUtils.assembler.fileUtils.BytesToString(data);
-
-				let platform = LSPUtils.assembler.config.ProjectSetting.platform;
-				LSPUtils.assembler.config.ReadConfigJson(json);
-				if (platform === LSPUtils.assembler.config.ProjectSetting.platform)
-					return;
-
-				LSPUtils.assembler.platform.ChangePlatform(LSPUtils.assembler.config.ProjectSetting.platform);
-			}
-		});
-
-		// watcher.onDidCreate(async (e) => {
-		// 	let tempFiles = await this.GetWorkspaceFilterFile();
-		// 	let searchFiles = tempFiles.map(value => value.fsPath);
-		// 	if (searchFiles.includes(e.fsPath)) {
-		// 		let buffer = await this.assembler.fileUtils.ReadFile(e.fsPath);
-		// 		let text = this.assembler.fileUtils.BytesToString(buffer);
-		// 		await this.assembler.compile.DecodeText([{ text, filePath: e.fsPath }]);
-		// 	}
-		// });
+		watcher.onDidDelete(UpdateFile.FileDelete);
+		watcher.onDidChange(UpdateFile.FileChange);
+		watcher.onDidCreate(UpdateFile.FileCreate);
 	}
 
+	/**文件删除 */
+	private static async FileDelete(e: vscode.Uri) {
+		if (await LSPUtils.assembler.fileUtils.GetFileName(e.fsPath) === LSPUtils.assembler.config.ConfigFile)
+			return;
+
+		LSPUtils.assembler.ClearFile(e.fsPath);
+		UpdateFile.errorCollection.delete(e);
+		console.log("delete file", e);
+		
+	}
+
+	/**文件修改 */
+	private static async FileChange(e: vscode.Uri) {
+		console.log("change file", e);
+		let fileName = await LSPUtils.assembler.fileUtils.GetFileName(e.fsPath);
+		if (fileName !== LSPUtils.assembler.config.ConfigFile)
+			return;
+
+		let platform = LSPUtils.assembler.config.ProjectSetting.platform;
+		await ConfigUtils.ReadConfig();
+		if (platform === LSPUtils.assembler.config.ProjectSetting.platform)
+			return;
+
+		LSPUtils.assembler.platform.ChangePlatform(LSPUtils.assembler.config.ProjectSetting.platform);
+	}
+
+	/**文件创建 */
+	private static async FileCreate(e: vscode.Uri) {
+		let tempFiles = (await UpdateFile.GetWorkspaceFilterFile()).map(value => value.fsPath);
+		if (tempFiles.includes(e.fsPath)) {
+			LSPUtils.fileUpdateFinished = false;
+			let buffer = await LSPUtils.assembler.fileUtils.ReadFile(e.fsPath);
+			let text = LSPUtils.assembler.fileUtils.BytesToString(buffer);
+			await LSPUtils.assembler.compiler.DecodeText([{ text, filePath: e.fsPath }]);
+			LSPUtils.fileUpdateFinished = true;
+		}
+		console.log("create file", e);
+	}
 	//#endregion 监视文件
+
+	//#region 获取工作目录下所筛选出的文件
+	private static async GetWorkspaceFilterFile() {
+		let includes = `{${LSPUtils.assembler.config.ProjectSetting.includes.join(",")}}`;
+		let excludes: string | null = null;
+		if (LSPUtils.assembler.config.ProjectSetting.excludes.length != 0)
+			excludes = `{${LSPUtils.assembler.config.ProjectSetting.excludes.join(",")}}`;
+
+		return await vscode.workspace.findFiles(includes, excludes);
+	}
+
+	/**查询文件是否在工程内 */
+	// private static async FindFileInProject(file: string) {
+	// 	let files = await this.GetWorkspaceFilterFile();
+	// 	let searchFiles = files.map(value => value.fsPath);
+	// 	return searchFiles.includes(file);
+	// }
+	//#endregion 获取工作目录下所筛选出的文件
 }

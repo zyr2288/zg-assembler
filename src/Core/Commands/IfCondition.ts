@@ -3,13 +3,11 @@ import { LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
-import { Localization } from "../I18n/Localization";
 import { LineCompileType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "./Commands";
 
 interface ConfidentLine {
 	index: number;
-	line: ICommandLine;
 	confident: boolean;
 }
 
@@ -47,7 +45,7 @@ export class IfCondition {
 		let index = 0;
 		let commands = [".ELSEIF", ".ELSE", ".ENDIF"];
 
-		let tag: ConfidentLine[] = [{ index: result[0].index, line, confident: false }];
+		let tag: ConfidentLine[] = [{ index: result[0].index, confident: false }];
 		IfCondition.SplitExpression(line);
 
 		for (let i = 1; i < result.length; i++) {
@@ -65,11 +63,7 @@ export class IfCondition {
 					index = 2;
 					break;
 			}
-			tag.push({
-				index: lineIndex,
-				line: option.allLines[lineIndex] as ICommandLine,
-				confident: false
-			});
+			tag.push({ index: lineIndex, confident: false });
 			option.allLines[lineIndex].compileType = LineCompileType.Finished;
 		}
 
@@ -79,9 +73,9 @@ export class IfCondition {
 	private static ThirdAnalyse_If(option: DecodeOption) {
 		const line = option.allLines[option.lineIndex] as ICommandLine;
 		let tag: ConfidentLine[] = line.tag;
-		for (let i = 0; i < tag.length - 1; i++) {
-			const tempLine = tag[i].line as ICommandLine;
-			if (tempLine.expParts[0] && ExpressionUtils.CheckLabelsAndShowError(tempLine.expParts[0]))
+		for (let i = 0; i < tag.length - 1; ++i) {
+			const tempLine = option.allLines[tag[i].index] as ICommandLine;
+			if (tempLine.expParts[0] && ExpressionUtils.CheckLabelsAndShowError(tempLine.expParts[0], option))
 				tempLine.compileType = LineCompileType.Error;
 		}
 	}
@@ -92,7 +86,7 @@ export class IfCondition {
 		let tag: ConfidentLine[] = line.tag;
 
 		for (let i = 0; i < tag.length - 1; i++) {
-			const tempLine = tag[i].line as ICommandLine;
+			const tempLine = option.allLines[tag[i].index] as ICommandLine;
 			if (tempLine.command.text === ".ELSE") {
 				tag[i].confident = true;
 				break;
@@ -117,8 +111,8 @@ export class IfCondition {
 		let index = 0;
 		let commands = [".ELSE", ".ENDIF"];
 
-		let tag: ConfidentLine[] = [{ index: result[0].index, line, confident: false }];
-		for (let i = 1; i < result.length; i++) {
+		let tag: ConfidentLine[] = [{ index: result[0].index, confident: false }];
+		for (let i = 1; i < result.length; ++i) {
 			const tempLine = option.allLines[result[i].index] as ICommandLine;
 			let temp = commands.indexOf(tempLine.command.text);
 			if (temp < index)
@@ -127,11 +121,7 @@ export class IfCondition {
 			if (temp === 0)
 				index = 1;
 
-			tag.push({
-				line: tempLine,
-				index: result[i].index,
-				confident: false
-			});
+			tag.push({ index: result[i].index, confident: false });
 		}
 
 		line.tag = tag;
@@ -149,7 +139,7 @@ export class IfCondition {
 		const line = option.allLines[option.lineIndex] as ICommandLine;
 		let tag: ConfidentLine[] = line.tag;
 
-		for (let i = 0; i < tag.length - 1; i++) {
+		for (let i = 0; i < tag.length - 1; ++i) {
 			const tempLine = option.allLines[tag[i].index] as ICommandLine;
 			if (line.command.text === ".ELSE") {
 				tag[i].confident = true;

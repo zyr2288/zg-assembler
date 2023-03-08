@@ -1,16 +1,8 @@
 import * as vscode from "vscode";
-import { Completion } from "../Core/LanguageHelper/IntellisenseProvider";
-import { CommandName } from "./AssCommands";
 import { LSPUtils } from "./LSPUtils";
 
-//#region 提示类型
-enum CompletionType {
-	Instruction, Command, Macro, Defined, Label, MacroLabel, Folder, File
-}
-//#endregion 提示类型
-
 export enum TriggerSuggestType {
-	Instruction, FilePath
+	None, Instruction, FilePath
 }
 
 export interface TriggerSuggestTag {
@@ -43,19 +35,14 @@ export class Intellisense {
 		if (Intellisense.suggestData) {
 			return Intellisense.ProcessSuggest();
 		}
-
-		let doc = {
-			filePath: document.uri.fsPath,
-			lineNumber: position.line,
-			allText: document.getText(),
-			currect: document.offsetAt(position),
-			lineText: document.lineAt(position.line).text,
-			lineCurrect: position.character,
-		};
-		let option = {
-			trigger: context.triggerCharacter
-		};
-		let completions = LSPUtils.assembler.languageHelper.intellisense.Intellisense(doc, option);
+		
+		let completions = LSPUtils.assembler.languageHelper.intellisense.Intellisense(
+			document.uri.fsPath,
+			position.line,
+			document.lineAt(position.line).text,
+			position.character,
+			context.triggerCharacter
+		);
 
 		let result: vscode.CompletionItem[] = [];
 
@@ -85,7 +72,7 @@ export class Intellisense {
 		return result;
 	}
 
-	private static ProcessSuggest() {
+	private static async ProcessSuggest() {
 		let result: vscode.CompletionItem[] = [];
 
 		switch (Intellisense.suggestData?.type) {
@@ -102,6 +89,24 @@ export class Intellisense {
 					com.kind = vscode.CompletionItemKind.EnumMember
 					result.push(com);
 				}
+				break;
+			case TriggerSuggestType.FilePath:
+				if (!vscode.workspace.workspaceFolders)
+					break;
+
+				let path = Intellisense.suggestData.data;
+				let top = path === vscode.workspace.workspaceFolders[0].uri.fsPath;
+				const files = await LSPUtils.assembler.languageHelper.intellisense.GetFileHelper(path, top);
+				for (let i = 0; i < files.length; ++i) {
+					const file = files[i];
+
+					let com = new vscode.CompletionItem(file.showText);
+					com.insertText = Intellisense.ChangeExp(file.insertText);
+					com.sortText = file.index.toString();
+					com.kind = Intellisense.CompletionShowType[file.type!];
+					result.push(com);
+				}
+
 				break;
 		}
 

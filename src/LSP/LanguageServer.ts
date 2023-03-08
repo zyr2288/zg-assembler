@@ -10,8 +10,6 @@ import { IOImplementation } from "./IOImplementation";
 import { LSPUtils } from "./LSPUtils";
 import { UpdateFile } from "./UpdateFile";
 
-const FreshTime = 1000;
-
 export class LanguageServer {
 
 	private assembler!: Assembler;
@@ -25,7 +23,10 @@ export class LanguageServer {
 		this.assembler.Initialize();
 		this.SetLanguage(vscode.env.language);
 
-		const classes = [Highlighting, UpdateFile, DefinitionProvider, Intellisense, HoverProvider, AssCommands];
+		const classes = [
+			Highlighting, UpdateFile, DefinitionProvider,
+			Intellisense, HoverProvider, AssCommands
+		];
 		for (let i = 0; i < classes.length; ++i) {
 			let temp = Reflect.get(classes[i], "Initialize");
 			await temp();

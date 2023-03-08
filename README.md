@@ -122,9 +122,9 @@
 ### `.DB` `.DW` `.DL`
 
 ```
-    .DB data1 [, data2, data3...]
-    .DW data1 [, data2, data3...]
-    .DL data1 [, data2, data3...]
+    .DB data1 [, data2, data3...]     ;1 byte
+    .DW data1 [, data2, data3...]     ;2 bytes
+    .DL data1 [, data2, data3...]     ;4 bytes
 ```
 
 * A series of bytes data

@@ -42,7 +42,6 @@ export class Compiler {
 			let lines = Compiler.SplitTexts(fileHash, files[index].text);
 
 			option.allLines.push(...lines);
-			Compiler.enviroment.allBaseLines.set(fileHash, option.allLines);
 		}
 
 		await Compiler.FirstAnalyse(option);
@@ -73,7 +72,6 @@ export class Compiler {
 
 		let lines = Compiler.SplitTexts(fileHash, text);
 		option.allLines.push(...lines);
-		Compiler.enviroment.allBaseLines.set(fileHash, option.allLines);
 
 		await Compiler.FirstAnalyse(option);
 		await Compiler.SecondAnalyse(option);
@@ -133,6 +131,8 @@ export class Compiler {
 
 			if (!tokens[1].isEmpty)
 				newLine.comment = tokens[1].text;
+
+
 		}
 		//#endregion 保存行Token
 
@@ -145,8 +145,7 @@ export class Compiler {
 			if (content.isEmpty)
 				continue;
 
-			let regex = new RegExp(Platform.regexString, "i");
-			match = regex.exec(content.text);
+			match = new RegExp(Platform.regexString, "ig").exec(content.text);
 
 			if (match?.groups?.["command"]) {
 				SaveToken(LineType.Command);
@@ -164,6 +163,14 @@ export class Compiler {
 			}
 
 			result.push(newLine);
+
+			let lines = Compiler.enviroment.allBaseLines.get(fileHash);
+			if (!lines) {
+				lines = new Map();
+				Compiler.enviroment.allBaseLines.set(fileHash, lines);
+			}
+
+			lines.set(index, newLine);
 			newLine = {} as ICommonLine;
 		}
 		return result;

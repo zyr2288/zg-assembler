@@ -5,6 +5,7 @@ import { FileUtils } from "./Base/FileUtils";
 import { MyDiagnostic } from "./Base/MyException";
 import { Utils } from "./Base/Utils";
 import { Commands } from "./Commands/Commands";
+import { Message } from "./Commands/Message";
 import { Localization } from "./I18n/Localization";
 import { DefinitionProvider } from "./LanguageHelper/DefinitionProvider";
 import { DocumentChangeProvider } from "./LanguageHelper/DocumentChangeProvider";
@@ -38,7 +39,7 @@ export class Assembler {
 		/**true为正在编译中 */
 		compiling: this.compiling,
 		DecodeText: Compiler.DecodeText,
-		CompileText: Compiler.CompileText
+		CompileText: Compiler.CompileText,
 	}
 
 	Initialize() {
@@ -50,6 +51,15 @@ export class Assembler {
 	GetUpdateLines(filePath: string) {
 		let hash = Utils.GetHashcode(filePath);
 		return Compiler.enviroment.allBaseLines.get(hash) ?? [];
+	}
+
+	ClearFile(filePath: string) {
+		let hash = Utils.GetHashcode(filePath);
+		Compiler.enviroment.ClearFile(hash);
+	}
+
+	BindingMessage(func: (message: string) => void) {
+		Message.ShowMessage = func;
 	}
 
 	private get compiling() {
