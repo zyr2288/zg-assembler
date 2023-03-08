@@ -76,59 +76,63 @@
 
 ### `.BASE` **baseAddress**
 
+```
+    .BASE baseAddress
+```
+
 * Set the generated file address, the default is `.BASE 0`, it is not same as `.ORG`.
 
 * For example, if `.BASE $10`, the generated file will be written from `$10`, and the previous `$F` address will be `0`.
 
-> Note: Compile top-down, some variables need to be assigned for the first compile, if the first compile is unknown then compile is not successful.
-
-> Note: If you use the `.BASE` command, it comes after `.ORG`, otherwise it compiles incorrectly.
+> Note: 
+> 1. Compile top-down, some variables need to be assigned for the first compile, if the first compile is unknown then compile is not successful.
+> 2. If you use the `.BASE` command, it comes after `.ORG`, otherwise it compiles incorrectly.
 
 ---
 
 
 ### `.ORG` **originalAddress**
 
+```
+    .ORG originalAddress
+```
+
 * Set the start compile address, e.g. `.ORG $8000`, then the compile will start at $8000.
 
 * You can also use `.ORG *`, which means compilation will start from the current address. But the current address has to be known, otherwise the compiler reports an error.
 
-* Note: If you use the `.BASE` command, it comes after `.ORG`, otherwise it compiles with an error.
+> Note: If you use the `.BASE` command, it comes after `.ORG`, otherwise it compiles with an error.
 
 ---
 
 
 ### `.DEF` **name, expression**
 
+```
+    .DEF name, expression
+```
+
 * Define a constant, for example: `.DEF idefined, $12`
 
-> Note: `temp = $12` can also be defined, but it can be re-value.
+> Note: `temp = $12` can also be defined, but `temp` can be re-value.
 
 ---
 
 
-### `.DB` **data1 [, data2...]**
+### `.DB` `.DW` `.DL`
 
-* A series of 1-byte data
+```
+    .DB data1 [, data2, data3...]
+    .DW data1 [, data2, data3...]
+    .DL data1 [, data2, data3...]
+```
 
----
-
-
-### `.DW` **data1 [, data2...]**
-
-* A series of 2-byte data
-
----
-
-
-### `.DL` **data1 [, data2...]**
-
-* A series of 4-byte data
+* A series of bytes data
 
 ---
 
 
-### [`.DBG` \ `.DWG` \ `.DLG`] `.ENDD`
+### `.DBG` `.DWG` `.DLG` `.ENDD`
 
 * Data group, get the data index.
 
@@ -140,9 +144,9 @@ For example:
 
     .ENDD
 
-    LDA data:.data1     ;A5 00
-    LDA data:.data3     ;A5 02
-    LDA data:.data1:1   ;A5 03
+    LDA data:.data1     ;Result A5 00
+    LDA data:.data3     ;Result A5 02
+    LDA data:.data1:1   ;Result A5 03
 ```
 
 ---
@@ -150,14 +154,16 @@ For example:
 
 ### `.HEX`
 
+```
+    .HEX hexString
+```
+
 * A hexadecimal string, can be separated by spaces.
 
 For example:
 ```
-    .HEX 12 34567 89
+    .HEX 12 34567 89     ;Result(Hex) 12 34 56 07 89
 ```
-
-* The compilation result: `12 34 56 07 89`
 
 ---
 
@@ -171,29 +177,41 @@ For example:
 For example:
 ```
     .IF a == 5
-    ...
+     .....
     .ELSEIF b >= 5
-    ...
+     .....
     .ELSEIF c != 3
-    ...
+     .....
     .ELSE
-    ...
+     .....
     .ENDIF
 ```
 
 ---
 
 
-### [`.IFDEF` \ `.IFNDEF`] `.ELSE` `.ENDIF`
+### `.IFDEF` `.IFNDEF` `.ELSE` `.ENDIF`
+
+```
+    .IFDEF label
+     .....
+	.ELSE
+     .....
+	.ENDIF
+```
 
 * Process a block of code if a label has been defined / not defined.
 
---
+---
 
 
 ### `.INCBIN` **filePath [, fileStartPosition, readLength]**
 
-You can read the binary content of the reference file. Please fill in the relative path of the file in the double quotes.
+```
+	.INCBIN filePath[, fileStartPosition, readLength]
+```
+
+* You can read the binary content of the reference file. Please fill in the relative path of the file in the double quotes.
 
 For example:
 ```
@@ -204,6 +222,10 @@ For example:
 
 
 ### `.INCLUDE`
+
+```
+    .INCLUDE filePath
+```
 
 * You can quote the file, please fill in the relative path of the file in double quotes. If there are also reference files in the reference file, please fill in relative to the main compilation file path. E.g:
 
