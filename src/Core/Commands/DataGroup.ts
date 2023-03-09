@@ -71,8 +71,8 @@ export class DataGroupCommand {
 		Compiler.enviroment.SetRange(line.command.fileHash, {
 			type: "DataGroup",
 			key: label.token.text,
-			start: option.includeCommandLines![0].index,
-			end: option.includeCommandLines![1].index
+			start: option.includeCommandLines![0].line,
+			end: option.includeCommandLines![1].line
 		});
 
 		let scope = label.token.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
@@ -101,6 +101,7 @@ export class DataGroupCommand {
 
 			}
 		}
+		line.tag = datagroup;
 	}
 
 	private static ThirdAnalyse_DataGroup(option: DecodeOption) {
@@ -134,7 +135,9 @@ export class DataGroupCommand {
 
 	private static Compile_DataGroup(option: DecodeOption, dataLength: number) {
 		const line = option.allLines[option.lineIndex] as ICommandLine;
-		Compiler.SetAddress(line);
+		if (!Compiler.SetAddress(line))
+			return;
+
 		let label = LabelUtils.FindLabel(line.label!.token);
 		if (label!.value == undefined)
 			label!.value = Compiler.enviroment.orgAddress;

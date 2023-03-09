@@ -38,6 +38,7 @@ interface CommandParams {
 interface MatchLine {
 	match: string;
 	index: number;
+	line: number;
 }
 
 interface IncludeCommand {
@@ -392,7 +393,7 @@ export class Commands {
 					deep--;
 					continue;
 				}
-				result.push({ match: commandToken.text, index: i });
+				result.push({ match: commandToken.text, index: i, line: commandToken.line });
 				found = true;
 				break;
 			}
@@ -400,10 +401,15 @@ export class Commands {
 			if (deep !== 0 || !names?.includes(commandToken.text))
 				continue;
 
-			result.push({ match: commandToken.text, index: i });
+			result.push({ match: commandToken.text, index: i, line: commandToken.line });
 		}
+
 		if (found)
-			result.unshift({ match: startCommand, index: option.lineIndex });
+			result.unshift({
+				match: startCommand,
+				index: option.lineIndex,
+				line: (option.allLines[option.lineIndex] as ICommandLine).command.line
+			});
 		else
 			result = [];
 

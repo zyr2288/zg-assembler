@@ -78,7 +78,8 @@ export class Include {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
 		let temp = await FileUtils.ReadFile(line.tag);
 
-		Compiler.SetAddress(line);
+		if (!Compiler.SetAddress(line))
+			return;
 
 		let start = 0;
 		let result = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.GetResultAndShowError, option);

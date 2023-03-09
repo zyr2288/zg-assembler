@@ -76,20 +76,20 @@ export class Intellisense {
 		let result: vscode.CompletionItem[] = [];
 
 		switch (Intellisense.suggestData?.type) {
-			case TriggerSuggestType.Instruction:
-				const modes = LSPUtils.assembler.languageHelper.intellisense.GetInstructionAddressingModes(Intellisense.suggestData.data);
-				if (!modes)
-					break;
+			// case TriggerSuggestType.Instruction:
+			// 	const modes = LSPUtils.assembler.languageHelper.intellisense.GetInstructionAddressingModes(Intellisense.suggestData.data);
+			// 	if (!modes)
+			// 		break;
 
-				for (let i = 0; i < modes.length; ++i) {
-					const mode = modes[i];
-					let com = new vscode.CompletionItem(mode.showText);
-					com.insertText = Intellisense.ChangeExp(mode.insertText);
-					com.sortText = mode.index.toString();
-					com.kind = vscode.CompletionItemKind.EnumMember
-					result.push(com);
-				}
-				break;
+			// 	for (let i = 0; i < modes.length; ++i) {
+			// 		const mode = modes[i];
+			// 		let com = new vscode.CompletionItem(mode.showText);
+			// 		com.insertText = Intellisense.ChangeExp(mode.insertText);
+			// 		com.sortText = mode.index.toString();
+			// 		com.kind = vscode.CompletionItemKind.EnumMember
+			// 		result.push(com);
+			// 	}
+			// 	break;
 			case TriggerSuggestType.FilePath:
 				if (!vscode.workspace.workspaceFolders)
 					break;

@@ -156,12 +156,12 @@ export class Compiler {
 			} else {
 				newLine = {
 					type: LineType.Unknow,
-					orgText: content,
 					comment: comment.text,
 					compileType: LineCompileType.None
 				} as ICommonLine;
 			}
 
+			newLine.orgText = content;
 			result.push(newLine);
 
 			let lines = Compiler.enviroment.allBaseLines.get(fileHash);
@@ -360,6 +360,11 @@ export class Compiler {
 	//#endregion 行设定结果值
 
 	//#region 设定起始地址
+	/**
+	 * 设定起始地址
+	 * @param line 当前行
+	 * @returns true为正确
+	 */
 	static SetAddress(line: IInstructionLine | ICommandLine | IMacroLine) {
 		if (Compiler.enviroment.orgAddress < 0) {
 			let errorMsg = Localization.GetMessage("Unknow original address");

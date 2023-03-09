@@ -13,28 +13,30 @@ export class HoverProvider {
 
 		let result = { value: undefined as number | undefined, comment: undefined as string | undefined };
 
-		const { content } = Compiler.GetContent(line);
-		let range = HelperUtils.GetWord(content.text, currect);
+		let temp = HelperUtils.GetWord(lineText, currect);
 
-		if (range.type === "none")
-			return result;
+		// const { content } = Compiler.GetContent(line);
+		// let range = HelperUtils.GetWord(content.text, currect);
 
-		if (range.type === "value") {
-			result.value = range.value;
-			return result;
-		}
+		// if (range.type === "none")
+		// 	return result;
 
-		if (range.type !== "var")
-			return result;
+		// if (range.type === "value") {
+		// 	result.value = range.value;
+		// 	return result;
+		// }
 
-		content.text = range.text;
-		content.start = currect - content.start;
-		let label = LabelUtils.FindLabel(content);
-		if (label) {
-			result.value = label.value;
-			result.comment = label.comment;
-			return result;
-		}
+		// if (range.type !== "var")
+		// 	return result;
+
+		// content.text = range.text;
+		// content.start = currect - content.start;
+		// let label = LabelUtils.FindLabel(content);
+		// if (label) {
+		// 	result.value = label.value;
+		// 	result.comment = label.comment;
+		// 	return result;
+		// }
 
 		// let macro = MacroUtils.FindMacro(content.text);
 		// if (macro) {

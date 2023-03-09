@@ -205,11 +205,12 @@ export class MacroCommand {
 
 		macro.comment = line.comment;
 		macro.lines = Commands.CollectBaseLines(option);
+
 		Compiler.enviroment.SetRange(line.command.fileHash, {
 			type: "Macro",
 			key: macro.name.text,
-			start: option.includeCommandLines![0].index,
-			end: option.includeCommandLines![1].index,
+			start: option.includeCommandLines![0].line,
+			end: option.includeCommandLines![1].line,
 		});
 
 		line.tag = macro;
