@@ -160,7 +160,7 @@ export class Commands {
 		if (!args) return;
 
 		line.tag = args;
-		com.FirstAnalyse?.(option);
+		await com.FirstAnalyse?.(option);
 		delete (line.splitLine);
 	}
 	//#endregion 第一次分析

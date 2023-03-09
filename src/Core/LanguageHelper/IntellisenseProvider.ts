@@ -80,12 +80,6 @@ interface HightlightRange {
 	end: number;
 }
 
-interface MatchRange {
-	type: "none" | "command" | "instruction" | "variable";
-	start: number;
-	text: string;
-}
-
 const NotInMacroCommands = [".DBG", ".DWG", ".MACRO", ".DEF", ".INCLUDE", ".INCBIN", ".BASE", ".ORG"];
 
 export enum CompletionRange { None, Base, Label, Macro, Path, AddressingMode }
@@ -111,9 +105,6 @@ export class IntellisenseProvider {
 	 * @returns 
 	 */
 	static Intellisense(filePath: string, lineNumber: number, lineText: string, lineCurrect: number, trigger?: string): Completion[] {
-		if (IntellisenseProvider.fileCompletion)
-			return [];
-
 		const fileHash = Utils.GetHashcode(filePath);
 		const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
 		const prefix = line.Substring(0, lineCurrect);
@@ -143,7 +134,7 @@ export class IntellisenseProvider {
 				break;
 		}
 
-		let tempMatch = IntellisenseProvider.BaseSplit(lineText);
+		let tempMatch = HelperUtils.BaseSplit(lineText);
 		if (tempMatch.type === "none" || lineCurrect < tempMatch.start)
 			return IntellisenseProvider.GetEmptyLineHelper({ fileHash, range: rangeType, trigger: trigger });
 
@@ -359,31 +350,5 @@ export class IntellisenseProvider {
 		});
 	}
 	//#endregion 更新所有编译器命令
-
-	//#region 基础分割行
-	/**
-	 * 基础分割行
-	 * @param lineText 一行文本
-	 * @returns 分割结果
-	 */
-	private static BaseSplit(lineText: string) {
-		let result: MatchRange = { type: "none", start: 0, text: "" };
-		let match = new RegExp(Platform.regexString, "ig").exec(lineText);
-		if (match?.groups?.[MatchNames.command]) {
-			result.type = "command";
-			result.text = match.groups[MatchNames.command];
-		} else if (match?.groups?.[MatchNames.instruction]) {
-			result.type = "instruction";
-			result.text = match.groups[MatchNames.instruction];
-		} else if ((match?.groups?.[MatchNames.variable])) {
-			result.type = "variable"
-		}
-
-		if (match)
-			result.start = match[0].indexOf(result.text) + match.index;
-
-		return result;
-	}
-	//#endregion 基础分割行
 
 }

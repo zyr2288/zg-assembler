@@ -117,7 +117,8 @@ export class Include {
 		}
 
 		let token = expressions[0].Substring(1, expressions[0].length - 2);
-		if (await FileUtils.PathType(token.text) === "file") {
+		let type = await FileUtils.PathType(token.text);
+		if (type === "file") {
 			result.exsist = true;
 			result.path = token.text;
 		}
@@ -126,7 +127,8 @@ export class Include {
 		let folder = await FileUtils.GetPathFolder(file);
 		result.path = FileUtils.Combine(folder, token.text);
 
-		result.exsist = (await FileUtils.PathType(result.path)) === "file";
+		type = (await FileUtils.PathType(result.path));
+		result.exsist = type === "file";
 		if (!result.exsist) {
 			let errorMsg = Localization.GetMessage("File {0} is not exist", expressions[0].text);
 			MyDiagnostic.PushException(expressions[0], errorMsg);

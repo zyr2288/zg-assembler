@@ -3,17 +3,41 @@ import { ExpressionUtils } from "../Base/ExpressionUtils";
 import { LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
-import { Platform } from "../Platform/Platform";
+import { MatchNames, Platform } from "../Platform/Platform";
 
-
-export interface WordType {
-	startColumn: number;
+export interface MatchRange {
+	type: "none" | "command" | "instruction" | "variable";
+	start: number;
 	text: string;
-	type: "path" | "var" | "value" | "none";
-	value?: number
 }
 
 export class HelperUtils {
+
+	//#region 基础分割行
+	/**
+	 * 基础分割行
+	 * @param lineText 一行文本
+	 * @returns 分割结果
+	 */
+	static BaseSplit(lineText: string): MatchRange {
+		let result: MatchRange = { type: "none", start: 0, text: "" };
+		let match = new RegExp(Platform.regexString, "ig").exec(lineText);
+		if (match?.groups?.[MatchNames.command]) {
+			result.type = "command";
+			result.text = match.groups[MatchNames.command].toUpperCase();
+		} else if (match?.groups?.[MatchNames.instruction]) {
+			result.type = "instruction";
+			result.text = match.groups[MatchNames.instruction].toUpperCase();
+		} else if ((match?.groups?.[MatchNames.variable])) {
+			result.type = "variable"
+		}
+
+		if (match)
+			result.start = match[0].indexOf(result.text) + match.index;
+
+		return result;
+	}
+	//#endregion 基础分割行
 
 	//#region 获取光标所在字符
 	/**

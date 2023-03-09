@@ -192,7 +192,7 @@ export class Compiler {
 					InstructionLine.FirstAnalyse(option);
 					break;
 				case LineType.Command:
-					Commands.FirstAnalyse(option as CommandDecodeOption);
+					await Commands.FirstAnalyse(option as CommandDecodeOption);
 					break;
 				case LineType.Variable:
 					VariableLineUtils.FirstAnalyse(option);
