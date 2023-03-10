@@ -64,7 +64,7 @@
 
 ### Special Operator
 
-* \> and < have special meanings, for example >$1234 takes the high ($12) and <$1234 takes the low ($34).
+* \> and < have special meanings, for example \>$1234 takes the high ($12) and <$1234 takes the low ($34).
 
 * \* has a special meaning when not used as a multiplication sign, it means currect line original address. e.g. `.ORG *`.
 
