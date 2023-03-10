@@ -58,7 +58,7 @@ export class HelperUtils {
 
 		for (let i = 0; i < lineText.length; ++i) {
 
-			if (inString && lineText !== "\"") {
+			if (inString && lineText[i] !== "\"") {
 				lastString = lineText[i];
 				continue;
 			}
@@ -69,9 +69,8 @@ export class HelperUtils {
 					range[0] = i;
 				} else if (lastString !== "\\") {
 					inString = false;
-					range[1] = i;
+					range[1] = i + 1;
 				}
-				continue;
 			} else if (match.includes(lineText[i])) {
 				range[1] = i;
 				findMatch = true;
@@ -88,9 +87,11 @@ export class HelperUtils {
 			lastString = lineText[i];
 		}
 
-		let rangeText = [lineText.substring(range[0], currect), lineText.substring(currect, range[1])];
+		let rangeText = [lineText.substring(range[0], currect)];
 		if (currect === lineText.length)
 			rangeText[1] = "";
+		else if(currect < lineText.length)
+			rangeText[1] = lineText.substring(currect, lineText.length);
 
 		return { rangeText, start: range[0] + start };
 	}
@@ -138,5 +139,20 @@ export class HelperUtils {
 		// return result;
 	}
 	//#endregion 获取Label注释以及值
+
+	//#region 获取行所在范围
+	static GetRange(fileHash: number, lineNumber: number) {
+		let ranges = Compiler.enviroment.GetRange(fileHash);
+		let rangeType = undefined;
+		for (let i = 0; i < ranges.length; ++i) {
+			if (lineNumber < ranges[i].start || lineNumber > ranges[i].end)
+				continue;
+
+			rangeType = ranges[i];
+			break;
+		}
+		return rangeType;
+	}
+	//#endregion 获取行所在范围
 
 }

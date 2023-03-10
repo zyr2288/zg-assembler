@@ -140,7 +140,7 @@ export class ExpressionUtils {
 			if (part.type !== PriorityType.Level_1_Label)
 				continue;
 
-			let temp = LabelUtils.FindLabel(part.token, option);
+			let temp = LabelUtils.FindLabel(part.token, option?.macro);
 			if (!temp || temp.labelType === LabelType.None) {
 				let errorMsg = Localization.GetMessage("Label {0} not found", parts[i].token.text);
 				MyDiagnostic.PushException(parts[i].token, errorMsg);
@@ -203,7 +203,7 @@ export class ExpressionUtils {
 					element.value = temp.value;
 					element.type = PriorityType.Level_0_Sure;
 				} else {
-					let label = LabelUtils.FindLabel(element.token, option);
+					let label = LabelUtils.FindLabel(element.token, option?.macro);
 					if (label?.value === undefined) {
 						if (analyseOption === ExpressionResult.GetResultAndShowError) {
 							let errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);

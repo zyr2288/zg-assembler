@@ -118,7 +118,7 @@ export class FileUtils {
 	 */
 	static async GetFileName(path: string) {
 		let type = await FileUtils.PathType(path);
-		if (type != "file")
+		if (type !== "file")
 			return "";
 
 		let parts = path.split(/[\\\/]/g);

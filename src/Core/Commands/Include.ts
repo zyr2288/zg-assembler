@@ -130,8 +130,8 @@ export class Include {
 		type = (await FileUtils.PathType(result.path));
 		result.exsist = type === "file";
 		if (!result.exsist) {
-			let errorMsg = Localization.GetMessage("File {0} is not exist", expressions[0].text);
-			MyDiagnostic.PushException(expressions[0], errorMsg);
+			let errorMsg = Localization.GetMessage("File {0} is not exist", token.text);
+			MyDiagnostic.PushException(token, errorMsg);
 		}
 		return result;
 	}

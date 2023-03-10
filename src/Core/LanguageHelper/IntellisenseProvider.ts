@@ -34,20 +34,19 @@ export class Completion {
 	 * @param option.index showText 排序Index，默认0
 	 * @param option.comment showText 注释
 	 * @param option.type showText 提示类型，默认空
-	 * @param option.tag showText 附加数据
+	 * @param option.command showText 附加数据
 	 */
 	constructor(option: {
 		showText: string, insertText?: string,
 		index?: number, comment?: string,
-		type?: CompletionType, child?: Completion[], tag?: any
+		type?: CompletionType, tag?: TriggerSuggestType
 	}) {
 		this.showText = option.showText;
 		this.insertText = option.insertText ?? option.showText;
 		this.index = option.index ?? 0;
 		this.comment = option.comment;
 		this.type = option.type;
-		this.child = option.child;
-		this.tag = option.tag;
+		this.triggerType = option.tag;
 	}
 	//#endregion 构造函数
 
@@ -62,9 +61,7 @@ export class Completion {
 	/**提示类型 */
 	type?: CompletionType;
 	/**附加数据 */
-	tag?: any;
-	/**智能提示后续项目 */
-	child?: Completion[];
+	triggerType?: TriggerSuggestType;
 
 	Copy() {
 		let completion = Utils.DeepClone<Completion>(this);
@@ -84,18 +81,21 @@ const NotInMacroCommands = [".DBG", ".DWG", ".MACRO", ".DEF", ".INCLUDE", ".INCB
 
 export enum CompletionRange { None, Base, Label, Macro, Path, AddressingMode }
 
+enum TriggerSuggestType {
+	None, AllAsm, AllFile
+}
+
+export interface TriggerSuggestTag {
+	type: TriggerSuggestType;
+	data: string;
+}
+
 /**智能提示类 */
 export class IntellisenseProvider {
 
 	private static commandCompletions: Completion[] = [];
 	private static commandNotInMacroCompletions: Completion[] = [];
 	private static instructionCompletions: Completion[] = [];
-	private static fileCompletion: {
-		type: ".INCLUDE" | ".INCBIN",
-		path: string,
-		workFolder: string,
-		excludeFile: string,
-	};
 
 	//#region 智能提示
 	/**
@@ -111,16 +111,7 @@ export class IntellisenseProvider {
 		if (ignoreWordStr.test(prefix.text))
 			return [];
 
-		let ranges = Compiler.enviroment.GetRange(fileHash);
-		let rangeType = undefined;
-		for (let i = 0; i < ranges.length; ++i) {
-			if (lineNumber < ranges[i].start || lineNumber > ranges[i].end)
-				continue;
-
-			rangeType = ranges[i];
-			break;
-		}
-
+		let rangeType = HelperUtils.GetRange(fileHash, lineNumber);
 		let macro: IMacro | undefined;
 		switch (rangeType?.type) {
 			case "DataGroup":
@@ -187,20 +178,32 @@ export class IntellisenseProvider {
 
 	//#region 获取文件帮助
 	/**获取文件帮助 */
-	static async GetFileHelper(root: string, isTop: boolean) {
+	static async GetFileHelper(topRoot: string, path: string, fileFilter: TriggerSuggestType, excludeFile: string) {
 
 		let completions: Completion[] = [];
 		if (!FileUtils.ReadFile)
 			return [];
 
-		if (!isTop) {
-			let com = new Completion({ showText: "../", index: 0 });
+		topRoot = FileUtils.ArrangePath(topRoot);
+		path = FileUtils.ArrangePath(path);
+
+		let folder = await FileUtils.GetPathFolder(path);
+
+		let exFileName = await FileUtils.GetFileName(excludeFile);
+		let sameFolder = (await FileUtils.GetPathFolder(excludeFile)) === folder;
+
+		if (topRoot !== folder) {
+			let com = new Completion({ showText: "..", insertText: "..", index: 0 });
 			com.type = CompletionType.Folder;
 			completions.push(com);
 		}
 
-		let files = await FileUtils.GetFolderFiles(root);
+		let files = await FileUtils.GetFolderFiles(folder);
 		for (let i = 0; i < files.length; ++i) {
+			if ((sameFolder && files[i].name === exFileName) ||
+				(fileFilter === TriggerSuggestType.AllAsm && files[i].type === "file" && !files[i].name.endsWith(".asm")))
+				continue;
+
 			let com = new Completion({ showText: "" });
 			switch (files[i].type) {
 
@@ -339,8 +342,12 @@ export class IntellisenseProvider {
 
 			switch (value) {
 				case ".INCLUDE":
+					completion.insertText = completion.insertText + " \"[exp]\"";
+					completion.triggerType = TriggerSuggestType.AllAsm;
 					break;
 				case ".INCBIN":
+					completion.insertText = completion.insertText + " \"[exp]\"";
+					completion.triggerType = TriggerSuggestType.AllFile;
 					break;
 			}
 

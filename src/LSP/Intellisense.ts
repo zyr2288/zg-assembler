@@ -1,13 +1,19 @@
 import * as vscode from "vscode";
+import { CommandName } from "./AssCommands";
 import { LSPUtils } from "./LSPUtils";
 
-export enum TriggerSuggestType {
-	None, Instruction, FilePath
+enum TriggerSuggestType {
+	None, AllAsm, AllFile
 }
 
 export interface TriggerSuggestTag {
 	type: TriggerSuggestType;
-	data: string;
+	data: any;
+}
+
+interface FileHelperData {
+	path: string;
+	exclude: string;
 }
 
 export class Intellisense {
@@ -33,9 +39,11 @@ export class Intellisense {
 	): Promise<vscode.CompletionItem[]> {
 
 		if (Intellisense.suggestData) {
-			return Intellisense.ProcessSuggest();
+			let result = await Intellisense.ProcessSuggest();
+			delete (Intellisense.suggestData);
+			return result;
 		}
-		
+
 		let completions = LSPUtils.assembler.languageHelper.intellisense.Intellisense(
 			document.uri.fsPath,
 			position.line,
@@ -51,16 +59,21 @@ export class Intellisense {
 			let newCom = new vscode.CompletionItem(com.showText);
 			newCom.insertText = Intellisense.ChangeExp(com.insertText);
 			newCom.sortText = com.index.toString();
-			// if (com.type === CompletionType.Instruction) {
-			// 	newCom.command = {
-			// 		title: "Assembler Suggest Show",
-			// 		command: CommandName,
-			// 		arguments: [{
-			// 			type: TriggerSuggestType.Instruction,
-			// 			data: com.showText,
-			// 		} as TriggerSuggestTag]
-			// 	}
-			// }
+			// 不会再走这里
+			switch (com.triggerType) {
+				case TriggerSuggestType.AllAsm:
+				case TriggerSuggestType.AllFile:
+					let path = LSPUtils.assembler.fileUtils.ArrangePath(document.uri.fsPath);
+					newCom.command = {
+						title: "Get Folder Files",
+						command: CommandName,
+						arguments: [{
+							type: com.triggerType,
+							data: { path: path, exclude: path } as FileHelperData
+						} as TriggerSuggestTag]
+					};
+					break;
+			}
 			result.push(newCom);
 
 			if (!com.type)
@@ -68,7 +81,6 @@ export class Intellisense {
 
 			newCom.kind = Intellisense.CompletionShowType[com.type];
 		}
-
 		return result;
 	}
 
@@ -76,40 +88,40 @@ export class Intellisense {
 		let result: vscode.CompletionItem[] = [];
 
 		switch (Intellisense.suggestData?.type) {
-			// case TriggerSuggestType.Instruction:
-			// 	const modes = LSPUtils.assembler.languageHelper.intellisense.GetInstructionAddressingModes(Intellisense.suggestData.data);
-			// 	if (!modes)
-			// 		break;
-
-			// 	for (let i = 0; i < modes.length; ++i) {
-			// 		const mode = modes[i];
-			// 		let com = new vscode.CompletionItem(mode.showText);
-			// 		com.insertText = Intellisense.ChangeExp(mode.insertText);
-			// 		com.sortText = mode.index.toString();
-			// 		com.kind = vscode.CompletionItemKind.EnumMember
-			// 		result.push(com);
-			// 	}
-			// 	break;
-			case TriggerSuggestType.FilePath:
+			case TriggerSuggestType.AllAsm:
+			case TriggerSuggestType.AllFile:
 				if (!vscode.workspace.workspaceFolders)
 					break;
 
-				let path = Intellisense.suggestData.data;
-				let top = path === vscode.workspace.workspaceFolders[0].uri.fsPath;
-				const files = await LSPUtils.assembler.languageHelper.intellisense.GetFileHelper(path, top);
+				let rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+
+				let data = Intellisense.suggestData.data as FileHelperData;
+				const files = await LSPUtils.assembler.languageHelper.intellisense.GetFileHelper(
+					rootPath, data.path, Intellisense.suggestData.type, data.exclude);
+
 				for (let i = 0; i < files.length; ++i) {
 					const file = files[i];
-
 					let com = new vscode.CompletionItem(file.showText);
 					com.insertText = Intellisense.ChangeExp(file.insertText);
 					com.sortText = file.index.toString();
 					com.kind = Intellisense.CompletionShowType[file.type!];
+					if (com.kind === vscode.CompletionItemKind.Folder) {
+						com.insertText.value += "/";
+						let path = await LSPUtils.assembler.fileUtils.GetPathFolder(data.path);
+						path = LSPUtils.assembler.fileUtils.Combine(path, file.showText);
+						com.command = {
+							title: "Get Folder Files",
+							command: CommandName,
+							arguments: [{
+								type: Intellisense.suggestData.type,
+								data: { path, exclude: data.exclude }
+							} as TriggerSuggestTag]
+						};
+					}
 					result.push(com);
 				}
-
 				break;
 		}
-
 		return result;
 	}
 

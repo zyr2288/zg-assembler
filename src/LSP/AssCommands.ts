@@ -11,10 +11,9 @@ export class AssCommands {
 	static Initialize() {
 
 		// 注册智能提示
-		vscode.commands.registerCommand(CommandName, async (tag: TriggerSuggestTag) => {
+		vscode.commands.registerCommand(CommandName, (tag: TriggerSuggestTag) => {
 			Intellisense.suggestData = tag;
-			await vscode.commands.executeCommand("editor.action.triggerSuggest");
-			delete (Intellisense.suggestData);
+			vscode.commands.executeCommand("editor.action.triggerSuggest");
 		});
 
 		// 编译本文件

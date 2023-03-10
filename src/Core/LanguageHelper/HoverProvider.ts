@@ -12,24 +12,24 @@ export class HoverProvider {
 
 		let result = { value: undefined as number | undefined, comment: undefined as string | undefined };
 
-		let temp = HelperUtils.GetWord(lineText, currect);
-		let text = temp.rangeText.join("");
-		var value = ExpressionUtils.GetNumber(text);
-		if (value.success) {
-			result.value = value.value;
-			return result;
-		}
+		// let temp = HelperUtils.GetWord(lineText, currect);
+		// let text = temp.rangeText.join("");
+		// var value = ExpressionUtils.GetNumber(text);
+		// if (value.success) {
+		// 	result.value = value.value;
+		// 	return result;
+		// }
 
-		let fileHash = Utils.GetHashcode(filePath);
-		let ranges = Compiler.enviroment.GetRange(fileHash);
-		let range: HightlightRange | undefined;
-		for (let i = 0; i < ranges.length; ++i) {
-			if (lineNumber > ranges[i].end || lineNumber < ranges[i].start)
-				continue;
+		// let fileHash = Utils.GetHashcode(filePath);
+		// let ranges = Compiler.enviroment.GetRange(fileHash);
+		// let range: HightlightRange | undefined;
+		// for (let i = 0; i < ranges.length; ++i) {
+		// 	if (lineNumber > ranges[i].end || lineNumber < ranges[i].start)
+		// 		continue;
 
-			range = ranges[i];
-			break;
-		}
+		// 	range = ranges[i];
+		// 	break;
+		// }
 
 		// const { content } = Compiler.GetContent(line);
 		// let range = HelperUtils.GetWord(content.text, currect);

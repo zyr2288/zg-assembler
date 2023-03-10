@@ -144,13 +144,11 @@ export class UpdateFile {
 
 		LSPUtils.assembler.ClearFile(e.fsPath);
 		UpdateFile.errorCollection.delete(e);
-		console.log("delete file", e);
 		
 	}
 
 	/**文件修改 */
 	private static async FileChange(e: vscode.Uri) {
-		console.log("change file", e);
 		let fileName = await LSPUtils.assembler.fileUtils.GetFileName(e.fsPath);
 		if (fileName !== LSPUtils.assembler.config.ConfigFile)
 			return;
@@ -173,7 +171,6 @@ export class UpdateFile {
 			await LSPUtils.assembler.compiler.DecodeText([{ text, filePath: e.fsPath }]);
 			LSPUtils.fileUpdateFinished = true;
 		}
-		console.log("create file", e);
 	}
 	//#endregion 监视文件
 

@@ -1,26 +1,56 @@
 import { Compiler } from "../Base/Compiler";
+import { FileUtils } from "../Base/FileUtils";
 import { LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
+import { IMacro } from "../Commands/Macro";
 import { HelperUtils } from "./HelperUtils";
 
 export class DefinitionProvider {
 
-	static GetLabelPosition(filePath: string, lineNumber: number, lineText: string, currect: number) {
+	static async GetLabelPosition(filePath: string, lineNumber: number, lineText: string, currect: number) {
 
 		let result = { filePath: "", line: 0, start: 0 };
-
 		let word = HelperUtils.GetWord(lineText, currect);
 		let tempMatch = HelperUtils.BaseSplit(lineText);
 		if (tempMatch.type === "command") {
 			switch (tempMatch.text) {
 				case ".INCLUDE":
 				case ".INCBIN":
+					let start = tempMatch.start + tempMatch.text.length;
+					if (start < word.start &&
+						lineText.substring(start, word.start).trim() === "") {
+						let path = word.rangeText[0].substring(1) + word.rangeText[1].substring(0, word.rangeText[1].length - 1);
+						result.filePath = await DefinitionProvider.GetFilePath(filePath, path);
+					}
 					break;
+			}
+		} else {
+			let fileHash = Utils.GetHashcode(filePath);
+			let rangeType = HelperUtils.GetRange(fileHash, lineNumber);
+			let macro: IMacro | undefined;
+
+			if (rangeType?.type === "Macro") {
+
+			}
+
+			let token = Token.CreateToken(fileHash, lineNumber, word.start, word.rangeText.join(""));
+			let label = LabelUtils.FindLabel(token, macro);
+			if (label) {
+				result.filePath = Compiler.enviroment.GetFile(label.token.fileHash);
+				result.line = label.token.line;
+				result.start = label.token.start;
 			}
 		}
 
+
+
 		return result;
+	}
+
+	private static async GetFilePath(filePath: string, path: string) {
+		let folder = await FileUtils.GetPathFolder(filePath);
+		return FileUtils.Combine(folder, path);
 	}
 }
 

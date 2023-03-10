@@ -1,3 +1,4 @@
+import { IMacro } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
 import { Compiler } from "./Compiler";
 import { ExpressionUtils } from "./ExpressionUtils";
@@ -121,7 +122,7 @@ export class LabelUtils {
 	 * @param option 选项
 	 * @returns 是否找到标签
 	 */
-	static FindLabel(word: Token, option?: DecodeOption): ILabel | undefined {
+	static FindLabel(word: Token, macro?: IMacro): ILabel | undefined {
 		if (!word || word.isEmpty)
 			return;
 
@@ -156,10 +157,10 @@ export class LabelUtils {
 		}
 
 		// 函数内标签
-		if (option?.macro) {
+		if (macro) {
 			let hash = Utils.GetHashcode(word.text);
-			let label = option.macro.params.get(hash) ?? option.macro.labels.get(hash);
-			if (label) 
+			let label = macro.params.get(hash) ?? macro.labels.get(hash);
+			if (label)
 				return label;
 		}
 
@@ -223,11 +224,11 @@ export class LabelUtils {
 	 */
 	static CheckIllegal(word: Token, allowDot: boolean) {
 		if (allowDot) {
-			if (/(^\d)|\s|\,|\+|\-|\*|\/|\>|\<|\=|\!|\~|#|&|\||%|\$/g.test(word.text)) {
+			if (/(^\d)|\s|\,|\+|\-|\*|\/|\>|\<|\=|\!|\~|#|&|\||%|\$|"/g.test(word.text)) {
 				return false;
 			}
 		} else {
-			if (/(^\d)|\s|\,|\+|\-|\*|\/|\>|\<|\=|\!|\~|#|&|\||%|\$|\./g.test(word.text)) {
+			if (/(^\d)|\s|\,|\+|\-|\*|\/|\>|\<|\=|\!|\~|#|&|\||%|\$|"|\./g.test(word.text)) {
 				return false;
 			}
 		}

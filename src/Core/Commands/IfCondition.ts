@@ -145,7 +145,7 @@ export class IfCondition {
 				tag[i].confident = true;
 				break;
 			}
-			let label = LabelUtils.FindLabel(tempLine.expParts[0][0].token, option);
+			let label = LabelUtils.FindLabel(tempLine.expParts[0][0].token, option.macro);
 			if (!!label === labelExist) {
 				tag[i].confident = true;
 				break;

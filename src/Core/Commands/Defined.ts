@@ -55,7 +55,7 @@ export class Defined {
 		let tag = line.tag as ExpressionPart[];
 
 		let temp = ExpressionUtils.GetExpressionValue(tag, ExpressionResult.GetResultAndShowError);
-		let label = LabelUtils.FindLabel(line.label!.token, option);
+		let label = LabelUtils.FindLabel(line.label!.token, option.macro);
 		if (label && temp.success) {
 			label.value = temp.value;
 			return;
