@@ -3,6 +3,7 @@ import { ExpressionUtils } from "../Base/ExpressionUtils";
 import { LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
+import { IMacro } from "../Commands/Macro";
 import { HightlightRange } from "../Lines/CommonLine";
 import { HelperUtils } from "./HelperUtils";
 
@@ -11,58 +12,32 @@ export class HoverProvider {
 	static Hover(filePath: string, lineNumber: number, lineText: string, currect: number) {
 
 		let result = { value: undefined as number | undefined, comment: undefined as string | undefined };
+		let fileHash = Utils.GetHashcode(filePath);
+		const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
+		const { content } = Compiler.GetContent(line);
+		if (currect > content.start + content.text.length)
+			return result;
 
-		let temp = HelperUtils.GetWord(lineText, currect);
-		// let value = ExpressionUtils.GetNumber(temp.rangeText.join(""));
-		// if (value.success) {
-		// 	result.value = value.value;
-		// 	return result;
-		// }
-		// let text = temp.rangeText.join("");
-		// var value = ExpressionUtils.GetNumber(text);
-		// if (value.success) {
-		// 	result.value = value.value;
-		// 	return result;
-		// }
+		let word = HelperUtils.GetWord(content.text, currect, content.start);
+		let tempWord = word.rangeText.join("");
+		let value = ExpressionUtils.GetNumber(tempWord);
+		if (value.success) {
+			result.value = value.value;
+			return result;
+		}
 
-		// let fileHash = Utils.GetHashcode(filePath);
-		// let ranges = Compiler.enviroment.GetRange(fileHash);
-		// let range: HightlightRange | undefined;
-		// for (let i = 0; i < ranges.length; ++i) {
-		// 	if (lineNumber > ranges[i].end || lineNumber < ranges[i].start)
-		// 		continue;
+		let range = HelperUtils.GetRange(fileHash, lineNumber);
+		let macro:IMacro|undefined;
+		if (range?.type === "Macro") 
+			macro = Compiler.enviroment.allMacro.get(range.key);
+		
+		let token = Token.CreateToken(fileHash, lineNumber, word.start, tempWord);
+		let label = LabelUtils.FindLabel(token, macro);
+		if (!label)
+			return result;
 
-		// 	range = ranges[i];
-		// 	break;
-		// }
-
-		// const { content } = Compiler.GetContent(line);
-		// let range = HelperUtils.GetWord(content.text, currect);
-
-		// if (range.type === "none")
-		// 	return result;
-
-		// if (range.type === "value") {
-		// 	result.value = range.value;
-		// 	return result;
-		// }
-
-		// if (range.type !== "var")
-		// 	return result;
-
-		// content.text = range.text;
-		// content.start = currect - content.start;
-		// let label = LabelUtils.FindLabel(content);
-		// if (label) {
-		// 	result.value = label.value;
-		// 	result.comment = label.comment;
-		// 	return result;
-		// }
-
-		// let macro = MacroUtils.FindMacro(content.text);
-		// if (macro) {
-		// 	result.comment = `${macro.comment}\n参数个数 ${macro.parameterCount}`;
-		// }
+		result.value = label.value;
+		result.comment = label.comment;
 		return result;
 	}
 }

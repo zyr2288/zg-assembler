@@ -1,7 +1,7 @@
 import { Compiler } from "../Base/Compiler";
 import { Config } from "../Base/Config";
 import { ExpressionResult, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
-import { ILabel, LabelScope, LabelUtils } from "../Base/Label";
+import { ILabel, LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
@@ -17,7 +17,9 @@ export class IDataGroup {
 	PushData(token: Token, index: number) {
 		let hash = Utils.GetHashcode(token.text);
 		let labelSet = this.labelHashAndIndex.get(hash) ?? [];
-		labelSet.push(index);
+		if (!labelSet.includes(index))
+			labelSet.push(index);
+			
 		this.labelHashAndIndex.set(hash, labelSet);
 	}
 
@@ -78,6 +80,7 @@ export class DataGroupCommand {
 		let scope = label.token.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
 		let hash = LabelUtils.GetLebalHash(label.token.text, label.token.fileHash, scope);
 
+		label.labelType = LabelType.Label;
 		line.label = label;
 		let datagroup = new IDataGroup();
 		Compiler.enviroment.allDataGroup.set(hash, datagroup);
@@ -115,7 +118,7 @@ export class DataGroupCommand {
 				for (let j = 0; j < line.expParts[i].length; ++j) {
 					const part = line.expParts[i][j];
 					if (part.type === PriorityType.Level_1_Label)
-						datagroup.PushData(part.token, j);
+						datagroup.PushData(part.token, i);
 				}
 			}
 		}
@@ -167,5 +170,7 @@ export class DataGroupCommand {
 
 		Compiler.AddAddress(line);
 	}
+
+
 
 }

@@ -19,7 +19,7 @@ export class HelperUtils {
 	 * @param lineText 一行文本
 	 * @returns 分割结果
 	 */
-	static BaseSplit(lineText: string): MatchRange {
+	static BaseSplit(lineText: string, start = 0): MatchRange {
 		let result: MatchRange = { type: "none", start: 0, text: "" };
 		let match = new RegExp(Platform.regexString, "ig").exec(lineText);
 		if (match?.groups?.[MatchNames.command]) {
@@ -33,7 +33,7 @@ export class HelperUtils {
 		}
 
 		if (match)
-			result.start = match[0].indexOf(result.text) + match.index;
+			result.start = match[0].indexOf(result.text) + match.index + start;
 
 		return result;
 	}
@@ -54,7 +54,7 @@ export class HelperUtils {
 		let range = [0, 0];
 
 		const match = "\t +-*/&|!^#,()[]{}<>";
-		let findIndex = 0;
+		let findEnd = false;
 
 		for (let i = 0; i < lineText.length; ++i) {
 
@@ -70,33 +70,29 @@ export class HelperUtils {
 				} else if (lastString !== "\\") {
 					inString = false;
 					range[1] = i + 1;
-					findIndex = 2;
+					findEnd = true;
 				}
 			} else if (match.includes(lineText[i])) {
-				switch (findIndex) {
-					case 0:
-						range[0] = i;
-						break;
-					case 1:
-						range[1] = i;
-						break;
-				}
-				findIndex++;
+				findEnd = !findEnd
+				if (findEnd)
+					range[1] = i;
+				else
+					range[0] = i + 1;
 			}
 
-			if (findIndex === 2) {
+			if (findEnd) {
 				if (currect >= range[0] && currect <= range[1]) {
 					break;
 				} else {
-					findIndex = 1;
-					range[0] = i;
+					findEnd = false;
+					range[0] = i + 1;
 				}
 			}
 
 			lastString = lineText[i];
 		}
 
-		if (findIndex === 1)
+		if (!findEnd)
 			range[1] = lineText.length;
 
 		let rangeText = [

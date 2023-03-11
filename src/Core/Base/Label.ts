@@ -168,7 +168,16 @@ export class LabelUtils {
 		if (word.text.includes(":")) {
 			let part = word.Split(/\:/g, { count: 2 });
 			if (part[0].isEmpty || part[1].isEmpty) {
-				let errorMsg = Localization.GetMessage("Label {0} not found", word.text);
+				let errorMsg = Localization.GetMessage("Data group {0} do not found", word.text);
+				MyDiagnostic.PushException(word, errorMsg);
+				return;
+			}
+
+			let scope = part[0].text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
+			let hash = LabelUtils.GetLebalHash(part[0].text, part[0].fileHash, scope);
+			let datagroup = Compiler.enviroment.allDataGroup.get(hash);
+			if (!datagroup) {
+				let errorMsg = Localization.GetMessage("Data group {0} do not found", word.text);
 				MyDiagnostic.PushException(word, errorMsg);
 				return;
 			}
@@ -184,6 +193,10 @@ export class LabelUtils {
 					return;
 				}
 			}
+
+			let value = datagroup.FindData(part[1].text, index);
+			let label: ILabel = { token: word, labelType: LabelType.Variable, value };
+			return label;
 		}
 
 		let scope = word.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;

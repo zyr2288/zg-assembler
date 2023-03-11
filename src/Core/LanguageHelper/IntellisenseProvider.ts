@@ -133,6 +133,9 @@ export class IntellisenseProvider {
 			let matchIndex = tempMatch.start + tempMatch.text.length + 1;
 			if (trigger === " " && lineCurrect === matchIndex) {
 				return IntellisenseProvider.GetInstructionAddressingModes(tempMatch.text);
+			} else if (trigger === ":" && lineCurrect > matchIndex) {
+				let prefix = HelperUtils.GetWord(lineText, lineCurrect);
+				return IntellisenseProvider.GetDataGroup(prefix.rangeText[0]);
 			} else if (trigger !== " " && lineCurrect > matchIndex) {
 				let prefix = HelperUtils.GetWord(lineText, lineCurrect);
 				return IntellisenseProvider.GetLabel(fileHash, prefix.rangeText[0], macro);
@@ -144,6 +147,8 @@ export class IntellisenseProvider {
 		return [];
 	}
 	//#endregion 智能提示
+
+	/***** Private *****/
 
 	//#region 获取空行帮助
 	/**
@@ -286,6 +291,47 @@ export class IntellisenseProvider {
 		return result;
 	}
 	//#endregion 获取Label
+
+	//#region 获取Datagrou
+	private static GetDataGroup(prefix: string): Completion[] {
+		let result: Completion[] = [];
+		let parts = prefix.split(/\s*:\s*/, 2);
+		if (!parts[0])
+			return result;
+
+		let hash = Utils.GetHashcode(parts[0]);
+		let datagroup = Compiler.enviroment.allDataGroup.get(hash);
+		if (!datagroup)
+			return result;
+
+		if (!parts[1]) {
+			datagroup.labelHashAndIndex.forEach((value, key) => {
+				let label = Compiler.enviroment.allLabel.get(key);
+				if (!label)
+					return;
+
+				let com = new Completion({
+					showText: label.token.text,
+					insertText: label.token.text
+				});
+				result.push(com);
+			});
+			return result;
+		}
+
+
+		hash = Utils.GetHashcode(parts[1]);
+		let numbers = datagroup.labelHashAndIndex.get(hash);
+		if (!numbers)
+			return result;
+
+		for (let i = 0; i < numbers.length; ++i) {
+			let com = new Completion({ showText: i.toString() });
+			result.push(com);
+		}
+		return result;
+	}
+	//#endregion 获取Datagrou
 
 	/***** 更新基础帮助 *****/
 

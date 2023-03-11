@@ -11,8 +11,15 @@ export class DefinitionProvider {
 	static async GetLabelPosition(filePath: string, lineNumber: number, lineText: string, currect: number) {
 
 		let result = { filePath: "", line: 0, start: 0 };
-		let word = HelperUtils.GetWord(lineText, currect);
-		let tempMatch = HelperUtils.BaseSplit(lineText);
+		let fileHash = Utils.GetHashcode(filePath);
+
+		const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
+		const { content } = Compiler.GetContent(line);
+		if (currect > content.start + content.text.length)
+			return result;
+
+		let word = HelperUtils.GetWord(line.text, currect, line.start);
+		let tempMatch = HelperUtils.BaseSplit(line.text, line.start);
 		if (tempMatch.type === "command") {
 			switch (tempMatch.text) {
 				case ".INCLUDE":
