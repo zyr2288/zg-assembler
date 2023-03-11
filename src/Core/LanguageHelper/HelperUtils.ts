@@ -53,8 +53,8 @@ export class HelperUtils {
 
 		let range = [0, 0];
 
-		const match = "\t +-*/&|!^#,()[]{}";
-		let findMatch = false;
+		const match = "\t +-*/&|!^#,()[]{}<>";
+		let findIndex = 0;
 
 		for (let i = 0; i < lineText.length; ++i) {
 
@@ -70,28 +70,39 @@ export class HelperUtils {
 				} else if (lastString !== "\\") {
 					inString = false;
 					range[1] = i + 1;
+					findIndex = 2;
 				}
 			} else if (match.includes(lineText[i])) {
-				range[1] = i;
-				findMatch = true;
+				switch (findIndex) {
+					case 0:
+						range[0] = i;
+						break;
+					case 1:
+						range[1] = i;
+						break;
+				}
+				findIndex++;
 			}
 
-			if (currect >= range[0] && currect <= range[1])
-				break;
-
-			if (findMatch) {
-				range[0] = i + 1;
-				findMatch = false;
+			if (findIndex === 2) {
+				if (currect >= range[0] && currect <= range[1]) {
+					break;
+				} else {
+					findIndex = 1;
+					range[0] = i;
+				}
 			}
 
 			lastString = lineText[i];
 		}
 
-		let rangeText = [lineText.substring(range[0], currect)];
-		if (currect === lineText.length)
-			rangeText[1] = "";
-		else if(currect < lineText.length)
-			rangeText[1] = lineText.substring(currect, lineText.length);
+		if (findIndex === 1)
+			range[1] = lineText.length;
+
+		let rangeText = [
+			lineText.substring(range[0], currect),
+			lineText.substring(currect, range[1])
+		];
 
 		return { rangeText, start: range[0] + start };
 	}

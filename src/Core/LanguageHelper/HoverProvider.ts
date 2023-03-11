@@ -12,7 +12,12 @@ export class HoverProvider {
 
 		let result = { value: undefined as number | undefined, comment: undefined as string | undefined };
 
-		// let temp = HelperUtils.GetWord(lineText, currect);
+		let temp = HelperUtils.GetWord(lineText, currect);
+		// let value = ExpressionUtils.GetNumber(temp.rangeText.join(""));
+		// if (value.success) {
+		// 	result.value = value.value;
+		// 	return result;
+		// }
 		// let text = temp.rangeText.join("");
 		// var value = ExpressionUtils.GetNumber(text);
 		// if (value.success) {
