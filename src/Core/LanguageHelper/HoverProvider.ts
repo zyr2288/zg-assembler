@@ -27,17 +27,23 @@ export class HoverProvider {
 		}
 
 		let range = HelperUtils.GetRange(fileHash, lineNumber);
-		let macro:IMacro|undefined;
-		if (range?.type === "Macro") 
+		let macro: IMacro | undefined;
+		if (range?.type === "Macro")
 			macro = Compiler.enviroment.allMacro.get(range.key);
-		
+
 		let token = Token.CreateToken(fileHash, lineNumber, word.start, tempWord);
 		let label = LabelUtils.FindLabel(token, macro);
-		if (!label)
+		if (label) {
+			result.value = label.value;
+			result.comment = label.comment;
+			return result;
+		}
+
+		macro = Compiler.enviroment.allMacro.get(token.text);
+		if (!macro)
 			return result;
 
-		result.value = label.value;
-		result.comment = label.comment;
+		result.comment = macro.comment
 		return result;
 	}
 }

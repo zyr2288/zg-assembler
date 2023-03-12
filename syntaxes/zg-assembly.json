@@ -57,11 +57,11 @@
 		"function": {
 			"name": "keyword.other.zg-assembly.commands",
 			"begin": "(?i)(^|\\s+)\\.MACRO\\s+",
-			"end": "(?=\\,|;)|$",
+			"end": "(?=[,;])|$",
 			"patterns": [
 				{
 					"name": "entity.name.function",
-					"match": "[^,]+"
+					"match": "[^,;]+"
 				}
 			]
 		},

@@ -37,10 +37,9 @@ export class DefinitionProvider {
 			let rangeType = HelperUtils.GetRange(fileHash, lineNumber);
 			let macro: IMacro | undefined;
 
-			if (rangeType?.type === "Macro") {
-
-			}
-
+			if (rangeType?.type === "Macro")
+				macro = Compiler.enviroment.allMacro.get(rangeType.key);
+			
 			let token = Token.CreateToken(fileHash, lineNumber, word.start, word.rangeText.join(""));
 			let label = LabelUtils.FindLabel(token, macro);
 			if (label) {
