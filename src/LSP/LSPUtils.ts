@@ -28,7 +28,7 @@ export class LSPUtils {
 
 	/**查询文件是否在工程内 */
 	static async FindFileInProject(file: string) {
-		let files = await this.GetWorkspaceFilterFile();
+		let files = await LSPUtils.GetWorkspaceFilterFile();
 		let searchFiles = files.map(value => value.fsPath);
 		return searchFiles.includes(file);
 	}

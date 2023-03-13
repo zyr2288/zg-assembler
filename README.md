@@ -1,4 +1,4 @@
-# Zeng Ge's Assembler
+# Zeng Ge Assembler
 
 [简体中文](./doc/README-zhcn.md)
 
@@ -74,7 +74,7 @@
 ## Compiler commands (example of 6502)
 
 
-### `.BASE` **baseAddress**
+### `.BASE`
 
 ```
     .BASE baseAddress
@@ -91,7 +91,7 @@
 ---
 
 
-### `.ORG` **originalAddress**
+### `.ORG`
 
 ```
     .ORG originalAddress
@@ -106,7 +106,7 @@
 ---
 
 
-### `.DEF` **name, expression**
+### `.DEF`
 
 ```
     .DEF name, expression
@@ -205,7 +205,7 @@ For example:
 ---
 
 
-### `.INCBIN` **filePath [, fileStartPosition, readLength]**
+### `.INCBIN`
 
 ```
 	.INCBIN filePath[, fileStartPosition, readLength]
@@ -236,7 +236,13 @@ For example:
 ---
 
 
-### `.MACRO` **name [, arg1, arg2...]** `.ENDM`
+### `.MACRO` `.ENDM`
+
+```
+    .MACRO macroName[, arg1, arg2...]
+	 .....
+	.ENDM
+```
 
 * Define a macro. Macro arguments are comma separated.
 
@@ -290,7 +296,13 @@ Example 2:
 ---
 
 
-### `.REPEAT` **repeatTimes** `.ENDR`
+### `.REPEAT` `.ENDR`
+
+```
+    .REPEAT repeatTimes
+	 .....
+	.ENDR
+```
 
 * Repeat a block of code a specified number of times.
 
@@ -308,7 +320,11 @@ For example:
 ---
 
 
-### `.MSG` **message [, arg1, arg2...]**
+### `.MSG`
+
+```
+    .MSG message[, arg1, arg2...]
+```
 
 * Out put a message.
 
@@ -316,12 +332,11 @@ For example:
 	.ORG $8000
 	.DEF test1, 10
 	.DEF test2, 11
-	.MSG "测试案例 {0}, ${1}, @{0}", test1, test2
+	.MSG "test {0}, ${1}, @{0}", test1, test2
 ```
 
 * 这里输出的信息是：
 
 ```
-	文件 xxx.asm 第 4 行
-	测试案例 10, $B, @0000 1010
+	test 10, $B, @0000 1010
 ```

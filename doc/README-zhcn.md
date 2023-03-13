@@ -1,4 +1,4 @@
-# Zeng Ge's Assembler
+# Zeng Ge Assembler
 
 ## 配置文件
 
@@ -328,6 +328,4 @@
 
 * 这里输出的信息是：
 
-> 文件 xxx.asm 第 4 行
->
 > 测试案例 10, $B, @0000 1010
