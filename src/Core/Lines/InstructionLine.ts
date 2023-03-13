@@ -73,8 +73,15 @@ export class InstructionLine {
 	/**编译汇编指令 */
 	static CompileInstruction(option: DecodeOption): void {
 		const line = option.allLines[option.lineIndex] as IInstructionLine;
-		if (!Compiler.SetAddress(line))
+
+		Compiler.SetAddress(line);
+		if (line.compileType === LineCompileType.Error)
 			return;
+
+		if (line.label) {
+			line.label.value = line.orgAddress;
+			delete (line.label);
+		}
 
 		if (line.addressingMode.spProcess) {
 			line.addressingMode.spProcess(option);

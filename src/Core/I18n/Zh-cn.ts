@@ -21,5 +21,11 @@ export const Chinese: LocalizationMsg = {
 	"Argument out of range": "参数超出范围",
 	"Expression result is {0}, but compile result is {1}": "表达式结果为 \"{0}\", 最终编译结果值为 \"{1}\"",
 	"Macro arguments count is {0}, but got {1}": "自定义函数参数个数应该为 \"{0}\", 但目前参数个数为 \"{1}\"",
-	"Data group {0} do not found": "数据组 \"{0}\" 未找到"
+	"Data group {0} do not found": "数据组 \"{0}\" 未找到",
+
+	"compiling": "编译中",
+	"compile finished": "编译完成",
+	"compile error": "编译错误",
+	"plugin loading": "编译器插件载入中",
+	"plugin loaded": "编译器插件载入完成",
 }

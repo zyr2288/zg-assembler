@@ -1,3 +1,4 @@
+import { Compiler } from "../Base/Compiler";
 import { MyDiagnostic } from "../Base/MyException";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
@@ -31,11 +32,16 @@ export class Hexadecimal {
 		return;
 	}
 
+	// 编译 HEX 命令
 	private static Compile_Hex(option: DecodeOption) {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
-		let token = line.tag as Token;
+		if (Commands.SetOrgAddressAndLabel(line))
+			return;
 
-		let tokens = token.Split(/s+/g);
+		let token = line.tag as Token;
+		line.result = [];
+
+		let tokens = token.Split(/\s+/g);
 		let temp = "";
 		for (let i = 0; i < tokens.length; ++i) {
 			for (let j = 0; j < tokens[i].text.length; j += 2) {
@@ -43,7 +49,7 @@ export class Hexadecimal {
 				line.result.push(parseInt(temp, 16));
 			}
 		}
-
-		return;
+		Compiler.AddAddress(line);
+		line.compileType = LineCompileType.Finished;
 	}
 }

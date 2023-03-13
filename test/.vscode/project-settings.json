@@ -1,0 +1,13 @@
+{
+	"platform": "6502",
+	"intellisense": true,
+	"outOfRangeWarning": true,
+	"entry": "main.asm",
+	"compileTimes": 2,
+	"outputEntryFile": "",
+	"outputSingleFile": "test.bin",
+	"copyToClipboard": true,
+	"patchFile": "",
+	"includes": ["**/*.asm"],
+	"excludes": []
+}

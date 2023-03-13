@@ -17,10 +17,14 @@ export class AssCommands {
 		});
 
 		// 编译本文件
-		vscode.commands.registerTextEditorCommand(LSPUtils.assembler.config.ExtensionCommandNames.CompliteThis, AssCommands.CompileThisFile);
+		vscode.commands.registerTextEditorCommand(
+			LSPUtils.assembler.config.ExtensionCommandNames.CompliteThis,
+			AssCommands.CompileThisFile);
 
 		// 编译入口文件
-		vscode.commands.registerTextEditorCommand(LSPUtils.assembler.config.ExtensionCommandNames.CompliteMain, AssCommands.CompileEntryFile);
+		vscode.commands.registerTextEditorCommand(
+			LSPUtils.assembler.config.ExtensionCommandNames.CompliteMain,
+			AssCommands.CompileEntryFile);
 	}
 
 	/**编译本文件 */
@@ -28,7 +32,7 @@ export class AssCommands {
 		if (!vscode.window.activeTextEditor)
 			return;
 
-		LSPUtils.StatueBarShowText(` $(sync~spin) 编译中...`, 0);
+		LSPUtils.StatueBarShowText(` $(sync~spin) ${LSPUtils.assembler.localization.GetMessage("compiling")}...`, 0);
 
 		let text = vscode.window.activeTextEditor.document.getText();
 		let filePath = vscode.window.activeTextEditor.document.uri.fsPath;
@@ -37,14 +41,17 @@ export class AssCommands {
 
 		let result = await LSPUtils.assembler.compiler.CompileText(filePath, text);
 		UpdateFile.UpdateDiagnostic();
+		if (result) {
+			await LSPUtils.OutputResult(result, {
+				toFile: LSPUtils.assembler.config.ProjectSetting.outputSingleFile,
+				toClipboard: LSPUtils.assembler.config.ProjectSetting.copyToClipboard,
+				patchFile: LSPUtils.assembler.config.ProjectSetting.patchFile
+			});
+		}
 
-		await LSPUtils.OutputResult(result!, {
-			toFile: LSPUtils.assembler.config.ProjectSetting.outputSingleFile,
-			toClipboard: LSPUtils.assembler.config.ProjectSetting.copyToClipboard,
-			patchFile: LSPUtils.assembler.config.ProjectSetting.patchFile
-		});
-
-		let showText = LSPUtils.assembler.diagnostic.hasError ? ` $(alert) 编译有错误` : ` $(check) 编译完成`;
+		let showText = LSPUtils.assembler.diagnostic.hasError ?
+		` $(alert) ${LSPUtils.assembler.localization.GetMessage("compile error")}` :
+		` $(check) ${LSPUtils.assembler.localization.GetMessage("compile finished")}`;
 		LSPUtils.StatueBarShowText(showText, 3000);
 	}
 
@@ -55,7 +62,7 @@ export class AssCommands {
 
 		vscode.workspace.saveAll(false);
 
-		LSPUtils.StatueBarShowText(` $(sync~spin) 编译中...`, 0);
+		LSPUtils.StatueBarShowText(` $(sync~spin) ${LSPUtils.assembler.localization.GetMessage("compiling")}...`, 0);
 
 		await ConfigUtils.ReadConfig();
 
@@ -70,13 +77,17 @@ export class AssCommands {
 		let result = await LSPUtils.assembler.compiler.CompileText(filePath, text);
 		UpdateFile.UpdateDiagnostic();
 
-		await LSPUtils.OutputResult(result!, {
-			toFile: LSPUtils.assembler.config.ProjectSetting.outputSingleFile,
-			toClipboard: LSPUtils.assembler.config.ProjectSetting.copyToClipboard,
-			patchFile: LSPUtils.assembler.config.ProjectSetting.patchFile
-		});
+		if (result) {
+			await LSPUtils.OutputResult(result, {
+				toFile: LSPUtils.assembler.config.ProjectSetting.outputSingleFile,
+				toClipboard: LSPUtils.assembler.config.ProjectSetting.copyToClipboard,
+				patchFile: LSPUtils.assembler.config.ProjectSetting.patchFile
+			});
+		}
 
-		let showText = LSPUtils.assembler.diagnostic.hasError ? ` $(alert) 编译有错误` : ` $(check) 编译完成`;
+		let showText = LSPUtils.assembler.diagnostic.hasError ?
+			` $(alert) ${LSPUtils.assembler.localization.GetMessage("compile error")}` :
+			` $(check) ${LSPUtils.assembler.localization.GetMessage("compile finished")}`;
 		LSPUtils.StatueBarShowText(showText, 3000);
 	}
 

@@ -12,7 +12,7 @@ export enum LineType {
 }
 
 export enum LineCompileType {
-	None, Error, Finished
+	None, Error, Finished, Ignore
 }
 
 export enum HighlightType {

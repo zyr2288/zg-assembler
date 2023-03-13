@@ -19,5 +19,11 @@ export const English = {
 	"Argument out of range": "Argument out of range",
 	"Expression result is {0}, but compile result is {1}": "Expression result is \"{0}\", but compile result is \"{1}\"",
 	"Macro arguments count is {0}, but got {1}": "Macro arguments count is \"{0}\", but got \"{1}\"",
-	"Data group {0} do not found": "Data group \"{0}\" do not found"
+	"Data group {0} do not found": "Data group \"{0}\" do not found",
+
+	"compiling": "compiling",
+	"compile finished": "compile finished",
+	"compile error": "compile error",
+	"plugin loading": "plugin loading",
+	"plugin loaded": "plugin loaded",
 }

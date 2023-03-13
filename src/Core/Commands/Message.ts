@@ -12,7 +12,7 @@ export class Message {
 
 	static Initialize() {
 		Commands.AddCommand({
-			name: ".MSG", min: 1, max: -1,
+			name: ".MSG", min: 1, max: -1, label: false,
 			firstAnalyse: Message.FirstAnalyse_Msg,
 			thirdAnalyse: Message.ThirdAnalyse_Msg,
 			compile: Message.Compiler_Msg

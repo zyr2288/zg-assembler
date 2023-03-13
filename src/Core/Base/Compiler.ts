@@ -88,6 +88,9 @@ export class Compiler {
 		}
 		Compiler.compiling = false;
 
+		if (MyDiagnostic.hasError)
+			return;
+
 		return ResultUtils.GetResult(option.allLines);
 	}
 	//#endregion 编译所有文本
@@ -117,7 +120,7 @@ export class Compiler {
 					Compiler.LineInitialize(newLine as ICommandLine);
 					break;
 				case LineType.Instruction:
-					newLine = { type: LineType.Instruction } as IInstructionLine;
+					newLine = { type: LineType.Instruction, result: [] as number[] } as IInstructionLine;
 					Compiler.LineInitialize(newLine as IInstructionLine);
 					break;
 				case LineType.Variable:
@@ -367,16 +370,15 @@ export class Compiler {
 	 */
 	static SetAddress(line: IInstructionLine | ICommandLine | IMacroLine) {
 		if (Compiler.enviroment.orgAddress < 0) {
+			line.compileType = LineCompileType.Error;
 			let errorMsg = Localization.GetMessage("Unknow original address");
 			MyDiagnostic.PushException(line.orgText, errorMsg);
-			return false;
 		}
 
 		if (line.orgAddress < 0) {
 			line.baseAddress = Compiler.enviroment.baseAddress;
 			line.orgAddress = Compiler.enviroment.orgAddress;
 		}
-		return true;
 	}
 	//#endregion 设定起始地址
 
@@ -402,7 +404,6 @@ export class Compiler {
 	private static LineInitialize = (line: IInstructionLine | ICommandLine | IMacroLine) => {
 		line.orgAddress = -1;
 		line.baseAddress = 0;
-		line.result ??= [];
 	}
 	//#endregion 绑定行命令
 

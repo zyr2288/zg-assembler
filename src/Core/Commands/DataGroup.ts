@@ -19,7 +19,7 @@ export class IDataGroup {
 		let labelSet = this.labelHashAndIndex.get(hash) ?? [];
 		if (!labelSet.includes(index))
 			labelSet.push(index);
-			
+
 		this.labelHashAndIndex.set(hash, labelSet);
 	}
 
@@ -138,12 +138,9 @@ export class DataGroupCommand {
 
 	private static Compile_DataGroup(option: DecodeOption, dataLength: number) {
 		const line = option.allLines[option.lineIndex] as ICommandLine;
-		if (!Compiler.SetAddress(line))
-			return;
 
-		let label = LabelUtils.FindLabel(line.label!.token);
-		if (label!.value == undefined)
-			label!.value = Compiler.enviroment.orgAddress;
+		if (Commands.SetOrgAddressAndLabel(line))
+			return;
 
 		line.result.length = line.expParts.length * dataLength;
 		line.compileType = LineCompileType.Finished;

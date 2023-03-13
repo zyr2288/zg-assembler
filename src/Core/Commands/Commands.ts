@@ -1,3 +1,4 @@
+import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
@@ -125,7 +126,7 @@ export class Commands {
 		// 命令不允许有标签
 		if (line.splitLine!.label && !line.splitLine!.label.isEmpty) {
 			if (!com.enableLabel) {
-				let errorMsg = Localization.GetMessage("Unmatched command {0}", line.command.text);
+				let errorMsg = Localization.GetMessage("Command {0} can not use label", line.command.text);
 				MyDiagnostic.PushException(line.splitLine!.label, errorMsg);
 				delete (line.label);
 			} else {
@@ -305,6 +306,25 @@ export class Commands {
 		return tag;
 	}
 	//#endregion 将头尾行的所有行纳入
+
+	//#region 设定起始地址并判断Label
+	/**
+	 * 
+	 * @param line 设定行
+	 * @returns 返回true为错误
+	 */
+	static SetOrgAddressAndLabel(line: ICommandLine) {
+		Compiler.SetAddress(line);
+		if (line.compileType === LineCompileType.Error)
+			return true;
+
+		if (line.label) {
+			line.label.value = line.orgAddress;
+			delete (line.label);
+		}
+		return false;
+	}
+	//#endregion 设定起始地址并判断Label
 
 	/***** Private *****/
 

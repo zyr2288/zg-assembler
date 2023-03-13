@@ -1,16 +1,16 @@
+import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { LabelType, LabelUtils } from "../Base/Label";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
-import { HighlightToken, HighlightType, LineCompileType } from "../Lines/CommonLine";
+import { HighlightToken, LineCompileType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "./Commands";
 
 export class Defined {
 
 	static Initialize() {
 		Commands.AddCommand({
-			name: ".DEF",
-			min: 2,
+			name: ".DEF", min: 2, label: false,
 			firstAnalyse: Defined.FirstAnalyse_Def,
 			thirdAnalyse: Defined.ThirdAnalyse_Def,
 			compile: Defined.Compile_Def
@@ -21,7 +21,8 @@ export class Defined {
 		const line = option.allLines[option.lineIndex] as ICommandLine;
 		let expressions: Token[] = line.tag;
 		line.label = LabelUtils.CreateLabel(expressions[0], option);
-		if (line.label) line.label.labelType = LabelType.Defined;
+		if (line.label)
+			line.label.labelType = LabelType.Defined;
 
 		let temp = ExpressionUtils.SplitAndSort(expressions[1]);
 		if (temp)
@@ -30,6 +31,7 @@ export class Defined {
 			line.compileType = LineCompileType.Error;
 
 		line.GetTokens = Defined.GetTokens.bind(line);
+		delete (line.tag);
 	}
 
 	private static ThirdAnalyse_Def(option: DecodeOption) {
@@ -52,16 +54,15 @@ export class Defined {
 	private static Compile_Def(option: DecodeOption) {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
 
-		let tag = line.tag as ExpressionPart[];
-
-		let temp = ExpressionUtils.GetExpressionValue(tag, ExpressionResult.GetResultAndShowError);
-		let label = LabelUtils.FindLabel(line.label!.token, option.macro);
-		if (label && temp.success) {
-			label.value = temp.value;
-			return;
+		let type = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.GetResultAndShowError;
+		let temp = ExpressionUtils.GetExpressionValue(line.expParts[0], type);
+		if (line.label && temp.success) {
+			line.label.value = temp.value;
+			line.compileType = LineCompileType.Finished;
+		} else if (Compiler.isLastCompile) {
+			line.compileType = LineCompileType.Error;
 		}
-		line.compileType = LineCompileType.Error;
-		return;
+
 	}
 
 	private static GetTokens(this: ICommandLine) {

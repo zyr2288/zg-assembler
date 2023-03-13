@@ -48,7 +48,7 @@ export class Data {
 	private static Compile_Data(dataLength: number, option: DecodeOption) {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
 
-		if (!Compiler.SetAddress(line))
+		if (Commands.SetOrgAddressAndLabel(line))
 			return;
 
 		line.compileType = LineCompileType.Finished;

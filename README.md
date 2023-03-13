@@ -16,7 +16,7 @@
     "outputEntryFile": "",
     "outputSingleFile": "",
     "copyToClipboard": true,       // Copy result bytes to the clipboard
-    "patchFile": "",               // It will rewrite patch file
+    "patchFile": "",               // It will overwrite patch file
     "includes": ["**/*.asm"],
     "excludes": []
 }
@@ -86,7 +86,7 @@
 
 > Note: 
 > 1. Compile top-down, some variables need to be assigned for the first compile, if the first compile is unknown then compile is not successful.
-> 2. If you use the `.BASE` command, it comes after `.ORG`, otherwise it compiles incorrectly.
+> 2. If you use the `.BASE` command, after `.ORG`, otherwise it compiles incorrectly.
 
 ---
 
@@ -101,7 +101,7 @@
 
 * You can also use `.ORG *`, which means compilation will start from the current address. But the current address has to be known, otherwise the compiler reports an error.
 
-> Note: If you use the `.BASE` command, it comes after `.ORG`, otherwise it compiles with an error.
+> Note: If you use the `.BASE` command, after `.ORG`, otherwise it compiles with an error.
 
 ---
 

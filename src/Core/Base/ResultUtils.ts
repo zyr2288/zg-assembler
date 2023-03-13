@@ -13,7 +13,7 @@ export class ResultUtils {
 				continue
 
 			for (let j = 0; j < line.result.length; ++j)
-				result[line.orgAddress + j] = line.result[j];
+				result[line.baseAddress + j] = line.result[j];
 		}
 		return result;
 	}

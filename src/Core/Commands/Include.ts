@@ -30,6 +30,7 @@ export class Include {
 		});
 	}
 
+
 	private static async FirstAnalyse_Include(option: CommandDecodeOption) {
 		const line = option.allLines[option.lineIndex] as ICommandLine;
 		let temp = await Include.ChechFile(option);
@@ -78,18 +79,24 @@ export class Include {
 		let line = option.allLines[option.lineIndex] as ICommandLine;
 		let temp = await FileUtils.ReadFile(line.tag);
 
-		if (!Compiler.SetAddress(line))
+		if (Commands.SetOrgAddressAndLabel(line))
 			return;
 
+		line.result = [];
 		let start = 0;
-		let result = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.GetResultAndShowError, option);
-		if (result.success)
-			start = result.value;
+		if (line.expParts[0]) {
+			let result = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.GetResultAndShowError, option);
+			if (result.success)
+				start = result.value;
+		}
+
 
 		let length = temp.length;
-		result = ExpressionUtils.GetExpressionValue(line.expParts[1], ExpressionResult.GetResultAndShowError, option);
-		if (result.success)
-			length = result.value;
+		if (line.expParts[1]) {
+			let result = ExpressionUtils.GetExpressionValue(line.expParts[1], ExpressionResult.GetResultAndShowError, option);
+			if (result.success)
+				length = result.value;
+		}
 
 		for (let i = start, j = 0; i < temp.length && j < length; ++i, ++j)
 			line.result[j] = temp[i];
