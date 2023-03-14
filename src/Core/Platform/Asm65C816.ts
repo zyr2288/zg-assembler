@@ -2,7 +2,7 @@ import { AsmCommon } from "./AsmCommon";
 
 export class Asm65C816 extends AsmCommon {
 
-	private static platformName = "65816";
+	private static platformName = "65c816";
 
 	constructor() {
 		super();
