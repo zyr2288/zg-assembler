@@ -29,7 +29,7 @@ export class Platform {
 		if (!Platform.platformNames) {
 			Platform.platformNames = [];
 			for (let i = 0; i < Platform.platforms.length; ++i) {
-				let name = Reflect.get(Platform.platforms[i], "platformName");
+				let name = Reflect.get(Platform.platforms[i], "PlatformName");
 				Platform.platformNames.push(name);
 			}
 		}

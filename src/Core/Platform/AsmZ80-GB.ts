@@ -2,7 +2,7 @@ import { AsmCommon } from "./AsmCommon";
 
 export class AsmZ80_GB extends AsmCommon {
 
-	private static platformName = "z80-gb";
+	static readonly PlatformName = "z80-gb";
 
 	constructor() {
 		super();

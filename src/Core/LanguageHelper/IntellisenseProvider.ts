@@ -1,4 +1,5 @@
 import { Compiler } from "../Base/Compiler";
+import { Config } from "../Base/Config";
 import { FileUtils } from "../Base/FileUtils";
 import { ILabel, LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
@@ -105,6 +106,9 @@ export class IntellisenseProvider {
 	 * @returns 
 	 */
 	static Intellisense(filePath: string, lineNumber: number, lineText: string, lineCurrect: number, trigger?: string): Completion[] {
+		if (!Config.ProjectSetting.intellisense)
+			return [];
+
 		const fileHash = Utils.GetHashcode(filePath);
 		const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
 		const prefix = line.Substring(0, lineCurrect);
