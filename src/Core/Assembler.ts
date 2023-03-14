@@ -9,7 +9,6 @@ import { Message } from "./Commands/Message";
 import { Localization } from "./I18n/Localization";
 import { DefinitionProvider } from "./LanguageHelper/DefinitionProvider";
 import { DocumentChangeProvider } from "./LanguageHelper/DocumentChangeProvider";
-import { HelperUtils } from "./LanguageHelper/HelperUtils";
 import { HighlightingProvider } from "./LanguageHelper/HighlightingProvider";
 import { HoverProvider } from "./LanguageHelper/HoverProvider";
 import { IntellisenseProvider } from "./LanguageHelper/IntellisenseProvider";
@@ -43,6 +42,8 @@ export class Assembler {
 	}
 
 	Initialize() {
+		console.log("init");
+		
 		ExpressionUtils.Initialize();
 		Commands.Initialize();
 		Platform.ChangePlatform(Config.ProjectSetting.platform);
@@ -56,10 +57,6 @@ export class Assembler {
 	ClearFile(filePath: string) {
 		let hash = Utils.GetHashcode(filePath);
 		Compiler.enviroment.ClearFile(hash);
-	}
-
-	BindingMessage(func: (message: string) => void) {
-		Message.ShowMessage = func;
 	}
 
 	private get compiling() {

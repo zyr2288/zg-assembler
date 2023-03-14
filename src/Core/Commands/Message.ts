@@ -1,4 +1,6 @@
+import { Compiler } from "../Base/Compiler";
 import { ExpressionResult, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
+import { FileUtils } from "../Base/FileUtils";
 import { MyDiagnostic } from "../Base/MyException";
 import { CommandDecodeOption, DecodeOption } from "../Base/Options";
 import { Utils } from "../Base/Utils";
@@ -7,8 +9,6 @@ import { LineCompileType } from "../Lines/CommonLine";
 import { Commands, ICommandLine } from "./Commands";
 
 export class Message {
-
-	static ShowMessage?: (message: string) => void;
 
 	static Initialize() {
 		Commands.AddCommand({
@@ -80,6 +80,8 @@ export class Message {
 			start = match.index! + match[0].length;
 		}
 		result += text.substring(start);
-		Message.ShowMessage?.(result);
+		let filePath = Compiler.enviroment.GetFile(line.command.fileHash);
+		let message = Localization.GetMessage("out put message File{0}, Line{1}, Message{2}", filePath, line.command.line + 1 , result);
+		FileUtils.ShowMessage?.(message);
 	}
 }

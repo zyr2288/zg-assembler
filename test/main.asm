@@ -84,9 +84,12 @@ ppuWrite	;+写入PPU
 
 	.INCLUDE "data.asm"
 
+	.MSG "Currect line address {0},${0},@{0}", *
+
 	.ORG $FFFA
 	.DW NMI
 	.DW RESET
 	.DW IRQ
 	
 	.INCBIN "CHR-ROM.bin"
+	

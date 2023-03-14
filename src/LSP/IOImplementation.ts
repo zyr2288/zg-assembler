@@ -20,8 +20,6 @@ export class IOImplementation {
 		LSPUtils.assembler.fileUtils.SaveFile = IOImplementation.SaveFile;
 		LSPUtils.assembler.fileUtils.ShowMessage = IOImplementation.ShowMessage;
 		LSPUtils.assembler.fileUtils.StringToBytes = IOImplementation.StringToByte;
-
-		LSPUtils.assembler.BindingMessage(IOImplementation.ShowMessage);
 	}
 
 	static BytesToString(data: Uint8Array) {

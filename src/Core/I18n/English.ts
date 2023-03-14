@@ -26,4 +26,6 @@ export const English = {
 	"compile error": "compile error",
 	"plugin loading": "plugin loading",
 	"plugin loaded": "plugin loaded",
+
+	"out put message File{0}, Line{1}, Message{2}":"File: \"{0}\"\nLine: {1}\n{2}\n\n",
 }
