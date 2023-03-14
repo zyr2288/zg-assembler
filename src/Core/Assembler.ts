@@ -42,8 +42,6 @@ export class Assembler {
 	}
 
 	Initialize() {
-		console.log("init");
-		
 		ExpressionUtils.Initialize();
 		Commands.Initialize();
 		Platform.ChangePlatform(Config.ProjectSetting.platform);

@@ -2,10 +2,10 @@ import { Utils } from "../Base/Utils";
 import { Commands } from "../Commands/Commands";
 import { Localization } from "../I18n/Localization";
 import { IntellisenseProvider } from "../LanguageHelper/IntellisenseProvider";
-import { Asm6502 } from "./Asm6502";
-import { Asm65816 } from "./Asm65816";
 import { AsmCommon } from "./AsmCommon";
-import { AsmGBZ80 } from "./AsmGBZ80";
+import { Asm6502 } from "./Asm6502";
+import { Asm65C816 } from "./Asm65C816";
+import { AsmZ80_GB } from "./AsmZ80-GB";
 
 export const MatchNames = {
 	command: "command",
@@ -20,22 +20,27 @@ export class Platform {
 	/**匹配编译器命令，编译指令，等式字符串，匹配结果 command instruction variable */
 	static regexString: string;
 
-	/**改变编译平台，目前有 6502 65816 gbz80 */
+	private static platformNames: string[];
+	private static platforms = [Asm6502, Asm65C816, AsmZ80_GB];
+
+	/**改变编译平台，目前有 6502 65816 z80-gb */
 	static ChangePlatform(platform: string) {
-		switch (platform) {
-			case "6502":
-				Platform.platform = new Asm6502();
-				break;
-			case "65816":
-				Platform.platform = new Asm65816();
-				break;
-			case "gbz80":
-				Platform.platform = new AsmGBZ80();
-				break;
-			default:
-				const errorMsg = Localization.GetMessage("Unsupport platform {0}", platform);
-				throw new Error(errorMsg);
+
+		if (!Platform.platformNames) {
+			Platform.platformNames = [];
+			for (let i = 0; i < Platform.platforms.length; ++i) {
+				let name = Reflect.get(Platform.platforms[i], "platformName");
+				Platform.platformNames.push(name);
+			}
 		}
+
+		let index = Platform.platformNames.indexOf(platform);
+		if (index < 0) {
+			const errorMsg = Localization.GetMessage("Unsupport platform {0}", platform);
+			throw new Error(errorMsg);
+		}
+
+		Platform.platform = new Platform.platforms[index]();
 		Platform.UpdateRegex();
 		IntellisenseProvider.UpdateCommandCompletions();
 		IntellisenseProvider.UpdateInstrucionCompletions();

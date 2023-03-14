@@ -1,6 +1,9 @@
 import { AsmCommon } from "./AsmCommon";
 
-export class Asm65816 extends AsmCommon {
+export class Asm65C816 extends AsmCommon {
+
+	private static platformName = "65816";
+
 	constructor() {
 		super();
 		this.Initialize();

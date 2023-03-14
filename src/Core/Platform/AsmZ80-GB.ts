@@ -1,6 +1,9 @@
 import { AsmCommon } from "./AsmCommon";
 
-export class AsmGBZ80 extends AsmCommon {
+export class AsmZ80_GB extends AsmCommon {
+
+	private static platformName = "z80-gb";
+
 	constructor() {
 		super();
 		this.Initialize();

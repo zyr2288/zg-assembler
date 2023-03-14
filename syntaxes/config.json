@@ -4,7 +4,7 @@
 	"description": "Assembler configurations",
 	"patternProperties": {
 		"platform": {
-			"enum": ["6502", "65816", "gbz80"],
+			"enum": ["6502", "65c816", "z80-gb"],
 			"description": "Target Platform"
 		},
 		"intellisense": { "type": "boolean", "default": true },

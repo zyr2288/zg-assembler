@@ -22,6 +22,7 @@ export interface AddressOption {
 	opCodeLength?: Array<number | undefined>;
 }
 
+/**请实现 static platformName */
 export class AsmCommon {
 
 	/**所有汇编指令 */
