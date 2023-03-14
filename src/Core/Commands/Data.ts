@@ -61,10 +61,12 @@ export class Data {
 			if (!temp.success) {
 				line.compileType = LineCompileType.None;
 				line.result.length += temp.values.length * dataLength;
+				index += line.result.length;
 			} else {
 				for (let j = 0; j < temp.values.length; j++) {
 					let tempLength = Utils.GetNumberByteLength(temp.values[j]);
 					let tempValue = Compiler.SetResult(line, temp.values[j], index, dataLength);
+					index += dataLength;
 					if (tempLength > dataLength || temp.values[j] < 0) {
 						let errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.values[j], tempValue);
 						let token = ExpressionUtils.CombineExpressionPart(part);
@@ -72,10 +74,8 @@ export class Data {
 					}
 				}
 			}
-			index += dataLength;
 		}
 
 		Compiler.AddAddress(line);
-		return;
 	}
 }
