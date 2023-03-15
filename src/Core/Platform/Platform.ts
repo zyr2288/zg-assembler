@@ -60,7 +60,7 @@ export class Platform {
 		Platform.regexString += ")|";
 
 		Platform.regexString += `(?<${MatchNames.instruction}>`;
-		let instructions = Platform.platform.instructions;
+		let instructions = AsmCommon.instructions;
 		for (let i = 0; i < instructions.length; ++i) {
 			temp = Utils.TransformRegex(instructions[i]) + "|";
 			Platform.regexString += temp;

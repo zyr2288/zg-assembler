@@ -26,32 +26,28 @@ export interface AddressOption {
 export class AsmCommon {
 
 	/**所有汇编指令 */
-	instructions!: string[];
+	static instructions: string[];
 	/**Key为 Instruction，例如：LDA */
-	allInstructions: Map<string, IAddressingMode[]> = new Map();
+	static allInstructions: Map<string, IAddressingMode[]> = new Map();
 
 	constructor() {
-		this.ClearAll();
-	}
-
-	ClearAll() {
-		this.allInstructions.clear();
+		AsmCommon.allInstructions.clear();
 	}
 
 	UpdateInstructions() {
-		this.instructions = [];
-		this.allInstructions.forEach((addressingMode, instruction, map) => {
-			this.instructions.push(instruction);
+		AsmCommon.instructions = [];
+		AsmCommon.allInstructions.forEach((addressingMode, instruction, map) => {
+			AsmCommon.instructions.push(instruction);
 		});
 	}
 
 	//#region 添加基础指令
 	AddInstruction(operation: string, option: AddressOption) {
 		operation = operation.toUpperCase();
-		let index = this.allInstructions.get(operation);
+		let index = AsmCommon.allInstructions.get(operation);
 		if (!index) {
 			index = [];
-			this.allInstructions.set(operation, index);
+			AsmCommon.allInstructions.set(operation, index);
 		}
 
 		let type: IAddressingMode = { addressingMode: option.addressingMode, addressType: [] as string[], opCode: [], opCodeLength: [] };
@@ -101,7 +97,7 @@ export class AsmCommon {
 
 	//#region 匹配指令
 	MatchAddressingMode(instruction: Token, expression: Token) {
-		let addressTypes = this.allInstructions.get(instruction.text.toUpperCase());
+		let addressTypes = AsmCommon.allInstructions.get(instruction.text.toUpperCase());
 		if (!addressTypes) {
 			let errorMsg = Localization.GetMessage("Unknow instruction {0}", instruction.text);
 			MyDiagnostic.PushException(instruction, errorMsg);

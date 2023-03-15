@@ -6,6 +6,7 @@ import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Commands } from "../Commands/Commands";
 import { IMacro, MacroUtils } from "../Commands/Macro";
+import { AsmCommon } from "../Platform/AsmCommon";
 import { MatchNames, Platform } from "../Platform/Platform";
 import { HelperUtils } from "./HelperUtils";
 
@@ -342,7 +343,7 @@ export class IntellisenseProvider {
 	//#region 获取汇编指令地址模式
 	/**获取汇编指令地址模式 */
 	private static GetInstructionAddressingModes(instruction: string) {
-		const modes = Platform.platform.allInstructions.get(instruction.toUpperCase());
+		const modes = AsmCommon.allInstructions.get(instruction.toUpperCase());
 		if (!modes)
 			return [];
 
@@ -368,8 +369,8 @@ export class IntellisenseProvider {
 	/**更新所有汇编指令 */
 	static UpdateInstrucionCompletions() {
 		IntellisenseProvider.instructionCompletions = [];
-		for (let i = 0; i < Platform.platform.instructions.length; ++i) {
-			const instruction = Platform.platform.instructions[i];
+		for (let i = 0; i < AsmCommon.instructions.length; ++i) {
+			const instruction = AsmCommon.instructions[i];
 			let completion = new Completion({
 				showText: instruction,
 				insertText: instruction,
