@@ -6,16 +6,13 @@ export class OnlyLabelLine implements ICommonLine {
 	type = LineType.OnlyLabel;
 	compileType = LineCompileType.None;
 	orgText!: Token;
+
 	label?: ILabel;
 
 	comment?: string;
 
-	constructor(label?: ILabel, comment?: string) {
+	constructor(label?: ILabel) {
 		this.label = label;
-		if (this.label) {
-			this.label.labelType = LabelType.Label;
-			this.label.comment = comment;
-		}
 	}
 
 	GetTokens() {

@@ -1,6 +1,6 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
-import { ILabel } from "../Base/Label";
+import { ILabel, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
@@ -16,21 +16,38 @@ export class CommandLine implements ICommonLine {
 	baseAddress = 0;
 
 	label?: ILabel;
-	command!: Token;
+	labelToken?: Token;
+
+	command: Token;
 	expression?: Token;
 	expParts: ExpressionPart[][] = [];
 	result: number[] = [];
 
 	tag?: any;
 
-	SetResult: (value: number, index: number, length: number) => number;
-	SetAddress: () => void;
-	AddAddress: () => void;
+	/**
+	 * 构造函数
+	 * @param option.command 命令
+	 * @param option.expression 表达式
+	 * @param option.labelToken Label的Token
+	 */
+	constructor(option: { command: Token, expression?: Token, labelToken?: Token }) {
+		this.command = option.command;
+		this.command.text = this.command.text.toUpperCase();
+		this.expression = option.expression;
+		this.labelToken = option.labelToken;
+	}
 
-	constructor() {
-		this.SetResult = Compiler.SetResult.bind(this);
-		this.SetAddress = Compiler.SetAddress.bind(this);
-		this.AddAddress = Compiler.AddAddress.bind(this);
+	SetResult(value: number, index: number, length: number): number {
+		return Compiler.SetResult(this, value, index, length);
+	}
+
+	SetAddress() {
+		Compiler.SetAddress(this);
+	}
+
+	AddAddress() {
+		Compiler.AddAddress(this);
 	}
 
 	GetTokens() {

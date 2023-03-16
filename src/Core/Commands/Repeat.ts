@@ -44,12 +44,10 @@ export class Repeat {
 		let tempLines = option.allLines.splice(option.lineIndex, length);
 		tempLines.splice(tempLines.length - 1, 1);
 		while (result.value > 0) {
-			let tempArray = tempLines.map(value => Utils.DeepClone(value));
+			let tempArray = Utils.DeepClone(tempLines);
 			option.allLines.splice(option.lineIndex, 0, ...tempArray);
 			result.value--;
 		}
 		option.lineIndex--;
-
-
 	}
 }

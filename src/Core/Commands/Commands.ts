@@ -78,6 +78,8 @@ export class Commands {
 	}
 	//#endregion 初始化
 
+	/***** 三次基本分析 *****/
+
 	//#region 第一次分析
 	static async FirstAnalyse(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
@@ -129,7 +131,7 @@ export class Commands {
 				return;
 			}
 
-			for (let i = 1; i < includeLines.length; i++) {
+			for (let i = 1; i < includeLines.length; ++i) {
 				const tempLine = option.GetLine<CommandLine>(includeLines[i].index);
 				tempLine.tag = Commands.SplitParams(tempLine);
 			}
@@ -145,23 +147,17 @@ export class Commands {
 
 	//#region 第二次分析
 	static async SecondAnalyse(option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as CommandLine;
-		let com = Commands.allCommands.get(line.command.text)!;
-		if (com.SecondAnalyse)
-			return await com.SecondAnalyse(option);
-
-		return true;
+		const line = option.GetCurrectLine<CommandLine>();
+		const com = Commands.allCommands.get(line.command.text)!;
+		await com.SecondAnalyse?.(option);
 	}
 	//#endregion 第二次分析
 
 	//#region 第三次分析
 	static async ThirdAnalyse(option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as CommandLine;
-		let com = Commands.allCommands.get(line.command.text)!;
-		if (com.ThirdAnalyse)
-			return await com.ThirdAnalyse(option);
-
-		return true;
+		const line = option.GetCurrectLine<CommandLine>();
+		const com = Commands.allCommands.get(line.command.text)!;
+		await com.ThirdAnalyse?.(option);
 	}
 	//#endregion 第三次分析
 
@@ -173,6 +169,8 @@ export class Commands {
 		await com?.CommandCompile?.(option);
 	}
 	//#endregion 编译命令
+
+	/***** 辅助函数 *****/
 
 	//#region 增加命令
 	/**
@@ -236,18 +234,6 @@ export class Commands {
 	}
 	//#endregion 增加命令
 
-	//#region 基础获取命令的高亮Token
-	static GetTokens(this: CommandLine) {
-		let result: HighlightToken[] = [];
-
-		if (this.label)
-			result.push({ token: this.label.token, type: HighlightType.Label });
-
-		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
-		return result;
-	}
-	//#endregion 基础获取命令的高亮Token
-
 	//#region 第一次的通用分析，仅拆分表达式，仅针对只有一个参数的命令
 	/**
 	 * 第一次的通用分析，仅拆分表达式，仅针对只有一个参数的命令，将分割结果放入tag
@@ -263,6 +249,7 @@ export class Commands {
 			else
 				line.compileType = LineCompileType.Error;
 		}
+		delete (line.tag);
 	}
 	//#endregion 第一次的通用分析，仅拆分表达式，仅针对只有一个参数的命令
 
@@ -275,7 +262,7 @@ export class Commands {
 	//#endregion 第三次的通用分析，仅对编译命令行的表达式小节分析
 
 	//#region 将头尾行的所有行纳入
-	static CollectBaseLines(option:DecodeOption, includeLines: IncludeLine[]) {
+	static CollectBaseLines(option: DecodeOption, includeLines: IncludeLine[]) {
 		let start = includeLines![0].index;
 		let end = includeLines![1].index;
 		let tag = option.allLines.splice(start + 1, end - start);

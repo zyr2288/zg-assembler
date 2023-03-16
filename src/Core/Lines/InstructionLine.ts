@@ -30,8 +30,10 @@ export class InstructionLine implements ICommonLine {
 	orgAddress = -1;
 	baseAddress = 0;
 
+	labelToken?: Token;
 	label?: ILabel;
-	instruction!: Token;
+
+	instruction: Token;
 	expression?: Token;
 	exprParts: ExpressionPart[][] = [];
 	addressingMode!: IAddressingMode;
@@ -39,15 +41,23 @@ export class InstructionLine implements ICommonLine {
 
 	comment?: string;
 
-	SetResult: (value: number, index: number, length: number) => number;
+	constructor(option: { instruction: Token, expression: Token, labelToken?: Token }) {
+		this.instruction = option.instruction;
+		this.instruction.text = this.instruction.text.toUpperCase();
+		this.expression = option.expression;
+		this.labelToken = option.labelToken;
+	}
 
-	SetAddress: () => void;
-	AddAddress: () => void;
+	SetResult(value: number, index: number, length: number): number {
+		return Compiler.SetResult(this, value, index, length);
+	}
 
-	constructor() {
-		this.SetResult = Compiler.SetResult.bind(this);
-		this.SetAddress = Compiler.SetAddress.bind(this);
-		this.AddAddress = Compiler.AddAddress.bind(this);
+	SetAddress() {
+		Compiler.SetAddress(this);
+	}
+
+	AddAddress() {
+		Compiler.AddAddress(this);
 	}
 
 	GetTokens() {
@@ -70,14 +80,13 @@ export class InstructionLineUtils {
 	 */
 	static FirstAnalyse(option: DecodeOption) {
 		const line = option.GetCurrectLine<InstructionLine>();
-		if (!line.label!.token.isEmpty) {
-			let label = LabelUtils.CreateLabel(line.label!.token, option);
+		if (!line.labelToken!.isEmpty) {
+			let label = LabelUtils.CreateLabel(line.labelToken!, option);
 			if (label) label.labelType = LabelType.Label;
 			line.label = label;
-		} else {
-			delete (line.label);
-		}
-
+		} 
+		delete (line.labelToken);
+		
 		let temp;
 		if (temp = Platform.platform.MatchAddressingMode(line.instruction, line.expression!)) {
 			line.addressingMode = temp.addressingMode;

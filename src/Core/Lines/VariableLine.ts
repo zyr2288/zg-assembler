@@ -9,11 +9,18 @@ export class VariableLine implements ICommonLine {
 	compileType = LineCompileType.None;
 	orgText!: Token;
 
+	labelToken?: Token;
 	label!: ILabel;
+
 	expression?: Token;
 	exprParts: ExpressionPart[] = [];
 
 	comment?: string;
+
+	constructor(option: { labelToken: Token, expression: Token }) {
+		this.labelToken = option.labelToken;
+		this.expression = option.expression;
+	}
 
 	GetTokens() {
 		let result: HighlightToken[] = [];
@@ -24,7 +31,7 @@ export class VariableLine implements ICommonLine {
 
 export class VariableLineUtils {
 	static FirstAnalyse(option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as VariableLine;
+		const line = option.GetCurrectLine<VariableLine>()
 		let label = LabelUtils.CreateLabel(line.label.token, option);
 		if (label) {
 			line.label = label;
@@ -32,6 +39,7 @@ export class VariableLineUtils {
 		} else {
 			line.compileType = LineCompileType.Error;
 		}
+		delete (line.labelToken);
 
 		let parts = ExpressionUtils.SplitAndSort(line.expression!);
 		if (parts)
