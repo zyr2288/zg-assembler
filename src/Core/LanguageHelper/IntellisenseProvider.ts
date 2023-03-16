@@ -134,8 +134,8 @@ export class IntellisenseProvider {
 		if (tempMatch.type === "none" || lineCurrect < tempMatch.start)
 			return IntellisenseProvider.GetEmptyLineHelper({ fileHash, range: rangeType, trigger: trigger });
 
+		let matchIndex = tempMatch.start + tempMatch.text.length + 1;
 		if (tempMatch.type === "instruction") {
-			let matchIndex = tempMatch.start + tempMatch.text.length + 1;
 			if (trigger === " " && lineCurrect === matchIndex) {
 				return IntellisenseProvider.GetInstructionAddressingModes(tempMatch.text);
 			} else if (trigger === ":" && lineCurrect > matchIndex) {
@@ -146,7 +146,11 @@ export class IntellisenseProvider {
 				return IntellisenseProvider.GetLabel(fileHash, prefix.rangeText[0], macro);
 			}
 		} else if (tempMatch.type === "command") {
-
+			if (lineCurrect < matchIndex || trigger === " ") 
+				return [];
+			
+			let prefix  = HelperUtils.GetWord(lineText, lineCurrect);
+			return IntellisenseProvider.GetLabel(fileHash, prefix.rangeText[0], macro);
 		}
 
 		return [];
