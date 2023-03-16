@@ -142,6 +142,7 @@ export class DataGroupCommand {
 		if (Commands.SetOrgAddressAndLabel(line))
 			return;
 
+		line.result ??= [];
 		line.result.length = line.expParts.length * dataLength;
 		line.compileType = LineCompileType.Finished;
 

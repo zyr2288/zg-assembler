@@ -51,12 +51,13 @@ export class Data {
 		if (Commands.SetOrgAddressAndLabel(line))
 			return;
 
+		line.result ??= [];
 		line.compileType = LineCompileType.Finished;
 		let index = 0;
 		let finalCompile = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
 
 		for (let i = 0; i < line.expParts.length; i++) {
-			const part: ExpressionPart[] = line.expParts[i]
+			const part: ExpressionPart[] = line.expParts[i];
 			let temp = ExpressionUtils.GetExpressionValues(part, finalCompile, option);
 			if (!temp.success) {
 				line.compileType = LineCompileType.None;
