@@ -2,11 +2,12 @@ import { Compiler } from "../Base/Compiler";
 import { ExpressionResult, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
 import { MyDiagnostic } from "../Base/MyException";
-import { CommandDecodeOption, DecodeOption } from "../Base/Options";
+import { DecodeOption } from "../Base/Options";
 import { Utils } from "../Base/Utils";
 import { Localization } from "../I18n/Localization";
+import { CommandLine } from "../Lines/CommandLine";
 import { LineCompileType } from "../Lines/CommonLine";
-import { Commands, ICommandLine } from "./Commands";
+import { Commands } from "./Commands";
 
 export class Message {
 
@@ -19,9 +20,9 @@ export class Message {
 		});
 	}
 
-	private static FirstAnalyse_Msg(option: CommandDecodeOption) {
+	private static FirstAnalyse_Msg(option: DecodeOption) {
 		Commands.FirstAnalyse_Common(option);
-		const line = option.allLines[option.lineIndex] as ICommandLine;
+		const line = option.GetCurrectLine<CommandLine>();
 		if (line.expParts[0]?.length !== 1 || line.expParts[0][0].type !== PriorityType.Level_3_String) {
 			let errorMsg = Localization.GetMessage("Command arguments error");
 			let token = ExpressionUtils.CombineExpressionPart(line.expParts[0]);
@@ -31,7 +32,7 @@ export class Message {
 	}
 
 	private static ThirdAnalyse_Msg(option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as ICommandLine;
+		const line = option.GetCurrectLine<CommandLine>();
 		for (let i = 1; i < line.expParts.length; ++i)
 			if (ExpressionUtils.CheckLabelsAndShowError(line.expParts[i], option))
 				line.compileType = LineCompileType.Error;
@@ -40,7 +41,7 @@ export class Message {
 	}
 
 	private static Compiler_Msg(option: DecodeOption) {
-		const line = option.allLines[option.lineIndex] as ICommandLine;
+		const line = option.GetCurrectLine<CommandLine>();
 		line.tag ??= [];
 		line.compileType = LineCompileType.Finished;
 		for (let i = 1; i < line.expParts.length; ++i) {

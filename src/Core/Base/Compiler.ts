@@ -1,16 +1,20 @@
-import { Commands, ICommandLine } from "../Commands/Commands";
+import { Commands } from "../Commands/Commands";
 import { IMacroLine, MacroUtils } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
-import { HighlightType, ICommonLine, IOnlyLabel, LineCompileType, LineType, SplitLine } from "../Lines/CommonLine";
-import { IInstructionLine, InstructionLine } from "../Lines/InstructionLine";
-import { IVariableLine, VariableLineUtils } from "../Lines/VariableLine";
+import { CommandLine } from "../Lines/CommandLine";
+import { ICommonLine, IOnlyLabel, LineCompileType, LineType } from "../Lines/CommonLine";
+import { InstructionLine, InstructionLineUtils } from "../Lines/InstructionLine";
+import { MacroLine } from "../Lines/MacroLine";
+import { OnlyLabelLine } from "../Lines/OnlyLabelLine";
+import { UnknowLine } from "../Lines/UnknowLine";
+import { VariableLine, VariableLineUtils } from "../Lines/VariableLine";
 import { Platform } from "../Platform/Platform";
 import { Config } from "./Config";
 import { Environment } from "./Environment";
 import { ExpressionResult, ExpressionUtils } from "./ExpressionUtils";
 import { LabelType, LabelUtils } from "./Label";
 import { MyDiagnostic } from "./MyException";
-import { CommandDecodeOption, DecodeOption } from "./Options";
+import { DecodeOption } from "./Options";
 import { ResultUtils } from "./ResultUtils";
 import { Token } from "./Token";
 
@@ -31,7 +35,7 @@ export class Compiler {
 
 		Compiler.compiling = true;
 		Compiler.enviroment = Compiler.editorEnv;
-		let option: DecodeOption = { allLines: [], lineIndex: 0 };
+		let option = new DecodeOption([]);
 		for (let index = 0; index < files.length; ++index) {
 
 			let fileHash = Compiler.enviroment.SetFile(files[index].filePath);
@@ -64,8 +68,7 @@ export class Compiler {
 
 		Compiler.compiling = true;
 		Compiler.enviroment = Compiler.compilerEnv;
-		let option: DecodeOption = { allLines: [], lineIndex: 0 };
-
+		let option = new DecodeOption([]);
 		let fileHash = Compiler.enviroment.SetFile(filePath);
 		MyDiagnostic.ClearAll();
 		Compiler.enviroment.ClearAll();
@@ -108,34 +111,38 @@ export class Compiler {
 		//#region 保存行Token
 		const SaveToken = (lineType: LineType) => {
 
-			let splitLine: SplitLine = {
-				label: tokens[0].Substring(0, match!.index),
-				comOrIntrs: tokens[0].Substring(match!.index, match![0].length),
-				expression: tokens[0].Substring(match!.index + match![0].length),
-			};
+
+			let label = tokens[0].Substring(0, match!.index);
+			let comOrIntrs = tokens[0].Substring(match!.index, match![0].length);
+			let expression = tokens[0].Substring(match!.index + match![0].length);
+
+			comOrIntrs.text = comOrIntrs.text.toUpperCase();
 
 			switch (lineType) {
 				case LineType.Command:
-					newLine = { type: LineType.Command } as ICommandLine;
-					Compiler.LineInitialize(newLine as ICommandLine);
+					let tempCommand = new CommandLine;
+					tempCommand.label = { token: label, labelType: LabelType.None };
+					tempCommand.command = comOrIntrs;
+					tempCommand.expression = expression;
+					newLine = tempCommand;
 					break;
 				case LineType.Instruction:
-					newLine = { type: LineType.Instruction, result: [] as number[] } as IInstructionLine;
-					Compiler.LineInitialize(newLine as IInstructionLine);
+					let tempIns = new InstructionLine;
+					tempIns.label = { token: label, labelType: LabelType.None };
+					tempIns.instruction = comOrIntrs;
+					tempIns.expression = expression;
+					newLine = tempIns;
 					break;
 				case LineType.Variable:
-					newLine = { type: LineType.Variable } as IVariableLine;
+					let tempVarLine = new VariableLine;
+					tempVarLine.label = { token: label, labelType: LabelType.None };
+					tempVarLine.expression = expression;
+					newLine = tempVarLine;
 					break;
 			}
 
-			// @ts-ignore
-			newLine.splitLine = splitLine;
-			newLine.compileType = LineCompileType.None;
-
 			if (!tokens[1].isEmpty)
 				newLine.comment = tokens[1].text;
-
-
 		}
 		//#endregion 保存行Token
 
@@ -157,25 +164,27 @@ export class Compiler {
 			} else if (match?.groups?.["variable"]) {
 				SaveToken(LineType.Variable);
 			} else {
-				newLine = {
-					type: LineType.Unknow,
-					comment: comment.text,
-					compileType: LineCompileType.None
-				} as ICommonLine;
+				newLine = new UnknowLine();
+
 			}
 
 			newLine.orgText = content;
+			if (comment.text)
+				newLine.comment = comment.text;
+
 			result.push(newLine);
 
-			let lines = Compiler.enviroment.allBaseLines.get(fileHash);
-			if (!lines) {
-				lines = new Map();
-				Compiler.enviroment.allBaseLines.set(fileHash, lines);
-			}
+			// let lines = Compiler.enviroment.allBaseLines.get(fileHash);
+			// if (!lines) {
+			// 	lines = new Map();
+			// 	Compiler.enviroment.allBaseLines.set(fileHash, lines);
+			// }
 
-			lines.set(index, newLine);
+			// lines.set(index, newLine);
 			newLine = {} as ICommonLine;
 		}
+
+		Compiler.enviroment.allBaseLines.set(fileHash, result);
 		return result;
 	}
 	//#endregion 分解文本
@@ -192,10 +201,10 @@ export class Compiler {
 			option.lineIndex = i;
 			switch (line.type) {
 				case LineType.Instruction:
-					InstructionLine.FirstAnalyse(option);
+					InstructionLineUtils.FirstAnalyse(option);
 					break;
 				case LineType.Command:
-					await Commands.FirstAnalyse(option as CommandDecodeOption);
+					await Commands.FirstAnalyse(option);
 					break;
 				case LineType.Variable:
 					VariableLineUtils.FirstAnalyse(option);
@@ -218,23 +227,20 @@ export class Compiler {
 			option.lineIndex = i;
 			switch (line.type) {
 				case LineType.Unknow:
-					let match = new RegExp(Compiler.enviroment.macroRegexString).exec(line.orgText.text);
+					let unknowLine = option.GetCurrectLine<UnknowLine>();
+					let match = new RegExp(Compiler.enviroment.macroRegexString).exec(unknowLine.orgText.text);
 					let macroName = match?.groups?.["macro"];
 					if (macroName) {
-						let pre = line.orgText.Substring(0, match!.index);
-						let currect = line.orgText.Substring(match!.index, match![0].length);
-						let after = line.orgText.Substring(match!.index + match![0].length);
+						let pre = unknowLine.orgText.Substring(0, match!.index);
+						let currect = unknowLine.orgText.Substring(match!.index, match![0].length);
+						let after = unknowLine.orgText.Substring(match!.index + match![0].length);
 						MacroUtils.MatchMacroLine(pre, currect, after, option);
-						Compiler.LineInitialize(option.allLines[i] as IMacroLine);
 					} else {
-						option.allLines[i].type = LineType.OnlyLabel;
-						let label = LabelUtils.CreateLabel(option.allLines[i].orgText, option);
-						if (label) {
-							label.labelType = LabelType.Label;
-							(option.allLines[i] as IOnlyLabel).label = label;
-							option.allLines[i].GetTokens = () => [{ token: label!.token, type: HighlightType.Label }];
-						}
+						let label = LabelUtils.CreateLabel(unknowLine.orgText, option);
+						let onlyLabelLine = new OnlyLabelLine(label, unknowLine.comment);
+						option.ReplaceLine(onlyLabelLine, unknowLine.orgText.fileHash);
 					}
+
 					break;
 				case LineType.Command:
 					await Commands.SecondAnalyse(option);
@@ -255,7 +261,7 @@ export class Compiler {
 			option.lineIndex = i;
 			switch (line.type) {
 				case LineType.Instruction:
-					InstructionLine.ThirdAnalyse(option);
+					InstructionLineUtils.ThirdAnalyse(option);
 					break;
 				case LineType.Command:
 					Commands.ThirdAnalyse(option);
@@ -267,6 +273,7 @@ export class Compiler {
 					Commands.ThirdAnalyse_Common(option);
 					break;
 			}
+			i = option.lineIndex;
 		}
 	}
 	//#endregion 第三次分析
@@ -301,7 +308,7 @@ export class Compiler {
 			option.lineIndex = i;
 			switch (line.type) {
 				case LineType.Instruction:
-					InstructionLine.CompileInstruction(option);
+					InstructionLineUtils.CompileInstruction(option);
 					break;
 				case LineType.Command:
 					await Commands.CompileCommands(option);
@@ -312,7 +319,7 @@ export class Compiler {
 					onlyLabelLine.compileType = LineCompileType.Finished;
 					break;
 				case LineType.Variable:
-					const varLine = option.allLines[i] as IVariableLine;
+					const varLine = option.allLines[i] as VariableLine;
 					let result = ExpressionUtils.GetExpressionValue(varLine.exprParts, isFinal, option);
 					if (result.success) {
 						varLine.label.value = result.value;
@@ -337,22 +344,20 @@ export class Compiler {
 	 * @param length 设定长度
 	 * @returns 返回设定的值
 	 */
-	static SetResult(line: IInstructionLine | ICommandLine | IMacroLine, value: number, index: number, length: number) {
-		line.result ??= [];
-
+	static SetResult(this: InstructionLine | CommandLine | IMacroLine, value: number, index: number, length: number): number {
 		let temp = length;
 		let tempIndex = 0;
 
 		while (temp--) {
-			line.result[index + tempIndex] = 0;
+			this.result[index + tempIndex] = 0;
 			tempIndex++;
 		}
 
 		let setResult = 0;
 		let offset = 0;
 		while (length--) {
-			line.result[index] = value & 0xFF;
-			setResult |= line.result[index] << offset;
+			this.result[index] = value & 0xFF;
+			setResult |= this.result[index] << offset;
 			value >>= 8;
 			offset += 8;
 			index++;
@@ -368,44 +373,44 @@ export class Compiler {
 	 * @param line 当前行
 	 * @returns true为正确
 	 */
-	static SetAddress(line: IInstructionLine | ICommandLine | IMacroLine) {
+	static SetAddress(this: InstructionLine | CommandLine | MacroLine) {
 		if (Compiler.enviroment.orgAddress < 0) {
-			line.compileType = LineCompileType.Error;
+			this.compileType = LineCompileType.Error;
 			let errorMsg = Localization.GetMessage("Unknow original address");
-			MyDiagnostic.PushException(line.orgText, errorMsg);
+			let token!: Token;
+			switch (this.type) {
+				case LineType.Instruction:
+					token = (this as InstructionLine).instruction;
+					break;
+				case LineType.Instruction:
+					token = (this as CommandLine).command;
+					break;
+				case LineType.Instruction:
+					token = (this as MacroLine).macroToken;
+					break;
+			}
+
+			MyDiagnostic.PushException(token, errorMsg);
 		}
 
-		if (line.orgAddress < 0) {
-			line.baseAddress = Compiler.enviroment.baseAddress;
-			line.orgAddress = Compiler.enviroment.orgAddress;
+		if (this.orgAddress < 0) {
+			this.baseAddress = Compiler.enviroment.baseAddress;
+			this.orgAddress = Compiler.enviroment.orgAddress;
 		}
 	}
 	//#endregion 设定起始地址
 
 	//#region 给文件的地址增加偏移
-	static AddAddress(line: IInstructionLine | ICommandLine | IMacroLine) {
-		if (line.orgAddress >= 0) {
-			Compiler.enviroment.orgAddress = line.orgAddress;
-			Compiler.enviroment.baseAddress = line.baseAddress;
+	static AddAddress(this: InstructionLine | CommandLine | MacroLine) {
+		if (this.orgAddress >= 0) {
+			Compiler.enviroment.orgAddress = this.orgAddress;
+			Compiler.enviroment.baseAddress = this.baseAddress;
 		}
 
-		Compiler.enviroment.baseAddress += line.result.length;
-		Compiler.enviroment.orgAddress += line.result.length;
+		Compiler.enviroment.baseAddress += this.result.length;
+		Compiler.enviroment.orgAddress += this.result.length;
 	}
 	//#endregion 给文件的地址增加偏移
-
-	/***** Private *****/
-
-	//#region 绑定行命令
-	/**
-	 * 绑定行命令
-	 * @param line 
-	 */
-	private static LineInitialize = (line: IInstructionLine | ICommandLine | IMacroLine) => {
-		line.orgAddress = -1;
-		line.baseAddress = 0;
-	}
-	//#endregion 绑定行命令
 
 }
 

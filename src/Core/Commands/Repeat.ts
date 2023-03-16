@@ -1,9 +1,10 @@
 import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
-import { CommandDecodeOption, DecodeOption } from "../Base/Options";
+import { DecodeOption, IncludeLine } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
+import { CommandLine } from "../Lines/CommandLine";
 import { LineCompileType } from "../Lines/CommonLine";
-import { Commands, ICommandLine } from "./Commands";
+import { Commands } from "./Commands";
 
 export class Repeat {
 
@@ -12,37 +13,43 @@ export class Repeat {
 			name: ".REPEAT", end: ".ENDR", min: 1, label: false, nested: true,
 			firstAnalyse: Repeat.FirstAnalyse,
 			thirdAnalyse: Commands.ThirdAnalyse_Common,
-			compile: Repeat.Compile_Repeat
+			compile: Repeat.Compile
 		});
 	}
 
-	private static FirstAnalyse(option: CommandDecodeOption) {
-		const line = option.allLines[option.lineIndex] as ICommandLine;
+	private static FirstAnalyse(option: DecodeOption, include?: IncludeLine[]) {
+		const line = option.GetCurrectLine<CommandLine>();
 		let expressions: Token[] = line.tag;
-		line.tag = option.includeCommandLines![1].index - option.includeCommandLines![0].index;
+		line.tag = include![1].index - include![0].index;
 
 		let temp = ExpressionUtils.SplitAndSort(expressions[0]);
 		if (temp)
 			line.expParts[0] = temp;
 		else
 			line.compileType = LineCompileType.Error;
+
+		option.GetLine(include![1].index).compileType = LineCompileType.Finished;
 	}
 
-	private static Compile_Repeat(option: DecodeOption) {
-		const line = option.allLines[option.lineIndex] as ICommandLine;
+	private static Compile(option: DecodeOption) {
+		const line = option.GetCurrectLine<CommandLine>();
 		let result = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.GetResultAndShowError, option);
-		if (!result.success || result.value < 0)
+		if (!result.success)
 			return;
+
+		line.compileType = LineCompileType.Finished;
 
 		let length: number = line.tag;
 		option.allLines.splice(option.lineIndex, 1);
 		let tempLines = option.allLines.splice(option.lineIndex, length);
 		tempLines.splice(tempLines.length - 1, 1);
-		while (result.value != 0) {
+		while (result.value > 0) {
 			let tempArray = tempLines.map(value => Utils.DeepClone(value));
 			option.allLines.splice(option.lineIndex, 0, ...tempArray);
 			result.value--;
 		}
 		option.lineIndex--;
+
+
 	}
 }

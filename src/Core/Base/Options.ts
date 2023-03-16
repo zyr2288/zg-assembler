@@ -1,19 +1,39 @@
 import { IMacro } from "../Commands/Macro";
 import { ICommonLine } from "../Lines/CommonLine";
-import { Token } from "./Token";
+import { Compiler } from "./Compiler";
 
-export interface SplitOption {
-	lineText: string;
-	restText: string;
-	lineNumber: number;
-}
-
-export interface DecodeOption {
+export class DecodeOption {
 	macro?: IMacro;
-	allLines: ICommonLine[];
-	lineIndex: number;
+	allLines: ICommonLine[] = [];
+	lineIndex = 0;
+
+	constructor(allLines: ICommonLine[]) {
+		this.allLines = allLines;
+	}
+
+	ReplaceLine(newLine: ICommonLine, fileHash: number) {
+		this.allLines[this.lineIndex] = newLine;
+		let temp = Compiler.enviroment.allBaseLines.get(fileHash);
+		if (!temp)
+			return;
+
+		temp[this.lineIndex] = newLine;
+	}
+
+	GetLine<T extends ICommonLine>(index: number) {
+		return this.allLines[index] as T;
+	}
+
+	GetCurrectLine<T>() {
+		return this.allLines[this.lineIndex] as T;
+	}
 }
 
-export interface CommandDecodeOption extends DecodeOption {
-	includeCommandLines?: { match: string, index: number, line: number }[];
-}
+export type IncludeLine = {
+	/**匹配的字符串 */
+	match: string,
+	/**行的索引 */
+	index: number,
+	/**行所在行号 */
+	line: number
+};

@@ -1,12 +1,6 @@
 import { ILabel } from "../Base/Label";
 import { Token } from "../Base/Token";
 
-export interface SplitLine {
-	label: Token;
-	comOrIntrs: Token;
-	expression: Token;
-}
-
 export enum LineType {
 	Unknow, Instruction, Command, Variable, Macro, OnlyLabel, Delegate
 }
@@ -25,6 +19,7 @@ export interface ICommonLine {
 	type: LineType;
 	compileType: LineCompileType;
 	comment?: string;
+	/**高亮Token */
 	GetTokens?: () => HighlightToken[];
 }
 

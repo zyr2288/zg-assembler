@@ -1,6 +1,6 @@
-import { ICommandLine } from "../Commands/Commands";
+import { CommandLine } from "../Lines/CommandLine";
 import { ICommonLine } from "../Lines/CommonLine";
-import { IInstructionLine } from "../Lines/InstructionLine";
+import { InstructionLine } from "../Lines/InstructionLine";
 
 export class ResultUtils {
 
@@ -8,7 +8,7 @@ export class ResultUtils {
 	static GetResult(allLines: ICommonLine[]) {
 		let result: number[] = [];
 		for (let i = 0; i < allLines.length; ++i) {
-			const line = allLines[i] as IInstructionLine | ICommandLine;
+			const line = allLines[i] as InstructionLine | CommandLine;
 			if (!line.result)
 				continue
 

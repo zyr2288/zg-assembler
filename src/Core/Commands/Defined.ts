@@ -1,10 +1,11 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { LabelType, LabelUtils } from "../Base/Label";
-import { CommandDecodeOption, DecodeOption } from "../Base/Options";
+import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
-import { HighlightToken, LineCompileType } from "../Lines/CommonLine";
-import { Commands, ICommandLine } from "./Commands";
+import { CommandLine } from "../Lines/CommandLine";
+import { LineCompileType } from "../Lines/CommonLine";
+import { Commands } from "./Commands";
 
 export class Defined {
 
@@ -17,8 +18,8 @@ export class Defined {
 		});
 	}
 
-	private static FirstAnalyse_Def(option: CommandDecodeOption) {
-		const line = option.allLines[option.lineIndex] as ICommandLine;
+	private static FirstAnalyse_Def(option: DecodeOption) {
+		const line = option.GetCurrectLine<CommandLine>();
 		let expressions: Token[] = line.tag;
 		line.label = LabelUtils.CreateLabel(expressions[0], option);
 		if (line.label)
@@ -30,12 +31,11 @@ export class Defined {
 		else
 			line.compileType = LineCompileType.Error;
 
-		line.GetTokens = Defined.GetTokens.bind(line);
 		delete (line.tag);
 	}
 
 	private static ThirdAnalyse_Def(option: DecodeOption) {
-		const line = option.allLines[option.lineIndex] as ICommandLine;
+		const line = option.GetCurrectLine<CommandLine>();
 		if (!line.label)
 			return;
 
@@ -52,8 +52,7 @@ export class Defined {
 	}
 
 	private static Compile_Def(option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as ICommandLine;
-
+		const line = option.GetCurrectLine<CommandLine>();
 		let type = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.GetResultAndShowError;
 		let temp = ExpressionUtils.GetExpressionValue(line.expParts[0], type);
 		if (line.label && temp.success) {
@@ -63,16 +62,6 @@ export class Defined {
 			line.compileType = LineCompileType.Error;
 		}
 
-	}
-
-	private static GetTokens(this: ICommandLine) {
-		let result: HighlightToken[] = [];
-
-		// if (this.label)
-		// 	result.push({ token: this.label.token, type: HighlightType.Defined });
-
-		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
-		return result;
 	}
 
 }

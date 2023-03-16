@@ -1,10 +1,10 @@
-import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { LabelUtils } from "../Base/Label";
-import { MyDiagnostic } from "../Base/MyException";
-import { CommandDecodeOption, DecodeOption } from "../Base/Options";
+import { DecodeOption, IncludeLine } from "../Base/Options";
 import { Token } from "../Base/Token";
+import { CommandLine } from "../Lines/CommandLine";
 import { LineCompileType } from "../Lines/CommonLine";
-import { Commands, ICommandLine } from "./Commands";
+import { Commands } from "./Commands";
 
 interface ConfidentLine {
 	index: number;
@@ -38,10 +38,9 @@ export class IfCondition {
 	}
 
 	//#region IF命令
-	private static FirstAnalyse_If(option: CommandDecodeOption) {
-		const line = option.allLines[option.lineIndex] as ICommandLine;
-
-		let result = option.includeCommandLines!;
+	private static FirstAnalyse_If(option: DecodeOption, include?: IncludeLine[]) {
+		const line = option.GetCurrectLine<CommandLine>();
+		let result = include!;
 		let index = 0;
 		let commands = [".ELSEIF", ".ELSE", ".ENDIF"];
 
@@ -50,7 +49,7 @@ export class IfCondition {
 
 		for (let i = 1; i < result.length; i++) {
 			let lineIndex = result[i].index;
-			const tempLine = option.allLines[lineIndex] as ICommandLine;
+			const tempLine = option.allLines[lineIndex] as CommandLine;
 			let searchIndex = commands.indexOf(tempLine.command.text);
 			if (searchIndex < index)
 				continue;
@@ -64,29 +63,28 @@ export class IfCondition {
 					break;
 			}
 			tag.push({ index: lineIndex, confident: false });
-			option.allLines[lineIndex].compileType = LineCompileType.Finished;
+			option.GetLine(lineIndex).compileType = LineCompileType.Finished;
 		}
 
 		line.tag = tag;
 	}
 
 	private static ThirdAnalyse_If(option: DecodeOption) {
-		const line = option.allLines[option.lineIndex] as ICommandLine;
+		const line = option.GetCurrectLine<CommandLine>();
 		let tag: ConfidentLine[] = line.tag;
 		for (let i = 0; i < tag.length - 1; ++i) {
-			const tempLine = option.allLines[tag[i].index] as ICommandLine;
+			const tempLine = option.allLines[tag[i].index] as CommandLine;
 			if (tempLine.expParts[0] && ExpressionUtils.CheckLabelsAndShowError(tempLine.expParts[0], option))
 				tempLine.compileType = LineCompileType.Error;
 		}
 	}
 
 	private static async Compile_If(option: DecodeOption) {
-		const line = option.allLines[option.lineIndex] as ICommandLine;
-
+		const line = option.GetCurrectLine<CommandLine>();
 		let tag: ConfidentLine[] = line.tag;
 
 		for (let i = 0; i < tag.length - 1; i++) {
-			const tempLine = option.allLines[tag[i].index] as ICommandLine;
+			const tempLine = option.allLines[tag[i].index] as CommandLine;
 			if (tempLine.command.text === ".ELSE") {
 				tag[i].confident = true;
 				break;
@@ -105,15 +103,15 @@ export class IfCondition {
 	//#endregion IF命令
 
 	//#region IFDEF IFNDEF 命令
-	private static FirstAnalyse_IfDefOrNot(option: CommandDecodeOption) {
-		const line = option.allLines[option.lineIndex] as ICommandLine
-		let result = option.includeCommandLines!;
+	private static FirstAnalyse_IfDefOrNot(option: DecodeOption, include?: IncludeLine[]) {
+		const line = option.GetCurrectLine<CommandLine>();
+		let result = include!;
 		let index = 0;
 		let commands = [".ELSE", ".ENDIF"];
 
 		let tag: ConfidentLine[] = [{ index: result[0].index, confident: false }];
 		for (let i = 1; i < result.length; ++i) {
-			const tempLine = option.allLines[result[i].index] as ICommandLine;
+			const tempLine = option.allLines[result[i].index] as CommandLine;
 			let temp = commands.indexOf(tempLine.command.text);
 			if (temp < index)
 				continue;
@@ -136,11 +134,11 @@ export class IfCondition {
 	}
 
 	private static Compile_IfDefOrNot(labelExist: boolean, option: DecodeOption) {
-		const line = option.allLines[option.lineIndex] as ICommandLine;
+		const line = option.allLines[option.lineIndex] as CommandLine;
 		let tag: ConfidentLine[] = line.tag;
 
 		for (let i = 0; i < tag.length - 1; ++i) {
-			const tempLine = option.allLines[tag[i].index] as ICommandLine;
+			const tempLine = option.allLines[tag[i].index] as CommandLine;
 			if (line.command.text === ".ELSE") {
 				tag[i].confident = true;
 				break;
@@ -178,7 +176,7 @@ export class IfCondition {
 	//#endregion 移除行
 
 	//#region 分析行表达式
-	private static SplitExpression(line: ICommandLine) {
+	private static SplitExpression(line: CommandLine) {
 		if (line.compileType === LineCompileType.Error) {
 			delete (line.tag);
 			return;

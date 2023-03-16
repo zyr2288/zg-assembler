@@ -20,7 +20,8 @@ export class Environment {
 	allDataGroup = new Map<number, IDataGroup>();
 
 	/**所有编译行 key1:fileHash key2:lineNumber */
-	allBaseLines = new Map<number, Map<number, ICommonLine>>();
+	// allBaseLines = new Map<number, Map<number, ICommonLine>>();
+	allBaseLines = new Map<number, ICommonLine[]>();
 
 	/**临时标签 Key: 文件的fileHash */
 	namelessLabel = new Map<number, INamelessLabelCollection>();
@@ -98,7 +99,7 @@ export class Environment {
 			this.fileMacros.set(fileHash, new Set());
 		}
 
-		this.allBaseLines.delete(fileHash);
+		// this.allBaseLines.delete(fileHash);
 		this.highlightRanges.delete(fileHash);
 	}
 

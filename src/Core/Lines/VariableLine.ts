@@ -1,18 +1,31 @@
 import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
-import { HighlightToken, HighlightType, ICommonLine, LineCompileType, SplitLine } from "./CommonLine";
+import { Token } from "../Base/Token";
+import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
-export interface IVariableLine extends ICommonLine {
-	splitLine?: SplitLine;
-	label: ILabel;
-	exprParts: ExpressionPart[];
+export class VariableLine implements ICommonLine {
+	type = LineType.Variable;
+	compileType = LineCompileType.None;
+	orgText!: Token;
+
+	label!: ILabel;
+	expression?: Token;
+	exprParts: ExpressionPart[] = [];
+
+	comment?: string;
+
+	GetTokens() {
+		let result: HighlightToken[] = [];
+		result.push(...ExpressionUtils.GetHighlightingTokens([this.exprParts]));
+		return result;
+	}
 }
 
 export class VariableLineUtils {
 	static FirstAnalyse(option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as IVariableLine;
-		let label = LabelUtils.CreateLabel(line.splitLine!.label, option);
+		let line = option.allLines[option.lineIndex] as VariableLine;
+		let label = LabelUtils.CreateLabel(line.label.token, option);
 		if (label) {
 			line.label = label;
 			line.label.labelType = LabelType.Variable;
@@ -20,33 +33,19 @@ export class VariableLineUtils {
 			line.compileType = LineCompileType.Error;
 		}
 
-		let parts = ExpressionUtils.SplitAndSort(line.splitLine!.expression);
+		let parts = ExpressionUtils.SplitAndSort(line.expression!);
 		if (parts)
 			line.exprParts = parts;
 		else
 			line.compileType = LineCompileType.Error;
 
-		delete (line.splitLine);
+		delete (line.expression);
 	}
 
 	static ThirdAnalyse(option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as IVariableLine;
+		let line = option.allLines[option.lineIndex] as VariableLine;
 		let temp = ExpressionUtils.GetExpressionValue(line.exprParts, ExpressionResult.TryToGetResult, option);
 		if (temp.success)
 			line.label.value = temp.value;
-
-		line.GetTokens = VariableLineUtils.GetTokens.bind(line);
 	}
-
-	//#region 基础获取命令的高亮Token
-	static GetTokens(this: IVariableLine) {
-		let result: HighlightToken[] = [];
-
-		if (this.label)
-			result.push({ token: this.label.token, type: HighlightType.Variable });
-
-		result.push(...ExpressionUtils.GetHighlightingTokens([this.exprParts]));
-		return result;
-	}
-	//#endregion 基础获取命令的高亮Token
 }

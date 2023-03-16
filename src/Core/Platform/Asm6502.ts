@@ -4,7 +4,7 @@ import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Localization } from "../I18n/Localization";
 import { LineCompileType } from "../Lines/CommonLine";
-import { IInstructionLine } from "../Lines/InstructionLine";
+import { InstructionLine } from "../Lines/InstructionLine";
 import { AsmCommon } from "./AsmCommon";
 
 export class Asm6502 extends AsmCommon {
@@ -115,7 +115,7 @@ export class Asm6502 extends AsmCommon {
 	}
 
 	private ConditionBranch(option: DecodeOption) {
-		const line = option.allLines[option.lineIndex] as IInstructionLine;
+		const line = option.allLines[option.lineIndex] as InstructionLine;
 		let tryValue = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
 		let tempValue = ExpressionUtils.GetExpressionValue(line.exprParts[0], tryValue, option);
 		if (!tempValue.success) {
@@ -131,8 +131,10 @@ export class Asm6502 extends AsmCommon {
 			return;
 		}
 
-		Compiler.SetResult(line, line.addressingMode.opCode[1]!, 0, 1);
-		Compiler.SetResult(line, temp & 0xFF, 1, 1);
+		line.SetResult(line.addressingMode.opCode[1]!, 0, 1);
+		line.SetResult(temp & 0xFF, 1, 1);
+		// Compiler.SetResult(line, line.addressingMode.opCode[1]!, 0, 1);
+		// Compiler.SetResult(line, temp & 0xFF, 1, 1);
 		line.compileType = LineCompileType.Finished;
 	}
 }

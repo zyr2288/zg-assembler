@@ -1,10 +1,11 @@
 import { Compiler } from "../Base/Compiler";
 import { MyDiagnostic } from "../Base/MyException";
-import { CommandDecodeOption, DecodeOption } from "../Base/Options";
+import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Localization } from "../I18n/Localization";
+import { CommandLine } from "../Lines/CommandLine";
 import { LineCompileType } from "../Lines/CommonLine";
-import { Commands, ICommandLine } from "./Commands";
+import { Commands } from "./Commands";
 
 /**.HEX 十六进制命令 */
 export class Hexadecimal {
@@ -17,8 +18,8 @@ export class Hexadecimal {
 		});
 	}
 
-	private static FirstAnalyse_Hex(option: CommandDecodeOption) {
-		let line = option.allLines[option.lineIndex] as ICommandLine;
+	private static FirstAnalyse_Hex(option: DecodeOption) {
+		const line = option.GetCurrectLine<CommandLine>();
 		let expressions: Token[] = line.tag;
 		line.tag = expressions[0];
 
@@ -26,20 +27,16 @@ export class Hexadecimal {
 			let errorMsg = Localization.GetMessage("Command arguments error");
 			MyDiagnostic.PushException(expressions[0], errorMsg);
 			line.compileType = LineCompileType.Error;
-			return;
 		}
-
-		return;
 	}
 
 	// 编译 HEX 命令
 	private static Compile_Hex(option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as ICommandLine;
+		const line = option.GetCurrectLine<CommandLine>();
 		if (Commands.SetOrgAddressAndLabel(line))
 			return;
 
 		let token = line.tag as Token;
-		line.result = [];
 
 		let tokens = token.Split(/\s+/g);
 		let temp = "";
@@ -49,7 +46,8 @@ export class Hexadecimal {
 				line.result.push(parseInt(temp, 16));
 			}
 		}
-		Compiler.AddAddress(line);
+		
 		line.compileType = LineCompileType.Finished;
+		line.AddAddress();
 	}
 }

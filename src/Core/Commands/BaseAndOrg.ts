@@ -1,8 +1,9 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { DecodeOption } from "../Base/Options";
+import { CommandLine } from "../Lines/CommandLine";
 import { LineCompileType } from "../Lines/CommonLine";
-import { Commands, ICommandLine } from "./Commands";
+import { Commands } from "./Commands";
 
 export class BaseAndOrg {
 
@@ -23,7 +24,7 @@ export class BaseAndOrg {
 	}
 
 	private static Compile_Base(option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as ICommandLine;
+		let line = option.allLines[option.lineIndex] as CommandLine;
 		let temp = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.GetResultAndShowError, option);
 		if (temp.success && temp.value < 0) {
 			line.compileType = LineCompileType.Error;
@@ -36,7 +37,7 @@ export class BaseAndOrg {
 	}
 
 	private static Compile_Org(option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as ICommandLine;
+		let line = option.allLines[option.lineIndex] as CommandLine;
 
 		let temp = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.GetResultAndShowError);
 		if (!temp.success || temp.value < 0) {

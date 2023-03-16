@@ -1,14 +1,14 @@
 import { Compiler } from "../Base/Compiler";
-import { Config } from "../Base/Config";
 import { ExpressionResult, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
 import { ILabel, LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
-import { CommandDecodeOption, DecodeOption } from "../Base/Options";
+import { DecodeOption, IncludeLine } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Localization } from "../I18n/Localization";
+import { CommandLine } from "../Lines/CommandLine";
 import { LineCompileType } from "../Lines/CommonLine";
-import { Commands, ICommandLine } from "./Commands";
+import { Commands } from "./Commands";
 
 export class IDataGroup {
 	label!: ILabel;
@@ -59,10 +59,10 @@ export class DataGroupCommand {
 		});
 	}
 
-	private static FirstAnalyse_DataGroup(option: CommandDecodeOption) {
-		const line = option.allLines[option.lineIndex] as ICommandLine;
+	private static FirstAnalyse_DataGroup(option: DecodeOption, include?: IncludeLine[]) {
+		const line = option.GetCurrectLine<CommandLine>();
 		let expressions: Token[] = line.tag;
-		let lines = Commands.CollectBaseLines(option);
+		let lines = Commands.CollectBaseLines(option, include!);
 		let label = LabelUtils.CreateLabel(expressions[0], option);
 
 		if (!label) {
@@ -73,8 +73,8 @@ export class DataGroupCommand {
 		Compiler.enviroment.SetRange(line.command.fileHash, {
 			type: "DataGroup",
 			key: label.token.text,
-			start: option.includeCommandLines![0].line,
-			end: option.includeCommandLines![1].line
+			start: include![0].line,
+			end: include![1].line
 		});
 
 		let scope = label.token.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
@@ -108,7 +108,7 @@ export class DataGroupCommand {
 	}
 
 	private static ThirdAnalyse_DataGroup(option: DecodeOption) {
-		const line = option.allLines[option.lineIndex] as ICommandLine;
+		const line = option.allLines[option.lineIndex] as CommandLine;
 		const datagroup: IDataGroup = line.tag;
 		for (let i = 0; i < line.expParts.length; ++i) {
 			let temp = ExpressionUtils.CheckLabelsAndShowError(line.expParts[i]);
@@ -137,12 +137,11 @@ export class DataGroupCommand {
 	}
 
 	private static Compile_DataGroup(option: DecodeOption, dataLength: number) {
-		const line = option.allLines[option.lineIndex] as ICommandLine;
+		const line = option.allLines[option.lineIndex] as CommandLine;
 
 		if (Commands.SetOrgAddressAndLabel(line))
 			return;
 
-		line.result ??= [];
 		line.result.length = line.expParts.length * dataLength;
 		line.compileType = LineCompileType.Finished;
 
@@ -156,7 +155,7 @@ export class DataGroupCommand {
 				break;
 			} else {
 				let byteLength = Utils.GetNumberByteLength(temp.value);
-				let tempValue = Compiler.SetResult(line, temp.value, index, dataLength);
+				let tempValue = line.SetResult(temp.value, index, dataLength);
 				if (temp.value < 0 || byteLength > dataLength) {
 					let token = ExpressionUtils.CombineExpressionPart(lex);
 					let errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.value, tempValue);
@@ -166,7 +165,8 @@ export class DataGroupCommand {
 			index += dataLength;
 		}
 
-		Compiler.AddAddress(line);
+		line.AddAddress();
+		// Compiler.AddAddress(line);
 	}
 
 

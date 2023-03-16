@@ -146,10 +146,10 @@ export class IntellisenseProvider {
 				return IntellisenseProvider.GetLabel(fileHash, prefix.rangeText[0], macro);
 			}
 		} else if (tempMatch.type === "command") {
-			if (lineCurrect < matchIndex || trigger === " ") 
+			if (lineCurrect < matchIndex || trigger === " ")
 				return [];
-			
-			let prefix  = HelperUtils.GetWord(lineText, lineCurrect);
+
+			let prefix = HelperUtils.GetWord(lineText, lineCurrect);
 			return IntellisenseProvider.GetLabel(fileHash, prefix.rangeText[0], macro);
 		}
 
@@ -403,6 +403,22 @@ export class IntellisenseProvider {
 				case ".INCBIN":
 					completion.insertText = completion.insertText + " \"[exp]\"";
 					completion.triggerType = TriggerSuggestType.AllFile;
+					break;
+				case ".MACRO":
+					completion.insertText = completion.insertText + " [exp]\n\n.ENDM";
+					break;
+				case ".DBG":
+				case ".DWG":
+				case ".DLG":
+					completion.insertText = completion.insertText + " [exp]\n\n.ENDD";
+					break;
+				case ".IF":
+				case ".IFDEF":
+				case ".IFNDEF":
+					completion.insertText = completion.insertText + " [exp]\n\n.ENDIF";
+					break;
+				case ".REPEAT":
+					completion.insertText = completion.insertText + " [exp]\n\n.ENDR";
 					break;
 			}
 

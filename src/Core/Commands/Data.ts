@@ -4,8 +4,9 @@ import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Utils } from "../Base/Utils";
 import { Localization } from "../I18n/Localization";
+import { CommandLine } from "../Lines/CommandLine";
 import { LineCompileType } from "../Lines/CommonLine";
-import { Commands, ICommandLine } from "./Commands";
+import { Commands } from "./Commands";
 
 /**.DB .DW .DL 命令 */
 export class Data {
@@ -46,12 +47,10 @@ export class Data {
 	}
 
 	private static Compile_Data(dataLength: number, option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as ICommandLine;
-
+		const line = option.GetCurrectLine<CommandLine>();
 		if (Commands.SetOrgAddressAndLabel(line))
 			return;
 
-		line.result ??= [];
 		line.compileType = LineCompileType.Finished;
 		let index = 0;
 		let finalCompile = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
@@ -66,7 +65,7 @@ export class Data {
 			} else {
 				for (let j = 0; j < temp.values.length; j++) {
 					let tempLength = Utils.GetNumberByteLength(temp.values[j]);
-					let tempValue = Compiler.SetResult(line, temp.values[j], index, dataLength);
+					let tempValue = line.SetResult(temp.values[j], index, dataLength);
 					index += dataLength;
 					if (tempLength > dataLength || temp.values[j] < 0) {
 						let errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.values[j], tempValue);
@@ -77,6 +76,6 @@ export class Data {
 			}
 		}
 
-		Compiler.AddAddress(line);
+		line.AddAddress();
 	}
 }

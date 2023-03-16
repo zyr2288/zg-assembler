@@ -2,13 +2,15 @@ import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
-import { CommandDecodeOption, DecodeOption } from "../Base/Options";
+import { DecodeOption, IncludeLine } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Localization } from "../I18n/Localization";
-import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
+import { CommandLine } from "../Lines/CommandLine";
+import { HighlightToken, ICommonLine, LineCompileType } from "../Lines/CommonLine";
+import { MacroLine } from "../Lines/MacroLine";
 import { Platform } from "../Platform/Platform";
-import { Commands, ICommandLine } from "./Commands";
+import { Commands } from "./Commands";
 
 /**自定义函数行 */
 export interface IMacroLine extends ICommonLine {
@@ -42,18 +44,11 @@ export class MacroUtils {
 
 		let macro = Compiler.enviroment.allMacro.get(macroToken.text)!;
 
-		// @ts-ignore 
-		let macroLine = {
-			macro: macro,
-			macroToken,
-			expParts: [],
-			type: LineType.Macro,
-			orgText: option.allLines[option.lineIndex].orgText,
-			compileType: LineCompileType.None,
-		} as IMacroLine;
+		let macroLine = new MacroLine();
+		macroLine.macro = macro;
+		macroLine.macroToken = macroToken;
 
-		macroLine.GetTokens = MacroUtils.GetToken.bind(macroLine);
-		option.allLines[option.lineIndex] = macroLine;
+		option.ReplaceLine(macroLine, macroToken.fileHash);
 
 		let parts: Token[] = [];
 		if (!expression.isEmpty)
@@ -152,26 +147,14 @@ export class MacroUtils {
 		}
 
 		// 编译完成并加入结果行
-		let tempOption: DecodeOption = { allLines: macro.lines, lineIndex: 0, macro };
+		let tempOption = new DecodeOption(macro.lines);
+		tempOption.macro = macro;
 		await Compiler.CompileResult(tempOption);
 		option.allLines.splice(option.lineIndex + 1, 0, ...macro.lines);
 
 		line.compileType = LineCompileType.Finished;
 	}
 	//#endregion 编译自定义函数
-
-	/***** Private *****/
-
-	//#region 获取自定义函数高亮Token
-	static GetToken(this: IMacroLine) {
-		let result: HighlightToken[] = [];
-
-		result.push({ token: this.macroToken, type: HighlightType.Macro });
-		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
-
-		return result;
-	}
-	//#endregion 获取自定义函数高亮Token
 
 }
 
@@ -188,8 +171,8 @@ export class MacroCommand {
 		});
 	}
 
-	private static async FirstAnalyse(option: CommandDecodeOption) {
-		const line = option.allLines[option.lineIndex] as ICommandLine;
+	private static async FirstAnalyse(option: DecodeOption, include?: IncludeLine[]) {
+		const line = option.GetCurrectLine<CommandLine>();
 		let expressions: Token[] = line.tag;
 		let name = expressions[0];
 		expressions.splice(0, 1);
@@ -204,48 +187,39 @@ export class MacroCommand {
 		line.GetTokens = MacroCommand.GetToken.bind(line);
 
 		macro.comment = line.comment;
-		macro.lines = Commands.CollectBaseLines(option);
+		macro.lines = Commands.CollectBaseLines(option, include!);
 
 		Compiler.enviroment.SetRange(line.command.fileHash, {
 			type: "Macro",
 			key: macro.name.text,
-			start: option.includeCommandLines![0].line,
-			end: option.includeCommandLines![1].line,
+			start: include![0].line,
+			end: include![1].line,
 		});
 
 		line.tag = macro;
-		let tempOption: DecodeOption = {
-			allLines: macro.lines,
-			lineIndex: 0,
-			macro: macro
-		};
 
+		let tempOption = new DecodeOption(macro.lines);
+		tempOption.macro = macro;
 		await Compiler.FirstAnalyse(tempOption);
 	}
 
 	private static async SecondAnalyse_Macro(option: DecodeOption) {
-		const line = option.allLines[option.lineIndex] as ICommandLine;
+		const line = option.allLines[option.lineIndex] as CommandLine;
 		let macro: IMacro = line.tag;
-		let tempOption: DecodeOption = {
-			allLines: macro.lines,
-			lineIndex: 0,
-			macro: macro
-		};
+		let tempOption = new DecodeOption(macro.lines);
+		tempOption.macro = macro;
 		await Compiler.SecondAnalyse(tempOption);
 	}
 
 	private static async ThirdAnalyse(option: DecodeOption) {
-		const line = option.allLines[option.lineIndex] as ICommandLine;
+		const line = option.allLines[option.lineIndex] as CommandLine;
 		let macro: IMacro = line.tag;
-		let tempOption: DecodeOption = {
-			allLines: macro.lines,
-			lineIndex: 0,
-			macro: macro
-		};
+		let tempOption = new DecodeOption(macro.lines);
+		tempOption.macro = macro;
 		await Compiler.ThirdAnalyse(tempOption);
 	}
 
-	private static GetToken(this: ICommandLine) {
+	private static GetToken(this: CommandLine) {
 		let macro: IMacro = this.tag;
 		let result: HighlightToken[] = [];
 

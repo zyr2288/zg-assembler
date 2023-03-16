@@ -2,11 +2,12 @@ import { Compiler } from "../Base/Compiler";
 import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
 import { MyDiagnostic } from "../Base/MyException";
-import { CommandDecodeOption, DecodeOption } from "../Base/Options";
+import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Localization } from "../I18n/Localization";
+import { CommandLine } from "../Lines/CommandLine";
 import { LineCompileType, LineType } from "../Lines/CommonLine";
-import { Commands, ICommandLine } from "./Commands";
+import { Commands } from "./Commands";
 
 export class Include {
 
@@ -31,8 +32,8 @@ export class Include {
 	}
 
 
-	private static async FirstAnalyse_Include(option: CommandDecodeOption) {
-		const line = option.allLines[option.lineIndex] as ICommandLine;
+	private static async FirstAnalyse_Include(option: DecodeOption) {
+		const line = option.GetCurrectLine<CommandLine>();
 		let temp = await Include.ChechFile(option);
 		if (!temp.exsist) {
 			line.compileType = LineCompileType.Error;
@@ -54,8 +55,8 @@ export class Include {
 		}
 	}
 
-	private static async FirstAnalyse_Incbin(option: CommandDecodeOption) {
-		const line = option.allLines[option.lineIndex] as ICommandLine;
+	private static async FirstAnalyse_Incbin(option: DecodeOption) {
+		const line = option.GetCurrectLine<CommandLine>();
 		let expressions: Token[] = line.tag;
 
 		const temp = await Include.ChechFile(option);
@@ -76,7 +77,7 @@ export class Include {
 
 	/**编译Incbin */
 	private static async Compile_Incbin(option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as ICommandLine;
+		const line = option.GetCurrectLine<CommandLine>();
 		let temp = await FileUtils.ReadFile(line.tag);
 
 		if (Commands.SetOrgAddressAndLabel(line))
@@ -101,8 +102,8 @@ export class Include {
 		for (let i = start, j = 0; i < temp.length && j < length; ++i, ++j)
 			line.result[j] = temp[i];
 
-		Compiler.AddAddress(line);
 		line.compileType = LineCompileType.Finished;
+		line.AddAddress();
 	}
 
 	/**检查是否满足表达式 */
@@ -111,8 +112,8 @@ export class Include {
 	}
 
 	/**检查文件是否存在 */
-	private static async ChechFile(option: CommandDecodeOption) {
-		let line = option.allLines[option.lineIndex] as ICommandLine;
+	private static async ChechFile(option: DecodeOption) {
+		const line = option.GetCurrectLine<CommandLine>();
 		let expressions: Token[] = line.tag;
 		let result = { exsist: false, path: "" };
 
