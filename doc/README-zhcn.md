@@ -2,6 +2,10 @@
 
 ## 配置文件
 
+* [编译器插件地址](https://marketplace.visualstudio.com/items?itemName=ZENG-GE.zg-assembler)
+
+* 或者可以在 VSCode 插件里搜索 `ZG Assembler` 即可找到插件
+
 * 一个 [VSCode](https://code.visualstudio.com/) 的可扩展的编译器，目前支持 `6502` `65c816`(感谢Thirteen) `z80-gb`，将来会加入更多适应平台。
 
 * 配置文件，当打开汇编文件会在目录下的 `.vscode` 目录创建 `project-settings.json` 文件，默认以下配置
