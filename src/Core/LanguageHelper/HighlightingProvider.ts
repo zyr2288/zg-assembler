@@ -28,21 +28,6 @@ export class HighlightingProvider {
 				}
 			}
 		}
-
-		// lines.forEach(line => {
-		// 	const highlightingTokens = line.GetTokens?.();
-		// 	if (highlightingTokens && highlightingTokens.length != 0) {
-		// 		for (let j = 0; j < highlightingTokens.length; ++j) {
-		// 			saveToken = highlightingTokens[j];
-		// 			result.push({
-		// 				line: saveToken.token.line,
-		// 				start: saveToken.token.start,
-		// 				length: saveToken.token.text.length,
-		// 				type: saveToken.type
-		// 			});
-		// 		}
-		// 	}
-		// });
 		return result;
 	}
 }

@@ -18,7 +18,7 @@ export class CommandLine implements ICommonLine {
 	label?: ILabel;
 	labelToken?: Token;
 
-	command: Token;
+	command!: Token;
 	expression?: Token;
 	expParts: ExpressionPart[][] = [];
 	result: number[] = [];
@@ -26,12 +26,12 @@ export class CommandLine implements ICommonLine {
 	tag?: any;
 
 	/**
-	 * 构造函数
+	 * 行初始化
 	 * @param option.command 命令
 	 * @param option.expression 表达式
 	 * @param option.labelToken Label的Token
 	 */
-	constructor(option: { command: Token, expression?: Token, labelToken?: Token }) {
+	Initialize(option: { command: Token, expression?: Token, labelToken?: Token }) {
 		this.command = option.command;
 		this.command.text = this.command.text.toUpperCase();
 		this.expression = option.expression;

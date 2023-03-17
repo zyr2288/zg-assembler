@@ -46,8 +46,10 @@ export class Include {
 		const hash = Compiler.enviroment.SetFile(temp.path);
 		const data = await FileUtils.ReadFile(temp.path);
 		let text = FileUtils.BytesToString(data);
+
 		let allLines = Compiler.SplitTexts(hash, text);
-		option.allLines.splice(option.lineIndex + 1, 0, ...allLines);
+		option.InsertLines(hash, option.lineIndex + 1, allLines);
+
 		if (line.label) {
 			line.type = LineType.OnlyLabel;
 		} else {

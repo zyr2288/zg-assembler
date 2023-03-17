@@ -13,6 +13,8 @@ export class OnlyLabelLine implements ICommonLine {
 
 	constructor(label?: ILabel) {
 		this.label = label;
+		if (this.label)
+			this.label.labelType = LabelType.Label;
 	}
 
 	GetTokens() {

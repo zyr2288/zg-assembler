@@ -37,7 +37,6 @@ export class Message {
 			if (ExpressionUtils.CheckLabelsAndShowError(line.expParts[i], option))
 				line.compileType = LineCompileType.Error;
 
-		delete (line.tag);
 	}
 
 	private static Compiler_Msg(option: DecodeOption) {

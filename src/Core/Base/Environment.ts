@@ -99,7 +99,7 @@ export class Environment {
 			this.fileMacros.set(fileHash, new Set());
 		}
 
-		// this.allBaseLines.delete(fileHash);
+		this.allBaseLines.delete(fileHash);
 		this.highlightRanges.delete(fileHash);
 	}
 

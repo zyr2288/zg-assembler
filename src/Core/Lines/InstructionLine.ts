@@ -33,7 +33,7 @@ export class InstructionLine implements ICommonLine {
 	labelToken?: Token;
 	label?: ILabel;
 
-	instruction: Token;
+	instruction!: Token;
 	expression?: Token;
 	exprParts: ExpressionPart[][] = [];
 	addressingMode!: IAddressingMode;
@@ -41,7 +41,7 @@ export class InstructionLine implements ICommonLine {
 
 	comment?: string;
 
-	constructor(option: { instruction: Token, expression: Token, labelToken?: Token }) {
+	Initialize(option: { instruction: Token, expression: Token, labelToken?: Token }) {
 		this.instruction = option.instruction;
 		this.instruction.text = this.instruction.text.toUpperCase();
 		this.expression = option.expression;
@@ -84,9 +84,9 @@ export class InstructionLineUtils {
 			let label = LabelUtils.CreateLabel(line.labelToken!, option);
 			if (label) label.labelType = LabelType.Label;
 			line.label = label;
-		} 
+		}
 		delete (line.labelToken);
-		
+
 		let temp;
 		if (temp = Platform.platform.MatchAddressingMode(line.instruction, line.expression!)) {
 			line.addressingMode = temp.addressingMode;

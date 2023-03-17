@@ -44,8 +44,7 @@ export class Compiler {
 			Compiler.enviroment.ClearFile(fileHash);
 
 			let lines = Compiler.SplitTexts(fileHash, files[index].text);
-
-			option.allLines.push(...lines);
+			option.InsertLines(fileHash, option.allLines.length, lines);
 		}
 
 		await Compiler.FirstAnalyse(option);
@@ -74,7 +73,7 @@ export class Compiler {
 		Compiler.enviroment.ClearAll();
 
 		let lines = Compiler.SplitTexts(fileHash, text);
-		option.allLines.push(...lines);
+		option.InsertLines(fileHash, 0, lines);
 
 		await Compiler.FirstAnalyse(option);
 		await Compiler.SecondAnalyse(option);
@@ -110,7 +109,7 @@ export class Compiler {
 
 		//#region 保存行Token
 		const SaveToken = (lineType: LineType) => {
-			let label = tokens[0].Substring(0, match!.index);
+			let labelToken = tokens[0].Substring(0, match!.index);
 			let comOrIntrs = tokens[0].Substring(match!.index, match![0].length);
 			let expression = tokens[0].Substring(match!.index + match![0].length);
 
@@ -118,12 +117,19 @@ export class Compiler {
 
 			switch (lineType) {
 				case LineType.Command:
-					newLine = new CommandLine({ command: comOrIntrs, expression, labelToken: label });
+					let comLine = new CommandLine();
+					comLine.Initialize({ command: comOrIntrs, expression, labelToken });
+					newLine = comLine;
 					break;
 				case LineType.Instruction:
-					newLine = new InstructionLine({ instruction: comOrIntrs, expression, labelToken: label });
+					let tempInsLine = new InstructionLine();
+					tempInsLine.Initialize({ instruction: comOrIntrs, expression, labelToken });
+					newLine = tempInsLine;
+					break;
 				case LineType.Variable:
-					newLine = new VariableLine({labelToken:label, expression});
+					let varLine = new VariableLine();
+					varLine.Initialize({ labelToken, expression });
+					newLine = varLine;
 					break;
 			}
 
@@ -133,10 +139,11 @@ export class Compiler {
 		//#endregion 保存行Token
 
 		let allLines = text.split(/\r\n|\r|\n/);
+		let orgText;
 		for (let index = 0; index < allLines.length; ++index) {
-			newLine.orgText = Token.CreateToken(fileHash, index, 0, allLines[index]);
+			orgText = Token.CreateToken(fileHash, index, 0, allLines[index]);
 
-			const { content, comment } = Compiler.GetContent(newLine.orgText);
+			const { content, comment } = Compiler.GetContent(orgText);
 			tokens = [content, comment];
 			if (content.isEmpty)
 				continue;
@@ -150,16 +157,16 @@ export class Compiler {
 			} else if (match?.groups?.["variable"]) {
 				SaveToken(LineType.Variable);
 			} else {
-				newLine = new UnknowLine(content);
+				newLine = new UnknowLine();
 			}
 
 			if (comment.text)
 				newLine.comment = comment.text;
 
+			newLine.orgText = content;
 			result.push(newLine);
 		}
 
-		Compiler.enviroment.allBaseLines.set(fileHash, result);
 		return result;
 	}
 	//#endregion 分解文本

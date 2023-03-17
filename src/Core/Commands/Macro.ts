@@ -132,7 +132,7 @@ export class MacroUtils {
 
 	//#region 编译自定义函数
 	static async CompileMacroLine(option: DecodeOption) {
-		const line = option.allLines[option.lineIndex] as IMacroLine;
+		const line = option.GetCurrectLine<MacroLine>();
 		if (line.label) {
 			line.label.value = Compiler.enviroment.orgAddress;
 			delete (line.label);		// 删除，不再编译
@@ -150,7 +150,7 @@ export class MacroUtils {
 		let tempOption = new DecodeOption(macro.lines);
 		tempOption.macro = macro;
 		await Compiler.CompileResult(tempOption);
-		option.allLines.splice(option.lineIndex + 1, 0, ...macro.lines);
+		option.InsertLines(line.macroToken.fileHash, option.lineIndex + 1, macro.lines);
 
 		line.compileType = LineCompileType.Finished;
 	}

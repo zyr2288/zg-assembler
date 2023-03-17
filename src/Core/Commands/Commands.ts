@@ -162,7 +162,7 @@ export class Commands {
 	//#region 编译命令
 	/**编译命令 */
 	static async CompileCommands(option: DecodeOption) {
-		const line = option.allLines[option.lineIndex] as CommandLine;
+		const line = option.GetCurrectLine<CommandLine>();
 		const com = Commands.allCommands.get(line.command.text);
 		await com?.CommandCompile?.(option);
 	}

@@ -407,18 +407,17 @@ export class IntellisenseProvider {
 				case ".MACRO":
 					completion.insertText = completion.insertText + " [exp]\n\n.ENDM";
 					break;
-				case ".DBG":
-				case ".DWG":
-				case ".DLG":
+				case ".DBG": case ".DWG": case ".DLG":
 					completion.insertText = completion.insertText + " [exp]\n\n.ENDD";
 					break;
-				case ".IF":
-				case ".IFDEF":
-				case ".IFNDEF":
+				case ".IF": case ".IFDEF": case ".IFNDEF":
 					completion.insertText = completion.insertText + " [exp]\n\n.ENDIF";
 					break;
 				case ".REPEAT":
 					completion.insertText = completion.insertText + " [exp]\n\n.ENDR";
+					break;
+				case ".ORG": case ".BASE": case ".MSG": case ".DB": case ".DW": case ".DL": case ".DEF":
+					completion.insertText = completion.insertText + " ";
 					break;
 			}
 

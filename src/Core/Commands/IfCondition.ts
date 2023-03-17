@@ -49,7 +49,7 @@ export class IfCondition {
 
 		for (let i = 1; i < result.length; i++) {
 			let lineIndex = result[i].index;
-			const tempLine = option.allLines[lineIndex] as CommandLine;
+			const tempLine = option.GetLine<CommandLine>(lineIndex);
 			let searchIndex = commands.indexOf(tempLine.command.text);
 			if (searchIndex < index)
 				continue;
@@ -98,7 +98,6 @@ export class IfCondition {
 		}
 
 		IfCondition.RemoveBaseLines(option, tag);
-		return;
 	}
 	//#endregion IF命令
 
