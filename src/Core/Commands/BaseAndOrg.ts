@@ -24,7 +24,7 @@ export class BaseAndOrg {
 	}
 
 	private static Compile_Base(option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as CommandLine;
+		const line = option.GetCurrectLine<CommandLine>();
 		let temp = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.GetResultAndShowError, option);
 		if (temp.success && temp.value < 0) {
 			line.compileType = LineCompileType.Error;
@@ -37,8 +37,7 @@ export class BaseAndOrg {
 	}
 
 	private static Compile_Org(option: DecodeOption) {
-		let line = option.allLines[option.lineIndex] as CommandLine;
-
+		const line = option.GetCurrectLine<CommandLine>();
 		let temp = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.GetResultAndShowError);
 		if (!temp.success || temp.value < 0) {
 			line.compileType = LineCompileType.Error;

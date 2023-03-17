@@ -103,11 +103,10 @@ export class Commands {
 		}
 
 		// 命令不允许有标签
-		if (!line.label!.token.isEmpty) {
+		if (!line.labelToken!.isEmpty) {
 			if (!com.enableLabel) {
 				let errorMsg = Localization.GetMessage("Command {0} can not use label", line.command.text);
 				MyDiagnostic.PushException(line.label!.token, errorMsg);
-				delete (line.label);
 			} else {
 				let label = LabelUtils.CreateLabel(line.label!.token, option);
 				if (label) {
@@ -115,9 +114,8 @@ export class Commands {
 					line.label = label;
 				}
 			}
-		} else {
-			delete (line.label);
 		}
+		delete (line.label);
 
 		let includeLines: IncludeLine[] | undefined;
 
@@ -294,7 +292,7 @@ export class Commands {
 
 	//#region 分析参数是否满足，并做最大分割
 	/**
-	 * 分析参数是否满足，并做最大分割
+	 * 分析参数是否满足，并做最大分割，此时删除 expression
 	 * @param line 一行命令
 	 * @returns 是否满足
 	 */
