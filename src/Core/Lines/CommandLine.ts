@@ -1,6 +1,6 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
-import { ILabel, LabelUtils } from "../Base/Label";
+import { ILabel } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 

@@ -219,7 +219,8 @@ export class Compiler {
 						MacroUtils.MatchMacroLine(pre, currect, after, option);
 					} else {
 						let label = LabelUtils.CreateLabel(unknowLine.orgText, option);
-						let onlyLabelLine = new OnlyLabelLine(label);
+						let onlyLabelLine = new OnlyLabelLine();
+						onlyLabelLine.Initialize(label);
 						option.ReplaceLine(onlyLabelLine, unknowLine.orgText.fileHash);
 					}
 

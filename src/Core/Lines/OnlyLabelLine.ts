@@ -11,7 +11,7 @@ export class OnlyLabelLine implements ICommonLine {
 
 	comment?: string;
 
-	constructor(label?: ILabel) {
+	Initialize(label?: ILabel) {
 		this.label = label;
 		if (this.label)
 			this.label.labelType = LabelType.Label;

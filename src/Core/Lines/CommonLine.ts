@@ -13,7 +13,7 @@ export enum HighlightType {
 	None, Label, Keyword, Macro, Defined, Variable
 }
 
-/**通用行接口 */
+/**通用行接口，不要使用构造函数，否则无法深拷贝 */
 export interface ICommonLine {
 	orgText: Token;
 	type: LineType;

@@ -110,7 +110,7 @@ export class IfCondition {
 
 		let tag: ConfidentLine[] = [{ index: result[0].index, confident: false }];
 		for (let i = 1; i < result.length; ++i) {
-			const tempLine = option.allLines[result[i].index] as CommandLine;
+			const tempLine = option.GetLine<CommandLine>(result[i].index);
 			let temp = commands.indexOf(tempLine.command.text);
 			if (temp < index)
 				continue;
@@ -133,11 +133,11 @@ export class IfCondition {
 	}
 
 	private static Compile_IfDefOrNot(labelExist: boolean, option: DecodeOption) {
-		const line = option.allLines[option.lineIndex] as CommandLine;
+		const line = option.GetCurrectLine<CommandLine>();
 		let tag: ConfidentLine[] = line.tag;
 
 		for (let i = 0; i < tag.length - 1; ++i) {
-			const tempLine = option.allLines[tag[i].index] as CommandLine;
+			const tempLine = option.GetLine<CommandLine>(tag[i].index);
 			if (line.command.text === ".ELSE") {
 				tag[i].confident = true;
 				break;
