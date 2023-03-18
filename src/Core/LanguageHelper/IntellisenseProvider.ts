@@ -301,7 +301,7 @@ export class IntellisenseProvider {
 	}
 	//#endregion 获取Label
 
-	//#region 获取Datagrou
+	//#region 获取DataGroup
 	private static GetDataGroup(prefix: string): Completion[] {
 		let result: Completion[] = [];
 		let parts = prefix.split(/\s*:\s*/, 2);
@@ -340,7 +340,7 @@ export class IntellisenseProvider {
 		}
 		return result;
 	}
-	//#endregion 获取Datagrou
+	//#endregion 获取DataGroup
 
 	/***** 更新基础帮助 *****/
 

@@ -4,7 +4,7 @@ import { LabelType, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { CommandLine } from "../Lines/CommandLine";
-import { LineCompileType } from "../Lines/CommonLine";
+import { HighlightToken, HighlightType, LineCompileType } from "../Lines/CommonLine";
 import { Commands } from "./Commands";
 
 export class Defined {
@@ -31,6 +31,7 @@ export class Defined {
 		else
 			line.compileType = LineCompileType.Error;
 
+		line.GetTokens = Defined.GetTokens.bind(line);
 		delete (line.tag);
 	}
 
@@ -62,6 +63,12 @@ export class Defined {
 			line.compileType = LineCompileType.Error;
 		}
 
+	}
+
+	private static GetTokens(this: CommandLine) {
+		let result: HighlightToken[] = [];
+		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
+		return result;
 	}
 
 }

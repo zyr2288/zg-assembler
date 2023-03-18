@@ -19,7 +19,7 @@ export class DefinitionProvider {
 
 		if (temp.filePath !== "") {
 			let fileUri = vscode.Uri.file(temp.filePath);
-			let filePos = new vscode.Range(temp.line, temp.start, temp.line, temp.start);
+			let filePos = new vscode.Range(temp.line, temp.start, temp.line, temp.start + temp.length);
 			let location = new vscode.Location(fileUri, filePos);
 			result.push(location);
 		}

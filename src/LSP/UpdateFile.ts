@@ -128,7 +128,7 @@ export class UpdateFile {
 
 		let rp = new vscode.RelativePattern(
 			vscode.workspace.workspaceFolders![0],
-			`{**/*.${LSPUtils.assembler.config.FileExtension.extension},.vscode/${LSPUtils.assembler.config.ConfigFile}}`
+			`{**/*.${LSPUtils.assembler.config.FileExtension.extension},${LSPUtils.assembler.config.ConfigFile}}`
 		);
 
 		const watcher = vscode.workspace.createFileSystemWatcher(rp, false, false, false);

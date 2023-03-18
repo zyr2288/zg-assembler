@@ -15,6 +15,7 @@ export class LanguageServer {
 	private assembler!: Assembler;
 
 	async Initialize() {
+
 		LSPUtils.assembler = this.assembler = new Assembler();
 		LSPUtils.StatueBarShowText(` $(sync~spin) ${LSPUtils.assembler.localization.GetMessage("plugin loading")}...`);
 

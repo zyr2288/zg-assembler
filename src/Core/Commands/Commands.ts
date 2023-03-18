@@ -106,16 +106,16 @@ export class Commands {
 		if (!line.labelToken!.isEmpty) {
 			if (!com.enableLabel) {
 				let errorMsg = Localization.GetMessage("Command {0} can not use label", line.command.text);
-				MyDiagnostic.PushException(line.label!.token, errorMsg);
+				MyDiagnostic.PushException(line.labelToken!, errorMsg);
 			} else {
-				let label = LabelUtils.CreateLabel(line.label!.token, option);
+				let label = LabelUtils.CreateLabel(line.labelToken!, option);
 				if (label) {
 					label.labelType = LabelType.Label;
 					line.label = label;
 				}
 			}
 		}
-		delete (line.label);
+		delete (line.labelToken);
 
 		let includeLines: IncludeLine[] | undefined;
 

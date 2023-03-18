@@ -10,7 +10,7 @@ export class DefinitionProvider {
 
 	static async GetLabelPosition(filePath: string, lineNumber: number, lineText: string, currect: number) {
 
-		let result = { filePath: "", line: 0, start: 0 };
+		let result = { filePath: "", line: 0, start: 0, length: 0 };
 		let fileHash = Utils.GetHashcode(filePath);
 
 		const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
@@ -22,6 +22,8 @@ export class DefinitionProvider {
 		let tempMatch = HelperUtils.BaseSplit(line.text, line.start);
 		if (tempMatch.type === "command") {
 			switch (tempMatch.text) {
+				case ".HEX":
+					return result;
 				case ".INCLUDE":
 				case ".INCBIN":
 					let start = tempMatch.start + tempMatch.text.length;
@@ -30,26 +32,24 @@ export class DefinitionProvider {
 						let path = word.rangeText[0].substring(1) + word.rangeText[1].substring(0, word.rangeText[1].length - 1);
 						result.filePath = await DefinitionProvider.GetFilePath(filePath, path);
 					}
-					break;
-			}
-		} else {
-			let fileHash = Utils.GetHashcode(filePath);
-			let rangeType = HelperUtils.GetRange(fileHash, lineNumber);
-			let macro: IMacro | undefined;
-
-			if (rangeType?.type === "Macro")
-				macro = Compiler.enviroment.allMacro.get(rangeType.key);
-			
-			let token = Token.CreateToken(fileHash, lineNumber, word.start, word.rangeText.join(""));
-			let label = LabelUtils.FindLabel(token, macro);
-			if (label) {
-				result.filePath = Compiler.enviroment.GetFile(label.token.fileHash);
-				result.line = label.token.line;
-				result.start = label.token.start;
+					return result;
 			}
 		}
 
+		let rangeType = HelperUtils.GetRange(fileHash, lineNumber);
+		let macro: IMacro | undefined;
 
+		if (rangeType?.type === "Macro")
+			macro = Compiler.enviroment.allMacro.get(rangeType.key);
+
+		let token = Token.CreateToken(fileHash, lineNumber, word.start, word.rangeText.join(""));
+		let label = LabelUtils.FindLabel(token, macro);
+		if (label) {
+			result.filePath = Compiler.enviroment.GetFile(label.token.fileHash);
+			result.line = label.token.line;
+			result.start = label.token.start;
+			result.length = label.token.text.length;
+		}
 
 		return result;
 	}

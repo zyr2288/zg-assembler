@@ -7,7 +7,6 @@ export class ConfigUtils {
 	static async ReadConfig() {
 		let settingFile = LSPUtils.assembler.fileUtils.Combine(
 			vscode.workspace.workspaceFolders![0].uri.fsPath,
-			".vscode",
 			"project-settings.json"
 		);
 

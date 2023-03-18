@@ -52,7 +52,6 @@ export class VariableLineUtils {
 
 	static ThirdAnalyse(option: DecodeOption) {
 		const line = option.GetCurrectLine<VariableLine>();
-		console.log(line);
 		let temp = ExpressionUtils.GetExpressionValue(line.exprParts, ExpressionResult.TryToGetResult, option);
 		if (temp.success)
 			line.label.value = temp.value;
