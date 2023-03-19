@@ -48,7 +48,7 @@ export class Data {
 
 	private static Compile_Data(dataLength: number, option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		if (Commands.SetOrgAddressAndLabel(line))
+		if (Commands.SetOrgAddressAndLabel(option))
 			return;
 
 		line.compileType = LineCompileType.Finished;

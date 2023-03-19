@@ -1,4 +1,5 @@
-import { ILabel, LabelType } from "../Base/Label";
+import { LabelType, LabelUtils } from "../Base/Label";
+import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
@@ -7,19 +8,25 @@ export class OnlyLabelLine implements ICommonLine {
 	compileType = LineCompileType.None;
 	orgText!: Token;
 
-	label?: ILabel;
+	labelToken?: Token;
+	labelHash?: number;
 
 	comment?: string;
 
-	Initialize(label?: ILabel) {
-		this.label = label;
-		if (this.label)
-			this.label.labelType = LabelType.Label;
+	Initialize(labelToken: Token, option: DecodeOption) {
+		if (labelToken.isEmpty)
+			return;
+
+		this.labelToken = labelToken;
+		let label = LabelUtils.CreateLabel(labelToken, option);
+		if (label) {
+			label.labelType = LabelType.Label;
+		}
 	}
 
 	GetTokens() {
-		if (this.label)
-			return [{ type: HighlightType.Label, token: this.label.token }];
+		if (this.labelToken)
+			return [{ type: HighlightType.Label, token: this.labelToken }];
 
 		return [];
 	}

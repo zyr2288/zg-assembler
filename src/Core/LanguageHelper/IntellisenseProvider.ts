@@ -135,24 +135,26 @@ export class IntellisenseProvider {
 			return IntellisenseProvider.GetEmptyLineHelper({ fileHash, range: rangeType, trigger: trigger });
 
 		let matchIndex = tempMatch.start + tempMatch.text.length + 1;
-		if (tempMatch.type === "instruction") {
-			if (trigger === " " && lineCurrect === matchIndex) {
-				return IntellisenseProvider.GetInstructionAddressingModes(tempMatch.text);
-			} else if (trigger === ":" && lineCurrect > matchIndex) {
-				let prefix = HelperUtils.GetWord(lineText, lineCurrect);
-				return IntellisenseProvider.GetDataGroup(prefix.rangeText[0]);
-			} else if (trigger !== " " && lineCurrect > matchIndex) {
+		switch (tempMatch.type) {
+			case "instruction":
+				if (trigger === " " && lineCurrect === matchIndex) {
+					return IntellisenseProvider.GetInstructionAddressingModes(tempMatch.text);
+				} else if (trigger === ":" && lineCurrect > matchIndex) {
+					let prefix = HelperUtils.GetWord(lineText, lineCurrect);
+					return IntellisenseProvider.GetDataGroup(prefix.rangeText[0]);
+				} else if (trigger !== " " && lineCurrect > matchIndex) {
+					let prefix = HelperUtils.GetWord(lineText, lineCurrect);
+					return IntellisenseProvider.GetLabel(fileHash, prefix.rangeText[0], macro);
+				}
+				break;
+			case "command":
+			case "variable":
+				if (lineCurrect < matchIndex || trigger === " ")
+					return [];
+
 				let prefix = HelperUtils.GetWord(lineText, lineCurrect);
 				return IntellisenseProvider.GetLabel(fileHash, prefix.rangeText[0], macro);
-			}
-		} else if (tempMatch.type === "command") {
-			if (lineCurrect < matchIndex || trigger === " ")
-				return [];
-
-			let prefix = HelperUtils.GetWord(lineText, lineCurrect);
-			return IntellisenseProvider.GetLabel(fileHash, prefix.rangeText[0], macro);
 		}
-
 		return [];
 	}
 	//#endregion 智能提示

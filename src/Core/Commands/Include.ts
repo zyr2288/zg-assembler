@@ -50,7 +50,7 @@ export class Include {
 		let allLines = Compiler.SplitTexts(hash, text);
 		option.InsertLines(hash, option.lineIndex + 1, allLines);
 
-		if (line.label) {
+		if (line.labelToken) {
 			line.type = LineType.OnlyLabel;
 		} else {
 			line.compileType = LineCompileType.Finished;
@@ -82,7 +82,7 @@ export class Include {
 		const line = option.GetCurrectLine<CommandLine>();
 		let temp = await FileUtils.ReadFile(line.tag);
 
-		if (Commands.SetOrgAddressAndLabel(line))
+		if (Commands.SetOrgAddressAndLabel(option))
 			return;
 
 		line.result = [];

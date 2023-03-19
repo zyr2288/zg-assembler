@@ -1,6 +1,5 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
-import { ILabel } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
@@ -15,7 +14,6 @@ export class CommandLine implements ICommonLine {
 	orgAddress = -1;
 	baseAddress = 0;
 
-	label?: ILabel;
 	labelToken?: Token;
 
 	command!: Token;
@@ -53,8 +51,8 @@ export class CommandLine implements ICommonLine {
 	GetTokens() {
 		let result: HighlightToken[] = [];
 
-		if (this.label)
-			result.push({ type: HighlightType.Label, token: this.label.token });
+		if (this.labelToken)
+			result.push({ type: HighlightType.Label, token: this.labelToken });
 
 		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
 		return result;

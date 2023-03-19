@@ -44,7 +44,7 @@ export class DecodeOption {
 		return this.allLines[index] as T;
 	}
 
-	GetCurrectLine<T>() {
+	GetCurrectLine<T extends ICommonLine>() {
 		return this.allLines[this.lineIndex] as T;
 	}
 }

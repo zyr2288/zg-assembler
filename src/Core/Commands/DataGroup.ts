@@ -63,25 +63,25 @@ export class DataGroupCommand {
 		const line = option.GetCurrectLine<CommandLine>();
 		let expressions: Token[] = line.tag;
 		let lines = Commands.CollectBaseLines(option, include!);
-		let label = LabelUtils.CreateLabel(expressions[0], option);
 
-		if (!label) {
+		let labelMark = LabelUtils.CreateLabel(expressions[0], option);
+		if (!labelMark) {
 			line.compileType = LineCompileType.Error;
 			return;
 		}
 
+		line.labelHash = labelMark.hash;
 		Compiler.enviroment.SetRange(line.command.fileHash, {
 			type: "DataGroup",
-			key: label.token.text,
+			key: labelMark.label.token.text,
 			start: include![0].line,
 			end: include![1].line
 		});
 
-		let scope = label.token.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
-		let hash = LabelUtils.GetLebalHash(label.token.text, label.token.fileHash, scope);
+		let scope = labelMark.label.token.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
+		let hash = LabelUtils.GetLebalHash(labelMark.label.token.text, labelMark.label.token.fileHash, scope);
 
-		label.labelType = LabelType.Label;
-		line.label = label;
+		labelMark.label.labelType = LabelType.Label;
 		let datagroup = new IDataGroup();
 		Compiler.enviroment.allDataGroup.set(hash, datagroup);
 
@@ -137,9 +137,8 @@ export class DataGroupCommand {
 	}
 
 	private static Compile_DataGroup(option: DecodeOption, dataLength: number) {
-		const line = option.allLines[option.lineIndex] as CommandLine;
-
-		if (Commands.SetOrgAddressAndLabel(line))
+		const line = option.GetCurrectLine<CommandLine>();
+		if (Commands.SetOrgAddressAndLabel(option))
 			return;
 
 		line.result.length = line.expParts.length * dataLength;

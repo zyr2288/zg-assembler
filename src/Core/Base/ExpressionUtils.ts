@@ -359,7 +359,7 @@ export class ExpressionUtils {
 	//#region 将所有表达式部分转换成高亮Token
 	static GetHighlightingTokens(parts: ExpressionPart[][]) {
 		let result: HighlightToken[] = [];
-		for (let i = 0; i < parts.length; ++i){
+		for (let i = 0; i < parts.length; ++i) {
 			for (let j = 0; j < parts[i].length; ++j) {
 				if (parts[i][j].type === PriorityType.Level_1_Label)
 					result.push({ token: parts[i][j].token, type: parts[i][j].highlightingType });
@@ -377,7 +377,7 @@ export class ExpressionUtils {
 
 		for (let i = 1; i < parts.length; ++i) {
 			const part = parts[i];
-			
+
 			if (part.token.start < tempToken.start)
 				tempToken.start = part.token.start;
 
@@ -647,6 +647,12 @@ export class ExpressionUtils {
 		return index;
 	}
 	//#endregion 获取字符串
+
+	//#region 给表达式部分高亮
+	private static GetExpressionPartHighlight(part: ExpressionPart, labelType: LabelType) {
+
+	}
+	//#endregion 给表达式部分高亮
 
 }
 

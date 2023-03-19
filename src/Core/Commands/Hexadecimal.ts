@@ -1,4 +1,3 @@
-import { Compiler } from "../Base/Compiler";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
@@ -33,7 +32,7 @@ export class Hexadecimal {
 	// 编译 HEX 命令
 	private static Compile_Hex(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		if (Commands.SetOrgAddressAndLabel(line))
+		if (Commands.SetOrgAddressAndLabel(option))
 			return;
 
 		let token = line.tag as Token;

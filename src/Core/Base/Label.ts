@@ -1,5 +1,8 @@
 import { IMacro } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
+import { CommandLine } from "../Lines/CommandLine";
+import { InstructionLine } from "../Lines/InstructionLine";
+import { VariableLine } from "../Lines/VariableLine";
 import { Compiler } from "./Compiler";
 import { ExpressionUtils } from "./ExpressionUtils";
 import { MyDiagnostic } from "./MyException";
@@ -101,7 +104,10 @@ export class LabelUtils {
 
 		let hash = LabelUtils.GetLebalHash(token.text, token.fileHash, type);
 		let tempLabel = Compiler.enviroment.allLabel.get(hash);
-		if ((tempLabel && tempLabel.labelType !== LabelType.None) || Compiler.enviroment.allMacro.has(token.text)) {
+		if (tempLabel || Compiler.enviroment.allMacro.has(token.text)) {
+			if (tempLabel?.labelType === LabelType.Variable || tempLabel?.labelType === LabelType.None)
+				return tempLabel;
+
 			let errorMsg = Localization.GetMessage("Label {0} is already defined", token.text);
 			MyDiagnostic.PushException(token, errorMsg);
 			return;
@@ -109,7 +115,7 @@ export class LabelUtils {
 
 		let label = LabelUtils.SplitLabel(token, type);
 		if (label)
-			label.comment = option.allLines[option.lineIndex].comment;
+			label.comment = option.GetCurrectLine().comment;
 
 		return label;
 	}
@@ -122,7 +128,7 @@ export class LabelUtils {
 	 * @param option 选项
 	 * @returns 是否找到标签
 	 */
-	static FindLabel(word: Token, macro?: IMacro): ILabel | undefined {
+	static FindLabel(word?: Token, macro?: IMacro): ILabel | undefined {
 		if (!word || word.isEmpty)
 			return;
 
@@ -205,6 +211,61 @@ export class LabelUtils {
 	}
 	//#endregion 查找标签
 
+	//#region 获取当前Token的Label
+	static SetLineLabelValue(option: DecodeOption) {
+		const line = option.GetCurrectLine<CommandLine | VariableLine | InstructionLine>();
+
+		if (!line.labelToken)
+			return;
+
+		let word = line.labelToken;
+		let match = LabelUtils.namelessLabelRegex.exec(word.text);
+		if (match) {
+			let count = match[0].length;
+
+			let collection = Compiler.enviroment.namelessLabel.get(word.fileHash);
+			if (!collection) {
+				let errorMsg = Localization.GetMessage("Label {0} not found", word.text);
+				MyDiagnostic.PushException(word, errorMsg);
+				return;
+			}
+
+			let label: ILabel | undefined;
+			if (match.groups?.["minus"]) {
+				let labels = collection.upLabels;
+				for (let i = 0; i < labels.length; ++i) {
+					if (labels[i].token.length === count && labels[i].token.line === word.line) {
+						label = labels[i];
+						break;
+					}
+				}
+			} else {
+				let labels = collection.downLabels;
+				for (let i = 0; i < labels.length; ++i) {
+					if (labels[i].token.length === count && labels[i].token.line === word.line) {
+						label = labels[i];
+						break;
+					}
+				}
+			}
+
+			if (label) {
+				label.value = Compiler.enviroment.orgAddress;
+			} else {
+				let errorMsg = Localization.GetMessage("Label {0} not found", word.text);
+				MyDiagnostic.PushException(word, errorMsg);
+			}
+			return;
+		}
+
+		let scope = word.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
+		let hash = LabelUtils.GetLebalHash(word.text, word.fileHash, scope);
+		let label = Compiler.enviroment.allLabel.get(hash);
+		if (label)
+			label.value = Compiler.enviroment.orgAddress;
+	}
+	//#endregion 获取当前Token的Label
+
 	//#region 获取标签的Hash值
 	/**
 	 * 获取标签的Hash值
@@ -214,7 +275,7 @@ export class LabelUtils {
 	 * @param option 选项
 	 * @returns Hash值
 	 */
-	static GetLebalHash(text: string, fileHash: number, type: LabelScope) {
+	static GetLebalHash(text: string, fileHash: number, type: LabelScope, line?: number) {
 		switch (type) {
 			case LabelScope.AllParent:
 				return 0;
@@ -223,7 +284,7 @@ export class LabelUtils {
 			case LabelScope.Local:
 				return Utils.GetHashcode(text, fileHash);
 			case LabelScope.Temporary:
-				return Utils.GetHashcode(text);
+				return Utils.GetHashcode(text, fileHash, line!);
 		}
 	}
 	//#endregion 获取标签的Hash值
@@ -252,10 +313,17 @@ export class LabelUtils {
 	/** Private */
 
 	//#region 插入临时标签
+	/**
+	 * 插入临时标签
+	 * @param token 
+	 * @param isDown 
+	 * @param option 
+	 * @returns 
+	 */
 	private static InsertNamelessLabel(token: Token, isDown: boolean, option: DecodeOption) {
 		let labels = Compiler.enviroment.namelessLabel.get(token.fileHash);
 
-		let line = option.allLines[option.lineIndex];
+		const line = option.GetCurrectLine();
 
 		let newItem: INamelessLabel = { token, comment: line.comment, labelType: LabelType.Label };
 		if (!labels) {

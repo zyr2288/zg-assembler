@@ -218,9 +218,8 @@ export class Compiler {
 						let after = unknowLine.orgText.Substring(match!.index + match![0].length);
 						MacroUtils.MatchMacroLine(pre, currect, after, option);
 					} else {
-						let label = LabelUtils.CreateLabel(unknowLine.orgText, option);
 						let onlyLabelLine = new OnlyLabelLine();
-						onlyLabelLine.Initialize(label);
+						onlyLabelLine.Initialize(unknowLine.orgText, option);
 						option.ReplaceLine(onlyLabelLine, unknowLine.orgText.fileHash);
 					}
 
@@ -297,16 +296,23 @@ export class Compiler {
 					await Commands.CompileCommands(option);
 					break;
 				case LineType.OnlyLabel:
-					const onlyLabelLine = option.allLines[i] as IOnlyLabel;
-					onlyLabelLine.label.value = Compiler.enviroment.orgAddress;
+					const onlyLabelLine = option.GetCurrectLine<OnlyLabelLine>();
+					let label1 = LabelUtils.FindLabel(onlyLabelLine.labelToken, option.macro);
+					if (label1) {
+						label1.value = Compiler.enviroment.orgAddress;
+						delete (onlyLabelLine.labelHash);
+					}
+
 					onlyLabelLine.compileType = LineCompileType.Finished;
 					break;
 				case LineType.Variable:
-					const varLine = option.allLines[i] as VariableLine;
+					const varLine = option.GetCurrectLine<VariableLine>();
+					let label2 = LabelUtils.FindLabel(varLine.labelToken, option.macro);
 					let result = ExpressionUtils.GetExpressionValue(varLine.exprParts, isFinal, option);
-					if (result.success) {
-						varLine.label.value = result.value;
+					if (label2 && result.success) {
+						label2.value = result.value;
 						varLine.compileType = LineCompileType.Finished;
+						delete (varLine.labelToken);
 					}
 					break;
 				case LineType.Macro:

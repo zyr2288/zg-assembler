@@ -133,9 +133,10 @@ export class MacroUtils {
 	//#region 编译自定义函数
 	static async CompileMacroLine(option: DecodeOption) {
 		const line = option.GetCurrectLine<MacroLine>();
-		if (line.label) {
-			line.label.value = Compiler.enviroment.orgAddress;
-			delete (line.label);		// 删除，不再编译
+		let label = LabelUtils.FindLabel(line.labelToken, option.macro);
+		if (label) {
+			label.value = Compiler.enviroment.orgAddress;
+			delete (line.labelToken);		// 删除，不再编译
 		}
 
 		let macro: IMacro = Utils.DeepClone(line.macro);

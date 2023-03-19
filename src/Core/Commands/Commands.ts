@@ -1,3 +1,4 @@
+import { Compiler } from "../Base/Compiler";
 import { ExpressionUtils } from "../Base/ExpressionUtils";
 import { LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
@@ -14,7 +15,7 @@ import { Defined } from "./Defined";
 import { Hexadecimal } from "./Hexadecimal";
 import { IfCondition } from "./IfCondition";
 import { Include } from "./Include";
-import { MacroCommand } from "./Macro";
+import { IMacro, MacroCommand } from "./Macro";
 import { Message } from "./Message";
 import { Repeat } from "./Repeat";
 
@@ -108,10 +109,10 @@ export class Commands {
 				let errorMsg = Localization.GetMessage("Command {0} can not use label", line.command.text);
 				MyDiagnostic.PushException(line.labelToken!, errorMsg);
 			} else {
-				let label = LabelUtils.CreateLabel(line.labelToken!, option);
-				if (label) {
-					label.labelType = LabelType.Label;
-					line.label = label;
+				let labelMark = LabelUtils.CreateLabel(line.labelToken!, option);
+				if (labelMark) {
+					labelMark.label.labelType = LabelType.Label;
+					line.labelHash = labelMark.hash;
 				}
 			}
 		}
@@ -275,14 +276,18 @@ export class Commands {
 	 * @param line 设定行
 	 * @returns 返回true为错误
 	 */
-	static SetOrgAddressAndLabel(line: CommandLine) {
+	static SetOrgAddressAndLabel(option: DecodeOption) {
+		const line = option.GetCurrectLine<CommandLine>();
 		line.SetAddress();
 		if (line.compileType === LineCompileType.Error)
 			return true;
 
-		if (line.label) {
-			line.label.value = line.orgAddress;
-			delete (line.label);
+		if (line.labelHash) {
+			let label = Compiler.enviroment.allLabel.get(line.labelHash);
+			if (label)
+				label.value = line.orgAddress;
+
+			delete (line.labelHash);
 		}
 		return false;
 	}

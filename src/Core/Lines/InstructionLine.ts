@@ -31,7 +31,6 @@ export class InstructionLine implements ICommonLine {
 	baseAddress = 0;
 
 	labelToken?: Token;
-	label?: ILabel;
 
 	instruction!: Token;
 	expression?: Token;
@@ -62,8 +61,8 @@ export class InstructionLine implements ICommonLine {
 
 	GetTokens() {
 		let result: HighlightToken[] = [];
-		if (this.label)
-			result.push({ type: HighlightType.Label, token: this.label.token });
+		if (this.labelToken)
+			result.push({ type: HighlightType.Label, token: this.labelToken });
 
 		result.push({ type: HighlightType.Keyword, token: this.instruction });
 		result.push(...ExpressionUtils.GetHighlightingTokens(this.exprParts));
@@ -82,8 +81,9 @@ export class InstructionLineUtils {
 		const line = option.GetCurrectLine<InstructionLine>();
 		if (!line.labelToken!.isEmpty) {
 			let label = LabelUtils.CreateLabel(line.labelToken!, option);
-			if (label) label.labelType = LabelType.Label;
-			line.label = label;
+			if (label) {
+				label.labelType = LabelType.Label;
+			}
 		}
 		delete (line.labelToken);
 
@@ -122,9 +122,10 @@ export class InstructionLineUtils {
 		if (line.compileType === LineCompileType.Error)
 			return;
 
-		if (line.label) {
-			line.label.value = line.orgAddress;
-			delete (line.label);
+		let label = LabelUtils.FindLabel(line.labelToken, option.macro);
+		if (label) {
+			label.value = line.orgAddress;
+			delete (line.labelToken);
 		}
 
 		if (line.addressingMode.spProcess) {
