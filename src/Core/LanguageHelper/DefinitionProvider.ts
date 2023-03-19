@@ -10,6 +10,8 @@ export class DefinitionProvider {
 
 	static async GetLabelPosition(filePath: string, lineNumber: number, lineText: string, currect: number) {
 
+		filePath = FileUtils.ArrangePath(filePath);
+
 		let result = { filePath: "", line: 0, start: 0, length: 0 };
 		let fileHash = Utils.GetHashcode(filePath);
 

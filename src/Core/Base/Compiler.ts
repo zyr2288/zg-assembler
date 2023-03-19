@@ -12,7 +12,8 @@ import { Platform } from "../Platform/Platform";
 import { Config } from "./Config";
 import { Environment } from "./Environment";
 import { ExpressionResult, ExpressionUtils } from "./ExpressionUtils";
-import { LabelType, LabelUtils } from "./Label";
+import { FileUtils } from "./FileUtils";
+import { LabelUtils } from "./Label";
 import { MyDiagnostic } from "./MyException";
 import { DecodeOption } from "./Options";
 import { ResultUtils } from "./ResultUtils";
@@ -38,6 +39,7 @@ export class Compiler {
 		let option = new DecodeOption([]);
 		for (let index = 0; index < files.length; ++index) {
 
+			files[index].filePath = FileUtils.ArrangePath(files[index].filePath);
 			let fileHash = Compiler.enviroment.SetFile(files[index].filePath);
 
 			MyDiagnostic.ClearFileExceptions(fileHash);
@@ -68,6 +70,9 @@ export class Compiler {
 		Compiler.compiling = true;
 		Compiler.enviroment = Compiler.compilerEnv;
 		let option = new DecodeOption([]);
+
+		filePath = FileUtils.ArrangePath(filePath);
+
 		let fileHash = Compiler.enviroment.SetFile(filePath);
 		MyDiagnostic.ClearAll();
 		Compiler.enviroment.ClearAll();
@@ -283,7 +288,7 @@ export class Compiler {
 			if (line.compileType === LineCompileType.Finished)
 				continue;
 
-			if (line.compileType === LineCompileType.Error) {
+			if (MyDiagnostic.hasError) {
 				Compiler.compileTimes = Config.ProjectSetting.compileTimes;
 				break;
 			}
@@ -371,10 +376,10 @@ export class Compiler {
 				case LineType.Instruction:
 					token = (line as InstructionLine).instruction;
 					break;
-				case LineType.Instruction:
+				case LineType.Command:
 					token = (line as CommandLine).command;
 					break;
-				case LineType.Instruction:
+				case LineType.Macro:
 					token = (line as MacroLine).macroToken;
 					break;
 			}

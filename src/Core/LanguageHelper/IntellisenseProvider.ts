@@ -5,9 +5,8 @@ import { ILabel, LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Commands } from "../Commands/Commands";
-import { IMacro, MacroUtils } from "../Commands/Macro";
+import { IMacro } from "../Commands/Macro";
 import { AsmCommon } from "../Platform/AsmCommon";
-import { MatchNames, Platform } from "../Platform/Platform";
 import { HelperUtils } from "./HelperUtils";
 
 const ignoreWordStr = /;|(^|\s+)(\.HEX|\.DBG|\.DWG|\.MACRO)(\s+|$)/ig;
@@ -110,6 +109,8 @@ export class IntellisenseProvider {
 		if (!Config.ProjectSetting.intellisense)
 			return [];
 
+		filePath = FileUtils.ArrangePath(filePath);
+			
 		const fileHash = Utils.GetHashcode(filePath);
 		const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
 		const prefix = line.Substring(0, lineCurrect);

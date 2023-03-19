@@ -129,11 +129,12 @@ export class Environment {
 		this.addressOffset = 0;
 		this.allLabel.clear();
 		this.allMacro.clear();
-		this.allBaseLines.clear();
 		this.allDataGroup.clear();
+		this.allBaseLines.clear();
 		this.namelessLabel.clear();
 		this.fileLabels.clear();
 		this.fileMacros.clear();
+		this.macroRegexString = "";
 	}
 	//#endregion 清除所有标记
 
