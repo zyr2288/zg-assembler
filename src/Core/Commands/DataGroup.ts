@@ -11,6 +11,7 @@ import { LineCompileType } from "../Lines/CommonLine";
 import { Commands } from "./Commands";
 
 export class IDataGroup {
+
 	label!: ILabel;
 	labelHashAndIndex: Map<number, number[]> = new Map();
 

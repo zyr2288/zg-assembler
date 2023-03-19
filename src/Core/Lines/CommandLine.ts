@@ -1,5 +1,6 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ILabel } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
@@ -15,6 +16,7 @@ export class CommandLine implements ICommonLine {
 	baseAddress = 0;
 
 	labelToken?: Token;
+	labelHash?: number;
 
 	command!: Token;
 	expression?: Token;

@@ -10,8 +10,7 @@ import { Commands } from "./Commands";
 export class Hexadecimal {
 	static Initialize() {
 		Commands.AddCommand({
-			name: ".HEX",
-			min: 1,
+			name: ".HEX", min: 1,
 			firstAnalyse: Hexadecimal.FirstAnalyse_Hex,
 			compile: Hexadecimal.Compile_Hex
 		});
@@ -45,7 +44,7 @@ export class Hexadecimal {
 				line.result.push(parseInt(temp, 16));
 			}
 		}
-		
+
 		line.compileType = LineCompileType.Finished;
 		line.AddAddress();
 	}

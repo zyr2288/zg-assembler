@@ -219,8 +219,9 @@ export class Compiler {
 						MacroUtils.MatchMacroLine(pre, currect, after, option);
 					} else {
 						let onlyLabelLine = new OnlyLabelLine();
-						onlyLabelLine.Initialize(unknowLine.orgText, option);
+						onlyLabelLine.comment = unknowLine.comment;
 						option.ReplaceLine(onlyLabelLine, unknowLine.orgText.fileHash);
+						onlyLabelLine.Initialize(unknowLine.orgText, option);
 					}
 
 					break;
@@ -297,12 +298,11 @@ export class Compiler {
 					break;
 				case LineType.OnlyLabel:
 					const onlyLabelLine = option.GetCurrectLine<OnlyLabelLine>();
-					let label1 = LabelUtils.FindLabel(onlyLabelLine.labelToken, option.macro);
+					let label1 = LabelUtils.GetLabelWithHash(onlyLabelLine.labelHash, option.macro);
 					if (label1) {
 						label1.value = Compiler.enviroment.orgAddress;
 						delete (onlyLabelLine.labelHash);
 					}
-
 					onlyLabelLine.compileType = LineCompileType.Finished;
 					break;
 				case LineType.Variable:

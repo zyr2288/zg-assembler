@@ -104,19 +104,14 @@ export class Commands {
 		}
 
 		// 命令不允许有标签
-		if (!line.labelToken!.isEmpty) {
+		if (line.labelToken && line.labelToken.isEmpty === false) {
 			if (!com.enableLabel) {
 				let errorMsg = Localization.GetMessage("Command {0} can not use label", line.command.text);
 				MyDiagnostic.PushException(line.labelToken!, errorMsg);
 			} else {
-				let labelMark = LabelUtils.CreateLabel(line.labelToken!, option);
-				if (labelMark) {
-					labelMark.label.labelType = LabelType.Label;
-					line.labelHash = labelMark.hash;
-				}
+				LabelUtils.GetLineLabelToken(option);
 			}
 		}
-		delete (line.labelToken);
 
 		let includeLines: IncludeLine[] | undefined;
 

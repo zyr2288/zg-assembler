@@ -1,6 +1,6 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
-import { ILabel, LabelType, LabelUtils } from "../Base/Label";
+import { LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
@@ -10,16 +10,6 @@ import { IAddressingMode } from "../Platform/AsmCommon";
 import { Platform } from "../Platform/Platform";
 import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
-// export interface IInstructionLine extends ICommonLine {
-// 	orgAddress: number;
-// 	baseAddress: number
-// 	splitLine?: SplitLine;
-// 	label?: ILabel;
-// 	instruction: Token;
-// 	exprParts: ExpressionPart[][];
-// 	addressingMode: IAddressingMode;
-// 	result: number[];
-// }
 
 export class InstructionLine implements ICommonLine {
 
@@ -31,6 +21,8 @@ export class InstructionLine implements ICommonLine {
 	baseAddress = 0;
 
 	labelToken?: Token;
+	/**使用 labelHash 记忆，以免深拷贝时无法正确使用 */
+	labelHash?: number;
 
 	instruction!: Token;
 	expression?: Token;
@@ -79,13 +71,7 @@ export class InstructionLineUtils {
 	 */
 	static FirstAnalyse(option: DecodeOption) {
 		const line = option.GetCurrectLine<InstructionLine>();
-		if (!line.labelToken!.isEmpty) {
-			let label = LabelUtils.CreateLabel(line.labelToken!, option);
-			if (label) {
-				label.labelType = LabelType.Label;
-			}
-		}
-		delete (line.labelToken);
+		LabelUtils.GetLineLabelToken(option);
 
 		let temp;
 		if (temp = Platform.platform.MatchAddressingMode(line.instruction, line.expression!)) {
@@ -122,10 +108,10 @@ export class InstructionLineUtils {
 		if (line.compileType === LineCompileType.Error)
 			return;
 
-		let label = LabelUtils.FindLabel(line.labelToken, option.macro);
+		let label = LabelUtils.GetLabelWithHash(line.labelHash, option.macro);
 		if (label) {
-			label.value = line.orgAddress;
-			delete (line.labelToken);
+			label.value = Compiler.enviroment.orgAddress;
+			delete (line.labelHash);
 		}
 
 		if (line.addressingMode.spProcess) {

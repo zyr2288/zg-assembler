@@ -18,10 +18,7 @@ export class OnlyLabelLine implements ICommonLine {
 			return;
 
 		this.labelToken = labelToken;
-		let label = LabelUtils.CreateLabel(labelToken, option);
-		if (label) {
-			label.labelType = LabelType.Label;
-		}
+		LabelUtils.GetLineLabelToken(option);
 	}
 
 	GetTokens() {

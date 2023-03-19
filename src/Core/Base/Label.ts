@@ -60,6 +60,21 @@ export class LabelUtils {
 
 	/** Public */
 
+	//#region 设定line的labelToken
+	/**设定line的labelToken */
+	static GetLineLabelToken(option: DecodeOption, labelType: LabelType = LabelType.Label) {
+		const line = option.GetCurrectLine<InstructionLine | VariableLine | CommandLine>();
+		if (line.labelToken && line.labelToken.isEmpty === false) {
+			let labelMark = LabelUtils.CreateLabel(line.labelToken!, option);
+			if (labelMark) {
+				labelMark.label.comment = line.comment;
+				labelMark.label.labelType = labelType;
+				line.labelHash = labelMark.hash;
+			}
+		}
+	}
+	//#endregion 设定line的labelToken
+
 	//#region 创建标签
 	/**
 	 * 创建标签
@@ -67,7 +82,7 @@ export class LabelUtils {
 	 * @param option 编译选项
 	 * @returns 
 	 */
-	static CreateLabel(token: Token, option: DecodeOption): ICommonLabel | undefined {
+	static CreateLabel(token: Token, option: DecodeOption): { label: ICommonLabel, hash: number } | undefined {
 		if (token.isEmpty)
 			return;
 
@@ -106,7 +121,7 @@ export class LabelUtils {
 		let tempLabel = Compiler.enviroment.allLabel.get(hash);
 		if (tempLabel || Compiler.enviroment.allMacro.has(token.text)) {
 			if (tempLabel?.labelType === LabelType.Variable || tempLabel?.labelType === LabelType.None)
-				return tempLabel;
+				return { label: tempLabel, hash };
 
 			let errorMsg = Localization.GetMessage("Label {0} is already defined", token.text);
 			MyDiagnostic.PushException(token, errorMsg);
@@ -114,10 +129,10 @@ export class LabelUtils {
 		}
 
 		let label = LabelUtils.SplitLabel(token, type);
-		if (label)
+		if (label) {
 			label.comment = option.GetCurrectLine().comment;
-
-		return label;
+			return { label, hash };
+		}
 	}
 	//#endregion 创建标签
 
@@ -211,60 +226,19 @@ export class LabelUtils {
 	}
 	//#endregion 查找标签
 
-	//#region 获取当前Token的Label
-	static SetLineLabelValue(option: DecodeOption) {
-		const line = option.GetCurrectLine<CommandLine | VariableLine | InstructionLine>();
-
-		if (!line.labelToken)
+	//#region 通过 labelHash 获取 label
+	static GetLabelWithHash(labelHash?: number, macro?: IMacro) {
+		if (!labelHash)
 			return;
 
-		let word = line.labelToken;
-		let match = LabelUtils.namelessLabelRegex.exec(word.text);
-		if (match) {
-			let count = match[0].length;
-
-			let collection = Compiler.enviroment.namelessLabel.get(word.fileHash);
-			if (!collection) {
-				let errorMsg = Localization.GetMessage("Label {0} not found", word.text);
-				MyDiagnostic.PushException(word, errorMsg);
-				return;
-			}
-
-			let label: ILabel | undefined;
-			if (match.groups?.["minus"]) {
-				let labels = collection.upLabels;
-				for (let i = 0; i < labels.length; ++i) {
-					if (labels[i].token.length === count && labels[i].token.line === word.line) {
-						label = labels[i];
-						break;
-					}
-				}
-			} else {
-				let labels = collection.downLabels;
-				for (let i = 0; i < labels.length; ++i) {
-					if (labels[i].token.length === count && labels[i].token.line === word.line) {
-						label = labels[i];
-						break;
-					}
-				}
-			}
-
-			if (label) {
-				label.value = Compiler.enviroment.orgAddress;
-			} else {
-				let errorMsg = Localization.GetMessage("Label {0} not found", word.text);
-				MyDiagnostic.PushException(word, errorMsg);
-			}
-			return;
-		}
-
-		let scope = word.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
-		let hash = LabelUtils.GetLebalHash(word.text, word.fileHash, scope);
-		let label = Compiler.enviroment.allLabel.get(hash);
+		let label = macro?.labels.get(labelHash);
 		if (label)
-			label.value = Compiler.enviroment.orgAddress;
+			return label;
+
+		label = Compiler.enviroment.allLabel.get(labelHash);
+		return label;
 	}
-	//#endregion 获取当前Token的Label
+	//#endregion 通过 labelHash 获取 label
 
 	//#region 获取标签的Hash值
 	/**
@@ -325,6 +299,7 @@ export class LabelUtils {
 
 		const line = option.GetCurrectLine();
 
+		let hash = LabelUtils.GetLebalHash(token.text, token.fileHash, LabelScope.Temporary, token.line);
 		let newItem: INamelessLabel = { token, comment: line.comment, labelType: LabelType.Label };
 		if (!labels) {
 			labels = { upLabels: [], downLabels: [] };
@@ -346,7 +321,14 @@ export class LabelUtils {
 		}
 
 		temp.splice(index, 0, newItem);
-		return newItem;
+		Compiler.enviroment.allLabel.set(hash, newItem);
+		let fileLabelSet = Compiler.enviroment.fileLabels.get(token.fileHash);
+		if (!fileLabelSet) {
+			fileLabelSet = new Set<number>();
+			Compiler.enviroment.fileLabels.set(token.fileHash, fileLabelSet);
+		}
+		fileLabelSet.add(hash);
+		return { label: newItem, hash };
 	}
 	//#endregion 插入临时标签
 

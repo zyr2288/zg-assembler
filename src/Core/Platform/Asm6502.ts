@@ -115,7 +115,7 @@ export class Asm6502 extends AsmCommon {
 	}
 
 	private ConditionBranch(option: DecodeOption) {
-		const line = option.allLines[option.lineIndex] as InstructionLine;
+		const line = option.GetCurrectLine<InstructionLine>();
 		let tryValue = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
 		let tempValue = ExpressionUtils.GetExpressionValue(line.exprParts[0], tryValue, option);
 		if (!tempValue.success) {

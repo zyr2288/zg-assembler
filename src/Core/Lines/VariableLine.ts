@@ -12,6 +12,7 @@ export class VariableLine implements ICommonLine {
 	orgText!: Token;
 
 	labelToken?: Token;
+	/**使用 labelHash 记忆，以免深拷贝时无法正确使用 */
 	labelHash?: number;
 
 	expression?: Token;
@@ -34,9 +35,10 @@ export class VariableLine implements ICommonLine {
 export class VariableLineUtils {
 	static FirstAnalyse(option: DecodeOption) {
 		const line = option.GetCurrectLine<VariableLine>();
-		let label = LabelUtils.CreateLabel(line.labelToken!, option);
-		if (label) {
-			label.labelType = LabelType.Variable;
+		let labelMark = LabelUtils.CreateLabel(line.labelToken!, option);
+		if (labelMark) {
+			labelMark.label.labelType = LabelType.Variable;
+			line.labelHash = labelMark.hash;
 		} else {
 			line.compileType = LineCompileType.Error;
 		}
@@ -63,7 +65,7 @@ export class VariableLineUtils {
 		}
 
 		let temp = ExpressionUtils.GetExpressionValue(line.exprParts, ExpressionResult.TryToGetResult, option);
-		let label = LabelUtils.FindLabel(line.labelToken, option.macro);
+		let label = LabelUtils.GetLabelWithHash(line.labelHash, option.macro);
 		if (label && temp.success)
 			label.value = temp.value;
 	}

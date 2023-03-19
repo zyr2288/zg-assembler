@@ -10,7 +10,7 @@
 		"intellisense": { "type": "boolean", "default": true },
 		"outOfRangeWarning": { "type": "boolean", "default": true },
 		"entry": { "type": "string", "default": "main.asm" },
-		"compileTimes": { "type": "number", "default": 2 },
+		"compileTimes": { "type": "number", "default": 2, "minimum": 2 },
 		"outputEntryFile": { "type": "string" },
 		"outputSingleFile": { "type": "string" },
 		"copyToClipboard": {
