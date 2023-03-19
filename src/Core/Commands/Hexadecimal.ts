@@ -21,7 +21,7 @@ export class Hexadecimal {
 		let expressions: Token[] = line.tag;
 		line.tag = expressions[0];
 
-		if (!/^[ 0-9a-fA-F]+$/.test(expressions[0].text)) {
+		if (!/^[\t 0-9a-fA-F]+$/.test(expressions[0].text)) {
 			let errorMsg = Localization.GetMessage("Command arguments error");
 			MyDiagnostic.PushException(expressions[0], errorMsg);
 			line.compileType = LineCompileType.Error;
