@@ -5,8 +5,8 @@
 	"entry": "main.asm",
 	"compileTimes": 2,
 	"outputEntryFile": "",
-	"outputSingleFile": "test.bin",
-	"copyToClipboard": true,
+	"outputSingleFile": "test.nes",
+	"copyToClipboard": false,
 	"patchFile": "",
 	"includes": ["**/*.asm"],
 	"excludes": []
