@@ -109,9 +109,7 @@ export class IntellisenseProvider {
 		if (!Config.ProjectSetting.intellisense)
 			return [];
 
-		filePath = FileUtils.ArrangePath(filePath);
-			
-		const fileHash = Utils.GetHashcode(filePath);
+		const fileHash = FileUtils.GetFilePathHashcode(filePath);
 		const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
 		const prefix = line.Substring(0, lineCurrect);
 		if (ignoreWordStr.test(prefix.text))

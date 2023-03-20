@@ -104,49 +104,6 @@ export class HelperUtils {
 	}
 	//#endregion 获取光标所在字符
 
-	//#region 获取Label注释以及值
-	/**获取Label注释以及值 */
-	static GetLabelCommentAndValue(text: string, currect: number, lineNumber: number, filePath: string) {
-
-		// let fileHash = Utils.GetHashcode(filePath);
-		// let lineText = Token.CreateToken(fileHash, lineNumber, 0, text);
-
-		// let result = { value: <number | undefined>undefined, comment: <string | undefined>undefined };
-		// const { content, comment } = Compiler.GetContent(lineText);
-
-		// let range = HelperUtils.GetWord(content.text, currect);
-		// if (range.type == "none")
-		// 	return result;
-
-		// if (range.type == "value") {
-		// 	result.value = range.value;
-		// 	return result;
-		// }
-
-		// if (range.type != "var") {
-		// 	return result;
-		// }
-
-		// content.text = range.text;
-		// content.start = currect - content.start;
-		// let label = LabelUtils.FindLabel(content);
-		// if (label) {
-		// 	if (label.labelType === LabelType.None)
-		// 		return result;
-
-		// 	result.value = label.value;
-		// 	result.comment = label.comment;
-		// 	return result;
-		// }
-
-		// let macro = MacroUtils.FindMacro(content.text);
-		// if (macro) 
-		// 	result.comment = `${macro.comment}\n参数个数 ${macro.parameterCount}`;
-
-		// return result;
-	}
-	//#endregion 获取Label注释以及值
-
 	//#region 获取行所在范围
 	static GetRange(fileHash: number, lineNumber: number) {
 		let ranges = Compiler.enviroment.GetRange(fileHash);

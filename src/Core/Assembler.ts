@@ -3,9 +3,7 @@ import { Config } from "./Base/Config";
 import { ExpressionUtils } from "./Base/ExpressionUtils";
 import { FileUtils } from "./Base/FileUtils";
 import { MyDiagnostic } from "./Base/MyException";
-import { Utils } from "./Base/Utils";
 import { Commands } from "./Commands/Commands";
-import { Message } from "./Commands/Message";
 import { Localization } from "./I18n/Localization";
 import { DefinitionProvider } from "./LanguageHelper/DefinitionProvider";
 import { DocumentChangeProvider } from "./LanguageHelper/DocumentChangeProvider";
@@ -48,12 +46,12 @@ export class Assembler {
 	}
 
 	GetUpdateLines(filePath: string) {
-		let hash = Utils.GetHashcode(filePath);
+		let hash = FileUtils.GetFilePathHashcode(filePath);
 		return Compiler.enviroment.allBaseLines.get(hash) ?? [];
 	}
 
 	ClearFile(filePath: string) {
-		let hash = Utils.GetHashcode(filePath);
+		let hash = FileUtils.GetFilePathHashcode(filePath);
 		Compiler.enviroment.ClearFile(hash);
 	}
 

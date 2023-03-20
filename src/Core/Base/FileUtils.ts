@@ -1,4 +1,5 @@
 import { Config } from "./Config";
+import { Utils } from "./Utils";
 
 export class FileUtils {
 
@@ -64,6 +65,14 @@ export class FileUtils {
 	//#endregion 显示消息
 
 	/**已实现的接口 */
+
+	//#region 获取文件路径Hashcode
+	/**获取文件路径Hashcode */
+	static GetFilePathHashcode(filePath:string) {
+		filePath = FileUtils.ArrangePath(filePath);
+		return Utils.GetHashcode(filePath);
+	}
+	//#endregion 获取文件路径Hashcode
 
 	//#region 拼合路径
 	/**

@@ -2,7 +2,7 @@ import { Commands } from "../Commands/Commands";
 import { IMacroLine, MacroUtils } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
-import { ICommonLine, IOnlyLabel, LineCompileType, LineType } from "../Lines/CommonLine";
+import { ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
 import { InstructionLine, InstructionLineUtils } from "../Lines/InstructionLine";
 import { MacroLine } from "../Lines/MacroLine";
 import { OnlyLabelLine } from "../Lines/OnlyLabelLine";
@@ -12,7 +12,6 @@ import { Platform } from "../Platform/Platform";
 import { Config } from "./Config";
 import { Environment } from "./Environment";
 import { ExpressionResult, ExpressionUtils } from "./ExpressionUtils";
-import { FileUtils } from "./FileUtils";
 import { LabelUtils } from "./Label";
 import { MyDiagnostic } from "./MyException";
 import { DecodeOption } from "./Options";
@@ -29,6 +28,12 @@ export class Compiler {
 	private static editorEnv = new Environment(false);
 
 	//#region 解析文本
+	/**
+	 * 解析文本
+	 * @param files.text 文本
+	 * @param files.filePath 文件路径
+	 * @returns 
+	 */
 	static async DecodeText(files: { text: string, filePath: string }[]) {
 
 		if (Compiler.compiling)
@@ -39,7 +44,6 @@ export class Compiler {
 		let option = new DecodeOption([]);
 		for (let index = 0; index < files.length; ++index) {
 
-			files[index].filePath = FileUtils.ArrangePath(files[index].filePath);
 			let fileHash = Compiler.enviroment.SetFile(files[index].filePath);
 
 			MyDiagnostic.ClearFileExceptions(fileHash);
@@ -70,8 +74,6 @@ export class Compiler {
 		Compiler.compiling = true;
 		Compiler.enviroment = Compiler.compilerEnv;
 		let option = new DecodeOption([]);
-
-		filePath = FileUtils.ArrangePath(filePath);
 
 		let fileHash = Compiler.enviroment.SetFile(filePath);
 		MyDiagnostic.ClearAll();
@@ -391,6 +393,14 @@ export class Compiler {
 			line.baseAddress = Compiler.enviroment.baseAddress;
 			line.orgAddress = Compiler.enviroment.orgAddress;
 		}
+
+		if (Compiler.enviroment.fileRange.start < 0) {
+			Compiler.enviroment.fileRange.start = Compiler.enviroment.fileRange.end = Compiler.enviroment.baseAddress;
+			return;
+		}
+
+		if (Compiler.enviroment.fileRange.start > Compiler.enviroment.baseAddress)
+			Compiler.enviroment.fileRange.start = Compiler.enviroment.baseAddress;
 	}
 	//#endregion 设定起始地址
 
@@ -403,6 +413,9 @@ export class Compiler {
 
 		Compiler.enviroment.baseAddress += line.result.length;
 		Compiler.enviroment.orgAddress += line.result.length;
+
+		if (Compiler.enviroment.fileRange.end < Compiler.enviroment.baseAddress)
+			Compiler.enviroment.fileRange.end = Compiler.enviroment.baseAddress;
 	}
 	//#endregion 给文件的地址增加偏移
 

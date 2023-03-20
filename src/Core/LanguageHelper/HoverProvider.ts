@@ -3,7 +3,6 @@ import { ExpressionUtils } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
 import { LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
-import { Utils } from "../Base/Utils";
 import { IMacro } from "../Commands/Macro";
 import { HelperUtils } from "./HelperUtils";
 
@@ -11,10 +10,8 @@ export class HoverProvider {
 
 	static Hover(filePath: string, lineNumber: number, lineText: string, currect: number) {
 
-		filePath = FileUtils.ArrangePath(filePath);
-
+		let fileHash = FileUtils.GetFilePathHashcode(filePath);
 		let result = { value: undefined as number | undefined, comment: undefined as string | undefined };
-		let fileHash = Utils.GetHashcode(filePath);
 		const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
 		const { content } = Compiler.GetContent(line);
 		if (currect > content.start + content.text.length)

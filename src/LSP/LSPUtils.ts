@@ -61,12 +61,16 @@ export class LSPUtils {
 	//#endregion 讲结果值运算成其他进制
 
 	//#region 结果值输出
-	static async OutputResult(result: number[], option: { toFile?: string, patchFile?: string, toClipboard?: boolean }) {
-		let buffer = new Uint8Array(result);
+	static async OutputResult(result: Int16Array, option: { toFile?: string, patchFile?: string, toClipboard?: boolean }) {
 
 		if (option.toFile) {
 			if (!vscode.workspace.workspaceFolders)
 				return;
+
+			let buffer = new Uint8Array(result.length);
+
+			for (let i = 0; i < buffer.length; ++i)
+				buffer[i] = result[i] < 0 ? 0 : result[i];
 
 			let filePath = this.assembler.fileUtils.Combine(vscode.workspace.workspaceFolders[0].uri.fsPath, option.toFile);
 			this.assembler.fileUtils.SaveFile(filePath, buffer);
@@ -87,7 +91,7 @@ export class LSPUtils {
 
 			let fileBuffer = await this.assembler.fileUtils.ReadFile(filePath);
 			for (let i = 0; i < result.length; i++) {
-				if (result[i] === undefined)
+				if (result[i] < 0)
 					continue;
 
 				fileBuffer[i] = result[i];
@@ -97,19 +101,18 @@ export class LSPUtils {
 	//#endregion 结果值输出
 
 	//#region 获取编译的String
-	private static GetResultString(data: number[]) {
+	private static GetResultString(data: Int16Array) {
 		let result = "";
 		let start = true;
 		for (let i = 0; i < data.length; i++) {
 			const d = data[i];
-			if (d === undefined) {
+			if (d < 0) {
 				if (start)
 					continue;
 
 				result += "00 ";
 			} else {
-				let temp = d.toString(16);
-				temp = temp.toUpperCase();
+				let temp = d.toString(16).toUpperCase();
 				if (temp.length < 2)
 					temp = "0" + temp;
 

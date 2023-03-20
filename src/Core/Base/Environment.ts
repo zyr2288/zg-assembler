@@ -1,8 +1,8 @@
 import { IDataGroup } from "../Commands/DataGroup";
 import { IMacro } from "../Commands/Macro";
 import { HightlightRange as HighlightRange, ICommonLine } from "../Lines/CommonLine";
+import { FileUtils } from "./FileUtils";
 import { ILabel, ILabelTree, INamelessLabelCollection, LabelType } from "./Label";
-import { Utils } from "./Utils";
 
 export class Environment {
 
@@ -12,6 +12,8 @@ export class Environment {
 	orgAddress: number = -1;
 	baseAddress: number = 0;
 	addressOffset: number = 0;
+
+	fileRange = { start: -1, end: -1 };
 
 	/**所有标签 Key: Label的Hash值 */
 	allLabel = new Map<number, ILabel>();
@@ -39,6 +41,10 @@ export class Environment {
 	private files = new Map<number, string>();
 	private highlightRanges = new Map<number, HighlightRange[]>();
 
+	/**
+	 * 构造函数
+	 * @param isCompile 是否是编译环境，true为编译环境
+	 */
 	constructor(isCompile: boolean) {
 		this.isCompileEnv = isCompile;
 	}
@@ -51,7 +57,7 @@ export class Environment {
 
 	//#region 设定文件Hash并返回Hash
 	SetFile(filePath: string) {
-		let hash = Utils.GetHashcode(filePath);
+		let hash = FileUtils.GetFilePathHashcode(filePath);
 		this.files.set(hash, filePath);
 		return hash;
 	}
