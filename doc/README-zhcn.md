@@ -8,7 +8,7 @@
 
 * 一个 [VSCode](https://code.visualstudio.com/) 的可扩展的编译器，目前支持 `6502` `65c816`(感谢Thirteen) `z80-gb`，将来会加入更多适应平台。
 
-* 配置文件，当打开汇编文件会在目录下的 `.vscode` 目录创建 `project-settings.json` 文件，默认以下配置
+* 配置文件，当打开汇编文件会在目录下创建 `project-settings.json` 文件，默认以下配置
 
 ```json
 {

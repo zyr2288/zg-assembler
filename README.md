@@ -6,7 +6,7 @@
 
 * An extensible compiler for [VSCode](https://code.visualstudio.com/), supporting `6502` `65c816` (Special thanks Thirteen) `z80-gb`.
 
-* When the assembly file is opened, a `project-settings.json` file is created in the `.vscode` directory.
+* When the assembly file is opened, a `project-settings.json` file is created in project directory.
 
 ```json
 {
