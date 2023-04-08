@@ -6,7 +6,7 @@ import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Localization } from "../I18n/Localization";
-import { IAddressingMode } from "../Platform/AsmCommon";
+import { AsmCommon, IAddressingMode } from "../Platform/AsmCommon";
 import { Platform } from "../Platform/Platform";
 import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
@@ -74,7 +74,7 @@ export class InstructionLineUtils {
 		LabelUtils.GetLineLabelToken(option);
 
 		let temp;
-		if (temp = Platform.platform.MatchAddressingMode(line.instruction, line.expression!)) {
+		if (temp = AsmCommon.MatchAddressingMode(line.instruction, line.expression!)) {
 			line.addressingMode = temp.addressingMode;
 			for (let i = 0; i < temp.exprs.length; ++i) {
 				let temp2 = ExpressionUtils.SplitAndSort(temp.exprs[i]);

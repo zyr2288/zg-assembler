@@ -42,13 +42,22 @@ export class DefinitionProvider {
 		if (rangeType?.type === "Macro")
 			macro = Compiler.enviroment.allMacro.get(rangeType.key);
 
-		let token = Token.CreateToken(fileHash, lineNumber, word.start, word.rangeText.join(""));
+		let wordText = word.rangeText.join("");
+		let token = Token.CreateToken(fileHash, lineNumber, word.start, wordText);
 		let label = LabelUtils.FindLabel(token, macro);
 		if (label) {
 			result.filePath = Compiler.enviroment.GetFile(label.token.fileHash);
 			result.line = label.token.line;
 			result.start = label.token.start;
 			result.length = label.token.text.length;
+		} else if (new RegExp(Compiler.enviroment.macroRegexString).test(wordText)) {
+			let macro = Compiler.enviroment.allMacro.get(wordText);
+			if (macro) {
+				result.filePath = Compiler.enviroment.GetFile(macro.name.fileHash);
+				result.line = macro.name.line;
+				result.start = macro.name.start;
+				result.length = macro.name.text.length;
+			}
 		}
 
 		return result;

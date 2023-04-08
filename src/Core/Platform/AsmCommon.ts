@@ -13,6 +13,7 @@ export interface IAddressingMode {
 }
 
 export interface AddressOption {
+	/**汇编模式特殊处理 */
 	spProcess?: (option: DecodeOption) => void;
 	/**寻址模式，可用正则表达式 或例如：([exp]),Y */
 	addressingMode?: string,
@@ -22,27 +23,45 @@ export interface AddressOption {
 	opCodeLength?: Array<number | undefined>;
 }
 
-/**请实现 static platformName */
+export interface IAsmCommon {
+
+}
+
 export class AsmCommon {
+
+	static PlatformName: string;
 
 	/**所有汇编指令 */
 	static instructions: string[];
 	/**Key为 Instruction，例如：LDA */
 	static allInstructions: Map<string, IAddressingMode[]> = new Map();
 
-	constructor() {
+	//#region 清除所有汇编指令
+	/**清除所有汇编指令 */
+	static ClearInstructions() {
 		AsmCommon.allInstructions.clear();
 	}
+	//#endregion 清除所有汇编指令
 
-	UpdateInstructions() {
+	//#region 更新汇编指令
+	/**
+	 * 更新汇编指令
+	 */
+	static UpdateInstructions() {
 		AsmCommon.instructions = [];
 		AsmCommon.allInstructions.forEach((addressingMode, instruction, map) => {
 			AsmCommon.instructions.push(instruction);
 		});
 	}
+	//#endregion 更新汇编指令
 
 	//#region 添加基础指令
-	AddInstruction(operation: string, option: AddressOption) {
+	/**
+	 * 添加基础指令
+	 * @param operation 汇编指令，例如：LDA
+	 * @param option 
+	 */
+	static AddInstruction(operation: string, option: AddressOption) {
 		operation = operation.toUpperCase();
 		let index = AsmCommon.allInstructions.get(operation);
 		if (!index) {
@@ -95,8 +114,40 @@ export class AsmCommon {
 	}
 	//#endregion 添加基础指令
 
+	//#region 添加额外定长汇编指令
+	/**
+	 * 添加额外定长汇编指令
+	 * @param instruction 汇编指令
+	 * @param addressingMode 地址模式
+	 * @returns 
+	 */
+	static AddInstructionWithLength(instruction: string, addressingMode: AddressOption) {
+		AsmCommon.AddInstruction(instruction, addressingMode);
+		let count = addressingMode.opCode.filter(v => v !== undefined);
+		if (count.length < 2)
+			return;
+
+		for (let j = 1; j < addressingMode.opCode.length; j++) {
+			let opcode = addressingMode.opCode[j];
+			if (opcode === undefined)
+				continue;
+
+			let tempCodes = [];
+			tempCodes.length = j + 1;
+			tempCodes[j] = opcode;
+			AsmCommon.AddInstruction(`${instruction}.${j}`, { addressingMode: addressingMode.addressingMode, opCode: tempCodes });
+		}
+	}
+	//#endregion 添加额外定长汇编指令
+
 	//#region 匹配指令
-	MatchAddressingMode(instruction: Token, expression: Token) {
+	/**
+	 * 匹配指令
+	 * @param instruction 汇编指令
+	 * @param expression 表达式
+	 * @returns 
+	 */
+	static MatchAddressingMode(instruction: Token, expression: Token) {
 		let addressTypes = AsmCommon.allInstructions.get(instruction.text.toUpperCase());
 		if (!addressTypes) {
 			let errorMsg = Localization.GetMessage("Unknow instruction {0}", instruction.text);

@@ -256,6 +256,12 @@ export class Commands {
 	//#endregion 第三次的通用分析，仅对编译命令行的表达式小节分析
 
 	//#region 将头尾行的所有行纳入
+	/**
+	 * 将头尾行的所有行纳入
+	 * @param option 编译选项
+	 * @param includeLines 所有包含的行
+	 * @returns 
+	 */
 	static CollectBaseLines(option: DecodeOption, includeLines: IncludeLine[]) {
 		let start = includeLines![0].index;
 		let end = includeLines![1].index;

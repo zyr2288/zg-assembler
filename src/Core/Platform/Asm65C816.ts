@@ -1,13 +1,13 @@
-import { AsmCommon } from "./AsmCommon";
+import { AddressOption, AsmCommon } from "./AsmCommon";
 
-export class Asm65C816 extends AsmCommon {
+export class Asm65C816 {
 
 	static readonly PlatformName = "65c816";
 
 	constructor() {
-		super();
+		AsmCommon.ClearInstructions();
 		this.Initialize();
-		this.UpdateInstructions();
+		AsmCommon.UpdateInstructions();
 	}
 
 	private Initialize() {
@@ -62,7 +62,7 @@ export class Asm65C816 extends AsmCommon {
 			0xAA, 0xA8, 0x8A, 0x98, 0xBA, 0x9A, 0x9B, 0xBB,
 			0x5B, 0x7B, 0x1B, 0x3B, 0xCB, 0xEB, 0xFB
 		];
-		for (let i = 0; i < instrs1.length; ++i)
+		for (let i = 0; i < instrs2.length; i++)
 			this.AddInstruction(instrs2[i], { opCode: [opCode4[i]] });
 
 		opCode = [
@@ -163,8 +163,10 @@ export class Asm65C816 extends AsmCommon {
 
 		this.AddInstruction("STX", { addressingMode: "[exp],Y", opCode: [, 0x96] });
 		this.AddInstruction("STX", { addressingMode: "[exp]", opCode: [, 0x86, 0x8E] });
+
 		this.AddInstruction("STY", { addressingMode: "[exp],X", opCode: [, 0x94] });
 		this.AddInstruction("STY", { addressingMode: "[exp]", opCode: [, 0x84, 0x8C] });
+
 		this.AddInstruction("STZ", { addressingMode: "[exp],X", opCode: [, 0x74, 0x9E] });
 		this.AddInstruction("STZ", { addressingMode: "[exp]", opCode: [, 0x64, 0x9C] });
 
@@ -174,8 +176,15 @@ export class Asm65C816 extends AsmCommon {
 
 	private Add(ins: string, modes: string[], codes: (Array<number | undefined> | undefined)[]) {
 		for (let i = 0; i < modes.length; ++i) {
-			if (codes[i])
-				this.AddInstruction(ins, { addressingMode: modes[i], opCode: codes[i]! });
+			let opCodes = codes[i];
+			if (!opCodes)
+				continue;
+
+			this.AddInstruction(ins, { addressingMode: modes[i], opCode: opCodes });
 		}
+	}
+
+	private AddInstruction(instruction: string, addressingMode: AddressOption) {
+		AsmCommon.AddInstructionWithLength(instruction, addressingMode);
 	}
 }

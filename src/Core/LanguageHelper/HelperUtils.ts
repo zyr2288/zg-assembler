@@ -1,12 +1,8 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionUtils } from "../Base/ExpressionUtils";
-import { LabelType, LabelUtils } from "../Base/Label";
-import { Token } from "../Base/Token";
-import { Utils } from "../Base/Utils";
 import { MatchNames, Platform } from "../Platform/Platform";
 
 export interface MatchRange {
-	type: "none" | "command" | "instruction" | "variable";
+	type: "none" | "command" | "instruction" | "variable" | "macro";
 	start: number;
 	text: string;
 }
@@ -52,6 +48,7 @@ export class HelperUtils {
 		let lastString = "";
 
 		let range = [0, 0];
+		currect -= start;
 
 		const match = "\t +-*/&|!^#,()[]{}<>";
 		let findEnd = false;

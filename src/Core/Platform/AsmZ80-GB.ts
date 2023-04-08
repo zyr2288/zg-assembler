@@ -1,13 +1,13 @@
-import { AsmCommon } from "./AsmCommon";
+import { AddressOption, AsmCommon } from "./AsmCommon";
 
-export class AsmZ80_GB extends AsmCommon {
+export class AsmZ80_GB {
 
 	static readonly PlatformName = "z80-gb";
 
 	constructor() {
-		super();
+		AsmCommon.ClearInstructions();
 		this.Initialize();
-		this.UpdateInstructions();
+		AsmCommon.UpdateInstructions();
 	}
 
 	private Initialize() {
@@ -188,6 +188,10 @@ export class AsmZ80_GB extends AsmCommon {
 		for (let i = 0; i < ops.length; ++i) {
 			this.AddInstruction(ops[i][0], { opCode: [ops[i][1]] });
 		}
+	}
+
+	private AddInstruction(instruction: string, addressingMode: AddressOption) {
+		AsmCommon.AddInstructionWithLength(instruction, addressingMode);
 	}
 
 }
