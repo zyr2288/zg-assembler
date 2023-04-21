@@ -21,7 +21,7 @@
 	"activationEvents": [
 		"onLanguage:zg-assembly"
 	],
-	"icon": "./syntaxes/chip.png",
+	"icon": "syntaxes/chip.png",
 	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [
