@@ -20,10 +20,10 @@ export class HelperUtils {
 		let match = new RegExp(Platform.regexString, "ig").exec(lineText);
 		if (match?.groups?.[MatchNames.command]) {
 			result.type = "command";
-			result.text = match.groups[MatchNames.command].toUpperCase();
+			result.text = match.groups[MatchNames.command];
 		} else if (match?.groups?.[MatchNames.instruction]) {
 			result.type = "instruction";
-			result.text = match.groups[MatchNames.instruction].toUpperCase();
+			result.text = match.groups[MatchNames.instruction];
 		} else if ((match?.groups?.[MatchNames.variable])) {
 			result.type = "variable"
 		}
