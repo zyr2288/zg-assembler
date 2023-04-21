@@ -197,9 +197,9 @@ For example:
 ```
     .IFDEF label
      .....
-	.ELSE
+    .ELSE
      .....
-	.ENDIF
+    .ENDIF
 ```
 
 * Process a block of code if a label has been defined / not defined.
@@ -210,7 +210,7 @@ For example:
 ### `.INCBIN`
 
 ```
-	.INCBIN filePath[, fileStartPosition, readLength]
+    .INCBIN filePath[, fileStartPosition, readLength]
 ```
 
 * You can read the binary content of the reference file. Please fill in the relative path of the file in the double quotes.
@@ -242,8 +242,8 @@ For example:
 
 ```
     .MACRO macroName[, arg1, arg2...]
-	 .....
-	.ENDM
+     .....
+    .ENDM
 ```
 
 * Define a macro. Macro arguments are comma separated.
@@ -302,8 +302,8 @@ Example 2:
 
 ```
     .REPEAT repeatTimes
-	 .....
-	.ENDR
+     .....
+    .ENDR
 ```
 
 * Repeat a block of code a specified number of times.
@@ -331,14 +331,14 @@ For example:
 * Out put a message.
 
 ```
-	.ORG $8000
-	.DEF test1, 10
-	.DEF test2, 11
-	.MSG "test {0}, ${1}, @{0}", test1, test2
+    .ORG $8000
+    .DEF test1, 10
+    .DEF test2, 11
+    .MSG "test {0}, ${1}, @{0}", test1, test2
 ```
 
 * 这里输出的信息是：
 
 ```
-	test 10, $B, @0000 1010
+    test 10, $B, @0000 1010
 ```
