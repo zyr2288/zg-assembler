@@ -2,7 +2,7 @@
 	"name": "zg-assembler",
 	"displayName": "ZG Assembler",
 	"description": "A simple assembler for 6502 / 65c816 / z80-gb",
-	"version": "0.2.10",
+	"version": "0.2.11",
 	"engines": {
 		"vscode": "^1.67.0"
 	},
@@ -21,7 +21,7 @@
 	"activationEvents": [
 		"onLanguage:zg-assembly"
 	],
-	"icon": "syntaxes/chip.png",
+	"icon": "./syntaxes/chip.png",
 	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [
@@ -40,10 +40,6 @@
 				"extensions": [
 					".asm"
 				],
-				"icon": {
-					"dark": "./syntaxes/chip.png",
-					"light": "./syntaxes/chip.png"
-				},
 				"configuration": "./syntaxes/language-configuration.json"
 			}
 		],

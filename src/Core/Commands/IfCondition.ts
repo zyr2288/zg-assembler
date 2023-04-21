@@ -118,6 +118,7 @@ export class IfCondition {
 			if (temp === 0)
 				index = 1;
 
+			tempLine.compileType = LineCompileType.Finished;
 			tag.push({ index: result[i].index, confident: false });
 		}
 
