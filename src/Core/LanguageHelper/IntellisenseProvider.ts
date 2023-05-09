@@ -263,10 +263,6 @@ export class IntellisenseProvider {
 			macro.params.forEach(GetCompletion);
 		}
 
-		let labelHashes = Compiler.enviroment.fileLabels.get(fileHash);
-		if (!labelHashes)
-			return result;
-
 		let labelScope = prefix.startsWith(".") ? LabelScope.Local : LabelScope.Global;
 		let index = prefix.lastIndexOf(".");
 
