@@ -285,7 +285,7 @@ export class IntellisenseProvider {
 					return [];
 
 				let showText = temp.token.text.substring(index + 1);
-				let item = new Completion({ showText });
+				let item = new Completion({ showText, comment:temp.comment });
 				switch (temp.labelType) {
 					case LabelType.Defined:
 						item.type = CompletionType.Defined;

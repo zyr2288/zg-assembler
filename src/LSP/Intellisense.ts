@@ -59,6 +59,9 @@ export class Intellisense {
 			let newCom = new vscode.CompletionItem(com.showText);
 			newCom.insertText = Intellisense.ChangeExp(com.insertText);
 			newCom.sortText = com.index.toString();
+			if (com.comment)
+				newCom.detail = com.comment;
+
 			// 不会再走这里
 			switch (com.triggerType) {
 				case TriggerSuggestType.AllAsm:

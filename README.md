@@ -337,7 +337,7 @@ For example:
     .MSG "test {0}, ${1}, @{0}", test1, test2
 ```
 
-* 这里输出的信息是：
+* The message is：
 
 ```
     test 10, $B, @0000 1010
