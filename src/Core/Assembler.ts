@@ -60,6 +60,3 @@ export class Assembler {
 	}
 
 }
-
-//@ts-ignore
-globalThis.zgassembler = Assembler;
