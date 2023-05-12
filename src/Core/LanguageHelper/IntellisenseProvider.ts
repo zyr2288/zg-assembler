@@ -30,12 +30,12 @@ export class Completion {
 	//#region 构造函数
 	/**
 	 * 构造函数
-	 * @param option.showText showText 显示的文本
-	 * @param option.insertText showText 插入的文本，默认与显示一致
-	 * @param option.index showText 排序Index，默认0
-	 * @param option.comment showText 注释
-	 * @param option.type showText 提示类型，默认空
-	 * @param option.command showText 附加数据
+	 * @param option.showText 显示的文本
+	 * @param option.insertText 插入的文本，默认与显示一致
+	 * @param option.index 排序Index，默认0
+	 * @param option.comment 注释
+	 * @param option.type 提示类型，默认空
+	 * @param option.command 附加数据
 	 */
 	constructor(option: {
 		showText: string, insertText?: string,
@@ -294,9 +294,9 @@ export class IntellisenseProvider {
 					let value = Utils.ConvertValue(label.value);
 					let tempStr = `HEX: $${value.hex}\nDEC: ${value.dec}\nBIN: @${value.bin}`;
 					if (item.comment)
-						item.comment += "\n\n" + tempStr;
+						item.comment += "\n-----\n\n" + tempStr;
 					else
-						item.comment = tempStr;
+						item.comment = "-----\n\n" + tempStr;
 				}
 				result.push(item);
 			});
