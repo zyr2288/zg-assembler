@@ -276,19 +276,27 @@ export class IntellisenseProvider {
 		let topLabel = Compiler.enviroment.labelTrees.get(labelHash);
 		if (topLabel) {
 			topLabel.child.forEach((labelHash) => {
-				let temp = Compiler.enviroment.allLabel.get(labelHash);
-				if (!temp)
+				let label = Compiler.enviroment.allLabel.get(labelHash);
+				if (!label)
 					return [];
 
-				let showText = temp.token.text.substring(index + 1);
-				let item = new Completion({ showText, comment:temp.comment });
-				switch (temp.labelType) {
+				let showText = label.token.text.substring(index + 1);
+				let item = new Completion({ showText, comment: label.comment });
+				switch (label.labelType) {
 					case LabelType.Defined:
 						item.type = CompletionType.Defined;
 						break;
 					case LabelType.Label:
 						item.type = CompletionType.Label;
 						break;
+				}
+				if (label.value) {
+					let value = Utils.ConvertValue(label.value);
+					let tempStr = `HEX: $${value.hex}\nDEC: ${value.dec}\nBIN: @${value.bin}`;
+					if (item.comment)
+						item.comment += "\n\n" + tempStr;
+					else
+						item.comment = tempStr;
 				}
 				result.push(item);
 			});
