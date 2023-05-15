@@ -192,7 +192,7 @@ export class ExpressionUtils {
 				if (labelUnknow)
 					continue;
 
-				if (element.token.text === "*") {
+				if (element.token.text === "*" && Compiler.enviroment.orgAddress >= 0) {
 					element.value = Compiler.enviroment.orgAddress;
 					element.type = PriorityType.Level_0_Sure;
 					continue;
