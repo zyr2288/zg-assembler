@@ -66,6 +66,14 @@ export class Message {
 		let text = line.expParts[0][0].token.text;
 		while (match = regex.exec(text)) {
 			let index = parseInt(match.groups!["index"]);
+			if (!values[index]) {
+				let errorMsg = Localization.GetMessage("Command arguments error");
+				let token = line.expParts[0][0].token.Substring(match.index!, match[0].length);
+				MyDiagnostic.PushException(token, errorMsg);
+				line.compileType = LineCompileType.Error;
+				continue;
+			}
+
 			switch (match[0][0]) {
 				case "@":
 					result += text.substring(start, match.index!) + "@" + values[index].bin;
@@ -79,9 +87,13 @@ export class Message {
 			}
 			start = match.index! + match[0].length;
 		}
+		
+		if (line.compileType === LineCompileType.Error)
+			return;
+
 		result += text.substring(start);
 		let filePath = Compiler.enviroment.GetFile(line.command.fileHash);
-		let message = Localization.GetMessage("out put message File{0}, Line{1}, Message{2}", filePath, line.command.line + 1 , result);
+		let message = Localization.GetMessage("out put message File{0}, Line{1}, Message{2}", filePath, line.command.line + 1, result);
 		FileUtils.ShowMessage?.(message);
 	}
 }

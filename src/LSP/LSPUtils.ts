@@ -50,7 +50,7 @@ export class LSPUtils {
 			array.splice(4, 0, " ");
 			temp2 = array.join("");
 			result.bin = " " + temp2 + result.bin;
-			temp >>= 8;
+			temp >>>= 8;
 		} while (temp !== 0)
 		result.bin = result.bin.substring(1);
 		result.dec = value.toString();

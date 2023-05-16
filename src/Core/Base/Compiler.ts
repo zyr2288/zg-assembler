@@ -354,7 +354,7 @@ export class Compiler {
 		while (length--) {
 			line.result[index] = value & 0xFF;
 			setResult |= line.result[index] << offset;
-			value >>= 8;
+			value >>>= 8;
 			offset += 8;
 			index++;
 		}

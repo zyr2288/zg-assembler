@@ -99,9 +99,9 @@ export class Utils {
 	static GetNumberByteLength(value: number) {
 		let length = 0;
 		do {
-			value >>= 8;
+			value >>>= 8;
 			length++;
-		} while (value != 0)
+		} while (value !== 0)
 		return length;
 	}
 	//#endregion 获取数字占用字节数
@@ -159,7 +159,7 @@ export class Utils {
 			array.splice(4, 0, " ");
 			temp2 = array.join("");
 			result.bin = " " + temp2 + result.bin;
-			temp >>= 8;
+			temp >>>= 8;
 		} while (temp != 0)
 		result.bin = result.bin.substring(1);
 		result.dec = value.toString();
