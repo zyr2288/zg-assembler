@@ -321,8 +321,8 @@ export class IntellisenseProvider {
 		if (!parts[1]) {
 			datagroup.labelHashAndIndex.forEach((value) => {
 				let com = new Completion({
-					showText: value.name,
-					insertText: value.name
+					showText: value.token.text,
+					insertText: value.token.text
 				});
 				result.push(com);
 			});

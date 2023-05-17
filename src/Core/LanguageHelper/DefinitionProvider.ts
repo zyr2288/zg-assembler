@@ -2,7 +2,6 @@ import { Compiler } from "../Base/Compiler";
 import { FileUtils } from "../Base/FileUtils";
 import { LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
-import { Utils } from "../Base/Utils";
 import { IMacro } from "../Commands/Macro";
 import { HelperUtils } from "./HelperUtils";
 

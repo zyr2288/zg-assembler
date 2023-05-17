@@ -218,8 +218,11 @@ export class LabelUtils {
 				}
 			}
 
-			let value = datagroup.FindData(part[1].text, index);
-			let label: ILabel = { token: word, labelType: LabelType.Variable, value };
+			let data = datagroup.FindData(part[1].text, index);
+			if (!data)
+				return;
+
+			let label: ILabel = { token: data.token, labelType: LabelType.Variable, value: data.index };
 			return label;
 		}
 

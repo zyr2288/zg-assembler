@@ -91,7 +91,7 @@ export class Environment {
 		let labels = this.fileLabels.get(fileHash);
 		if (labels) {
 			labels.forEach((value) => {
-				this.ClearLabelTree(value);
+				this.ClearLabelTree(value, true);
 			});
 			this.fileLabels.set(fileHash, new Set());
 		}
@@ -109,7 +109,7 @@ export class Environment {
 		this.highlightRanges.delete(fileHash);
 	}
 
-	private ClearLabelTree(labelTreeHash: number) {
+	private ClearLabelTree(labelTreeHash: number, notDeep: boolean) {
 		let labelTree = this.labelTrees.get(labelTreeHash);
 		if (!labelTree || labelTreeHash === 0)
 			return;
@@ -120,14 +120,12 @@ export class Environment {
 			this.labelTrees.get(labelTree.parent)?.child.delete(labelTreeHash);
 			let label = this.allLabel.get(labelTree.parent);
 			if (label && label.labelType === LabelType.None)
-				this.ClearLabelTree(labelTree.parent);
+				this.ClearLabelTree(labelTree.parent, false);
+		} else if (notDeep) {
+			let label = this.allLabel.get(labelTreeHash)!;
+			if (label)
+				label.labelType = LabelType.None;
 		}
-		// else {
-			// let label = this.allLabel.get(labelTreeHash)!;
-			// if (label)
-			// 	label.labelType = LabelType.None;
-		// }
-
 	}
 	//#endregion 清除文件内的所有标记
 

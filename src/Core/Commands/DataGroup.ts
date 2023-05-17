@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionResult, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
+import { ExpressionPart, ExpressionResult, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
 import { ILabel, LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption, IncludeLine } from "../Base/Options";
@@ -13,24 +13,30 @@ import { Commands } from "./Commands";
 export class DataGroup {
 
 	label!: ILabel;
-	labelHashAndIndex: Map<number, { name: string, index: number[] }> = new Map();
+	labelHashAndIndex: Map<number, { token: Token, index: number[] }> = new Map();
 
 	PushData(token: Token, index: number) {
 		let hash = Utils.GetHashcode(token.text);
-		let labelSet = this.labelHashAndIndex.get(hash) ?? { name: token.text, index: [] };
+		let labelSet = this.labelHashAndIndex.get(hash) ?? { token, index: [] };
 		if (!labelSet.index.includes(index))
 			labelSet.index.push(index);
 
 		this.labelHashAndIndex.set(hash, labelSet);
 	}
 
+	/**
+	 * 查找数据
+	 * @param text 文本
+	 * @param index 查找的Index
+	 * @returns 
+	 */
 	FindData(text: string, index: number) {
 		let hash = Utils.GetHashcode(text);
 		let labelSet = this.labelHashAndIndex.get(hash);
 		if (!labelSet)
 			return;
 
-		return labelSet.index[index];
+		return { token: labelSet.token, index: labelSet.index[index] };
 	}
 }
 
@@ -98,6 +104,7 @@ export class DataGroupCommand {
 				let temp2 = ExpressionUtils.SplitAndSort(p);
 				if (temp2) {
 					line.expParts.push(temp2);
+					DataGroupCommand.AddExpressionPart(datagroup, temp2, j);
 				} else {
 					line.expParts.push([]);
 					line.compileType = LineCompileType.Error;
@@ -110,18 +117,11 @@ export class DataGroupCommand {
 
 	private static ThirdAnalyse_DataGroup(option: DecodeOption) {
 		const line = option.allLines[option.lineIndex] as CommandLine;
-		const datagroup: DataGroup = line.tag;
 		for (let i = 0; i < line.expParts.length; ++i) {
 			let temp = ExpressionUtils.CheckLabelsAndShowError(line.expParts[i]);
-			if (temp) {
+			if (temp)
 				line.compileType = LineCompileType.Error;
-			} else {
-				for (let j = 0; j < line.expParts[i].length; ++j) {
-					const part = line.expParts[i][j];
-					if (part.type === PriorityType.Level_1_Label)
-						datagroup.PushData(part.token, i);
-				}
-			}
+			
 		}
 	}
 
@@ -170,6 +170,10 @@ export class DataGroupCommand {
 		// Compiler.AddAddress(line);
 	}
 
+	private static AddExpressionPart(datagroup: DataGroup, parts: ExpressionPart[], index: number) {
+		for (let i = 0; i < parts.length; i++)
+			datagroup.PushData(parts[i].token, index);
 
+	}
 
 }
