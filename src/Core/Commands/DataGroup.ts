@@ -92,6 +92,7 @@ export class DataGroupCommand {
 		let datagroup = new DataGroup();
 		Compiler.enviroment.allDataGroup.set(hash, datagroup);
 
+		let dataIndex = 0;
 		for (let i = 0; i < lines.length; i++) {
 			const tempLine = lines[i];
 			let temp = tempLine.orgText.Split(/\,/g);
@@ -99,12 +100,12 @@ export class DataGroupCommand {
 			if (temp[temp.length - 1].isEmpty)
 				temp.splice(temp.length - 1, 1);
 
-			for (let j = 0; j < temp.length; j++) {
+			for (let j = 0; j < temp.length; j++, dataIndex++) {
 				const p = temp[j];
 				let temp2 = ExpressionUtils.SplitAndSort(p);
 				if (temp2) {
 					line.expParts.push(temp2);
-					DataGroupCommand.AddExpressionPart(datagroup, temp2, j);
+					DataGroupCommand.AddExpressionPart(datagroup, temp2, dataIndex);
 				} else {
 					line.expParts.push([]);
 					line.compileType = LineCompileType.Error;
