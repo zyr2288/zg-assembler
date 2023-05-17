@@ -62,7 +62,6 @@ export class LSPUtils {
 
 	//#region 结果值输出
 	static async OutputResult(result: Int16Array, option: { toFile?: string, patchFile?: string, toClipboard?: boolean }) {
-
 		if (option.toFile) {
 			if (!vscode.workspace.workspaceFolders)
 				return;
@@ -73,7 +72,7 @@ export class LSPUtils {
 				buffer[i] = result[i] < 0 ? 0 : result[i];
 
 			let filePath = this.assembler.fileUtils.Combine(vscode.workspace.workspaceFolders[0].uri.fsPath, option.toFile);
-			this.assembler.fileUtils.SaveFile(filePath, buffer);
+			await this.assembler.fileUtils.SaveFile(filePath, buffer);
 		}
 
 		if (option.toClipboard) {

@@ -50,8 +50,8 @@ export class AssCommands {
 		}
 
 		let showText = LSPUtils.assembler.diagnostic.hasError ?
-		` $(alert) ${LSPUtils.assembler.localization.GetMessage("compile error")}` :
-		` $(check) ${LSPUtils.assembler.localization.GetMessage("compile finished")}`;
+			` $(alert) ${LSPUtils.assembler.localization.GetMessage("compile error")}` :
+			` $(check) ${LSPUtils.assembler.localization.GetMessage("compile finished")}`;
 		LSPUtils.StatueBarShowText(showText, 3000);
 	}
 
@@ -60,16 +60,22 @@ export class AssCommands {
 		if (!vscode.workspace.workspaceFolders)
 			return;
 
-		vscode.workspace.saveAll(false);
-
-		LSPUtils.StatueBarShowText(` $(sync~spin) ${LSPUtils.assembler.localization.GetMessage("compiling")}...`, 0);
-
 		await ConfigUtils.ReadConfig();
 
 		let filePath = LSPUtils.assembler.fileUtils.Combine(
 			vscode.workspace.workspaceFolders[0].uri.fsPath,
 			LSPUtils.assembler.config.ProjectSetting.entry
 		);
+
+		if (await LSPUtils.assembler.fileUtils.PathType(filePath) === "none") {
+			let errorMsg = LSPUtils.assembler.localization.GetMessage("File {0} is not exist", filePath);
+			vscode.window.showErrorMessage(errorMsg);
+			return;
+		}
+
+		vscode.workspace.saveAll(false);
+
+		LSPUtils.StatueBarShowText(` $(sync~spin) ${LSPUtils.assembler.localization.GetMessage("compiling")}...`, 0);
 
 		let data = await LSPUtils.assembler.fileUtils.ReadFile(filePath);
 		let text = LSPUtils.assembler.fileUtils.BytesToString(data);
