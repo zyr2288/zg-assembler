@@ -1,4 +1,4 @@
-import { IMacro } from "../Commands/Macro";
+import { Macro } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
 import { InstructionLine } from "../Lines/InstructionLine";
@@ -146,7 +146,7 @@ export class LabelUtils {
 	 * @param option 选项
 	 * @returns 是否找到标签
 	 */
-	static FindLabel(word?: Token, macro?: IMacro): ILabel | undefined {
+	static FindLabel(word?: Token, macro?: Macro): ILabel | undefined {
 		if (!word || word.isEmpty)
 			return;
 
@@ -233,7 +233,7 @@ export class LabelUtils {
 	//#endregion 查找标签
 
 	//#region 通过 labelHash 获取 label
-	static GetLabelWithHash(labelHash?: number, macro?: IMacro) {
+	static GetLabelWithHash(labelHash?: number, macro?: Macro) {
 		if (!labelHash)
 			return;
 

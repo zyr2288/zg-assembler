@@ -3,7 +3,7 @@ import { ExpressionUtils } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
 import { LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
-import { IMacro } from "../Commands/Macro";
+import { Macro } from "../Commands/Macro";
 import { HelperUtils } from "./HelperUtils";
 
 export class HoverProvider {
@@ -26,7 +26,7 @@ export class HoverProvider {
 		}
 
 		let range = HelperUtils.GetRange(fileHash, lineNumber);
-		let macro: IMacro | undefined;
+		let macro: Macro | undefined;
 		if (range?.type === "Macro")
 			macro = Compiler.enviroment.allMacro.get(range.key);
 

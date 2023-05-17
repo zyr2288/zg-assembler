@@ -1,13 +1,13 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionUtils } from "../Base/ExpressionUtils";
-import { LabelType, LabelUtils } from "../Base/Label";
+import { LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption, IncludeLine } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
-import { HighlightToken, HighlightType, LineCompileType, LineType } from "../Lines/CommonLine";
+import { LineCompileType, LineType } from "../Lines/CommonLine";
 import { BaseAndOrg } from "./BaseAndOrg";
 import { Data } from "./Data";
 import { DataGroupCommand } from "./DataGroup";
@@ -15,7 +15,7 @@ import { Defined } from "./Defined";
 import { Hexadecimal } from "./Hexadecimal";
 import { IfCondition } from "./IfCondition";
 import { Include } from "./Include";
-import { IMacro, MacroCommand } from "./Macro";
+import { MacroCommand } from "./Macro";
 import { Message } from "./Message";
 import { Repeat } from "./Repeat";
 

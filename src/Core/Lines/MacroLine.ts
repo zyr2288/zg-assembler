@@ -1,6 +1,6 @@
 import { ExpressionPart } from "../Base/ExpressionUtils";
 import { Token } from "../Base/Token";
-import { IMacro } from "../Commands/Macro";
+import { Macro } from "../Commands/Macro";
 import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
 export class MacroLine implements ICommonLine {
@@ -11,7 +11,7 @@ export class MacroLine implements ICommonLine {
 	labelToken?: Token;
 	orgAddress: number = -1;
 	baseAddress: number = 0;
-	macro!: IMacro;
+	macro!: Macro;
 	macroToken!: Token;
 	expParts: ExpressionPart[][] = [];
 	result: number[] = [];

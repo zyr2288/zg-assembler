@@ -5,7 +5,7 @@ import { ILabel, LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Commands } from "../Commands/Commands";
-import { IMacro } from "../Commands/Macro";
+import { Macro } from "../Commands/Macro";
 import { AsmCommon } from "../Platform/AsmCommon";
 import { HelperUtils } from "./HelperUtils";
 
@@ -71,7 +71,7 @@ export class Completion {
 }
 //#endregion 提示项
 
-interface HightlightRange {
+interface HighlightRange {
 	type: "DataGroup" | "Macro";
 	key: string;
 	start: number;
@@ -116,7 +116,7 @@ export class IntellisenseProvider {
 			return [];
 
 		let rangeType = HelperUtils.GetRange(fileHash, lineNumber);
-		let macro: IMacro | undefined;
+		let macro: Macro | undefined;
 		switch (rangeType?.type) {
 			case "DataGroup":
 				if (trigger === " ")
@@ -165,7 +165,7 @@ export class IntellisenseProvider {
 	 * 获取空行帮助
 	 * @param trigger 触发字符串
 	 */
-	private static GetEmptyLineHelper(option: { fileHash: number, range?: HightlightRange, trigger?: string, macro?: IMacro }): Completion[] {
+	private static GetEmptyLineHelper(option: { fileHash: number, range?: HighlightRange, trigger?: string, macro?: Macro }): Completion[] {
 		switch (option.trigger) {
 			case " ":
 			case ":":
@@ -250,7 +250,7 @@ export class IntellisenseProvider {
 	 * @param macro 自定义函数
 	 * @returns 
 	 */
-	private static GetLabel(fileHash: number, prefix: string, macro?: IMacro): Completion[] {
+	private static GetLabel(fileHash: number, prefix: string, macro?: Macro): Completion[] {
 		let result: Completion[] = [];
 		if (macro) {
 

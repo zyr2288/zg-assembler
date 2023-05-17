@@ -2,7 +2,7 @@ import { Compiler } from "../Base/Compiler";
 import { FileUtils } from "../Base/FileUtils";
 import { LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
-import { IMacro } from "../Commands/Macro";
+import { Macro } from "../Commands/Macro";
 import { HelperUtils } from "./HelperUtils";
 
 export class DefinitionProvider {
@@ -36,7 +36,7 @@ export class DefinitionProvider {
 		}
 
 		let rangeType = HelperUtils.GetRange(fileHash, lineNumber);
-		let macro: IMacro | undefined;
+		let macro: Macro | undefined;
 
 		if (rangeType?.type === "Macro")
 			macro = Compiler.enviroment.allMacro.get(rangeType.key);

@@ -4,7 +4,7 @@ import { LabelType, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { CommandLine } from "../Lines/CommandLine";
-import { HighlightToken, HighlightType, LineCompileType } from "../Lines/CommonLine";
+import { HighlightToken, LineCompileType } from "../Lines/CommonLine";
 import { Commands } from "./Commands";
 
 export class Defined {

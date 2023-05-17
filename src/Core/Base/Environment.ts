@@ -1,6 +1,6 @@
 import { DataGroup } from "../Commands/DataGroup";
-import { IMacro } from "../Commands/Macro";
-import { HightlightRange as HighlightRange, ICommonLine } from "../Lines/CommonLine";
+import { Macro } from "../Commands/Macro";
+import { HighlightRange, ICommonLine } from "../Lines/CommonLine";
 import { FileUtils } from "./FileUtils";
 import { ILabel, ILabelTree, INamelessLabelCollection, LabelType } from "./Label";
 
@@ -17,7 +17,7 @@ export class Environment {
 
 	/**所有标签 Key: Label的Hash值 */
 	allLabel = new Map<number, ILabel>();
-	allMacro = new Map<string, IMacro>();
+	allMacro = new Map<string, Macro>();
 	/**所有数据组 Key: Label的Hash值 */
 	allDataGroup = new Map<number, DataGroup>();
 

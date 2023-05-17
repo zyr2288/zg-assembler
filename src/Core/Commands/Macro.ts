@@ -17,13 +17,13 @@ export interface IMacroLine extends ICommonLine {
 	orgAddress: number;
 	baseAddress: number;
 	label?: ILabel;
-	macro: IMacro;
+	macro: Macro;
 	macroToken: Token;
 	expParts: ExpressionPart[][];
 	result: number[];
 }
 
-export class IMacro {
+export class Macro {
 	name!: Token;
 
 	params = new Map<number, ILabel>();
@@ -93,7 +93,7 @@ export class MacroUtils {
 			return;
 		}
 
-		let macro = new IMacro();
+		let macro = new Macro();
 		macro.name = name;
 		if (params.length !== 0) {
 			for (let i = 0; i < params.length; ++i) {
@@ -139,7 +139,7 @@ export class MacroUtils {
 			delete (line.labelToken);		// 删除，不再编译
 		}
 
-		let macro: IMacro = Utils.DeepClone(line.macro);
+		let macro: Macro = Utils.DeepClone(line.macro);
 		for (let i = 0; i < line.expParts.length; ++i) {
 			let result = ExpressionUtils.GetExpressionValue(line.expParts[i], ExpressionResult.GetResultAndShowError, option);
 			if (result.success) {
@@ -206,7 +206,7 @@ export class MacroCommand {
 
 	private static async SecondAnalyse_Macro(option: DecodeOption) {
 		const line = option.allLines[option.lineIndex] as CommandLine;
-		let macro: IMacro = line.tag;
+		let macro: Macro = line.tag;
 		let tempOption = new DecodeOption(macro.lines);
 		tempOption.macro = macro;
 		await Compiler.SecondAnalyse(tempOption);
@@ -214,14 +214,14 @@ export class MacroCommand {
 
 	private static async ThirdAnalyse(option: DecodeOption) {
 		const line = option.allLines[option.lineIndex] as CommandLine;
-		let macro: IMacro = line.tag;
+		let macro: Macro = line.tag;
 		let tempOption = new DecodeOption(macro.lines);
 		tempOption.macro = macro;
 		await Compiler.ThirdAnalyse(tempOption);
 	}
 
 	private static GetToken(this: CommandLine) {
-		let macro: IMacro = this.tag;
+		let macro: Macro = this.tag;
 		let result: HighlightToken[] = [];
 
 		for (let i = 0; i < macro.lines.length; ++i) {
