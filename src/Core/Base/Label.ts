@@ -80,7 +80,7 @@ export class LabelUtils {
 	 * 创建标签
 	 * @param token 标签Token
 	 * @param option 编译选项
-	 * @returns 
+	 * @returns 返回创建的label和hash
 	 */
 	static CreateLabel(token: Token, option: DecodeOption): { label: ICommonLabel, hash: number } | undefined {
 		if (token.isEmpty)

@@ -319,14 +319,10 @@ export class IntellisenseProvider {
 			return result;
 
 		if (!parts[1]) {
-			datagroup.labelHashAndIndex.forEach((value, key) => {
-				let label = Compiler.enviroment.allLabel.get(key);
-				if (!label)
-					return;
-
+			datagroup.labelHashAndIndex.forEach((value) => {
 				let com = new Completion({
-					showText: label.token.text,
-					insertText: label.token.text
+					showText: value.name,
+					insertText: value.name
 				});
 				result.push(com);
 			});
@@ -335,11 +331,11 @@ export class IntellisenseProvider {
 
 
 		hash = Utils.GetHashcode(parts[1]);
-		let numbers = datagroup.labelHashAndIndex.get(hash);
-		if (!numbers)
+		let members = datagroup.labelHashAndIndex.get(hash);
+		if (!members)
 			return result;
 
-		for (let i = 0; i < numbers.length; ++i) {
+		for (let i = 0; i < members.index.length; ++i) {
 			let com = new Completion({ showText: i.toString() });
 			result.push(com);
 		}

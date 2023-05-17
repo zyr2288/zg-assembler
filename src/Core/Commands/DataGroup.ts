@@ -10,16 +10,16 @@ import { CommandLine } from "../Lines/CommandLine";
 import { LineCompileType } from "../Lines/CommonLine";
 import { Commands } from "./Commands";
 
-export class IDataGroup {
+export class DataGroup {
 
 	label!: ILabel;
-	labelHashAndIndex: Map<number, number[]> = new Map();
+	labelHashAndIndex: Map<number, { name: string, index: number[] }> = new Map();
 
 	PushData(token: Token, index: number) {
 		let hash = Utils.GetHashcode(token.text);
-		let labelSet = this.labelHashAndIndex.get(hash) ?? [];
-		if (!labelSet.includes(index))
-			labelSet.push(index);
+		let labelSet = this.labelHashAndIndex.get(hash) ?? { name: token.text, index: [] };
+		if (!labelSet.index.includes(index))
+			labelSet.index.push(index);
 
 		this.labelHashAndIndex.set(hash, labelSet);
 	}
@@ -30,7 +30,7 @@ export class IDataGroup {
 		if (!labelSet)
 			return;
 
-		return labelSet[index];
+		return labelSet.index[index];
 	}
 }
 
@@ -83,7 +83,7 @@ export class DataGroupCommand {
 		let hash = LabelUtils.GetLebalHash(labelMark.label.token.text, labelMark.label.token.fileHash, scope);
 
 		labelMark.label.labelType = LabelType.Label;
-		let datagroup = new IDataGroup();
+		let datagroup = new DataGroup();
 		Compiler.enviroment.allDataGroup.set(hash, datagroup);
 
 		for (let i = 0; i < lines.length; i++) {
@@ -97,9 +97,9 @@ export class DataGroupCommand {
 				const p = temp[j];
 				let temp2 = ExpressionUtils.SplitAndSort(p);
 				if (temp2) {
-					line.expParts[j] = temp2;
+					line.expParts.push(temp2);
 				} else {
-					line.expParts[j] = [];
+					line.expParts.push([]);
 					line.compileType = LineCompileType.Error;
 				}
 
@@ -110,7 +110,7 @@ export class DataGroupCommand {
 
 	private static ThirdAnalyse_DataGroup(option: DecodeOption) {
 		const line = option.allLines[option.lineIndex] as CommandLine;
-		const datagroup: IDataGroup = line.tag;
+		const datagroup: DataGroup = line.tag;
 		for (let i = 0; i < line.expParts.length; ++i) {
 			let temp = ExpressionUtils.CheckLabelsAndShowError(line.expParts[i]);
 			if (temp) {
@@ -152,6 +152,7 @@ export class DataGroupCommand {
 			const lex = line.expParts[i];
 			let temp = ExpressionUtils.GetExpressionValue(lex, finalCompile, option);
 			if (!temp.success) {
+				line.compileType = LineCompileType.None;
 				break;
 			} else {
 				let byteLength = Utils.GetNumberByteLength(temp.value);
