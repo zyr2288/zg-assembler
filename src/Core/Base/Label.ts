@@ -120,8 +120,11 @@ export class LabelUtils {
 		let hash = LabelUtils.GetLebalHash(token.text, token.fileHash, type);
 		let tempLabel = Compiler.enviroment.allLabel.get(hash);
 		if (tempLabel || Compiler.enviroment.allMacro.has(token.text)) {
-			if (tempLabel?.labelType === LabelType.Variable || tempLabel?.labelType === LabelType.None)
+			if (tempLabel?.labelType === LabelType.Variable || tempLabel?.labelType === LabelType.None) {
+				let fileLabelHashes = LabelUtils.GetFileLabelHash(token.fileHash);
+				fileLabelHashes.add(hash);
 				return { label: tempLabel, hash };
+			}
 
 			let errorMsg = Localization.GetMessage("Label {0} is already defined", token.text);
 			MyDiagnostic.PushException(token, errorMsg);
@@ -342,11 +345,7 @@ export class LabelUtils {
 			text += ".";
 		}
 
-
-		if (!Compiler.enviroment.fileLabels.has(token.fileHash))
-			Compiler.enviroment.fileLabels.set(token.fileHash, new Set());
-
-		let fileLabelSet = Compiler.enviroment.fileLabels.get(token.fileHash)!;
+		let fileLabelSet = LabelUtils.GetFileLabelHash(token.fileHash);
 		let parentHash = 0;
 		if (type === LabelScope.Local)
 			parentHash = Utils.GetHashcode(token.fileHash);
@@ -409,5 +408,19 @@ export class LabelUtils {
 		return result;
 	}
 	//#endregion 分割标签并插入
+
+	//#region 获取文件保存的Labelhash
+	/**
+	 * 获取文件保存的Labelhash
+	 * @param fileHash 文件的Hash
+	 * @returns 文件保存label的set
+	 */
+	private static GetFileLabelHash(fileHash: number) {
+		if (!Compiler.enviroment.fileLabels.has(fileHash))
+			Compiler.enviroment.fileLabels.set(fileHash, new Set());
+
+		return Compiler.enviroment.fileLabels.get(fileHash)!;
+	}
+	//#endregion 获取文件保存的Labelhash
 
 }

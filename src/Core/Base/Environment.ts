@@ -118,12 +118,15 @@ export class Environment {
 			this.allLabel.delete(labelTreeHash);
 			this.allDataGroup.delete(labelTreeHash);
 			this.labelTrees.get(labelTree.parent)?.child.delete(labelTreeHash);
-			this.ClearLabelTree(labelTree.parent);
-		} else {
-			let label = this.allLabel.get(labelTreeHash)!;
-			if (label)
-				label.labelType = LabelType.None;
+			let label = this.allLabel.get(labelTree.parent);
+			if (label && label.labelType === LabelType.None)
+				this.ClearLabelTree(labelTree.parent);
 		}
+		// else {
+			// let label = this.allLabel.get(labelTreeHash)!;
+			// if (label)
+			// 	label.labelType = LabelType.None;
+		// }
 
 	}
 	//#endregion 清除文件内的所有标记
