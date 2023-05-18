@@ -364,7 +364,7 @@ export class LabelUtils {
 		let result: ILabel | undefined;
 
 		for (let index = 0; index < tokens.length; ++index) {
-			if (index != 0)
+			if (index !== 0)
 				text += ".";
 
 			if (tokens[index].isEmpty) {
@@ -375,7 +375,6 @@ export class LabelUtils {
 
 			text += tokens[index].text;
 			labelHash = LabelUtils.GetLebalHash(text, token.fileHash, type);
-			fileLabelSet.add(labelHash);
 
 			// 查找label的trees是否创建
 			let labelTree = Compiler.enviroment.labelTrees.get(labelHash);
@@ -397,6 +396,7 @@ export class LabelUtils {
 				result = { token: tokens[0].Copy(), labelType: LabelType.Defined };
 				result.token.text = text;
 				Compiler.enviroment.allLabel.set(labelHash, result);
+				fileLabelSet.add(labelHash);
 			} else if (!Compiler.enviroment.allLabel.has(labelHash)) {
 				result = { token: tokens[0].Copy(), labelType: LabelType.None };
 				result.token.text = text;

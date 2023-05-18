@@ -28,7 +28,7 @@ export class Environment {
 	/**临时标签 Key: 文件的fileHash */
 	namelessLabel = new Map<number, INamelessLabelCollection>();
 
-	/**标签树，key为 Label的Key，用于记忆标签层集关系 */
+	/**标签树，key为 Label的Key，用于记忆标签层级关系 */
 	labelTrees = new Map<number, ILabelTree>();
 
 	/**文件标签，用于记忆文件内的所有标签 */
@@ -90,8 +90,8 @@ export class Environment {
 		this.namelessLabel.delete(fileHash);
 		let labels = this.fileLabels.get(fileHash);
 		if (labels) {
-			labels.forEach((value) => {
-				this.ClearLabelTree(value, true);
+			labels.forEach((labelHash) => {
+				this.ClearLabelTree(fileHash, labelHash);
 			});
 			this.fileLabels.set(fileHash, new Set());
 		}
@@ -109,7 +109,7 @@ export class Environment {
 		this.highlightRanges.delete(fileHash);
 	}
 
-	private ClearLabelTree(labelTreeHash: number, notDeep: boolean) {
+	private ClearLabelTree(fileHash: number, labelTreeHash: number) {
 		let labelTree = this.labelTrees.get(labelTreeHash);
 		if (!labelTree || labelTreeHash === 0)
 			return;
@@ -118,12 +118,12 @@ export class Environment {
 			this.allLabel.delete(labelTreeHash);
 			this.allDataGroup.delete(labelTreeHash);
 			this.labelTrees.get(labelTree.parent)?.child.delete(labelTreeHash);
-			let label = this.allLabel.get(labelTree.parent);
-			if (label && label.labelType === LabelType.None)
-				this.ClearLabelTree(labelTree.parent, false);
-		} else if (notDeep) {
+			let parentLabel = this.allLabel.get(labelTree.parent);
+			if (parentLabel && parentLabel.token.fileHash === fileHash)
+				this.ClearLabelTree(fileHash, labelTree.parent);
+		} else {
 			let label = this.allLabel.get(labelTreeHash)!;
-			if (label)
+			if (label && label.token.fileHash === fileHash)
 				label.labelType = LabelType.None;
 		}
 	}
