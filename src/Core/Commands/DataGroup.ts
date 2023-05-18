@@ -122,7 +122,7 @@ export class DataGroupCommand {
 			let temp = ExpressionUtils.CheckLabelsAndShowError(line.expParts[i]);
 			if (temp)
 				line.compileType = LineCompileType.Error;
-			
+
 		}
 	}
 
@@ -172,9 +172,11 @@ export class DataGroupCommand {
 	}
 
 	private static AddExpressionPart(datagroup: DataGroup, parts: ExpressionPart[], index: number) {
-		for (let i = 0; i < parts.length; i++)
+		for (let i = 0; i < parts.length; i++) {
+			if (parts[i].type !== PriorityType.Level_1_Label)
+				continue;
+
 			datagroup.PushData(parts[i].token, index);
-
+		}
 	}
-
 }
