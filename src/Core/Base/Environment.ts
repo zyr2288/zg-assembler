@@ -132,7 +132,8 @@ export class Environment {
 	//#region 清除所有标记
 	ClearAll() {
 		this.orgAddress = -1;
-		this.baseAddress = 0;
+		this.baseAddress = -1;
+		this.fileRange.start = this.fileRange.end = -1;
 		this.addressOffset = 0;
 		this.allLabel.clear();
 		this.allMacro.clear();
