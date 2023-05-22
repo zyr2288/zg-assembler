@@ -368,8 +368,12 @@ export class ExpressionUtils {
 		let result: HighlightToken[] = [];
 		for (let i = 0; i < parts.length; ++i) {
 			for (let j = 0; j < parts[i].length; ++j) {
-				if (parts[i][j].type === PriorityType.Level_1_Label)
-					result.push({ token: parts[i][j].token, type: parts[i][j].highlightingType });
+				const part = parts[i][j];
+				switch (part.type) {
+					case PriorityType.Level_1_Label:
+						result.push({ token: part.token, type: part.highlightingType });
+						break;
+				}
 			}
 		}
 
