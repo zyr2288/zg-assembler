@@ -7,6 +7,9 @@ export class ResultUtils {
 
 	/**获取所有行的结果 */
 	static GetResult(allLines: ICommonLine[]) {
+		if (Compiler.enviroment.fileRange.end < 0)
+			return;
+
 		let result: Int16Array = new Int16Array(Compiler.enviroment.fileRange.end);
 		result.fill(-1);
 		for (let i = 0; i < allLines.length; ++i) {

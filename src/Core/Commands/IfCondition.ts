@@ -7,7 +7,9 @@ import { LineCompileType } from "../Lines/CommonLine";
 import { Commands } from "./Commands";
 
 interface ConfidentLine {
-	index: number;
+	/**与第一行相差多少 */
+	offsetFirstLine: number;
+	/**该行判断结果 */
 	confident: boolean;
 }
 
@@ -44,9 +46,10 @@ export class IfCondition {
 		let index = 0;
 		let commands = [".ELSEIF", ".ELSE", ".ENDIF"];
 
-		let tag: ConfidentLine[] = [{ index: result[0].index, confident: false }];
+		let tag: ConfidentLine[] = [{ offsetFirstLine: 0, confident: false }];
 		IfCondition.SplitExpression(line);
 
+		let startLindeIndex = result[0].index;
 		for (let i = 1; i < result.length; i++) {
 			let lineIndex = result[i].index;
 			const tempLine = option.GetLine<CommandLine>(lineIndex);
@@ -62,7 +65,7 @@ export class IfCondition {
 					index = 2;
 					break;
 			}
-			tag.push({ index: lineIndex, confident: false });
+			tag.push({ offsetFirstLine: lineIndex - startLindeIndex, confident: false });
 			option.GetLine(lineIndex).compileType = LineCompileType.Finished;
 		}
 
@@ -72,8 +75,9 @@ export class IfCondition {
 	private static ThirdAnalyse_If(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
 		let tag: ConfidentLine[] = line.tag;
+		let currectLineIndex = option.allLines.indexOf(line);
 		for (let i = 0; i < tag.length - 1; ++i) {
-			const tempLine = option.allLines[tag[i].index] as CommandLine;
+			const tempLine = option.GetLine<CommandLine>(currectLineIndex + tag[i].offsetFirstLine);
 			if (tempLine.expParts[0] && ExpressionUtils.CheckLabelsAndShowError(tempLine.expParts[0], option))
 				tempLine.compileType = LineCompileType.Error;
 		}
@@ -83,8 +87,9 @@ export class IfCondition {
 		const line = option.GetCurrectLine<CommandLine>();
 		let tag: ConfidentLine[] = line.tag;
 
+		let startLineIndex = option.allLines.indexOf(line);
 		for (let i = 0; i < tag.length - 1; i++) {
-			const tempLine = option.allLines[tag[i].index] as CommandLine;
+			const tempLine = option.GetLine<CommandLine>(startLineIndex + tag[i].offsetFirstLine);
 			if (tempLine.command.text === ".ELSE") {
 				tag[i].confident = true;
 				break;
@@ -97,7 +102,7 @@ export class IfCondition {
 			}
 		}
 
-		IfCondition.RemoveBaseLines(option, tag);
+		IfCondition.RemoveBaseLines(option, startLineIndex, tag);
 	}
 	//#endregion IF命令
 
@@ -108,8 +113,10 @@ export class IfCondition {
 		let index = 0;
 		let commands = [".ELSE", ".ENDIF"];
 
-		let tag: ConfidentLine[] = [{ index: result[0].index, confident: false }];
+		let tag: ConfidentLine[] = [{ offsetFirstLine: 0, confident: false }];
+		let startLindeIndex = result[0].index;
 		for (let i = 1; i < result.length; ++i) {
+			let lineIndex = result[i].index;
 			const tempLine = option.GetLine<CommandLine>(result[i].index);
 			let temp = commands.indexOf(tempLine.command.text);
 			if (temp < index)
@@ -119,7 +126,8 @@ export class IfCondition {
 				index = 1;
 
 			tempLine.compileType = LineCompileType.Finished;
-			tag.push({ index: result[i].index, confident: false });
+			tag.push({ offsetFirstLine: lineIndex - startLindeIndex, confident: false });
+			startLindeIndex = lineIndex;
 		}
 
 		line.tag = tag;
@@ -137,8 +145,9 @@ export class IfCondition {
 		const line = option.GetCurrectLine<CommandLine>();
 		let tag: ConfidentLine[] = line.tag;
 
+		let startLine = option.allLines.indexOf(line);
 		for (let i = 0; i < tag.length - 1; ++i) {
-			const tempLine = option.GetLine<CommandLine>(tag[i].index);
+			const tempLine = option.GetLine<CommandLine>(startLine + tag[i].offsetFirstLine);
 			if (line.command.text === ".ELSE") {
 				tag[i].confident = true;
 				break;
@@ -150,30 +159,32 @@ export class IfCondition {
 			}
 		}
 
-		IfCondition.RemoveBaseLines(option, tag);
+		IfCondition.RemoveBaseLines(option, startLine, tag);
 		return;
 	}
 	//#endregion IFDEF IFNDEF 命令
 
-	//#region 移除行
+	//#region 标记该行已处理完毕
 	/**
-	 * 移除行
+	 * 标记该行已处理完毕
 	 * @param option 
 	 * @param lines 
 	 */
-	private static RemoveBaseLines(option: DecodeOption, lines: ConfidentLine[]) {
-		option.allLines.splice(lines[lines.length - 1].index, 1);
+	private static RemoveBaseLines(option: DecodeOption, startLineIndex:number, lines: ConfidentLine[]) {
+		option.allLines.splice(startLineIndex + lines[lines.length - 1].offsetFirstLine, 1);
 		for (let i = lines.length - 2; i >= 0; --i) {
 			const line = lines[i];
 			if (line.confident) {
-				option.allLines.splice(line.index, 1);
+				option.allLines.splice(startLineIndex + line.offsetFirstLine, 1);
 			} else {
-				option.allLines.splice(line.index, lines[i + 1].index - line.index);
+				let startIndex = startLineIndex + line.offsetFirstLine
+				let length = lines[i + 1].offsetFirstLine - line.offsetFirstLine;
+				option.allLines.splice(startIndex, length);
 			}
 		}
 		option.lineIndex--;
 	}
-	//#endregion 移除行
+	//#endregion 标记该行已处理完毕
 
 	//#region 分析行表达式
 	private static SplitExpression(line: CommandLine) {

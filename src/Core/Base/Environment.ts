@@ -13,7 +13,7 @@ export class Environment {
 	baseAddress: number = -1;
 	addressOffset: number = 0;
 
-	fileRange = { start: -1, end: -1 };
+	fileRange = { start: 0, end: 0 };
 
 	/**所有标签 Key: Label的Hash值 */
 	allLabel = new Map<number, ILabel>();
@@ -133,7 +133,7 @@ export class Environment {
 	ClearAll() {
 		this.orgAddress = -1;
 		this.baseAddress = -1;
-		this.fileRange.start = this.fileRange.end = -1;
+		this.fileRange.start = this.fileRange.end = 0;
 		this.addressOffset = 0;
 		this.allLabel.clear();
 		this.allMacro.clear();

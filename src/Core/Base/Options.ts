@@ -52,8 +52,8 @@ export class DecodeOption {
 export type IncludeLine = {
 	/**匹配的字符串 */
 	match: string,
-	/**行的索引 */
+	/**该行在所有行中的索引 */
 	index: number,
-	/**行所在行号 */
-	line: number
+	/**该行所在文件内的行号 */
+	line:number
 };
