@@ -66,6 +66,7 @@ export class ExpressionUtils {
 		ExpressionUtils.onlyOnePriority.set("(", PriorityType.Level_4_Brackets);
 		ExpressionUtils.onlyOnePriority.set(")", PriorityType.Level_4_Brackets);
 		ExpressionUtils.onlyOnePriority.set("*", PriorityType.Level_6);
+		ExpressionUtils.onlyOnePriority.set("$", PriorityType.Level_6);
 		ExpressionUtils.onlyOnePriority.set("/", PriorityType.Level_6);
 		ExpressionUtils.onlyOnePriority.set("%", PriorityType.Level_6);
 		ExpressionUtils.onlyOnePriority.set("+", PriorityType.Level_7);
@@ -194,6 +195,12 @@ export class ExpressionUtils {
 
 				if (element.token.text === "*" && Compiler.enviroment.orgAddress >= 0) {
 					element.value = Compiler.enviroment.orgAddress;
+					element.type = PriorityType.Level_0_Sure;
+					continue;
+				}
+
+				if (element.token.text === "$" && Compiler.enviroment.baseAddress >= 0) {
+					element.value = Compiler.enviroment.baseAddress;
 					element.type = PriorityType.Level_0_Sure;
 					continue;
 				}
@@ -413,7 +420,7 @@ export class ExpressionUtils {
 			return result;
 		}
 
-		let regex = /((?<!\\)")|\(|\)|\!=|==|\>\>|\>=|\<\<|\<=|\>|\<|=|\+|\-|\*|\/|%|&&|&|\|\||\||\^/g;
+		let regex = /((?<!\\)")|\(|\)|\!=|==|\>\>|\>=|\<\<|\<=|\>|\<|=|\+|\-|\*|\/|%|&&|&|\|\||\||\^|\$(?![0-9a-fA-F])/g;
 
 		let tokens = expression.Split(regex, { saveToken: true });
 		let isLabel = true;
@@ -482,6 +489,7 @@ export class ExpressionUtils {
 					isLabel = true;
 					break;
 				case "*":
+				case "$":
 					if (!isLabel) {
 						isLabel = true;
 						part.type = ExpressionUtils.onlyOnePriority.get(part.token.text)!;

@@ -10,7 +10,7 @@ export class Environment {
 	compiling: boolean = false;
 
 	orgAddress: number = -1;
-	baseAddress: number = 0;
+	baseAddress: number = -1;
 	addressOffset: number = 0;
 
 	fileRange = { start: -1, end: -1 };

@@ -47,6 +47,9 @@ export class BaseAndOrg {
 		line.compileType = LineCompileType.Finished;
 		let temp2 = Compiler.enviroment.orgAddress;
 		Compiler.enviroment.orgAddress = temp.value;
+		if (Compiler.enviroment.baseAddress < 0)
+			Compiler.enviroment.baseAddress = 0;
+
 		if (temp2 >= 0) {
 			Compiler.enviroment.baseAddress = Compiler.enviroment.orgAddress + Compiler.enviroment.addressOffset;
 		} else {

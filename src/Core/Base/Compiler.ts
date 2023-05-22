@@ -414,8 +414,10 @@ export class Compiler {
 		Compiler.enviroment.baseAddress += line.result.length;
 		Compiler.enviroment.orgAddress += line.result.length;
 
-		if (Compiler.enviroment.fileRange.end < Compiler.enviroment.baseAddress)
+		if (Compiler.enviroment.fileRange.end < Compiler.enviroment.baseAddress) {
 			Compiler.enviroment.fileRange.end = Compiler.enviroment.baseAddress;
+			// console.log(Compiler.enviroment.fileRange.end);
+		}
 	}
 	//#endregion 给文件的地址增加偏移
 
