@@ -190,6 +190,8 @@ export class AsmCommon {
 					if (type.addressType[j] === "")
 						continue;
 
+
+
 					const regex = new RegExp(type.addressType[j], "i");
 					let match = regex.exec(text);
 					if (!match) {
@@ -198,7 +200,7 @@ export class AsmCommon {
 					}
 
 					let token = expression.Substring(start, match.index);
-					if (!token.isEmpty) {
+					if (!type.addressType[j].startsWith("^")) {
 						result.exprs.push(token);
 					}
 
