@@ -79,7 +79,9 @@ export class AsmCommon {
 			let regex = /\[exp\]/g;
 			while (match = regex.exec(option.addressingMode)) {
 				temp = option.addressingMode.substring(start, match.index).trim();
-				if (temp) stringMatch.push(Utils.TransformRegex(temp));
+				if (temp)
+					stringMatch.push(Utils.TransformRegex(temp));
+
 				stringMatch.push("");
 				start = match.index + match[0].length;
 			}
@@ -87,7 +89,7 @@ export class AsmCommon {
 			temp = option.addressingMode.substring(start).trim();
 			if (temp) stringMatch.push(Utils.TransformRegex(temp));
 
-			if (stringMatch.length != 1)
+			if (stringMatch.length !== 1)
 				stringMatch[0] = "^" + stringMatch[0];
 
 			stringMatch[stringMatch.length - 1] = stringMatch[stringMatch.length - 1] + "$";
@@ -165,7 +167,6 @@ export class AsmCommon {
 
 			// 重置搜索结果
 			result.exprs = [];
-
 			foundAddressType = false;
 
 			// 表达式为空
@@ -197,8 +198,9 @@ export class AsmCommon {
 					}
 
 					let token = expression.Substring(start, match.index);
-					if (!token.isEmpty)
+					if (!token.isEmpty) {
 						result.exprs.push(token);
+					}
 
 					start += match.index + match[0].length;
 					text = text.substring(start);

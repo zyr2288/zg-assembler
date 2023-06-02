@@ -75,7 +75,7 @@ export class InstructionLineUtils {
 		let temp;
 		if (temp = AsmCommon.MatchAddressingMode(line.instruction, line.expression!)) {
 			line.addressingMode = temp.addressingMode;
-			for (let i = 0; i < temp.exprs.length; ++i) {
+			for (let i = 0; i < temp.exprs.length; i++) {
 				let temp2 = ExpressionUtils.SplitAndSort(temp.exprs[i]);
 				if (temp2) {
 					line.exprParts[i] = temp2;
