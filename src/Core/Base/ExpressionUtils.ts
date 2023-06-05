@@ -283,7 +283,7 @@ export class ExpressionUtils {
 						operation.value = pre1.value << pre2.value;
 						break;
 					case ">>":
-						operation.value = pre1.value >> pre2.value;
+						operation.value = pre1.value >>> pre2.value;
 						break;
 					case "==":
 						operation.value = pre1.value === pre2.value ? 1 : 0;
@@ -292,13 +292,13 @@ export class ExpressionUtils {
 						operation.value = pre1.value !== pre2.value ? 1 : 0;
 						break;
 					case "&":
-						operation.value = pre1.value >> pre2.value;
+						operation.value = pre1.value & pre2.value;
 						break;
 					case "^":
 						operation.value = pre1.value ^ pre2.value;
 						break;
 					case "|":
-						operation.value = pre1.value >> pre2.value;
+						operation.value = pre1.value | pre2.value;
 						break;
 					case "&&":
 						operation.value = pre1.value && pre2.value;
