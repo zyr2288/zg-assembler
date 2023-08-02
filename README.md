@@ -8,6 +8,8 @@
 
 * When the assembly file is opened, a `project-settings.json` file is created in project directory.
 
+* If you want to use core, use `npm run build-core` to build core source.
+
 ```json
 {
     "platform": "6502",            // Target Platform
