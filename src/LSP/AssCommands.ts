@@ -3,6 +3,7 @@ import { ConfigUtils } from "./ConfigUtils";
 import { Intellisense, TriggerSuggestTag } from "./Intellisense";
 import { LSPUtils } from "./LSPUtils";
 import { UpdateFile } from "./UpdateFile";
+import { DebugAdapterFactory } from "./DebugAdapterFactory";
 
 export const CommandName = "zgassembler.triggerSuggest";
 

@@ -15,6 +15,8 @@ export class Config {
 		CompliteThis: "zg-assembly.compliteThis",
 		/**编译主文件 */
 		CompliteMain: "zg-assembly.compliteMain",
+		/**调试文件 */
+		DebugFile: "zg-assembly.debug"
 	}
 
 	/**是项目还是单文件，true为项目 */

@@ -9,6 +9,7 @@ import { Intellisense } from "./Intellisense";
 import { IOImplementation } from "./IOImplementation";
 import { LSPUtils } from "./LSPUtils";
 import { UpdateFile } from "./UpdateFile";
+import { DebugAdapterFactory } from "./DebugAdapterFactory";
 
 export class LanguageServer {
 
@@ -26,7 +27,7 @@ export class LanguageServer {
 
 		const classes = [
 			Highlighting, UpdateFile, DefinitionProvider,
-			Intellisense, HoverProvider, AssCommands
+			Intellisense, HoverProvider, AssCommands, DebugAdapterFactory
 		];
 		for (let i = 0; i < classes.length; ++i) {
 			let temp = Reflect.get(classes[i], "Initialize");
