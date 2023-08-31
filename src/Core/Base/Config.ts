@@ -11,7 +11,7 @@ export class Config {
 		/**Debug类型 */
 		DebugType: "zg-assembly-debug",
 		DebugHost: "127.0.0.1",
-		DebugPort: 141414
+		DebugPort: 14000
 	}
 	static readonly ConfigFile = "project-settings.json";
 	static readonly CommonSplit = "/";

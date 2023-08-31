@@ -3,24 +3,21 @@ import {
 	LoggingDebugSession,
 	InitializedEvent, TerminatedEvent, StoppedEvent, BreakpointEvent, OutputEvent,
 	ProgressStartEvent, ProgressUpdateEvent, ProgressEndEvent, InvalidatedEvent,
-	Thread, StackFrame, Scope, Source, Handles, Breakpoint
+	Thread, StackFrame, Scope, Source, Handles, Breakpoint, Event
 } from "@vscode/debugadapter";
 
 import * as vscode from "vscode";
 import { DebugProtocol } from "@vscode/debugprotocol";
 import { Socket } from "net";
-import { config } from "process";
 import { LSPUtils } from "./LSPUtils";
 import { spawn } from "child_process";
-
-const Port = 141414;
 
 type Commands = "registers";
 
 interface SocketMessage {
 	messageId: number;
 	command: Commands;
-	data: any;
+	data?: number | string;
 }
 
 interface DebugConfig extends vscode.DebugConfiguration {
@@ -95,7 +92,7 @@ export class ZGAssemblerDebugConfigurationProvider implements vscode.DebugConfig
 //#region Debug的Session
 class ZGAssemblerDebugSession extends DebugSession {
 
-	// debugUtils = new DebugUtils();
+	debugUtils = new DebugUtils();
 	config: DebugConfig;
 	context: vscode.ExtensionContext;
 
@@ -133,22 +130,36 @@ class ZGAssemblerDebugSession extends DebugSession {
 			return;
 		}
 
-
-
 		console.log(response);
 		console.log(args);
 		this.sendResponse(response);
 	}
 
-	protected launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments, request?: DebugProtocol.Request | undefined): void {
+	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments, request?: DebugProtocol.Request) {
 		const luaPath = this.context.asAbsolutePath("EmulatorLink/Mesen.lua");
 		const program = spawn(
 			this.config.emuPath,
 			[this.config.romPath, luaPath]
-		)
+		);
+
+		const progressStart = new ZGAssProgressStartEvent("launching", "Connecting to debugger...", undefined, 0);
+		this.sendEvent(progressStart);
+
+		const retryLimit = 5;
+		let retry = 0;
+
+		while (retry++ < retryLimit) {
+			await this.debugUtils.Waiting(2 * 1000);
+			if (this.debugUtils.socketOption.isConnected)
+				break;
+
+			this.debugUtils.OpenConnect(this.config.host, this.config.port);
+		}
+
+		await this.debugUtils.GetRegisters();
 	}
 
-	protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request | undefined): void {
+	protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request): void {
 
 	}
 }
@@ -156,10 +167,10 @@ class ZGAssemblerDebugSession extends DebugSession {
 
 class DebugUtils {
 
-	private socket: Socket
-	private socketOption = {
+	socketOption = {
 		isConnected: false
 	}
+	private socket: Socket
 	private messagePorts: ((response: any) => void)[] = [];
 
 	constructor() {
@@ -189,13 +200,14 @@ class DebugUtils {
 			console.log('ready');
 		});
 
-		this.socket.on("data", (data: Buffer) => {
-			console.log(data);
+		this.socket.on("data", (data: ArrayBuffer) => {
+			let buffer = new Uint8Array(data);
+			let text = LSPUtils.assembler.fileUtils.BytesToString(buffer);
 		});
 	}
 
-	OpenConnect() {
-		this.socket.connect(Port, "127.0.0.1");
+	OpenConnect(host: string, port: number) {
+		this.socket.connect(port, host);
 	}
 
 	async GetRegisters() {
@@ -203,11 +215,17 @@ class DebugUtils {
 		console.log(data);
 	}
 
+	Waiting(millisecond: number): Promise<void> {
+		return new Promise((resolve, reject) => {
+			setTimeout(() => { resolve(); }, millisecond);
+		});
+	}
+
 	private SendMessage(command: Commands, data?: any): Promise<SocketMessage> {
 		const messageId = Math.random();
 		return new Promise((resolve, reject) => {
 			const message = { messageId, command, data };
-			this.socket.write(JSON.stringify(message));
+			this.socket.write(this.ProcessMessage(message));
 			this.messagePorts[messageId] = (response: any) => {
 				resolve(response.data);
 			};
@@ -225,5 +243,24 @@ class DebugUtils {
 
 		this.messagePorts[data.messageId].call(this, data);
 		delete (this.messagePorts[data.messageId]);
+	}
+
+	private ProcessMessage(data: SocketMessage) {
+		return `${data.messageId} ${data.command} ${data.data}\n`
+	}
+}
+
+class ZGAssProgressStartEvent extends Event implements DebugProtocol.ProgressStartEvent {
+	body: {
+		progressId: string;
+		title: string;
+		message?: string;
+		percentage?: number;
+	};
+	constructor(progressId: string, title: string, message?: string, percentage?: number) {
+		super('progressStart');
+		this.body = {
+			progressId, title, message, percentage,
+		};
 	}
 }

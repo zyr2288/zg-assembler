@@ -101,7 +101,7 @@
 					{
 						"name": "ZG-assembly Debugger",
 						"type": "zg-assembly-debug",
-						"request": "attach",
+						"request": "launch",
 						"emuPath": "${workspaceFolder}/path/to/mesen.exe",
 						"romPath": "${workspaceFolder}/game.bin"
 					}
@@ -147,7 +147,6 @@
 		"webpack-cli": "^4.9.2"
 	},
 	"dependencies": {
-		"@vscode/debugadapter": "^1.61.0",
-		"vscode-debugadapter": "^1.51.0"
+		"@vscode/debugadapter": "^1.61.0"
 	}
 }
