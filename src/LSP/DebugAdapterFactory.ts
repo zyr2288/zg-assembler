@@ -12,12 +12,12 @@ import { Socket } from "net";
 import { LSPUtils } from "./LSPUtils";
 import { spawn } from "child_process";
 
-type Commands = "registers";
+type Commands = "registers" | "memory";
 
 interface SocketMessage {
 	messageId: number;
 	command: Commands;
-	data?: number | string;
+	data?: (number | string)[];
 }
 
 interface DebugConfig extends vscode.DebugConfiguration {
@@ -156,11 +156,16 @@ class ZGAssemblerDebugSession extends DebugSession {
 			this.debugUtils.OpenConnect(this.config.host, this.config.port);
 		}
 
+		await this.debugUtils.Waiting(2 * 1000);
 		await this.debugUtils.GetRegisters();
 	}
 
 	protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request): void {
 
+	}
+
+	protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments, request?: DebugProtocol.Request | undefined): void {
+		
 	}
 }
 //#endregion Debug的Session
@@ -177,7 +182,6 @@ class DebugUtils {
 		this.socket = new Socket();
 		this.socket.on("connect", () => {
 			this.socketOption.isConnected = true;
-			console.log("connected");
 		});
 
 		this.socket.on('error', (err: Error) => {
@@ -197,12 +201,16 @@ class DebugUtils {
 		});
 
 		this.socket.on('ready', () => {
-			console.log('ready');
+		
 		});
 
-		this.socket.on("data", (data: ArrayBuffer) => {
-			let buffer = new Uint8Array(data);
+		this.socket.on("data", (buf: ArrayBuffer) => {
+			let buffer = new Uint8Array(buf);
 			let text = LSPUtils.assembler.fileUtils.BytesToString(buffer);
+			const index = text.indexOf(" ");
+			const messageId = parseFloat(text.substring(0, index));
+			const data = JSON.parse(text.substring(index + 1));
+			this.ReceiveMessage({ messageId, data })
 		});
 	}
 
@@ -232,17 +240,16 @@ class DebugUtils {
 		});
 	}
 
-	private ReceiveMessage(message: SocketMessage) {
-		const data: SocketMessage = message;
-		if (data.messageId === undefined) {
+	private ReceiveMessage(message: Omit<SocketMessage, "command">) {
+		if (message.messageId === undefined) {
 			return;
 		}
 
-		if (!this.messagePorts[data.messageId])
+		if (!this.messagePorts[message.messageId])
 			return;
 
-		this.messagePorts[data.messageId].call(this, data);
-		delete (this.messagePorts[data.messageId]);
+		this.messagePorts[message.messageId].call(this, message);
+		delete (this.messagePorts[message.messageId]);
 	}
 
 	private ProcessMessage(data: SocketMessage) {

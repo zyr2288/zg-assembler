@@ -1,9 +1,11 @@
-﻿local socket = require("socket.core");
+local socket = require("socket.core");
 local server = socket.tcp();
 local port = 14000;
 local emuPause = false;
 local connection = nil;
-local test = 0;
+
+local breaks = {};
+
 
 function DoInOneFrame()
 	ReceiveData();
@@ -11,12 +13,11 @@ end
 
 function StringSplit(str, spliter)
 	local result = {};
-	for match in (str..spliter):gmatch("(.-)"..spliter) do
+	for match in (str .. spliter):gmatch("(.-)" .. spliter) do
 		table.insert(result, match);
 	end
 	return result;
 end
-
 
 function ReceiveData()
 	if connection == nil then
@@ -26,19 +27,58 @@ function ReceiveData()
 	if message == nil then
 		return;
 	end
-	local args = StringSplit(message, ' ');		-- arg 1~3，分别是 messageId command data
-	local messageId = args[1];    -- lua很恶心，下标从1开始
+	local args = StringSplit(message, ' ');
+	local messageId = args[1];
 	local responseData = RunCommand(args[2], args[3]);
-	connection:send(messageId.." "..responseData);
-end
-
-function RunCommand(command, data)
-	if command == "registers" then
-		local state = emu.getState();
-		return state.cpu.a..state.cpu.x;
+	if responseData ~= nil then
+		connection:send(messageId .. " " .. responseData);
 	end
 end
 
+function RunCommand(command, data)
+	local args = StringSplit(data, ",");
+	if command == "registers" then
+		local state = emu.getState();
+		return GetTableValues(state.cpu, { "a", "x", "y", "pc", "sp" });
+	elseif command == "memory" then
+		return emu.read(data, emu.memType.cpu);
+	elseif command == "set-break" then
+		SetBreakpoint(args[1], args[2]);
+	end
+end
+
+function GetTableValues(table, keys)
+	local result = "";
+	for i = 1, #keys do
+		local type = type(table[keys[i]]);
+		if type == "number" then
+			result = result .. "\"" .. keys[i] .. "\":" .. table[keys[i]] .. ",";
+		elseif type == "string" then
+			result = result .. "\"" .. keys[i] .. "\":\"" .. table[keys[i]] .. "\",";
+		end
+	end
+	result = string.sub(result, 1, string.len(result) - 1);
+	return "{" .. result .. "}";
+end
+
+function SetBreakpoint(cpuAddress, prgAddress)
+	if breaks[prgAddress] ~= nil then
+		return;
+	end
+
+	breaks[prgAddress] = cpuAddress;
+	emu.addMemoryCallback(MemoryCallback, emu.memCallbackType.cpuExec, cpuAddress);
+end
+
+function MemoryCallback(cpuAddress)
+	local prgAdd = emu.getPrgRomOffset(cpuAddress);
+	if prgAdd == -1 or prgAdd == nil then
+		return;
+	end
+
+	connection:send()
+	emu.breakExecution();
+end
 
 server:settimeout(2);
 server:bind("127.0.0.1", port);
