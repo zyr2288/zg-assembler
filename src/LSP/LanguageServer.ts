@@ -9,13 +9,13 @@ import { Intellisense } from "./Intellisense";
 import { IOImplementation } from "./IOImplementation";
 import { LSPUtils } from "./LSPUtils";
 import { UpdateFile } from "./UpdateFile";
-import { DebugAdapterFactory } from "./DebugAdapterFactory";
+import { ZGAssemblerDebugAdapterFactory } from "./DebugAdapterFactory";
 
 export class LanguageServer {
 
 	private assembler!: Assembler;
 
-	async Initialize() {
+	async Initialize(context: vscode.ExtensionContext) {
 
 		LSPUtils.assembler = this.assembler = new Assembler();
 		LSPUtils.StatueBarShowText(` $(sync~spin) ${LSPUtils.assembler.localization.GetMessage("plugin loading")}...`);
@@ -26,17 +26,27 @@ export class LanguageServer {
 		this.SetLanguage(vscode.env.language);
 
 		const classes = [
-			Highlighting, UpdateFile, DefinitionProvider,
-			Intellisense, HoverProvider, AssCommands, DebugAdapterFactory
+			Highlighting, UpdateFile, DefinitionProvider, Intellisense,
+			HoverProvider, AssCommands, ZGAssemblerDebugAdapterFactory
 		];
-		for (let i = 0; i < classes.length; ++i) {
+		for (let i = 0; i < classes.length; i++) {
 			let temp = Reflect.get(classes[i], "Initialize");
-			await temp();
+			await temp(context);
 		}
+
+		// await Highlighting.Initialize(context);
+		// await UpdateFile.Initialize(context);
+		// await DefinitionProvider.Initialize(context);
+		// await Intellisense.Initialize(context);
+		// HoverProvider.Initialize(context);
+
+		// AssCommands.Initialize(context);
+		// DebugAdapterFactory.Initialize(context);
 
 		UpdateFile.LoadAllFile();
 
-		LSPUtils.StatueBarShowText(` $(check) ${LSPUtils.assembler.localization.GetMessage("plugin loaded")}`, 3000);
+		const msg = LSPUtils.assembler.localization.GetMessage("plugin loaded");
+		LSPUtils.StatueBarShowText(` $(check) ${msg}`, 3000);
 	}
 
 	private SetLanguage(language: string) {

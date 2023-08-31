@@ -2,11 +2,13 @@ import * as vscode from "vscode";
 import { LSPUtils } from "./LSPUtils";
 
 export class HoverProvider {
-	static Initialize() {
-		vscode.languages.registerHoverProvider(
-			LSPUtils.assembler.config.FileExtension,
-			{ provideHover: HoverProvider.Hover }
-		);
+	static Initialize(context: vscode.ExtensionContext) {
+		context.subscriptions.push(
+			vscode.languages.registerHoverProvider(
+				LSPUtils.assembler.config.FileExtension,
+				{ provideHover: HoverProvider.Hover }
+			)
+		)
 	}
 
 	static Hover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
@@ -28,8 +30,8 @@ export class HoverProvider {
 			result.push(new vscode.MarkdownString(`HEX: $${temp2.hex}`));
 			result.push(new vscode.MarkdownString(`DEC: ${temp2.dec}`));
 			result.push(new vscode.MarkdownString(`BIN: @${temp2.bin}`));
-		} 
-	
+		}
+
 		return new vscode.Hover(result);
 	}
 }

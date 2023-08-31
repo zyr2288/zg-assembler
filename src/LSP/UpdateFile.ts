@@ -11,11 +11,12 @@ export class UpdateFile {
 	private static updateFiles = new Map<string, string>();
 	private static errorCollection: vscode.DiagnosticCollection;
 
-	static async Initialize() {
+	static async Initialize(context: vscode.ExtensionContext) {
 		UpdateFile.errorCollection ??= vscode.languages.createDiagnosticCollection(LSPUtils.assembler.config.FileExtension.language);
-
-		vscode.workspace.onDidChangeTextDocument(UpdateFile.ChangeDocument);
-		UpdateFile.WatchFile();
+		context.subscriptions.push(
+			vscode.workspace.onDidChangeTextDocument(UpdateFile.ChangeDocument)
+		)
+		UpdateFile.WatchFile(context);
 	}
 
 	/**载入所有工程文件 */
@@ -122,7 +123,7 @@ export class UpdateFile {
 
 	//#region 监视文件
 	/**监视文件，改动等 */
-	private static WatchFile() {
+	private static WatchFile(context: vscode.ExtensionContext) {
 		if (!vscode.workspace.workspaceFolders)
 			return;
 
@@ -132,9 +133,11 @@ export class UpdateFile {
 		);
 
 		const watcher = vscode.workspace.createFileSystemWatcher(rp, false, false, false);
-		watcher.onDidDelete(UpdateFile.FileDelete);
-		watcher.onDidChange(UpdateFile.FileChange);
-		watcher.onDidCreate(UpdateFile.FileCreate);
+		context.subscriptions.push(
+			watcher.onDidDelete(UpdateFile.FileDelete),
+			watcher.onDidChange(UpdateFile.FileChange),
+			watcher.onDidCreate(UpdateFile.FileCreate)
+		);
 	}
 
 	/**文件删除 */
@@ -144,7 +147,7 @@ export class UpdateFile {
 
 		LSPUtils.assembler.ClearFile(e.fsPath);
 		UpdateFile.errorCollection.delete(e);
-		
+
 	}
 
 	/**文件修改 */

@@ -3,29 +3,33 @@ import { ConfigUtils } from "./ConfigUtils";
 import { Intellisense, TriggerSuggestTag } from "./Intellisense";
 import { LSPUtils } from "./LSPUtils";
 import { UpdateFile } from "./UpdateFile";
-import { DebugAdapterFactory } from "./DebugAdapterFactory";
 
 export const CommandName = "zgassembler.triggerSuggest";
 
 export class AssCommands {
 
-	static Initialize() {
-
+	static Initialize(context: vscode.ExtensionContext) {
 		// 注册智能提示
-		vscode.commands.registerCommand(CommandName, (tag: TriggerSuggestTag) => {
-			Intellisense.suggestData = tag;
-			vscode.commands.executeCommand("editor.action.triggerSuggest");
-		});
+		context.subscriptions.push(
+			vscode.commands.registerCommand(CommandName, (tag: TriggerSuggestTag) => {
+				Intellisense.suggestData = tag;
+				vscode.commands.executeCommand("editor.action.triggerSuggest");
+			}));
 
 		// 编译本文件
-		vscode.commands.registerTextEditorCommand(
-			LSPUtils.assembler.config.ExtensionCommandNames.CompliteThis,
-			AssCommands.CompileThisFile);
+		context.subscriptions.push(
+			vscode.commands.registerTextEditorCommand(
+				LSPUtils.assembler.config.ExtensionCommandNames.CompliteThis,
+				AssCommands.CompileThisFile
+			));
+
 
 		// 编译入口文件
-		vscode.commands.registerTextEditorCommand(
-			LSPUtils.assembler.config.ExtensionCommandNames.CompliteMain,
-			AssCommands.CompileEntryFile);
+		context.subscriptions.push(
+			vscode.commands.registerTextEditorCommand(
+				LSPUtils.assembler.config.ExtensionCommandNames.CompliteMain,
+				AssCommands.CompileEntryFile
+			));
 	}
 
 	/**编译本文件 */

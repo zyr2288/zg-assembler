@@ -9,14 +9,15 @@ export class Highlighting {
 
 	private static leagend: vscode.SemanticTokensLegend;
 
-	static async Initialize() {
+	static async Initialize(context: vscode.ExtensionContext) {
 
 		Highlighting.leagend = new vscode.SemanticTokensLegend(VSCodeHighlight);
-
-		vscode.languages.registerDocumentRangeSemanticTokensProvider(
-			LSPUtils.assembler.config.FileExtension,
-			{ provideDocumentRangeSemanticTokens: Highlighting.HighlightingDocument },
-			Highlighting.leagend
+		context.subscriptions.push(
+			vscode.languages.registerDocumentRangeSemanticTokensProvider(
+				LSPUtils.assembler.config.FileExtension,
+				{ provideDocumentRangeSemanticTokens: Highlighting.HighlightingDocument },
+				Highlighting.leagend
+			)
 		);
 	}
 

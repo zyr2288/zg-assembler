@@ -26,10 +26,12 @@ export class Intellisense {
 		vscode.CompletionItemKind.Folder, vscode.CompletionItemKind.File
 	];
 
-	static async Initialize() {
-		vscode.languages.registerCompletionItemProvider(LSPUtils.assembler.config.FileExtension, {
-			provideCompletionItems: Intellisense.ShowCompletion
-		}, " ", ".", ":")
+	static async Initialize(context: vscode.ExtensionContext) {
+		context.subscriptions.push(
+			vscode.languages.registerCompletionItemProvider(LSPUtils.assembler.config.FileExtension, {
+				provideCompletionItems: Intellisense.ShowCompletion
+			}, " ", ".", ":")
+		);
 	}
 
 	private static async ShowCompletion(document: vscode.TextDocument,

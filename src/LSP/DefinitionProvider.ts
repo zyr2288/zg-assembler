@@ -2,12 +2,14 @@ import * as vscode from "vscode";
 import { LSPUtils } from "./LSPUtils";
 
 export class DefinitionProvider {
-	
-	static async Initialize() {
-		vscode.languages.registerDefinitionProvider(
-			LSPUtils.assembler.config.FileExtension,
-			{ provideDefinition: DefinitionProvider.Definition }
-		)
+
+	static async Initialize(context: vscode.ExtensionContext) {
+		context.subscriptions.push(
+			vscode.languages.registerDefinitionProvider(
+				LSPUtils.assembler.config.FileExtension,
+				{ provideDefinition: DefinitionProvider.Definition }
+			)
+		);
 	}
 
 	private static async Definition(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {

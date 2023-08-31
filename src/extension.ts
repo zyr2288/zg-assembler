@@ -30,7 +30,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	try {
 		var server = new LanguageServer();
-		await server.Initialize();
+		await server.Initialize(context);
 	} catch (e) {
 		console.log(e);
 		throw e;

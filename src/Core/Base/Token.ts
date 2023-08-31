@@ -21,9 +21,13 @@ export class Token {
 	}
 	//#endregion 建立一个Token
 
+	/**文件路径Hash */
 	fileHash: number = 0;
+	/**所在文件行号，0开始 */
 	line: number = 0;
+	/**所在行的起始位置 */
 	start: number = 0;
+	/**文本 */
 	text: string = "";
 
 	get length() { return this.text.length; }

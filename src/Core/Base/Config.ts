@@ -4,8 +4,15 @@ export class Config {
 		/**编译语言 */
 		language: "zg-assembly",
 		/**文件扩展名，无点 */
-		extension: "asm"
+		extension: "asm",
 	};
+	/**Debug配置 */
+	static readonly DebugConfig = {
+		/**Debug类型 */
+		DebugType: "zg-assembly-debug",
+		DebugHost: "127.0.0.1",
+		DebugPort: 141414
+	}
 	static readonly ConfigFile = "project-settings.json";
 	static readonly CommonSplit = "/";
 	static readonly ExtensionCommandNames = {

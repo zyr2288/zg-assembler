@@ -28,4 +28,8 @@ export const English = {
 	"plugin loaded": "plugin loaded",
 
 	"out put message File{0}, Line{1}, Message{2}":"File: \"{0}\"\nLine: {1}\n{2}\n\n",
+
+	"Cannot find launch.json": "Cannot find launch.json",
+	"Cannot find rom file {0}": "Cannot find rom file {0}",
+	"Cannot find program path {0}": "Cannot find program path {0}",
 }

@@ -20,7 +20,7 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onDebugResolve:zg-assembly",
+		"onDebugResolve:zg-assembly-debug",
 		"onLanguage:zg-assembly"
 	],
 	"icon": "syntaxes/chip.png",
@@ -96,7 +96,24 @@
 				"languages": [
 					"zg-assembly"
 				],
-				"label": "Debugger for zg-assembly"
+				"label": "Debugger for zg-assembly",
+				"initialConfigurations": [
+					{
+						"name": "ZG-assembly Debugger",
+						"type": "zg-assembly-debug",
+						"request": "attach",
+						"emuPath": "${workspaceFolder}/path/to/mesen.exe",
+						"romPath": "${workspaceFolder}/game.bin"
+					}
+				],
+				"configurationAttributes": {
+					"attach": {
+						"required": [
+							"emuPath",
+							"romPath"
+						]
+					}
+				}
 			}
 		]
 	},
