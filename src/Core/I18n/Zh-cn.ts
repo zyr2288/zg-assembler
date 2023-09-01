@@ -31,6 +31,7 @@ export const Chinese: LocalizationMsg = {
 
 	"out put message File{0}, Line{1}, Message{2}":"文件: \"{0}\"\n第 {1} 行\n{2}\n\n",
 
+	"Please compile the file before Debug": "请在Debug之前编译文件",
 	"Cannot find launch.json": "找不到 launch.json",
 	"Cannot find rom file {0}" : "找不到 rom {0}",
 	"Cannot find program path {0}": "找不到启动程序  {0}",

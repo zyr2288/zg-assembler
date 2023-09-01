@@ -8,6 +8,8 @@ export const CommandName = "zgassembler.triggerSuggest";
 
 export class AssCommands {
 
+	
+
 	static Initialize(context: vscode.ExtensionContext) {
 		// 注册智能提示
 		context.subscriptions.push(
