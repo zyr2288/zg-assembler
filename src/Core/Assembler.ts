@@ -3,8 +3,10 @@ import { Config } from "./Base/Config";
 import { ExpressionUtils } from "./Base/ExpressionUtils";
 import { FileUtils } from "./Base/FileUtils";
 import { MyDiagnostic } from "./Base/MyException";
+import { Utils } from "./Base/Utils";
 import { Commands } from "./Commands/Commands";
 import { Localization } from "./I18n/Localization";
+import { DebugHelper } from "./LanguageHelper/DebugHelper";
 import { DefinitionProvider } from "./LanguageHelper/DefinitionProvider";
 import { DocumentChangeProvider } from "./LanguageHelper/DocumentChangeProvider";
 import { HighlightingProvider } from "./LanguageHelper/HighlightingProvider";
@@ -25,12 +27,17 @@ export class Assembler {
 	// labelUtils = LabelUtils;
 
 	languageHelper = {
+		debugHelper: DebugHelper,
 		highlightingProvider: HighlightingProvider,
 		documentChange: DocumentChangeProvider,
 		hoverProvider: HoverProvider,
 		intellisense: IntellisenseProvider,
 		definition: DefinitionProvider
 	};
+
+	utils = {
+		getHashcode: Utils.GetHashcode
+	}
 
 	compiler = {
 		/**true为正在编译中 */

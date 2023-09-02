@@ -13,6 +13,7 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 	private config: ZGAssConfig;
 	private context: vscode.ExtensionContext;
 	private debugUtils: DebugUtils;
+	private breakPointMap = new Map<number, Set<number>>();
 
 	constructor(context: vscode.ExtensionContext, session: vscode.DebugSession) {
 		super();
@@ -29,8 +30,6 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 
 	/**初始化启动Debug的请求 */
 	protected async initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): Promise<void> {
-		
-
 		let emu = await LSPUtils.assembler.fileUtils.PathType(this.config.emuPath);
 		if (emu !== "file") {
 			this.sendErrorResponse(response, {
@@ -48,8 +47,16 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 			});
 			return;
 		}
+
+		if (LSPUtils.assembler.languageHelper.debugHelper.allDebugLines.base.size === 0) {
+			this.sendErrorResponse(response, {
+				id: 1001,
+				format: LSPUtils.assembler.localization.GetMessage("Please compile the file before Debug")
+			});
+			return;
+		}
+
 		this.sendResponse(response);
-		this.sendEvent(new InitializedEvent());
 	}
 
 	protected launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments, request?: DebugProtocol.Request): void {
@@ -61,11 +68,29 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 	}
 
 	protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments, request?: DebugProtocol.Request | undefined): void {
-		console.log("break", response);
-		console.log("arg", args);
+		if (!args.source.path || !args.breakpoints)
+			return;
+
+		const hash = LSPUtils.assembler.utils.getHashcode(args.source.path);
+		const lineSets = this.breakPointMap.get(hash) ?? new Set<number>();
+
+		const remain = new Set<number>();
+		const newLine = new Set<number>();
+		const indexConfident: boolean[] = [];
+
+		for (let i = 0; i < args.breakpoints.length; i++) {
+			const brk = args.breakpoints[i];
+			if (indexConfident[i] = lineSets.has(brk.line)) {
+				remain.add(brk.line);
+				lineSets.delete(brk.line);
+			} else {
+				newLine.add(brk.line);
+			}
+		}
+
+
+		LSPUtils.assembler.languageHelper.debugHelper.DebugSet
 	}
-
-
 
 	/***** private *****/
 
@@ -97,8 +122,9 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 			}
 		}
 		this.sendResponse(response);
+		this.sendEvent(new InitializedEvent());
 		this.sendEvent(new ProgressEndEvent("launching"));
 	}
 	//#endregion 程序初始化
-	
+
 }

@@ -3,9 +3,11 @@ import { Utils } from "../Base/Utils";
 import { ICommonLine, LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
 
-export class DebugAdapter {
+type DebugLine = InstructionLine;
 
-	allDebugLines = {
+export class DebugHelper {
+
+	static allDebugLines = {
 		/**Key为基础地址(BaseAddress) */
 		base: new Map<number, ICommonLine>(),
 		/**Key为 FilePath 和 LineNumber 计算出来的Hash，Value为基础地址(BaseAddress) */
@@ -14,20 +16,20 @@ export class DebugAdapter {
 		base2Fileline: new Map<number, number>(),
 	}
 
-	Clear() {
+	static Clear() {
 		this.allDebugLines.base.clear();
 		this.allDebugLines.fileLine2base.clear();
 		this.allDebugLines.base2Fileline.clear();
 	}
 
-	AddLines(baseLines: ICommonLine[]) {
+	static AddLines(baseLines: ICommonLine[]) {
 		let baseAddress;
 		for (let i = 0; i < baseLines.length; i++) {
 			baseAddress = -1;
-			const line = baseLines[i] as InstructionLine;
+			const line = baseLines[i] as DebugLine;
 			switch (line.type) {
 				case LineType.Instruction:
-					baseAddress = (line as InstructionLine).baseAddress;
+					baseAddress = line.baseAddress;
 					break;
 			}
 
@@ -44,7 +46,19 @@ export class DebugAdapter {
 		}
 	}
 
-	GetLineInfo(filePath: string, line: number) {
+	static DebugSet(filePath: string, lineNumber: number) {
+		const line = DebugHelper.GetLineInfo(filePath, lineNumber) as DebugLine;
+		if (!line)
+			return;
+
+		return line.baseAddress;
+	}
+
+	static DebugRemove(filePath: string, lineNumber: number) {
+
+	}
+
+	private static GetLineInfo(filePath: string, line: number) {
 		const fileHash = Utils.GetHashcode(FileUtils.ArrangePath(filePath));
 		const hash = Utils.GetHashcode(fileHash, line);
 
