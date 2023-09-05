@@ -16,10 +16,14 @@ export class DebugHelper {
 		base2Fileline: new Map<number, number>(),
 	}
 
+	private static breakPoints = {
+		counter: new Map<number, Map<number, number>>()
+	}
+
 	static Clear() {
-		this.allDebugLines.base.clear();
-		this.allDebugLines.fileLine2base.clear();
-		this.allDebugLines.base2Fileline.clear();
+		DebugHelper.allDebugLines.base.clear();
+		DebugHelper.allDebugLines.fileLine2base.clear();
+		DebugHelper.allDebugLines.base2Fileline.clear();
 	}
 
 	static AddLines(baseLines: ICommonLine[]) {
@@ -39,29 +43,58 @@ export class DebugHelper {
 			if (line.result.length === 0)
 				return;
 
-			this.allDebugLines.base.set(baseAddress, line);
+			DebugHelper.allDebugLines.base.set(baseAddress, line);
 			const hash = Utils.GetHashcode(line.orgText.fileHash, line.orgText.line);
-			this.allDebugLines.base2Fileline.set(baseAddress, hash);
-			this.allDebugLines.fileLine2base.set(hash, baseAddress);
+			DebugHelper.allDebugLines.base2Fileline.set(baseAddress, hash);
+			DebugHelper.allDebugLines.fileLine2base.set(hash, baseAddress);
 		}
 	}
 
+	/**添加Debug */
 	static DebugSet(filePath: string, lineNumber: number) {
-		const line = DebugHelper.GetLineInfo(filePath, lineNumber) as DebugLine;
+		const fileHash = Utils.GetHashcode(FileUtils.ArrangePath(filePath));
+		const line = DebugHelper.GetLineInfo(fileHash, lineNumber) as DebugLine;
 		if (!line)
 			return;
 
-		return line.baseAddress;
+		console.log("set debug", line);
+		const fileMap = DebugHelper.breakPoints.counter.get(fileHash) ?? new Map<number, number>();
+		let baseLineCount = fileMap.get(line.orgAddress);
+		if (baseLineCount === undefined)
+			baseLineCount = 1;
+		else
+			baseLineCount++;
+
+		fileMap.set(line.orgAddress, baseLineCount);
+		DebugHelper.breakPoints.counter.set(fileHash, fileMap);
+		// 减 0x10 是为了配合 NES头部
+		return { orgAddress: line.orgAddress, baseAddress: line.baseAddress - 0x10 };
 	}
 
+	/**移除Debug */
 	static DebugRemove(filePath: string, lineNumber: number) {
+		const fileHash = Utils.GetHashcode(FileUtils.ArrangePath(filePath));
+		const line = DebugHelper.GetLineInfo(fileHash, lineNumber) as DebugLine;
+		if (!line)
+			return;
 
+		console.log("remove debug", line);
+		const fileMap = DebugHelper.breakPoints.counter.get(fileHash);
+		if (!fileMap)
+			return;
+
+		let baseLineCount = fileMap.get(line.orgAddress);
+		if (baseLineCount === undefined)
+			return;
+
+		if (baseLineCount-- <= 0)
+			fileMap.delete(line.orgAddress);
+
+		return line.orgAddress;
 	}
 
-	private static GetLineInfo(filePath: string, line: number) {
-		const fileHash = Utils.GetHashcode(FileUtils.ArrangePath(filePath));
+	private static GetLineInfo(fileHash: number, line: number) {
 		const hash = Utils.GetHashcode(fileHash, line);
-
 		const base = this.allDebugLines.fileLine2base.get(hash);
 		if (!base)
 			return;

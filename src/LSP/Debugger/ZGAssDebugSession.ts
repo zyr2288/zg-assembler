@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
-import { BreakpointEvent, LoggingDebugSession, Response, ProgressEndEvent, InitializedEvent } from "@vscode/debugadapter";
+import { BreakpointEvent, LoggingDebugSession, Response, ProgressEndEvent, InitializedEvent, TerminatedEvent } from "@vscode/debugadapter";
 import { ZGAssDebugRuntime } from "./ZGAssDebugRuntime";
 import { DebugProtocol } from "@vscode/debugprotocol";
 import { LSPUtils } from "../LSPUtils";
 import { ZGAssConfig, ZGAssProgressStartEvent } from "./ZGAssInterface";
-import { spawn } from "child_process";
+import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { DebugUtils } from "./DebugUtils";
 
 export class ZGAssDebugSession extends LoggingDebugSession {
@@ -14,6 +14,9 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 	private context: vscode.ExtensionContext;
 	private debugUtils: DebugUtils;
 	private breakPointMap = new Map<number, Set<number>>();
+
+	// 绑定的模拟器进程
+	private program: ChildProcessWithoutNullStreams | undefined;
 
 	constructor(context: vscode.ExtensionContext, session: vscode.DebugSession) {
 		super();
@@ -26,6 +29,10 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 		// this.runtime.on("setBreakPoint", () => {
 		// 	this.sendEvent(new BreakpointEvent("changed", { verified: true }));
 		// });
+
+		this.debugUtils.BindingEvent("socket-close", () => {
+			this.CloseEmulator();
+		});
 	}
 
 	/**初始化启动Debug的请求 */
@@ -59,15 +66,18 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 		this.sendResponse(response);
 	}
 
-	protected launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments, request?: DebugProtocol.Request): void {
+	//#region Debug进程启动
+	protected launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments, request?: DebugProtocol.Request) {
 		this.ProgramInit(response);
 	}
 
-	protected attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments, request?: DebugProtocol.Request): void {
+	protected attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments, request?: DebugProtocol.Request) {
 		this.ProgramInit(response);
 	}
+	//#endregion Debug进程启动
 
-	protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments, request?: DebugProtocol.Request | undefined): void {
+	//#region 设定断点
+	protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments, request?: DebugProtocol.Request | undefined) {
 		if (!args.source.path || !args.breakpoints)
 			return;
 
@@ -76,21 +86,52 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 
 		const remain = new Set<number>();
 		const newLine = new Set<number>();
-		const indexConfident: boolean[] = [];
+		const debug = LSPUtils.assembler.languageHelper.debugHelper;
+
+		let resultBreakPoint: DebugProtocol.Breakpoint[] = [];
 
 		for (let i = 0; i < args.breakpoints.length; i++) {
-			const brk = args.breakpoints[i];
-			if (indexConfident[i] = lineSets.has(brk.line)) {
-				remain.add(brk.line);
-				lineSets.delete(brk.line);
+			const line = args.breakpoints[i].line - 1;
+			if (lineSets.has(line)) {
+				remain.add(line);
+				lineSets.delete(line);
 			} else {
-				newLine.add(brk.line);
+				const result = debug.DebugSet(args.source.path!, line);
+				if (result === undefined) {
+					resultBreakPoint.push({ line: line, verified: false });
+					continue;
+				}
+
+				this.debugUtils.SetBreakPoint(result.orgAddress, result.baseAddress);
+				newLine.add(line);
 			}
 		}
 
+		newLine.forEach((value) => {
+			remain.add(value);
+		});
 
-		LSPUtils.assembler.languageHelper.debugHelper.DebugSet
+		lineSets.forEach((value) => {
+			debug.DebugRemove(args.source.path!, value);
+		});
+
+		this.breakPointMap.set(hash, remain);
+
+
+		response.body = { breakpoints: resultBreakPoint };
+		this.sendResponse(response);
 	}
+	//#endregion 设定断点
+
+	//#region 关闭Debug进程
+	protected terminateRequest(response: DebugProtocol.TerminateResponse, args: DebugProtocol.TerminateArguments, request?: DebugProtocol.Request | undefined): void {
+		this.CloseEmulator();
+	}
+
+	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request | undefined): void {
+		this.CloseEmulator();
+	}
+	//#endregion 关闭Debug进程
 
 	/***** private *****/
 
@@ -98,7 +139,7 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 	/**程序初始化 */
 	private async ProgramInit(response: Response) {
 		const luaPath = this.context.asAbsolutePath("EmulatorLink/Mesen.lua");
-		const program = spawn(
+		this.program = spawn(
 			this.config.emuPath,
 			[this.config.romPath, luaPath]
 		);
@@ -126,5 +167,12 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 		this.sendEvent(new ProgressEndEvent("launching"));
 	}
 	//#endregion 程序初始化
+
+	//#region 关闭模拟器进程
+	private CloseEmulator() {
+		this.program?.kill();
+		this.sendEvent(new TerminatedEvent());
+	}
+	//#endregion 关闭模拟器进程
 
 }

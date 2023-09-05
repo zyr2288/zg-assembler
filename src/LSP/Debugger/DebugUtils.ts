@@ -1,7 +1,8 @@
 import { Socket } from "net";
 import { LSPUtils } from "../LSPUtils";
+import EventEmitter = require("events");
 
-type Commands = "registers" | "memory";
+type Commands = "registers" | "memory" | "set-break" | "break";
 
 interface SocketMessage {
 	messageId: number;
@@ -9,27 +10,49 @@ interface SocketMessage {
 	data?: any;
 }
 
+export type ZGAssEvent = "socket-close";
+
 export class DebugUtils {
+
 	socketOption = {
 		isConnected: false
 	}
+
 	private socket: Socket;
+	private eventEmitter = new EventEmitter();
 	private messagePorts: ((response: any) => void)[] = [];
 
 	constructor() {
 		this.socket = new Socket();
 
+		this.socket.on("close", (error) => {
+			this.eventEmitter.emit("socket-close");
+		});
+
 		this.socket.on("data", (data: Uint8Array) => {
 			let text = LSPUtils.assembler.fileUtils.BytesToString(data);
-			let args = text.split(/\s+/g, 2);
-			this.ReceiveMessage({ messageId: parseFloat(args[0]), command: args[1] as Commands, data: args[2] });
+			let args = text.split(/\s+/g, 3);
+			if (args[0] === "undefined")
+				args[0] = undefined as any;
+
+			this.ReceiveMessage({ messageId: args[0] as any, command: args[1] as Commands, data: args[2] });
 		});
+	}
+
+	BindingEvent(event: ZGAssEvent, callback: (data: any) => void) {
+		this.eventEmitter.on(event, callback);
 	}
 
 	Connect(host: string, port: number): Promise<void> {
 		return new Promise((resolve, reject) => {
+			if (this.socketOption.isConnected) {
+				reject("already connected");
+				return;
+			}
+
 			this.socket.on("ready", () => {
 				console.log("connect ready");
+				this.socketOption.isConnected = true;
 				resolve();
 			});
 			this.socket.on("error", (err) => { reject(err); });
@@ -54,8 +77,13 @@ export class DebugUtils {
 		});
 	}
 
+	SetBreakPoint(orgAddress: number, baseAddress: number) {
+		this.SendMessage("set-break", `${orgAddress},${baseAddress}`);
+	}
+
 	private ReceiveMessage(message: SocketMessage) {
 		if (message.messageId === undefined) {
+			this.ReceiveSpMessage(message);
 			return;
 		}
 
@@ -68,5 +96,14 @@ export class DebugUtils {
 
 	private ProcessMessage(data: SocketMessage) {
 		return `${data.messageId} ${data.command} ${data.data}\n`
+	}
+
+	private ReceiveSpMessage(message: SocketMessage) {
+		switch(message.command) {
+			case "break":
+				const breakData = message.data as number;
+				console.log(breakData);
+				break;
+		}
 	}
 }

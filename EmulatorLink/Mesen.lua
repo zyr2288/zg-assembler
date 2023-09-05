@@ -4,7 +4,11 @@ local port = 14000;
 local emuPause = false;
 local connection = nil;
 
+local ConectTimeout = 0.00001;
+
+-- Table的Key必须是string类型的，否则key无效
 local breaks = {};
+local cpuBreakCount = {};
 
 
 function DoInOneFrame()
@@ -31,7 +35,7 @@ function ReceiveData()
 	local messageId = args[1];
 	local responseData = RunCommand(args[2], args[3]);
 	if responseData ~= nil then
-		connection:send(messageId .. " " .. responseData);
+		connection:send(messageId .. " " .. args[2] .. " " .. responseData);
 	end
 end
 
@@ -45,6 +49,12 @@ function RunCommand(command, data)
 	elseif command == "set-break" then
 		SetBreakpoint(args[1], args[2]);
 	end
+end
+
+function SendMessage(command, data)
+	local response = "undefined " .. command .. " " .. data;
+	emu.log(response);
+	connection:send(response);
 end
 
 function GetTableValues(table, keys)
@@ -62,22 +72,52 @@ function GetTableValues(table, keys)
 end
 
 function SetBreakpoint(cpuAddress, prgAddress)
-	if breaks[prgAddress] ~= nil then
+	local prgAddrStr = "prg-" .. prgAddress;
+	local cpuAddrStr = "cpu-" .. cpuAddress;
+	if breaks[prgAddrStr] ~= nil then
 		return;
 	end
 
-	breaks[prgAddress] = cpuAddress;
+	breaks[prgAddrStr] = cpuAddress;
+	if cpuBreakCount[cpuAddrStr] == nil then
+		cpuBreakCount[cpuAddrStr] = 1;
+	else
+		cpuBreakCount[cpuAddrStr] = cpuBreakCount[cpuAddrStr] + 1;
+	end
+
 	emu.addMemoryCallback(MemoryCallback, emu.memCallbackType.cpuExec, cpuAddress);
 end
 
 function MemoryCallback(cpuAddress)
-	local prgAdd = emu.getPrgRomOffset(cpuAddress);
-	if prgAdd == -1 or prgAdd == nil then
+	local prgAddress = emu.getPrgRomOffset(cpuAddress);
+	local prgAddrStr = "prg-" .. prgAddress;
+	if prgAddress == -1 or prgAddress == nil then
 		return;
 	end
 
-	connection:send()
-	emu.breakExecution();
+	local temp = tonumber(breaks[prgAddrStr]);
+	if temp == cpuAddress then
+		emu.breakExecution();
+		SendMessage("break", prgAddress);
+	end
+end
+
+function ClearBreakpoint(cpuAddress, prgAddress)
+	emu.log("clear breakpoint");
+	if breaks[prgAddress] == nil then
+		return;
+	end
+
+	breaks[prgAddress] = nil;
+	if cpuBreakCount[cpuAddress] == nil then
+		return;
+	end
+
+	cpuBreakCount[cpuAddress] = cpuBreakCount[cpuAddress] - 1;
+	if cpuBreakCount[cpuAddress] == 0 then
+		emu.removeMemoryCallback(MemoryCallback, emu.memCallbackType.cpuExec, cpuAddress);
+		cpuBreakCount[cpuAddress] = nil;
+	end
 end
 
 server:settimeout(2);
@@ -85,6 +125,6 @@ server:bind("127.0.0.1", port);
 
 local listener = server:listen(10);
 connection = server:accept();
-connection:settimeout(1);
+connection:settimeout(ConectTimeout);
 
 emu.addEventCallback(DoInOneFrame, emu.eventType.endFrame);
