@@ -53,11 +53,10 @@ export class DebugHelper {
 	/**添加Debug */
 	static DebugSet(filePath: string, lineNumber: number) {
 		const fileHash = Utils.GetHashcode(FileUtils.ArrangePath(filePath));
-		const line = DebugHelper.GetLineInfo(fileHash, lineNumber) as DebugLine;
+		const line = DebugHelper.GetLineInfo(fileHash, lineNumber);
 		if (!line)
 			return;
 
-		console.log("set debug", line);
 		const fileMap = DebugHelper.breakPoints.counter.get(fileHash) ?? new Map<number, number>();
 		let baseLineCount = fileMap.get(line.orgAddress);
 		if (baseLineCount === undefined)
@@ -99,6 +98,6 @@ export class DebugHelper {
 		if (!base)
 			return;
 
-		return this.allDebugLines.base.get(base);
+		return this.allDebugLines.base.get(base) as DebugLine;
 	}
 }

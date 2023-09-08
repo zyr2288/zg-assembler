@@ -10,7 +10,7 @@ interface SocketMessage {
 	data?: any;
 }
 
-export type ZGAssEvent = "socket-close";
+export type ZGAssEvent = "socket-close" | "break";
 
 export class DebugUtils {
 
@@ -99,10 +99,10 @@ export class DebugUtils {
 	}
 
 	private ReceiveSpMessage(message: SocketMessage) {
-		switch(message.command) {
+		switch (message.command) {
 			case "break":
 				const breakData = message.data as number;
-				console.log(breakData);
+				this.eventEmitter.emit("break", breakData);
 				break;
 		}
 	}

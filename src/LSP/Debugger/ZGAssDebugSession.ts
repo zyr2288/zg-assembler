@@ -1,11 +1,13 @@
 import * as vscode from "vscode";
-import { BreakpointEvent, LoggingDebugSession, Response, ProgressEndEvent, InitializedEvent, TerminatedEvent } from "@vscode/debugadapter";
+import { BreakpointEvent, LoggingDebugSession, Response, ProgressEndEvent, InitializedEvent, TerminatedEvent, StoppedEvent, Thread } from "@vscode/debugadapter";
 import { ZGAssDebugRuntime } from "./ZGAssDebugRuntime";
 import { DebugProtocol } from "@vscode/debugprotocol";
 import { LSPUtils } from "../LSPUtils";
 import { ZGAssConfig, ZGAssProgressStartEvent } from "./ZGAssInterface";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { DebugUtils } from "./DebugUtils";
+
+const ThreadID = 1;
 
 export class ZGAssDebugSession extends LoggingDebugSession {
 
@@ -21,6 +23,9 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 	constructor(context: vscode.ExtensionContext, session: vscode.DebugSession) {
 		super();
 
+		// this.setDebuggerLinesStartAt1(false);
+		// this.setDebuggerColumnsStartAt1(false);
+
 		this.runtime = new ZGAssDebugRuntime();
 		this.config = session.configuration as ZGAssConfig;
 		this.context = context;
@@ -33,8 +38,20 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 		this.debugUtils.BindingEvent("socket-close", () => {
 			this.CloseEmulator();
 		});
+
+		this.debugUtils.BindingEvent("break", (data: number) => {
+			console.log("break");
+			this.sendEvent(new StoppedEvent("step", ThreadID));
+			this.sendEvent(new StoppedEvent("breakpoint", ThreadID));
+			// let breakPoint = new BreakpointEvent("change", { verified: true });
+			// this.sendEvent(breakPoint);
+			// this.handleMessage = (msg) => {
+			// 	console.log(msg);
+			// }
+		});
 	}
 
+	//#region 初始化启动Debug的请求
 	/**初始化启动Debug的请求 */
 	protected async initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): Promise<void> {
 		let emu = await LSPUtils.assembler.fileUtils.PathType(this.config.emuPath);
@@ -63,8 +80,12 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 			return;
 		}
 
+		response.body = response.body || {};
+		//response.body.supportsBreakpointLocationsRequest = true;
+		// response.body.supportsBreakpointLocationsRequest = true;
 		this.sendResponse(response);
 	}
+	//#endregion 初始化启动Debug的请求
 
 	//#region Debug进程启动
 	protected launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments, request?: DebugProtocol.Request) {
@@ -91,17 +112,18 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 		let resultBreakPoint: DebugProtocol.Breakpoint[] = [];
 
 		for (let i = 0; i < args.breakpoints.length; i++) {
-			const line = args.breakpoints[i].line - 1;
+			const line = args.breakpoints[i].line;
 			if (lineSets.has(line)) {
 				remain.add(line);
 				lineSets.delete(line);
 			} else {
-				const result = debug.DebugSet(args.source.path!, line);
+				const result = debug.DebugSet(args.source.path!, line - 1);
 				if (result === undefined) {
 					resultBreakPoint.push({ line: line, verified: false });
 					continue;
 				}
 
+				resultBreakPoint.push({ line: line, verified: true });
 				this.debugUtils.SetBreakPoint(result.orgAddress, result.baseAddress);
 				newLine.add(line);
 			}
@@ -117,7 +139,6 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 
 		this.breakPointMap.set(hash, remain);
 
-
 		response.body = { breakpoints: resultBreakPoint };
 		this.sendResponse(response);
 	}
@@ -132,6 +153,13 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 		this.CloseEmulator();
 	}
 	//#endregion 关闭Debug进程
+
+	protected threadsRequest(response: DebugProtocol.ThreadsResponse, request?: DebugProtocol.Request | undefined): void {
+		response.body = {
+			threads: [new Thread(ThreadID, "thread 1")]
+		};
+		this.sendResponse(response);
+	}
 
 	/***** private *****/
 
