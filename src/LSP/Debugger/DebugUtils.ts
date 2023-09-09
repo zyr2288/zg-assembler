@@ -2,7 +2,7 @@ import { Socket } from "net";
 import { LSPUtils } from "../LSPUtils";
 import EventEmitter = require("events");
 
-type Commands = "registers" | "memory" | "set-break" | "break";
+type Commands = "registers" | "memory" | "set-break" | "remove-break";
 
 interface SocketMessage {
 	messageId: number;
@@ -77,8 +77,12 @@ export class DebugUtils {
 		});
 	}
 
-	SetBreakPoint(orgAddress: number, baseAddress: number) {
+	BreakPointSet(orgAddress: number, baseAddress: number) {
 		this.SendMessage("set-break", `${orgAddress},${baseAddress}`);
+	}
+
+	BreakPointRemove(orgAddress:number, baseAddress:number) {
+		this.SendMessage("remove-break", `${orgAddress},${baseAddress}`);
 	}
 
 	private ReceiveMessage(message: SocketMessage) {
@@ -99,7 +103,7 @@ export class DebugUtils {
 	}
 
 	private ReceiveSpMessage(message: SocketMessage) {
-		switch (message.command) {
+		switch (message.command as ZGAssEvent) {
 			case "break":
 				const breakData = message.data as number;
 				this.eventEmitter.emit("break", breakData);

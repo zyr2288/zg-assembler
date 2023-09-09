@@ -77,7 +77,6 @@ export class DebugHelper {
 		if (!line)
 			return;
 
-		console.log("remove debug", line);
 		const fileMap = DebugHelper.breakPoints.counter.get(fileHash);
 		if (!fileMap)
 			return;
@@ -89,7 +88,7 @@ export class DebugHelper {
 		if (baseLineCount-- <= 0)
 			fileMap.delete(line.orgAddress);
 
-		return line.orgAddress;
+		return { orgAddress: line.orgAddress, baseAddress: line.baseAddress - 0x10 };
 	}
 
 	private static GetLineInfo(fileHash: number, line: number) {

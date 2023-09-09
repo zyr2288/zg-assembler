@@ -48,6 +48,8 @@ function RunCommand(command, data)
 		return emu.read(data, emu.memType.cpu);
 	elseif command == "set-break" then
 		SetBreakpoint(args[1], args[2]);
+	elseif command == "remove-break" then
+		ClearBreakpoint(args[1], args[2]);
 	end
 end
 

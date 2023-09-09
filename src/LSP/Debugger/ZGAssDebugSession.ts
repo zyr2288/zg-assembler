@@ -15,6 +15,7 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 	private config: ZGAssConfig;
 	private context: vscode.ExtensionContext;
 	private debugUtils: DebugUtils;
+	/**分别是，key fileHash， set 为行号 */
 	private breakPointMap = new Map<number, Set<number>>();
 	private breakPointId = 1;
 
@@ -41,9 +42,9 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 		});
 
 		this.debugUtils.BindingEvent("break", (data: number) => {
-			console.log("break");
-			this.sendEvent(new StoppedEvent("step", ThreadID));
-			this.sendEvent(new StoppedEvent("breakpoint", ThreadID));
+			console.log("break hit", data);
+			// this.sendEvent(new StoppedEvent("step", ThreadID));
+			// this.sendEvent(new StoppedEvent("breakpoint", ThreadID));
 			// let breakPoint = new BreakpointEvent("change", { verified: true });
 			// this.sendEvent(breakPoint);
 			// this.handleMessage = (msg) => {
@@ -82,7 +83,6 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 		}
 
 		response.body = response.body || {};
-		//response.body.supportsBreakpointLocationsRequest = true;
 		// response.body.supportsBreakpointLocationsRequest = true;
 		this.sendResponse(response);
 	}
@@ -103,7 +103,8 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 		if (!args.source.path || !args.breakpoints)
 			return;
 
-		const hash = LSPUtils.assembler.utils.getHashcode(args.source.path);
+		const filePath = LSPUtils.assembler.fileUtils.ArrangePath(args.source.path);
+		const hash = LSPUtils.assembler.utils.getHashcode(filePath);
 		const lineSets = this.breakPointMap.get(hash) ?? new Set<number>();
 
 		const remain = new Set<number>();
@@ -118,14 +119,15 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 				remain.add(line);
 				lineSets.delete(line);
 			} else {
-				const result = debug.DebugSet(args.source.path!, line - 1);
+				const id = LSPUtils.assembler.utils.getHashcode(filePath, line);
+				const result = debug.DebugSet(filePath, line - 1);
 				if (result === undefined) {
-					resultBreakPoint.push({ line: line, verified: false });
+					resultBreakPoint.push({ id, line: line, verified: false });
 					continue;
 				}
 
-				resultBreakPoint.push({ line: line, verified: true });
-				this.debugUtils.SetBreakPoint(result.orgAddress, result.baseAddress);
+				resultBreakPoint.push({ id, line: line, verified: true });
+				this.debugUtils.BreakPointSet(result.orgAddress, result.baseAddress);
 				newLine.add(line);
 			}
 		}
@@ -135,12 +137,16 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 		});
 
 		lineSets.forEach((value) => {
-			debug.DebugRemove(args.source.path!, value);
+			const result = debug.DebugRemove(args.source.path!, value);
+			if (result === undefined)
+				return;
+
+			this.debugUtils.BreakPointRemove(result.orgAddress, result.baseAddress);
 		});
 
 		this.breakPointMap.set(hash, remain);
 
-		response.body = { breakpoints: resultBreakPoint };
+		// response.body = { breakpoints: resultBreakPoint };
 		this.sendResponse(response);
 	}
 	//#endregion 设定断点
