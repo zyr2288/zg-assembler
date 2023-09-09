@@ -16,6 +16,7 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 	private context: vscode.ExtensionContext;
 	private debugUtils: DebugUtils;
 	private breakPointMap = new Map<number, Set<number>>();
+	private breakPointId = 1;
 
 	// 绑定的模拟器进程
 	private program: ChildProcessWithoutNullStreams | undefined;
