@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
-import { BreakpointEvent, LoggingDebugSession, Response, ProgressEndEvent, InitializedEvent, TerminatedEvent, StoppedEvent, Thread } from "@vscode/debugadapter";
-import { ZGAssDebugRuntime } from "./ZGAssDebugRuntime";
+import { BreakpointEvent, LoggingDebugSession, Response, ProgressEndEvent, InitializedEvent, TerminatedEvent, StoppedEvent, Thread, Source } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
 import { LSPUtils } from "../LSPUtils";
 import { ZGAssConfig, ZGAssProgressStartEvent } from "./ZGAssInterface";
@@ -8,27 +7,27 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { DebugUtils } from "./DebugUtils";
 
 const ThreadID = 1;
-const debugHelper = LSPUtils.assembler.languageHelper.debugHelper;
 
 export class ZGAssDebugSession extends LoggingDebugSession {
 
-	private runtime: ZGAssDebugRuntime;
 	private config: ZGAssConfig;
 	private context: vscode.ExtensionContext;
 	private debugUtils: DebugUtils;
 	/**分别是，key fileHash， set 为行号 */
 	private breakPointMap = new Map<number, Set<number>>();
+	private hitBreakPoint?: DebugProtocol.StackFrame;
 
 	// 绑定的模拟器进程
 	private program: ChildProcessWithoutNullStreams | undefined;
+	private debugHelper = LSPUtils.assembler.languageHelper.debugHelper;
+
 
 	constructor(context: vscode.ExtensionContext, session: vscode.DebugSession) {
 		super();
 
-		this.setDebuggerLinesStartAt1(false);
-		this.setDebuggerColumnsStartAt1(false);
+		// this.setDebuggerLinesStartAt1(false);
+		// this.setDebuggerColumnsStartAt1(false);
 
-		this.runtime = new ZGAssDebugRuntime();
 		this.config = session.configuration as ZGAssConfig;
 		this.context = context;
 		this.debugUtils = new DebugUtils();
@@ -41,18 +40,7 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 			this.CloseEmulator();
 		});
 
-		this.debugUtils.BindingEvent("break", () => {
-			this.sendEvent(new StoppedEvent("breakpoint", ThreadID));
-			// const breakPoint = new BreakpointEvent("change", { id: hash, verified: true, line: data.orgText.line + 1 });
-			// this.sendEvent(breakPoint);
-
-			// this.sendEvent(new StoppedEvent("breakpoint", ThreadID));
-			// let breakPoint = new BreakpointEvent("change", { verified: true });
-			// this.sendEvent(breakPoint);
-			// this.handleMessage = (msg) => {
-			// 	console.log(msg);
-			// }
-		});
+		this.debugUtils.BindingEvent("break", this.HitBreakPoint.bind(this));
 	}
 
 	//#region 初始化启动Debug的请求
@@ -113,22 +101,25 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 		const newLine = new Set<number>();
 
 		let resultBreakPoint: DebugProtocol.Breakpoint[] = [];
-
 		for (let i = 0; i < args.breakpoints.length; i++) {
 			// 这里对应的行为编辑器行数 - 1
 			const line = args.breakpoints[i].line - 1;
+
+			const fileName = await LSPUtils.assembler.fileUtils.GetFileName(filePath);
+			const source = new Source(fileName, filePath);
+
 			if (lineSets.has(line)) {
 				remain.add(line);
 				lineSets.delete(line);
 			} else {
 				const id = LSPUtils.assembler.utils.getHashcode(filePath, line);
-				const result = debugHelper.DebugSet(filePath, line);
+				const result = this.debugHelper.DebugSet(filePath, line);
 				if (result === undefined) {
-					// resultBreakPoint.push({ id, line: line + 1, verified: false });
+					resultBreakPoint.push({ id, line: line + 1, verified: false, source });
 					continue;
 				}
 
-				resultBreakPoint.push({ id, line: line + 1, verified: true });
+				resultBreakPoint.push({ id, line: line + 1, verified: true, source });
 				this.debugUtils.BreakPointSet(result.orgAddress, result.baseAddress);
 				newLine.add(line);
 			}
@@ -139,7 +130,7 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 		});
 
 		lineSets.forEach((value) => {
-			const result = debugHelper.DebugRemove(args.source.path!, value);
+			const result = this.debugHelper.DebugRemove(args.source.path!, value);
 			if (result === undefined)
 				return;
 
@@ -156,8 +147,27 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 	}
 	//#endregion 设定断点
 
+
 	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments, request?: DebugProtocol.Request): void {
+		if (!this.hitBreakPoint)
+			return;
+
+		response.body = {
+			stackFrames: [this.hitBreakPoint],
+			totalFrames: 1
+		};
+		this.hitBreakPoint = undefined;
 		this.sendResponse(response);
+	}
+
+	private HitBreakPoint(data: number) {
+		const line = this.debugHelper.allDebugLines.base.get(data);
+		if (!line)
+			return;
+
+		const hash = LSPUtils.assembler.utils.getHashcode(line.orgText.fileHash, line.orgText.line);
+		this.hitBreakPoint = { id: hash, line: line.orgText.line, name: "PRG-ROM", column: 0 };
+		this.sendEvent(new StoppedEvent("breakpoint", ThreadID));
 	}
 
 	//#region 关闭Debug进程

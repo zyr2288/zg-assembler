@@ -107,10 +107,7 @@ export class DebugUtils {
 			case "break":
 				/**命中的 romAddress */
 				const breakData = parseInt(message.data) + 0x10;
-				let data = LSPUtils.assembler.languageHelper.debugHelper.allDebugLines.base.get(breakData);
-				if (data) {
-					this.eventEmitter.emit("break", data);
-				}
+				this.eventEmitter.emit("break", breakData);
 				break;
 		}
 	}

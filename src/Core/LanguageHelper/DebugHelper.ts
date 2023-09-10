@@ -16,8 +16,6 @@ export class DebugHelper {
 		base2Fileline: new Map<number, number>(),
 	}
 
-	static hitBreakpointKey = 0;
-
 	private static breakPoints = {
 		counter: new Map<number, Map<number, number>>()
 	}
