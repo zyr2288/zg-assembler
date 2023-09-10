@@ -8,6 +8,7 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { DebugUtils } from "./DebugUtils";
 
 const ThreadID = 1;
+const debugHelper = LSPUtils.assembler.languageHelper.debugHelper;
 
 export class ZGAssDebugSession extends LoggingDebugSession {
 
@@ -17,7 +18,6 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 	private debugUtils: DebugUtils;
 	/**分别是，key fileHash， set 为行号 */
 	private breakPointMap = new Map<number, Set<number>>();
-	private breakPointId = 1;
 
 	// 绑定的模拟器进程
 	private program: ChildProcessWithoutNullStreams | undefined;
@@ -25,8 +25,8 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 	constructor(context: vscode.ExtensionContext, session: vscode.DebugSession) {
 		super();
 
-		// this.setDebuggerLinesStartAt1(false);
-		// this.setDebuggerColumnsStartAt1(false);
+		this.setDebuggerLinesStartAt1(false);
+		this.setDebuggerColumnsStartAt1(false);
 
 		this.runtime = new ZGAssDebugRuntime();
 		this.config = session.configuration as ZGAssConfig;
@@ -41,9 +41,11 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 			this.CloseEmulator();
 		});
 
-		this.debugUtils.BindingEvent("break", (data: number) => {
-			console.log("break hit", data);
-			// this.sendEvent(new StoppedEvent("step", ThreadID));
+		this.debugUtils.BindingEvent("break", () => {
+			this.sendEvent(new StoppedEvent("breakpoint", ThreadID));
+			// const breakPoint = new BreakpointEvent("change", { id: hash, verified: true, line: data.orgText.line + 1 });
+			// this.sendEvent(breakPoint);
+
 			// this.sendEvent(new StoppedEvent("breakpoint", ThreadID));
 			// let breakPoint = new BreakpointEvent("change", { verified: true });
 			// this.sendEvent(breakPoint);
@@ -109,24 +111,24 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 
 		const remain = new Set<number>();
 		const newLine = new Set<number>();
-		const debug = LSPUtils.assembler.languageHelper.debugHelper;
 
 		let resultBreakPoint: DebugProtocol.Breakpoint[] = [];
 
 		for (let i = 0; i < args.breakpoints.length; i++) {
-			const line = args.breakpoints[i].line;
+			// 这里对应的行为编辑器行数 - 1
+			const line = args.breakpoints[i].line - 1;
 			if (lineSets.has(line)) {
 				remain.add(line);
 				lineSets.delete(line);
 			} else {
 				const id = LSPUtils.assembler.utils.getHashcode(filePath, line);
-				const result = debug.DebugSet(filePath, line - 1);
+				const result = debugHelper.DebugSet(filePath, line);
 				if (result === undefined) {
-					resultBreakPoint.push({ id, line: line, verified: false });
+					// resultBreakPoint.push({ id, line: line + 1, verified: false });
 					continue;
 				}
 
-				resultBreakPoint.push({ id, line: line, verified: true });
+				resultBreakPoint.push({ id, line: line + 1, verified: true });
 				this.debugUtils.BreakPointSet(result.orgAddress, result.baseAddress);
 				newLine.add(line);
 			}
@@ -137,7 +139,7 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 		});
 
 		lineSets.forEach((value) => {
-			const result = debug.DebugRemove(args.source.path!, value);
+			const result = debugHelper.DebugRemove(args.source.path!, value);
 			if (result === undefined)
 				return;
 
@@ -145,11 +147,19 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 		});
 
 		this.breakPointMap.set(hash, remain);
+		if (resultBreakPoint.length !== 0) {
+			response.body = { breakpoints: resultBreakPoint };
+			console.log("add break point", resultBreakPoint);
+		}
 
-		// response.body = { breakpoints: resultBreakPoint };
 		this.sendResponse(response);
 	}
 	//#endregion 设定断点
+
+	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments, request?: DebugProtocol.Request): void {
+		debugHelper.
+		this.sendResponse(response);
+	}
 
 	//#region 关闭Debug进程
 	protected terminateRequest(response: DebugProtocol.TerminateResponse, args: DebugProtocol.TerminateArguments, request?: DebugProtocol.Request | undefined): void {
@@ -161,12 +171,20 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 	}
 	//#endregion 关闭Debug进程
 
+
+	//#region 必要的方法
+	/**必要的方法 */
+	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments, request?: DebugProtocol.Request) {
+		this.sendResponse(response);
+	}
+
 	protected threadsRequest(response: DebugProtocol.ThreadsResponse, request?: DebugProtocol.Request | undefined): void {
 		response.body = {
 			threads: [new Thread(ThreadID, "thread 1")]
 		};
 		this.sendResponse(response);
 	}
+	//#endregion 必要的方法
 
 	/***** private *****/
 

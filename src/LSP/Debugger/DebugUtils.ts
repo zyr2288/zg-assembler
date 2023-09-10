@@ -81,7 +81,7 @@ export class DebugUtils {
 		this.SendMessage("set-break", `${orgAddress},${baseAddress}`);
 	}
 
-	BreakPointRemove(orgAddress:number, baseAddress:number) {
+	BreakPointRemove(orgAddress: number, baseAddress: number) {
 		this.SendMessage("remove-break", `${orgAddress},${baseAddress}`);
 	}
 
@@ -105,8 +105,11 @@ export class DebugUtils {
 	private ReceiveSpMessage(message: SocketMessage) {
 		switch (message.command as ZGAssEvent) {
 			case "break":
-				const breakData = message.data as number;
-				this.eventEmitter.emit("break", breakData);
+				/**命中的 romAddress */
+				const breakData = parseInt(message.data) + 0x10;
+				let data = LSPUtils.assembler.languageHelper.debugHelper.allDebugLines.base.get(breakData);
+				if (data)
+					this.eventEmitter.emit("break", data);
 				break;
 		}
 	}
