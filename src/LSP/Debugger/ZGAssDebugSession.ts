@@ -157,7 +157,6 @@ export class ZGAssDebugSession extends LoggingDebugSession {
 	//#endregion 设定断点
 
 	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments, request?: DebugProtocol.Request): void {
-		debugHelper.
 		this.sendResponse(response);
 	}
 
