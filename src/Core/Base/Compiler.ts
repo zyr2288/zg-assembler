@@ -1,7 +1,6 @@
 import { Commands } from "../Commands/Commands";
 import { IMacroLine, MacroUtils } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
-import { DebugHelper } from "../LanguageHelper/DebugHelper";
 import { CommandLine } from "../Lines/CommandLine";
 import { ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
 import { InstructionLine, InstructionLineUtils } from "../Lines/InstructionLine";
@@ -101,8 +100,6 @@ export class Compiler {
 		if (MyDiagnostic.hasError)
 			return;
 
-		DebugHelper.Clear();
-		DebugHelper.AddLines(option.allLines);
 		return ResultUtils.GetResult(option.allLines);
 	}
 	//#endregion 编译所有文本
