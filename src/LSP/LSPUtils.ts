@@ -95,6 +95,8 @@ export class LSPUtils {
 
 				fileBuffer[i] = result[i];
 			}
+
+			await this.assembler.fileUtils.SaveFile(filePath, fileBuffer);
 		}
 	}
 	//#endregion 结果值输出
