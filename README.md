@@ -1,58 +1,58 @@
 # Zeng Ge Assembler
 
-[简体中文](./doc/README-zhcn.md)
+[English](./doc/README-en.md)
 
-* [ZG Assembler in Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZENG-GE.zg-assembler)
+## 配置文件
 
-* An extensible compiler for [VSCode](https://code.visualstudio.com/), supporting `6502` `65c816` (Special thanks Thirteen) `z80-gb`.
+* [编译器插件地址](https://marketplace.visualstudio.com/items?itemName=ZENG-GE.zg-assembler)
 
-* When the assembly file is opened, a `project-settings.json` file is created in project directory.
+* 或者可以在 VSCode 插件里搜索 `ZG Assembler` 即可找到插件
 
-* If you want to use core, use `npm run build-core` to build core source.
+* 一个 [VSCode](https://code.visualstudio.com/) 的可扩展的编译器，目前支持 `6502` `65c816`(感谢Thirteen) `z80-gb`，将来会加入更多适应平台。
+
+* 配置文件，当打开汇编文件会在目录下创建 `project-settings.json` 文件，默认以下配置
+
+* 如果你想单独编译内核，请使用 `npm run build-core`，详情请查看 [内核单独编译方法](内核单独编译方法.md)
 
 ```json
 {
-    "platform": "6502",            // Target Platform
-    "intellisense": true,
-    "outOfRangeWarning": true,     // Compile result out-of-bounds warning
-    "entry": "main.asm",
-    "compileTimes": 2,
-    "outputEntryFile": "",
-    "outputSingleFile": "",
-    "copyToClipboard": true,       // Copy result bytes to the clipboard
-    "patchFile": "",               // It will overwrite patch file
-    "includes": ["**/*.asm"],
-    "excludes": []
+    "platform": "6502",                 // 选择平台
+    "intellisense": true,               // 是否开启智能提示
+    "outOfRangeWarning": true,          // 编译结果越界警告
+    "entry": "main.asm",                // 入口文件
+    "compileTimes": 2,                  // 编译次数，至少两次，否则回出错
+    "outputEntryFile": "",              // 输出入口文件，不写则不输出
+    "outputSingleFile": "",             // 单个文件输出，不写则不输出
+    "copyToClipboard": true,            // 结果是否复制到剪贴板
+    "patchFile": "",                    // 匹配文件直接写入，建议备份原文件
+    "includes": ["**/*.asm"],           // 包含的文件
+    "excludes": []                      // 排除的文件
 }
 ```
+---
+## 功能介绍
 
-## Features
+### 编译
 
-### Compile
-
-* In the editor under `.asm` file, right click on the mouse and the compile menu will appear.
-
-
-### Label
-
-* You can use sub labels, such as `player.x` `player.y`.
-
-* Press vscode's Find Definition shortcut key (default F12) to find the label definition location directly.
+* 在`asm`文件下的编辑器内，点击鼠标右键则会出现编译菜单。
 
 
-### Local label
+### 标签
 
-* If a label is starting with "." (dot), then the label is valid only for this file.
-
-
-### Folding
-
-* The folding function starts with `;+` and ends with `;-`.
+* 在这个版本增加了子标签的功能，可以使用例如 player.x player.y 这样的子标签，并且智能提示能更好的协助你。
+* 按 vscode 的查找定义快捷键（默认F12）可直接找到标签定义位置。
 
 
-### Nameless label
+### 局部标签
 
-* Labels are one or more '+' or '-' characters are nameless labels.
+* 若文件内使用标签（非编译器指令）以.（点）开头，则该标签的有效范围仅仅于本文件。
+* 这样有利于可以在不同文件使用相同名称的标签。
+
+
+### 简易标签
+
+* 当标签以全部是+号或全部是-号的时候，则是简易标签。例如：
+
 ```
 --      LDA $2002
         BPL --
@@ -65,32 +65,31 @@
         ; AD 02 20 10 FB A5 00 F0 05 10 06 4C 00 90 4C 00 80 4C 00 A0 
 ```
 
+### 特殊运算符
 
-### Special Operator
-
-1. `>` and `<` have special meanings, for example `>$1234` takes the high ($12) and `<$1234` takes the low ($34).
-2. `*` has a special meaning when not used as a multiplication sign, it means currect line original address. e.g. `.ORG *`.
-3. `$` has a special meaning when not used as hex sign, it means currect line base address.
+1. `>` 与 `<` 都有特殊的意义，例如 `>$1234` 即取高位 ($12)， `<$1234` 取低位 ($34)
+2. `*` 有当不作为乘号时有特殊的意义，表示当前行的 `ORG` 地址
+3. `$` 作为单独符号出现（即不为16进制标识符），表示当前行的 `BASE` 地址
 
 ---
 
+## 编译器命令
 
-## Compiler commands (example of 6502)
-
+> 以下命令内中括号为可选参数
 
 ### `.BASE`
 
 ```
-    .BASE baseAddress
+    .BASE 文件起始位置
 ```
 
-* Set the generated file address, the default is `.BASE 0`, it is not same as `.ORG`.
+* 设置生成文件地址，默认为`.BASE 0`，这里不等同与`.ORG`。
 
-* For example, if `.BASE $10`, the generated file will be written from `$10`, and the previous `$F` address will be `0`.
+* 例如：若`.BASE $10`，则生成的文件编译内容从`$10`开始写入，之前的`$F`个地址为`0`。
 
-> Note: 
-> 1. Compile top-down, some variables need to be assigned for the first compile, if the first compile is unknown then compile is not successful.
-> 2. If you use the `.BASE` command, after `.ORG`, otherwise it compiles incorrectly.
+> 注意
+> 1. 编译自上而下，一些第一次编译需要赋值的变量如果第一次编译未知则编译不成功。
+> 2. 如果使用`.BASE`命令，则在`.ORG`之后，否则编译错误。
 
 ---
 
@@ -98,14 +97,14 @@
 ### `.ORG`
 
 ```
-    .ORG originalAddress
+    .ORG 编译起始位置
 ```
 
-* Set the start compile address, e.g. `.ORG $8000`, then the compile will start at $8000.
+* 设置开始编译地址，例如：`.ORG $8000`，则编译将从$8000开始。
 
-* You can also use `.ORG *`, which means compilation will start from the current address. But the current address has to be known, otherwise the compiler reports an error.
+* 也可以使用`.ORG *`，表示从当前地址开始编译。不过要知道当前地址，否则编译器报错。
 
-> Note: If you use the `.BASE` command, after `.ORG`, otherwise it compiles with an error.
+* 注意：如果使用 `.BASE` 命令，则在 `.ORG` 之后，否则编译错误。
 
 ---
 
@@ -113,12 +112,12 @@
 ### `.DEF`
 
 ```
-    .DEF name, expression
+    .DEF 标签, 表达式
 ```
 
-* Define a constant, for example: `.DEF idefined, $12`
+* 定义一个常量，例如：`.DEF idefined $12`。
 
-> Note: `temp = $12` can also be defined, but `temp` can be re-value.
+> 注意：`temp = $12` 虽然也能定义，用等号可重复定义。
 
 ---
 
@@ -126,59 +125,56 @@
 ### `.DB` `.DW` `.DL`
 
 ```
-    .DB data1 [, data2, data3...]     ;1 byte
-    .DW data1 [, data2, data3...]     ;2 bytes
-    .DL data1 [, data2, data3...]     ;4 bytes
+    .DB 数据1 [, 数据2, 数据3...]    ;1字节
+    .DW 数据1 [, 数据2, 数据3...]    ;2字节
+    .DL 数据1 [, 数据2, 数据3...]    ;4字节
 ```
 
-* A series of bytes data
+* 一系列数据。
 
 ---
 
 
 ### `.DBG` `.DWG` `.DLG` `.ENDD`
 
-* Data group, get the data index.
+* 数据组，用于定位数据位置。
 
-For example:
 ```
-    .DWG data
+    .DWG 标签
 
     .data1, .data2, .data3, .data1
 
     .ENDD
 
-    LDA data:.data1     ;Result A5 00
-    LDA data:.data3     ;Result A5 02
-    LDA data:.data1:1   ;Result A5 03
+    LDA data:.data1     ;0
+    LDA data:.data3     ;2
+    LDA data:.data1:1   ;3
 ```
 
----
+-----
 
 
 ### `.HEX`
 
 ```
-    .HEX hexString
+    .HEX 16进制字符串
+    .HEX 12 34567 89    ;12 34 56 07 89
 ```
 
-* A hexadecimal string, can be separated by spaces.
+* 一段16进制数据，可以用空格隔开。
 
-For example:
-```
-    .HEX 12 34567 89     ;Result(Hex) 12 34 56 07 89
-```
+> 注意：之后只能输入16进制数据，否则编译器会报错。
+
 
 ---
 
 
 ### `.IF` `.ELSEIF` `.ELSE` `.ENDIF`
 
-* Process a block of code if an expression is true.
+* 这里是一套判断条件，根据条件是否成立是否编译相应内容。
 
-> Note: Must know the parameters value.
+> 注意：必须要在使用这些之前知道参数的信息，否则编译报错
 
-For example:
 ```
     .IF a == 5
      .....
@@ -191,20 +187,26 @@ For example:
     .ENDIF
 ```
 
----
+-----
 
 
 ### `.IFDEF` `.IFNDEF` `.ELSE` `.ENDIF`
 
 ```
-    .IFDEF label
+    .IFDEF 标签
      .....
     .ELSE
      .....
     .ENDIF
 ```
 
-* Process a block of code if a label has been defined / not defined.
+* 这里是一套判断条件，根据条件是否成立是否编译相应内容。
+
+* 用法同 `.IF` 的命令类似，后面可以用 `.ELSE` `.ENDIF`
+
+* 这里是判断变量是否存在，`.IFDEF`为判断变量是否存在，`.IFNDEF`为判断变量是否不存在。
+
+> 注：必须要在使用这些之前知道参数的信息，否则编译报错
 
 ---
 
@@ -212,58 +214,50 @@ For example:
 ### `.INCBIN`
 
 ```
-    .INCBIN filePath[, fileStartPosition, readLength]
+    .INCBIN 文件相对路径[, 读取文件起始位置, 读取长度]
 ```
 
-* You can read the binary content of the reference file. Please fill in the relative path of the file in the double quotes.
+* 可以读取引用文件的二进制内容，后面双引号内请填写本文件的相对路径。
 
-For example:
+例如:
 ```
-    .INCBIN "Folder\file.bin", 0, 100
+    .INCBIN "文件夹\文件.bin", 0, 100
 ```
 
----
+-----
 
 
 ### `.INCLUDE`
 
-```
-    .INCLUDE filePath
-```
-
-* You can quote the file, please fill in the relative path of the file in double quotes. If there are also reference files in the reference file, please fill in relative to the main compilation file path. E.g:
 
 ```
-    .INCLUDE "Folder\file.asm"
+    .INCLUDE 文件相对路径
 ```
 
----
+* 可以引用文件，后面双引号内请填写本文件的相对路径。
 
+* 如果引用文件内也有引用文件，请相对于主编译文件路径填写。
+
+例如：
+```
+    .INCLUDE "文件夹\文件.asm"。
+```
+
+-----
 
 ### `.MACRO` `.ENDM`
 
 ```
-    .MACRO macroName[, arg1, arg2...]
+    .MACRO 自定义函数名称[, 参数1, 参数2...]
      .....
     .ENDM
 ```
 
-* Define a macro. Macro arguments are comma separated.
+> 注意：用这里的指令可以自定义函数，所要使用的函数要在编译之前定义好，否则编译器会报错。
 
-> Note: Arguments shoud get the value at first compilation.
+> 注意：所有自定义函数内的标签属于局部变量，请勿在函数外部使用。
 
-> Note: All labels in macro are local labels, please do not use them outside the macro.
-
-For example:
-
-```
-    .MACRO name, param1, param2, param3... 
-    ...
-    .ENDM
-```
-
-Example 1:
-
+实例1：
 ```
     .MACRO TXY
     TXA
@@ -272,9 +266,9 @@ Example 1:
 
     TXY
 ```
-* The compilation result:`8A A8`
+* 编译之后结果为：`8A A8`
 
-Example 2:
+实例2：
 ```
     .MACRO test, a, b
     .IF 3 == a
@@ -294,23 +288,21 @@ Example 2:
     test 5,4
     test 5,5
 ```
+* 编译之后结果为：`A5 03 A6 04 A5 06 85 06 A4 05`
 
-* The compilation result:`A5 03 A6 04 A5 06 85 06 A4 05`
-
----
-
+-----
 
 ### `.REPEAT` `.ENDR`
-
 ```
-    .REPEAT repeatTimes
+    .REPEAT 重复次数
      .....
     .ENDR
 ```
 
-* Repeat a block of code a specified number of times.
+* 可以重复某个指令多次，在 `.REPEAT` 后输入表达式即可。
 
-For example:
+> 注意：每个 `.REPEAT` 和 `.ENDR` 必须成对出现，可以嵌套。
+
 ```
     .REPEAT 2
     NOP
@@ -319,28 +311,27 @@ For example:
     .ENDR
     .ENDR
 ```
-* The compilation result is same as:`NOP ASL ASL ASL NOP ASL ASL ASL`
 
----
+* 对应编译的结果相当于：`NOP ASL ASL ASL NOP ASL ASL ASL`
+
+-----
 
 
 ### `.MSG`
 
 ```
-    .MSG message[, arg1, arg2...]
+    .MSG 输出信息[, 参数1, 参数2...]
 ```
 
-* Out put a message.
+* 可输出一条信息
 
 ```
     .ORG $8000
     .DEF test1, 10
     .DEF test2, 11
-    .MSG "test {0}, ${1}, @{0}", test1, test2
+    .MSG "测试案例 {0}, ${1}, @{0}", test1, test2
 ```
 
-* The message is：
+* 这里输出的信息是：
 
-```
-    test 10, $B, @0000 1010
-```
+> 测试案例 10, $B, @0000 1010
