@@ -65,7 +65,11 @@ export class LabelUtils {
 	static GetLineLabelToken(option: DecodeOption, labelType: LabelType = LabelType.Label) {
 		const line = option.GetCurrectLine<InstructionLine | VariableLine | CommandLine>();
 		if (line.labelToken && line.labelToken.isEmpty === false) {
-			let labelMark = LabelUtils.CreateLabel(line.labelToken!, option);
+
+			if (line.labelToken.text.endsWith(":"))
+				line.labelToken = line.labelToken.Substring(0, line.labelToken.length - 1);
+
+			let labelMark = LabelUtils.CreateLabel(line.labelToken, option);
 			if (labelMark) {
 				labelMark.label.comment = line.comment;
 				labelMark.label.labelType = labelType;
@@ -278,11 +282,11 @@ export class LabelUtils {
 	 */
 	static CheckIllegal(word: Token, allowDot: boolean) {
 		if (allowDot) {
-			if (/(^\d)|\s|\,|\+|\-|\*|\/|\>|\<|\=|\!|\~|#|&|\||%|\$|"/g.test(word.text)) {
+			if (/(^\d)|\s|\,|\+|\-|\*|\/|\>|\<|\=|\!|\~|:|#|&|\||%|\$|"/g.test(word.text)) {
 				return false;
 			}
 		} else {
-			if (/(^\d)|\s|\,|\+|\-|\*|\/|\>|\<|\=|\!|\~|#|&|\||%|\$|"|\./g.test(word.text)) {
+			if (/(^\d)|\s|\,|\+|\-|\*|\/|\>|\<|\=|\!|\~|:|#|&|\||%|\$|"|\./g.test(word.text)) {
 				return false;
 			}
 		}
