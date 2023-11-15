@@ -25,7 +25,6 @@ export class LSPUtils {
 
 		let tempFiles = await vscode.workspace.findFiles(includes, excludes);
 		let files = tempFiles.map(v => v.fsPath);
-		files = await LSPUtils.FileNameLowcase(...files);
 		return files;
 	}
 
