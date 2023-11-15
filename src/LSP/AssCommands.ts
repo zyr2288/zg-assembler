@@ -74,7 +74,7 @@ export class AssCommands {
 			LSPUtils.assembler.config.ProjectSetting.entry
 		);
 
-		if (await LSPUtils.assembler.fileUtils.PathType(filePath) === "none") {
+		if (await LSPUtils.assembler.fileUtils.PathType(filePath) !== "file") {
 			let errorMsg = LSPUtils.assembler.localization.GetMessage("File {0} is not exist", filePath);
 			vscode.window.showErrorMessage(errorMsg);
 			LSPUtils.StatueBarShowText(` $(alert) ${LSPUtils.assembler.localization.GetMessage("compile error")}`, 3000);

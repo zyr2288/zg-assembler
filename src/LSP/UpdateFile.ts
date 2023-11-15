@@ -19,6 +19,7 @@ export class UpdateFile {
 		UpdateFile.WatchFile(context);
 	}
 
+	//#region 载入所有工程文件
 	/**载入所有工程文件 */
 	static async LoadAllFile() {
 		if (!vscode.workspace.workspaceFolders)
@@ -28,54 +29,17 @@ export class UpdateFile {
 
 		let tempFiles: { text: string, filePath: string }[] = [];
 		for (let i = 0; i < files.length; ++i) {
-			let buffer = await LSPUtils.assembler.fileUtils.ReadFile(files[i].fsPath);
+			let buffer = await LSPUtils.assembler.fileUtils.ReadFile(files[i]);
 			let text = LSPUtils.assembler.fileUtils.BytesToString(buffer);
-			tempFiles.push({ text, filePath: files[i].fsPath });
+			tempFiles.push({ text, filePath: files[i] });
 		}
 
 		await LSPUtils.assembler.compiler.DecodeText(tempFiles);
 		UpdateFile.UpdateDiagnostic();
 	}
+	//#endregion 载入所有工程文件
 
-	/**文档变更 */
-	private static async ChangeDocument(event: vscode.TextDocumentChangeEvent) {
-		if (event.document.languageId !== LSPUtils.assembler.config.FileExtension.language)
-			return;
-
-		for (let i = 0; i < event.contentChanges.length; ++i) {
-			const value = event.contentChanges[i];
-			if (value.text.match(/\r\n|\r|\n/)) {
-				let lineNumber = value.range.start.line;
-				let content = event.document.lineAt(lineNumber).text;
-				let match = LSPUtils.assembler.languageHelper.documentChange.AutoUpperCase(content);
-				if (!match)
-					continue;
-
-				let range = new vscode.Range(lineNumber, match.index, lineNumber, match.index + match.length);
-				let editor = vscode.window.activeTextEditor!;
-				editor.edit((ee) => {
-					ee.replace(range, match!.text);
-				});
-			}
-		}
-
-		UpdateFile.updateFiles.set(event.document.uri.fsPath, event.document.getText());
-
-		LSPUtils.fileUpdateFinished = false;
-		clearTimeout(UpdateFile.fileUpdateThreadId);
-		UpdateFile.fileUpdateThreadId = setTimeout(async () => {
-			let files: { text: string, filePath: string }[] = [];
-			UpdateFile.updateFiles.forEach((text, filePath) => {
-				files.push({ text, filePath });
-			});
-			await LSPUtils.assembler.compiler.DecodeText(files);
-			UpdateFile.UpdateDiagnostic();
-			UpdateFile.updateFiles.clear();
-			LSPUtils.fileUpdateFinished = true;
-		}, FreshTime);
-
-	}
-
+	//#region 更新错误
 	/**更新错误 */
 	static UpdateDiagnostic() {
 		let errors = LSPUtils.assembler.diagnostic.GetExceptions();
@@ -120,6 +84,9 @@ export class UpdateFile {
 			this.errorCollection.set(uri, value);
 		});
 	}
+	//#endregion 更新错误
+
+	/***** private *****/
 
 	//#region 监视文件
 	/**监视文件，改动等 */
@@ -194,4 +161,46 @@ export class UpdateFile {
 	// 	return searchFiles.includes(file);
 	// }
 	//#endregion 获取工作目录下所筛选出的文件
+
+	//#region 文档变更
+	/**文档变更 */
+	private static async ChangeDocument(event: vscode.TextDocumentChangeEvent) {
+		if (event.document.languageId !== LSPUtils.assembler.config.FileExtension.language)
+			return;
+
+		for (let i = 0; i < event.contentChanges.length; ++i) {
+			const value = event.contentChanges[i];
+			if (value.text.match(/\r\n|\r|\n/)) {
+				let lineNumber = value.range.start.line;
+				let content = event.document.lineAt(lineNumber).text;
+				let match = LSPUtils.assembler.languageHelper.documentChange.AutoUpperCase(content);
+				if (!match)
+					continue;
+
+				let range = new vscode.Range(lineNumber, match.index, lineNumber, match.index + match.length);
+				let editor = vscode.window.activeTextEditor!;
+				editor.edit((ee) => {
+					ee.replace(range, match!.text);
+				});
+			}
+		}
+
+		UpdateFile.updateFiles.set(event.document.uri.fsPath, event.document.getText());
+
+		LSPUtils.fileUpdateFinished = false;
+		clearTimeout(UpdateFile.fileUpdateThreadId);
+		UpdateFile.fileUpdateThreadId = setTimeout(async () => {
+			let files: { text: string, filePath: string }[] = [];
+			UpdateFile.updateFiles.forEach((text, filePath) => {
+				files.push({ text, filePath });
+			});
+			await LSPUtils.assembler.compiler.DecodeText(files);
+			UpdateFile.UpdateDiagnostic();
+			UpdateFile.updateFiles.clear();
+			LSPUtils.fileUpdateFinished = true;
+		}, FreshTime);
+
+	}
+	//#endregion 文档变更
+
 }

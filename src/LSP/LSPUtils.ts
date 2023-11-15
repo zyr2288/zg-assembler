@@ -23,14 +23,16 @@ export class LSPUtils {
 		if (LSPUtils.assembler.config.ProjectSetting.excludes.length !== 0)
 			excludes = `{${LSPUtils.assembler.config.ProjectSetting.excludes.join(",")}}`;
 
-		return await vscode.workspace.findFiles(includes, excludes);
+		let tempFiles = await vscode.workspace.findFiles(includes, excludes);
+		let files = tempFiles.map(v => v.fsPath);
+		files = await LSPUtils.FileNameLowcase(...files);
+		return files;
 	}
 
 	/**查询文件是否在工程内 */
 	static async FindFileInProject(file: string) {
 		let files = await LSPUtils.GetWorkspaceFilterFile();
-		let searchFiles = files.map(value => value.fsPath);
-		return searchFiles.includes(file);
+		return files.includes(file);
 	}
 	//#endregion 获取工作目录下所筛选出的文件
 
@@ -153,5 +155,21 @@ export class LSPUtils {
 		});
 	}
 	//#endregion 等待编译完成
+
+	/***** private *****/
+
+	//#region 将文件名自动小写
+	/**将文件名自动小写 */
+	private static async FileNameLowcase(...paths: string[]) {
+		let result: string[] = [];
+		for (let i = 0; i < paths.length; i++) {
+			const filePath = paths[i];
+			let folder = await LSPUtils.assembler.fileUtils.GetPathFolder(filePath);
+			let fileName = (await LSPUtils.assembler.fileUtils.GetFileName(filePath)).toLocaleLowerCase();
+			result.push(LSPUtils.assembler.fileUtils.Combine(folder, fileName));
+		}
+		return result;
+	}
+	//#endregion 将文件名自动小写
 
 }

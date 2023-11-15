@@ -24,25 +24,16 @@ export class LanguageServer {
 		this.assembler.Initialize();
 		this.SetLanguage(vscode.env.language);
 
-		const classes = [
-			Highlighting, UpdateFile, DefinitionProvider, Intellisense,
-			HoverProvider, AssCommands
-		];
-		for (let i = 0; i < classes.length; i++) {
-			let temp = Reflect.get(classes[i], "Initialize");
-			await temp(context);
-		}
+		// 怕看不懂，直接改成这个形式，顺序不能变动
+		await Highlighting.Initialize(context);
+		await UpdateFile.Initialize(context);
+		await DefinitionProvider.Initialize(context);
+		await Intellisense.Initialize(context);
 
-		// await Highlighting.Initialize(context);
-		// await UpdateFile.Initialize(context);
-		// await DefinitionProvider.Initialize(context);
-		// await Intellisense.Initialize(context);
-		// HoverProvider.Initialize(context);
+		HoverProvider.Initialize(context);
+		AssCommands.Initialize(context);
 
-		// AssCommands.Initialize(context);
-		// DebugAdapterFactory.Initialize(context);
-
-		UpdateFile.LoadAllFile();
+		await UpdateFile.LoadAllFile();
 
 		const msg = LSPUtils.assembler.localization.GetMessage("plugin loaded");
 		LSPUtils.StatueBarShowText(` $(check) ${msg}`, 3000);
