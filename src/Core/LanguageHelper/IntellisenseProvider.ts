@@ -6,7 +6,9 @@ import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Commands } from "../Commands/Commands";
 import { Macro } from "../Commands/Macro";
+import { Localization } from "../I18n/Localization";
 import { AsmCommon } from "../Platform/AsmCommon";
+import { Platform } from "../Platform/Platform";
 import { HelperUtils } from "./HelperUtils";
 
 const ignoreWordStr = /;|(^|\s+)(\.HEX|\.DBG|\.DWG|\.MACRO)(\s+|$)/ig;
@@ -112,6 +114,7 @@ export class IntellisenseProvider {
 		const fileHash = FileUtils.GetFilePathHashcode(filePath);
 		const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
 		const prefix = line.Substring(0, lineCurrect);
+		
 		if (ignoreWordStr.test(prefix.text))
 			return [];
 
@@ -142,6 +145,12 @@ export class IntellisenseProvider {
 					let prefix = HelperUtils.GetWord(lineText, lineCurrect);
 					return IntellisenseProvider.GetDataGroup(prefix.rangeText[0]);
 				} else if (trigger !== " " && lineCurrect > matchIndex) {
+					const restText = lineText.substring(matchIndex);
+					const tempCurrect = lineCurrect - matchIndex - 1;
+					let ignoreContent = AsmCommon.MatchLinePosition(tempMatch.text, restText, tempCurrect);
+					if (ignoreContent)
+						return [];
+
 					let prefix = HelperUtils.GetWord(lineText, lineCurrect);
 					return IntellisenseProvider.GetLabel(fileHash, prefix.rangeText[0], macro);
 				}
@@ -356,7 +365,7 @@ export class IntellisenseProvider {
 		for (let j = 0; j < modes.length; ++j) {
 			let com = new Completion({ showText: "" });
 			if (!modes[j].addressingMode) {
-				com.showText = "(Empty)";
+				com.showText = Localization.GetMessage("empty addressing mode");
 				com.insertText = "\n";
 				com.index = 0;
 			} else {
@@ -376,9 +385,16 @@ export class IntellisenseProvider {
 		IntellisenseProvider.instructionCompletions = [];
 		for (let i = 0; i < AsmCommon.instructions.length; ++i) {
 			const instruction = AsmCommon.instructions[i];
+			const insType = AsmCommon.allInstructions.get(instruction)!;
+
+			let insertText = instruction;
+			if (insType.length === 1 && !insType[0].addressingMode) {
+				insertText += "\n";
+			}
+
 			let completion = new Completion({
 				showText: instruction,
-				insertText: instruction,
+				insertText,
 				type: CompletionType.Instruction
 			});
 			IntellisenseProvider.instructionCompletions.push(completion);

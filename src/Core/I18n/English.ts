@@ -27,6 +27,8 @@ export const English = {
 	"plugin loading": "plugin loading",
 	"plugin loaded": "plugin loaded",
 
+	"empty addressing mode": "(Empty)",
+
 	"out put message File{0}, Line{1}, Message{2}":"File: \"{0}\"\nLine: {1}\n{2}\n\n",
 
 	"Please compile the file before Debug": "Please compile the file before Debug",

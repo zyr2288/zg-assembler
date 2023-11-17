@@ -29,6 +29,8 @@ export const Chinese: LocalizationMsg = {
 	"plugin loading": "编译器插件载入中",
 	"plugin loaded": "编译器插件载入完成",
 
+	"empty addressing mode": "空",
+
 	"out put message File{0}, Line{1}, Message{2}":"文件: \"{0}\"\n第 {1} 行\n{2}\n\n",
 
 	"Please compile the file before Debug": "请在Debug之前编译文件",

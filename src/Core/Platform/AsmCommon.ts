@@ -3,9 +3,12 @@ import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Localization } from "../I18n/Localization";
+import { Completion } from "../LanguageHelper/IntellisenseProvider";
 
 export interface IAddressingMode {
+	/**寻址正则表达式的分割 */
 	addressType: string[];
+	/**寻址模式，可用正则表达式 或例如：([exp]),Y */
 	addressingMode?: string;
 	opCode: Array<number | undefined>;
 	opCodeLength: Array<number | undefined>;
@@ -24,13 +27,14 @@ export interface AddressOption {
 }
 
 export interface IAsmCommon {
-
+	Intellisense?: () => Completion[] | void;
 }
 
 export class AsmCommon {
 
-	static PlatformName: string;
+	/***** static *****/
 
+	static PlatformName: string;
 	/**所有汇编指令 */
 	static instructions: string[];
 	/**Key为 Instruction，例如：LDA */
@@ -190,8 +194,6 @@ export class AsmCommon {
 					if (type.addressType[j] === "")
 						continue;
 
-
-
 					const regex = new RegExp(type.addressType[j], "i");
 					let match = regex.exec(text);
 					if (!match) {
@@ -232,5 +234,36 @@ export class AsmCommon {
 		return result;
 	}
 	//#endregion 匹配指令
+
+	//#region 判断输入内容是否在忽略内容内
+	/**判断输入内容是否在忽略内容内 */
+	static MatchLinePosition(instruction: string, restText: string, restCurrect: number) {
+		const modes = AsmCommon.allInstructions.get(instruction);
+		if (!modes)
+			return false;
+
+		for (let i = 0; i < modes.length; i++) {
+			let adType = modes[i].addressType;
+			let expRange = [];
+			for (let j = 0; j < adType.length; j++) {
+				if (adType[j] === "")
+					continue;
+
+				const regex = new RegExp(adType[j], "i");
+				let match = regex.exec(restText);
+				if (!match) {
+					expRange = [];
+					break;
+				}
+
+				if (match[0].length !== 0 &&
+					match.index <= restCurrect && 
+					restCurrect <= match.index + match[0].length - 1) {
+						return true;
+					}
+			}
+		}
+	}
+	//#endregion 判断输入内容是否在忽略内容内
 
 }
