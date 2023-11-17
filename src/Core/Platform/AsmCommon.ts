@@ -238,6 +238,7 @@ export class AsmCommon {
 	//#region 判断输入内容是否在忽略内容内
 	/**判断输入内容是否在忽略内容内 */
 	static MatchLinePosition(instruction: string, restText: string, restCurrect: number) {
+		instruction = instruction.toUpperCase();
 		const modes = AsmCommon.allInstructions.get(instruction);
 		if (!modes)
 			return false;
