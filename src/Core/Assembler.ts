@@ -11,6 +11,7 @@ import { DocumentChangeProvider } from "./LanguageHelper/DocumentChangeProvider"
 import { HighlightingProvider } from "./LanguageHelper/HighlightingProvider";
 import { HoverProvider } from "./LanguageHelper/HoverProvider";
 import { IntellisenseProvider } from "./LanguageHelper/IntellisenseProvider";
+import { RenameProvider } from "./LanguageHelper/RenameProvider";
 import { Platform } from "./Platform/Platform";
 
 export class Assembler {
@@ -30,7 +31,8 @@ export class Assembler {
 		documentChange: DocumentChangeProvider,
 		hoverProvider: HoverProvider,
 		intellisense: IntellisenseProvider,
-		definition: DefinitionProvider
+		definition: DefinitionProvider,
+		rename: RenameProvider
 	};
 
 	utils = {

@@ -9,6 +9,7 @@ import { Intellisense } from "./Intellisense";
 import { IOImplementation } from "./IOImplementation";
 import { LSPUtils } from "./LSPUtils";
 import { UpdateFile } from "./UpdateFile";
+import { RenameProvider } from "./RenameProvider";
 
 export class LanguageServer {
 
@@ -28,6 +29,7 @@ export class LanguageServer {
 		await Highlighting.Initialize(context);
 		await UpdateFile.Initialize(context);
 		await DefinitionProvider.Initialize(context);
+		await RenameProvider.Initialize(context);
 		await Intellisense.Initialize(context);
 
 		HoverProvider.Initialize(context);
