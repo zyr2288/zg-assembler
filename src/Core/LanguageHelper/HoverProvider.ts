@@ -18,7 +18,7 @@ export class HoverProvider {
 			return result;
 
 		let word = HelperUtils.GetWord(content.text, currect, content.start);
-		let tempWord = word.rangeText.join("");
+		let tempWord = word.leftText + word.rightText;
 		let value = ExpressionUtils.GetNumber(tempWord);
 		if (value.success) {
 			result.value = value.value;

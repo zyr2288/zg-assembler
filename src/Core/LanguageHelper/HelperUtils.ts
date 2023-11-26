@@ -40,7 +40,7 @@ export class HelperUtils {
 	 * 获取光标所在字符
 	 * @param lineText 一行文本
 	 * @param currect 当前光标未知
-	 * @returns 
+	 * @returns { rangeText 为光标左边文本和光标右边文本, start: range[0] + start }
 	 */
 	static GetWord(lineText: string, currect: number, start = 0) {
 
@@ -92,16 +92,20 @@ export class HelperUtils {
 		if (!findEnd)
 			range[1] = lineText.length;
 
-		let rangeText = [
-			lineText.substring(range[0], currect),
-			lineText.substring(currect, range[1])
-		];
+		let leftText = lineText.substring(range[0], currect);
+		let rightText = lineText.substring(currect, range[1]);
 
-		return { rangeText, start: range[0] + start };
+		return { leftText, rightText, start: range[0] + start };
 	}
 	//#endregion 获取光标所在字符
 
-	//#region 获取行所在范围
+	//#region 所在行的作用域，例如 Macro 或 DataGroup
+	/**
+	 * 所在行的作用域，例如 Macro 或 DataGroup
+	 * @param fileHash 文件hash
+	 * @param lineNumber 行号
+	 * @returns 作用域类型
+	 */
 	static GetRange(fileHash: number, lineNumber: number) {
 		let ranges = Compiler.enviroment.GetRange(fileHash);
 		let rangeType = undefined;
@@ -114,6 +118,6 @@ export class HelperUtils {
 		}
 		return rangeType;
 	}
-	//#endregion 获取行所在范围
+	//#endregion 所在行的作用域，例如 Macro 或 DataGroup
 
 }

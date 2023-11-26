@@ -67,8 +67,12 @@ export class FileUtils {
 	/**已实现的接口 */
 
 	//#region 获取文件路径Hashcode
-	/**获取文件路径Hashcode */
-	static GetFilePathHashcode(filePath:string) {
+	/**
+	 * 获取文件路径Hashcode
+	 * @param filePath 文件路径
+	 * @returns fileHash
+	 */
+	static GetFilePathHashcode(filePath: string) {
 		filePath = FileUtils.ArrangePath(filePath);
 		return Utils.GetHashcode(filePath);
 	}

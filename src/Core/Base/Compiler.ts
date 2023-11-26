@@ -18,6 +18,7 @@ import { DecodeOption } from "./Options";
 import { ResultUtils } from "./ResultUtils";
 import { Token } from "./Token";
 
+/**编译类 */
 export class Compiler {
 
 	static compiling: boolean = false;
@@ -62,9 +63,9 @@ export class Compiler {
 
 	//#region 编译所有文本
 	/**
-	 * 
-	 * @param filePath 
-	 * @param text 
+	 * 编译所有文本
+	 * @param filePath 文件路径
+	 * @param text 文本内容
 	 */
 	static async CompileText(filePath: string, text: string) {
 

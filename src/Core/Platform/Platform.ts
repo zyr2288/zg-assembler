@@ -16,14 +16,23 @@ export const MatchNames = {
 /**平台 */
 export class Platform {
 
+	/**当前平台 */
 	static platform: AsmCommon;
+
 	/**匹配编译器命令，编译指令，等式字符串，匹配结果 command instruction variable */
 	static regexString: string;
 
+	/**所有平台名称 */
 	private static platformNames: string[];
+
+	/**各个平台的主要类 */
 	private static platforms = [Asm6502, Asm65C816, AsmZ80_GB];
 
-	/**改变编译平台，目前有 6502 65816 z80-gb */
+	//#region 改变编译平台，目前有 6502 65816 z80-gb
+	/**
+	 * 改变编译平台
+	 * @param platform 编译平台 目前有 6502 65816 z80-gb
+	 */
 	static ChangePlatform(platform: string) {
 
 		if (!Platform.platformNames) {
@@ -45,8 +54,10 @@ export class Platform {
 		IntellisenseProvider.UpdateCommandCompletions();
 		IntellisenseProvider.UpdateInstrucionCompletions();
 	}
+	//#endregion 改变编译平台，目前有 6502 65816 z80-gb
 
 	//#region 更新编译平台的正则表达式
+	/**更新编译平台的正则表达式 */
 	private static UpdateRegex() {
 
 		Platform.regexString = `((\\s+|^)((?<${MatchNames.command}>`;

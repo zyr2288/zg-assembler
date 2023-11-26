@@ -126,7 +126,7 @@ export class IntellisenseProvider {
 					return [];
 
 				let prefix = HelperUtils.GetWord(lineText, lineCurrect);
-				return IntellisenseProvider.GetLabel(fileHash, prefix.rangeText[0]);
+				return IntellisenseProvider.GetLabel(fileHash, prefix.leftText);
 			case "Macro":
 				macro = Compiler.enviroment.allMacro.get(rangeType.key);
 				break;
@@ -143,7 +143,7 @@ export class IntellisenseProvider {
 					return IntellisenseProvider.GetInstructionAddressingModes(tempMatch.text);
 				} else if (trigger === ":" && lineCurrect > matchIndex) {
 					let prefix = HelperUtils.GetWord(lineText, lineCurrect);
-					return IntellisenseProvider.GetDataGroup(prefix.rangeText[0]);
+					return IntellisenseProvider.GetDataGroup(prefix.leftText);
 				} else if (trigger !== " " && lineCurrect > matchIndex) {
 					const restText = lineText.substring(matchIndex);
 					const tempCurrect = lineCurrect - matchIndex - 1;
@@ -152,7 +152,7 @@ export class IntellisenseProvider {
 						return [];
 
 					let prefix = HelperUtils.GetWord(lineText, lineCurrect);
-					return IntellisenseProvider.GetLabel(fileHash, prefix.rangeText[0], macro);
+					return IntellisenseProvider.GetLabel(fileHash, prefix.leftText, macro);
 				}
 				break;
 			case "command":
@@ -161,7 +161,7 @@ export class IntellisenseProvider {
 					return [];
 
 				let prefix = HelperUtils.GetWord(lineText, lineCurrect);
-				return IntellisenseProvider.GetLabel(fileHash, prefix.rangeText[0], macro);
+				return IntellisenseProvider.GetLabel(fileHash, prefix.leftText, macro);
 		}
 		return [];
 	}

@@ -7,6 +7,14 @@ export enum TokenType {
 export class Token {
 
 	//#region 建立一个Token
+	/**
+	 * 建立一个Token
+	 * @param fileHash 文件名hash
+	 * @param line 行号，0开始
+	 * @param start 起始位置
+	 * @param text 文本
+	 * @returns Token
+	 */
 	static CreateToken(fileHash: number, line: number, start: number, text: string) {
 		let token = new Token();
 
@@ -19,7 +27,17 @@ export class Token {
 
 		return token;
 	}
+
 	//#endregion 建立一个Token
+
+	//#region 建立一个空白Token
+	/**建立一个空白Token */
+	static EmptyToken() { return new Token(); }
+	//#endregion 建立一个空白Token
+
+	private constructor() {
+
+	}
 
 	/**文件路径Hash */
 	fileHash: number = 0;

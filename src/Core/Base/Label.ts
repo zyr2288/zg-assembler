@@ -147,7 +147,7 @@ export class LabelUtils {
 	/**
 	 * 查找标签
 	 * @param word 要查找的标签
-	 * @param option 选项
+	 * @param macro 函数
 	 * @returns 是否找到标签
 	 */
 	static FindLabel(word?: Token, macro?: Macro): ILabel | undefined {
@@ -237,6 +237,12 @@ export class LabelUtils {
 	//#endregion 查找标签
 
 	//#region 通过 labelHash 获取 label
+	/**
+	 * 通过 labelHash 获取 label
+	 * @param labelHash labelHash
+	 * @param macro 函数
+	 * @returns 查找到的Label
+	 */
 	static GetLabelWithHash(labelHash?: number, macro?: Macro) {
 		if (!labelHash)
 			return;
@@ -256,7 +262,7 @@ export class LabelUtils {
 	 * @param text 文本
 	 * @param fileHash 文件Hash
 	 * @param type 标签作用域
-	 * @param option 选项
+	 * @param line 行号
 	 * @returns Hash值
 	 */
 	static GetLebalHash(text: string, fileHash: number, type: LabelScope, line?: number) {
@@ -277,7 +283,7 @@ export class LabelUtils {
 	/**
 	 * 检查标签是否合法，true合法
 	 * @param word 要检查的文本
-	 * @param allowDot 允许逗号
+	 * @param allowDot 允许点
 	 * @returns true为合法
 	 */
 	static CheckIllegal(word: Token, allowDot: boolean) {
@@ -343,6 +349,12 @@ export class LabelUtils {
 	//#endregion 插入临时标签
 
 	//#region 分割标签并插入
+	/**
+	 * 分割标签并插入
+	 * @param token 整个标签
+	 * @param type 标签作用域
+	 * @returns 
+	 */
 	private static SplitLabel(token: Token, type: LabelScope) {
 		let tokens = token.Split(/\./g);
 		let text = "";

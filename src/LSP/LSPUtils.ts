@@ -142,6 +142,34 @@ export class LSPUtils {
 	}
 	//#endregion 状态栏显示文本
 
+	//#region 显示信息
+	/**
+	 * 显示信息
+	 * @param message 所显示的信息
+	 * @param boxType 信息类型
+	 * @param buttons 显示的按钮
+	 * @returns 
+	 */
+	static async ShowMessageBox(message: string, boxType: "info" | "warning" | "error", ...buttons: string[]) {
+		let selectButton: string | undefined;
+		switch (boxType) {
+			case "info":
+				selectButton = await vscode.window.showInformationMessage(message, ...buttons);
+				break;
+			case "warning":
+				selectButton = await vscode.window.showWarningMessage(message, ...buttons);
+				break;
+			case "error":
+				selectButton = await vscode.window.showErrorMessage(message, ...buttons);
+				break;
+		}
+		if (!selectButton)
+			return -1;
+
+		return buttons.indexOf(selectButton);
+	}
+	//#endregion 显示信息
+
 	//#region 等待编译完成
 	static async WaitingCompileFinished(): Promise<void> {
 		return new Promise((resolve, reject) => {

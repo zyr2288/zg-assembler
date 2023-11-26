@@ -28,7 +28,7 @@ export class DefinitionProvider {
 					let start = tempMatch.start + tempMatch.text.length;
 					if (start < word.start &&
 						lineText.substring(start, word.start).trim() === "") {
-						let path = word.rangeText[0].substring(1) + word.rangeText[1].substring(0, word.rangeText[1].length - 1);
+						let path = word.leftText.substring(1) + word.rightText.substring(0, word.rightText.length - 1);
 						result.filePath = await DefinitionProvider.GetFilePath(filePath, path);
 					}
 					return result;
@@ -41,7 +41,7 @@ export class DefinitionProvider {
 		if (rangeType?.type === "Macro")
 			macro = Compiler.enviroment.allMacro.get(rangeType.key);
 
-		let wordText = word.rangeText.join("");
+		let wordText = word.leftText + word.rightText;
 		let token = Token.CreateToken(fileHash, lineNumber, word.start, wordText);
 		let label = LabelUtils.FindLabel(token, macro);
 		if (label) {

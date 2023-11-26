@@ -9,9 +9,23 @@ export enum LineCompileType {
 	None, Error, Finished, Ignore
 }
 
+//#region 高亮类型
+/**高亮类型 */
 export enum HighlightType {
-	None, Label, Keyword, Macro, Defined, Variable
+	/**无 */
+	None,
+	/**标签 */
+	Label,
+	/**关键字 */
+	Keyword,
+	/**自定义函数 */
+	Macro,
+	/**定义的常量 */
+	Defined,
+	/**定义的变量 */
+	Variable
 }
+//#endregion 高亮类型
 
 /**通用行接口，不要使用构造函数，否则无法深拷贝 */
 export interface ICommonLine {
