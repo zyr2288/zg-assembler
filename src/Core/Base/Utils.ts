@@ -7,18 +7,31 @@ export class Utils {
 	/**深拷贝 */
 	static DeepClone<T>(source: T): T {
 		// @ts-ignore
-		let _out = new source.constructor;
+		const out = new source.constructor;
 
-		for (let _key in source) {
+		for (const key in source) {
 			// @ts-ignore
-			if (source.hasOwnProperty(_key)) {
-				let type = Utils.GetType(source[_key]);
-				_out[_key] = type === "Object" || type === "Array" ?
-					Utils.DeepClone(source[_key]) :
-					source[_key];
+			if (source.hasOwnProperty(key)) {
+				const type = Utils.GetType(source[key]);
+				switch (type) {
+					case "Object":
+					case "Array":
+						out[key] = Utils.DeepClone(source[key]);
+						break;
+					case "Map":
+						const sourceMap = source[key] as Map<any, any>;
+						const outMap = out[key] as Map<any, any>;
+						for (const mapKey of sourceMap.keys())
+							outMap.set(mapKey, Utils.DeepClone(sourceMap.get(mapKey)))
+						
+						break;
+					default:
+						out[key] = source[key];
+						break;
+				}
 			}
 		}
-		return _out;
+		return out;
 	}
 
 	private static GetType(n: any) {

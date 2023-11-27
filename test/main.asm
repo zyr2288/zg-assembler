@@ -16,6 +16,17 @@
 	.ORG $C000
 	.BASE $10
 
+	.MACRO WriteToPPU, address	;地址内容写入PPU，这里做一个自定义函数写法
+	
+	LDA #<address
+	STA $0
+	LDA #>address
+	STA $1
+	JSR ppuWrite
+
+	.ENDM
+	
+
 RESET
 IRQ
 
@@ -37,17 +48,8 @@ IRQ
 	DEX
 	BNE -
 
-	LDA #<palette
-	STA $0
-	LDA #>palette
-	STA $1
-	JSR ppuWrite
-	
-	LDA #<helloWorld
-	STA $0
-	LDA #>helloWorld
-	STA $1
-	JSR ppuWrite
+	WriteToPPU palette
+	WriteToPPU helloWorld
 
 -	LDA $2002
 	BPL -

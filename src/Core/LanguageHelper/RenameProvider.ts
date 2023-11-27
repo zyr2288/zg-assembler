@@ -3,6 +3,7 @@ import { ExpressionPart, PriorityType } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
 import { LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
+import { Localization } from "../I18n/Localization";
 import { Platform } from "../Platform/Platform";
 import { HelperUtils } from "./HelperUtils";
 
@@ -14,7 +15,7 @@ enum RenameType {
 export class RenameProvider {
 
 	/**
-	 * 预备命名
+	 * 预备命名，获取重命名的范围
 	 * @param lineText 一行文本
 	 * @param currect 当前光标位置
 	 * @returns 文本起始位置和长度
@@ -38,7 +39,7 @@ export class RenameProvider {
 
 		const match = new RegExp(Platform.regexString).exec(newLabelStr);
 		if (match)
-			return;
+			return Localization.GetMessage("rename error");
 
 		const oldToken = Token.CreateToken(fileHash, line, tempResult.start, tempResult.leftText + tempResult.rightText);
 		const newToken = Token.CreateToken(fileHash, line, tempResult.start, newLabelStr);
@@ -52,14 +53,15 @@ export class RenameProvider {
 			macro = Compiler.enviroment.allMacro.get(rangeType.key);
 		}
 
+		let result = new Map<number, Token[]>();
+
 		const oldLabel = LabelUtils.FindLabel(oldToken, macro);
 		const newLabel = LabelUtils.FindLabel(newToken, macro);
 		if (!oldLabel || newLabel)
-			return [];
+			return result;
 
 		const allLines = Compiler.enviroment.allBaseLines;
 
-		let result = new Map<number, Token[]>();
 		// for (let i = 0; i < option.allLines.length; i++) {
 		// 	const line = option.GetLine(i);
 		// 	const fileHash = line.orgText.fileHash;

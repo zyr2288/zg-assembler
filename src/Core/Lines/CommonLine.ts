@@ -23,7 +23,9 @@ export enum HighlightType {
 	/**定义的常量 */
 	Defined,
 	/**定义的变量 */
-	Variable
+	Variable,
+	/**数字 */
+	Number,
 }
 //#endregion 高亮类型
 

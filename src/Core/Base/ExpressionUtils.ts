@@ -1,4 +1,5 @@
 import { Localization } from "../I18n/Localization";
+import { LabelReferences } from "../LanguageHelper/LabelReferences";
 import { HighlightToken, HighlightType } from "../Lines/CommonLine";
 import { Compiler } from "./Compiler";
 import { LabelType, LabelUtils } from "./Label";
@@ -113,8 +114,8 @@ export class ExpressionUtils {
 	//#region 获取数字
 	/**获取数字 */
 	static GetNumber(number: string) {
-		let match = /(^(?<hex>\$[0-9a-fA-F]+)$)|(^(?<decimal>\-?[0-9]+(\.[0-9]+)?)$)|(^(?<bin>\@[01]+)$)/.exec(number);
-		let result = { success: !!match, value: 0 };
+		const match = /(^(?<hex>\$[0-9a-fA-F]+)$)|(^(?<decimal>\-?[0-9]+(\.[0-9]+)?)$)|(^(?<bin>\@[01]+)$)/.exec(number);
+		const result = { success: !!match, value: 0 };
 		if (match?.groups?.hex) {
 			number = number.substring(1);
 			result.value = parseInt(number, 16);
@@ -142,13 +143,14 @@ export class ExpressionUtils {
 			if (part.type !== PriorityType.Level_1_Label)
 				continue;
 
-			let tempLabel = LabelUtils.FindLabel(part.token, option?.macro);
-			if (!tempLabel || tempLabel.labelType === LabelType.None) {
+			const labelResult = LabelUtils.FindLabel(part.token, option?.macro);
+			if (!labelResult || labelResult.label.labelType === LabelType.None) {
 				const errorMsg = Localization.GetMessage("Label {0} not found", parts[i].token.text);
 				MyDiagnostic.PushException(parts[i].token, errorMsg);
 				error = true;
 			} else {
-				switch (tempLabel.labelType) {
+				parts[i].value = labelResult.hash;
+				switch (labelResult.label.labelType) {
 					case LabelType.Defined:
 						part.highlightingType = HighlightType.Defined;
 						break;
@@ -206,12 +208,12 @@ export class ExpressionUtils {
 					continue;
 				}
 
-				let temp = ExpressionUtils.GetNumber(element.token.text);
+				const temp = ExpressionUtils.GetNumber(element.token.text);
 				if (temp.success) {
 					element.value = temp.value;
 					element.type = PriorityType.Level_0_Sure;
 				} else {
-					let label = LabelUtils.FindLabel(element.token, option?.macro);
+					const label = LabelUtils.FindLabelWithHash(element.value, option?.macro);
 					if (label?.value === undefined) {
 						if (analyseOption === ExpressionResult.GetResultAndShowError) {
 							let errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
@@ -247,7 +249,7 @@ export class ExpressionUtils {
 						operation.value = -pre2.value;
 						break;
 					case ">":
-						operation.value = (pre2.value & 0xFF00) >> 8
+						operation.value = (pre2.value & 0xFF00) >> 8;
 						break;
 					case "<":
 						operation.value = pre2.value & 0xFF;
@@ -377,6 +379,11 @@ export class ExpressionUtils {
 	//#endregion 获取包含字符串的表达式值
 
 	//#region 将所有表达式部分转换成高亮Token
+	/**
+	 * 将所有表达式部分转换成高亮Token
+	 * @param parts 表达式小节
+	 * @returns 高亮标识
+	 */
 	static GetHighlightingTokens(parts: ExpressionPart[][]) {
 		let result: HighlightToken[] = [];
 		for (let i = 0; i < parts.length; ++i) {
@@ -386,11 +393,14 @@ export class ExpressionUtils {
 					case PriorityType.Level_1_Label:
 						result.push({ token: part.token, type: part.highlightingType });
 						break;
+					case PriorityType.Level_2_Number:
+						if (part.token.text === "$" || part.token.text === "*")
+							result.push({ token: part.token, type: HighlightType.Number });
+						
+						break;
 				}
 			}
 		}
-
-
 		return result;
 	}
 	//#endregion 将所有表达式部分转换成高亮Token
@@ -454,7 +464,7 @@ export class ExpressionUtils {
 			if (part.token.isEmpty)
 				continue;
 
-			if (stringStart > 0 && part.token.text != "\"")
+			if (stringStart > 0 && part.token.text !== "\"")
 				continue;
 
 			switch (part.token.text) {
@@ -674,12 +684,6 @@ export class ExpressionUtils {
 		return index;
 	}
 	//#endregion 获取字符串
-
-	//#region 给表达式部分高亮
-	private static GetExpressionPartHighlight(part: ExpressionPart, labelType: LabelType) {
-
-	}
-	//#endregion 给表达式部分高亮
 
 }
 

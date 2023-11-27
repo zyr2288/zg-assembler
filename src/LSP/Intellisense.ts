@@ -20,12 +20,14 @@ export class Intellisense {
 
 	static suggestData?: TriggerSuggestTag;
 
+	/**智能提示显示类型 */
 	private static CompletionShowType: vscode.CompletionItemKind[] = [
 		vscode.CompletionItemKind.Keyword, vscode.CompletionItemKind.Method, vscode.CompletionItemKind.Function,
 		vscode.CompletionItemKind.Enum, vscode.CompletionItemKind.Struct, vscode.CompletionItemKind.TypeParameter,
 		vscode.CompletionItemKind.Folder, vscode.CompletionItemKind.File
 	];
 
+	/**初始化 */
 	static async Initialize(context: vscode.ExtensionContext) {
 		context.subscriptions.push(
 			vscode.languages.registerCompletionItemProvider(LSPUtils.assembler.config.FileExtension, {
@@ -34,6 +36,7 @@ export class Intellisense {
 		);
 	}
 
+	/**显示智能提示 */
 	private static async ShowCompletion(document: vscode.TextDocument,
 		position: vscode.Position,
 		token: vscode.CancellationToken,
@@ -46,7 +49,7 @@ export class Intellisense {
 			return result;
 		}
 
-		let completions = LSPUtils.assembler.languageHelper.intellisense.Intellisense(
+		const completions = LSPUtils.assembler.languageHelper.intellisense.Intellisense(
 			document.uri.fsPath,
 			position.line,
 			document.lineAt(position.line).text,
@@ -54,11 +57,11 @@ export class Intellisense {
 			context.triggerCharacter
 		);
 
-		let result: vscode.CompletionItem[] = [];
+		const result: vscode.CompletionItem[] = [];
 
 		for (let i = 0; i < completions.length; ++i) {
 			const com = completions[i];
-			let newCom = new vscode.CompletionItem(com.showText);
+			const newCom = new vscode.CompletionItem(com.showText);
 			newCom.insertText = Intellisense.ChangeExp(com.insertText);
 			newCom.sortText = com.index.toString();
 
@@ -69,7 +72,7 @@ export class Intellisense {
 			switch (com.triggerType) {
 				case TriggerSuggestType.AllAsm:
 				case TriggerSuggestType.AllFile:
-					let path = LSPUtils.assembler.fileUtils.ArrangePath(document.uri.fsPath);
+					const path = LSPUtils.assembler.fileUtils.ArrangePath(document.uri.fsPath);
 					newCom.command = {
 						title: "Get Folder Files",
 						command: CommandName,
@@ -90,8 +93,9 @@ export class Intellisense {
 		return result;
 	}
 
+	/**处理智能提示 */
 	private static async ProcessSuggest() {
-		let result: vscode.CompletionItem[] = [];
+		const result: vscode.CompletionItem[] = [];
 
 		switch (Intellisense.suggestData?.type) {
 			case TriggerSuggestType.AllAsm:
@@ -99,15 +103,15 @@ export class Intellisense {
 				if (!vscode.workspace.workspaceFolders)
 					break;
 
-				let rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+				const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
-				let data = Intellisense.suggestData.data as FileHelperData;
+				const data = Intellisense.suggestData.data as FileHelperData;
 				const files = await LSPUtils.assembler.languageHelper.intellisense.GetFileHelper(
 					rootPath, data.path, Intellisense.suggestData.type, data.exclude);
 
 				for (let i = 0; i < files.length; ++i) {
 					const file = files[i];
-					let com = new vscode.CompletionItem(file.showText);
+					const com = new vscode.CompletionItem(file.showText);
 					com.insertText = Intellisense.ChangeExp(file.insertText);
 					com.sortText = file.index.toString();
 					com.kind = Intellisense.CompletionShowType[file.type!];

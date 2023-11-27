@@ -49,7 +49,7 @@ export class Defined {
 			return;
 		}
 
-		let label = LabelUtils.GetLabelWithHash(line.labelHash, option.macro);
+		let label = LabelUtils.FindLabelWithHash(line.labelHash, option.macro);
 		let temp2 = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.TryToGetResult, option);
 		if (label && temp2.success)
 			label.value = temp2.value;
@@ -59,7 +59,7 @@ export class Defined {
 		const line = option.GetCurrectLine<CommandLine>();
 		let type = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.GetResultAndShowError;
 		let temp = ExpressionUtils.GetExpressionValue(line.expParts[0], type);
-		let label = LabelUtils.GetLabelWithHash(line.labelHash, option.macro);
+		let label = LabelUtils.FindLabelWithHash(line.labelHash, option.macro);
 		if (label && temp.success) {
 			label.value = temp.value;
 			line.compileType = LineCompileType.Finished;

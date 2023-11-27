@@ -13,16 +13,16 @@ export class DefinitionProvider {
 	}
 
 	private static async Definition(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
-		let result: vscode.Location[] = [];
+		const result: vscode.Location[] = [];
 
-		let temp = await LSPUtils.assembler.languageHelper.definition.GetLabelPosition(
+		const temp = await LSPUtils.assembler.languageHelper.definition.GetLabelPosition(
 			document.uri.fsPath, position.line, document.lineAt(position.line).text, position.character
 		);
 
 		if (temp.filePath !== "") {
-			let fileUri = vscode.Uri.file(temp.filePath);
-			let filePos = new vscode.Range(temp.line, temp.start, temp.line, temp.start + temp.length);
-			let location = new vscode.Location(fileUri, filePos);
+			const fileUri = vscode.Uri.file(temp.filePath);
+			const filePos = new vscode.Range(temp.line, temp.start, temp.line, temp.start + temp.length);
+			const location = new vscode.Location(fileUri, filePos);
 			result.push(location);
 		}
 

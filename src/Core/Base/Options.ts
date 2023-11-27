@@ -11,14 +11,20 @@ export class DecodeOption {
 		this.allLines = allLines;
 	}
 
+	/**
+	 * 替换行
+	 * @param newLine 新替换的行
+	 * @param fileHash 文件Hash
+	 * @returns 
+	 */
 	ReplaceLine(newLine: ICommonLine, fileHash: number) {
-		let findLine = this.allLines[this.lineIndex];
+		const findLine = this.allLines[this.lineIndex];
 		this.allLines[this.lineIndex] = newLine;
-		let temp = Compiler.enviroment.allBaseLines.get(fileHash);
+		const temp = Compiler.enviroment.allBaseLines.get(fileHash);
 		if (!temp)
 			return;
 
-		let index = temp.indexOf(findLine);
+		const index = temp.indexOf(findLine);
 		if (index < 0)
 			return;
 

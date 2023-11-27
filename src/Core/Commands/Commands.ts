@@ -343,8 +343,8 @@ export class Commands {
 	 * @returns 找到每一个匹配的行
 	 */
 	private static FindNextMatchCommand(startCommand: string, endCommand: string, nested: boolean, option: DecodeOption, includes?: IncludeCommand[]) {
+		const names = includes?.map(value => value.name);
 		let result: MatchLine[] = [];
-		let names = includes?.map(value => value.name);
 		let deep = 0;
 		let found = false;
 		for (let i = option.lineIndex + 1; i < option.allLines.length; i++) {
@@ -355,7 +355,7 @@ export class Commands {
 			const commandToken = line.command;
 			if (commandToken.text === startCommand) {
 				if (!nested) {
-					let errorMsg = Localization.GetMessage("Command {0} do not support nesting", commandToken.text);
+					const errorMsg = Localization.GetMessage("Command {0} do not support nesting", commandToken.text);
 					MyDiagnostic.PushException(commandToken, errorMsg);
 					continue;
 				}
@@ -385,7 +385,7 @@ export class Commands {
 			result.unshift({
 				match: startCommand,
 				index: option.lineIndex,
-				line: (option.allLines[option.lineIndex] as CommandLine).command.line
+				line: option.GetCurrectLine<CommandLine>().command.line
 			});
 		else
 			result = [];

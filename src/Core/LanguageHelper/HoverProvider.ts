@@ -9,7 +9,6 @@ import { HelperUtils } from "./HelperUtils";
 export class HoverProvider {
 
 	static Hover(filePath: string, lineNumber: number, lineText: string, currect: number) {
-
 		let fileHash = FileUtils.GetFilePathHashcode(filePath);
 		let result = { value: undefined as number | undefined, comment: undefined as string | undefined };
 		const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
@@ -17,24 +16,24 @@ export class HoverProvider {
 		if (currect > content.start + content.text.length)
 			return result;
 
-		let word = HelperUtils.GetWord(content.text, currect, content.start);
-		let tempWord = word.leftText + word.rightText;
-		let value = ExpressionUtils.GetNumber(tempWord);
+		const word = HelperUtils.GetWord(content.text, currect, content.start);
+		const tempWord = word.leftText + word.rightText;
+		const value = ExpressionUtils.GetNumber(tempWord);
 		if (value.success) {
 			result.value = value.value;
 			return result;
 		}
 
-		let range = HelperUtils.GetRange(fileHash, lineNumber);
+		const range = HelperUtils.GetRange(fileHash, lineNumber);
 		let macro: Macro | undefined;
 		if (range?.type === "Macro")
 			macro = Compiler.enviroment.allMacro.get(range.key);
 
-		let token = Token.CreateToken(fileHash, lineNumber, word.start, tempWord);
-		let label = LabelUtils.FindLabel(token, macro);
-		if (label) {
-			result.value = label.value;
-			result.comment = label.comment;
+		const token = Token.CreateToken(fileHash, lineNumber, word.start, tempWord);
+		const labelResult = LabelUtils.FindLabel(token, macro);
+		if (labelResult) {
+			result.value = labelResult.label.value;
+			result.comment = labelResult.label.comment;
 			return result;
 		}
 

@@ -1,5 +1,6 @@
 import { Macro } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
+import { LabelReferences } from "../LanguageHelper/LabelReferences";
 import { CommandLine } from "../Lines/CommandLine";
 import { InstructionLine } from "../Lines/InstructionLine";
 import { VariableLine } from "../Lines/VariableLine";
@@ -10,7 +11,7 @@ import { DecodeOption } from "./Options";
 import { Token } from "./Token";
 import { Utils } from "./Utils";
 
-/**全局变量的Hash	 */
+/**全局变量的Hash */
 export const TopLabelHash = 0;
 
 /**标签类型 */
@@ -22,7 +23,9 @@ export enum LabelType {
 	/**常量 */
 	Defined,
 	/**标签 */
-	Label
+	Label,
+	/**数据组数据 */
+	DataGroup,
 }
 
 export enum LabelScope { Global, Local, Temporary, AllParent }
@@ -45,7 +48,9 @@ export interface ILabel extends ICommonLabel {
 
 /**临时标签 ++ --- */
 export interface INamelessLabelCollection {
+	/**所有减号临时标签 */
 	upLabels: INamelessLabel[];
+	/**所有加号临时标签 */
 	downLabels: INamelessLabel[];
 }
 
@@ -61,7 +66,11 @@ export class LabelUtils {
 	/** Public */
 
 	//#region 设定line的labelToken
-	/**设定line的labelToken */
+	/**
+	 * 设定line的labelToken
+	 * @param option 编译选项
+	 * @param labelType Label的类型，默认是Label
+	 */
 	static GetLineLabelToken(option: DecodeOption, labelType: LabelType = LabelType.Label) {
 		const line = option.GetCurrectLine<InstructionLine | VariableLine | CommandLine>();
 		if (line.labelToken && line.labelToken.isEmpty === false) {
@@ -69,11 +78,13 @@ export class LabelUtils {
 			if (line.labelToken.text.endsWith(":"))
 				line.labelToken = line.labelToken.Substring(0, line.labelToken.length - 1);
 
-			let labelMark = LabelUtils.CreateLabel(line.labelToken, option);
-			if (labelMark) {
-				labelMark.label.comment = line.comment;
-				labelMark.label.labelType = labelType;
-				line.labelHash = labelMark.hash;
+			const labelResult = LabelUtils.CreateLabel(line.labelToken, option);
+			if (labelResult) {
+				labelResult.label.comment = line.comment;
+				labelResult.label.labelType = labelType;
+				line.labelHash = labelResult.hash;
+
+				LabelReferences.SetOrgLabel(labelResult.label, labelResult.hash);
 			}
 		}
 	}
@@ -93,49 +104,52 @@ export class LabelUtils {
 		// 判断临时标签
 		if (LabelUtils.namelessLabelRegex.test(token.text)) {
 			if (option?.macro) {
-				let errorMsg = Localization.GetMessage("Can not use nameless label in Macro");
+				const errorMsg = Localization.GetMessage("Can not use nameless label in Macro");
 				MyDiagnostic.PushException(token, errorMsg);
 				return;
 			}
 
-			let isDown = token.text[0] === "+";
-			let item = LabelUtils.InsertNamelessLabel(token, isDown, option);
+			const isDown = token.text[0] === "+";
+			const item = LabelUtils.InsertNamelessLabel(token, isDown, option);
 			return item;
 		}
 
 		if (!LabelUtils.CheckIllegal(token, !option.macro)) {
-			let errorMsg = Localization.GetMessage("Label {0} illegal", token.text);
+			const errorMsg = Localization.GetMessage("Label {0} illegal", token.text);
 			MyDiagnostic.PushException(token, errorMsg);
 			return;
 		}
 
 		// 自定义函数内不允许使用子标签
 		if (option.macro) {
-			let hash = Utils.GetHashcode(token.text);
+			const hash = Utils.GetHashcode(token.text);
 			if (option.macro.labels.has(hash) || option.macro.name.text === token.text) {
-				let errorMsg = Localization.GetMessage("Label {0} is already defined", token.text);
+				const errorMsg = Localization.GetMessage("Label {0} is already defined", token.text);
 				MyDiagnostic.PushException(token, errorMsg);
 				return;
 			}
+			const label: ILabel = { token, labelType: LabelType.Label };
+			option.macro.labels.set(hash, label);
+			return { label, hash };
 		}
 
-		let type = token.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
+		const type = token.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
 
-		let hash = LabelUtils.GetLebalHash(token.text, token.fileHash, type);
-		let tempLabel = Compiler.enviroment.allLabel.get(hash);
+		const hash = LabelUtils.GetLebalHash(token.text, token.fileHash, type);
+		const tempLabel = Compiler.enviroment.allLabel.get(hash);
 		if (tempLabel || Compiler.enviroment.allMacro.has(token.text)) {
 			if (tempLabel?.labelType === LabelType.Variable || tempLabel?.labelType === LabelType.None) {
-				let fileLabelHashes = LabelUtils.GetFileLabelHash(token.fileHash);
+				const fileLabelHashes = LabelUtils.GetFileLabelHash(token.fileHash);
 				fileLabelHashes.add(hash);
 				return { label: tempLabel, hash };
 			}
 
-			let errorMsg = Localization.GetMessage("Label {0} is already defined", token.text);
+			const errorMsg = Localization.GetMessage("Label {0} is already defined", token.text);
 			MyDiagnostic.PushException(token, errorMsg);
 			return;
 		}
 
-		let label = LabelUtils.SplitLabel(token, type);
+		const label = LabelUtils.SplitLabel(token, type);
 		if (label) {
 			label.comment = option.GetCurrectLine().comment;
 			return { label, hash };
@@ -150,32 +164,38 @@ export class LabelUtils {
 	 * @param macro 函数
 	 * @returns 是否找到标签
 	 */
-	static FindLabel(word?: Token, macro?: Macro): ILabel | undefined {
+	static FindLabel(word?: Token, macro?: Macro): { label: ILabel, hash: number } | undefined {
 		if (!word || word.isEmpty)
 			return;
 
-		let match = LabelUtils.namelessLabelRegex.exec(word.text);
+		const match = LabelUtils.namelessLabelRegex.exec(word.text);
 		if (match) {
-			let count = match[0].length;
+			const count = match[0].length;
 
-			let collection = Compiler.enviroment.namelessLabel.get(word.fileHash);
+			const collection = Compiler.enviroment.namelessLabel.get(word.fileHash);
 			if (!collection) {
-				let errorMsg = Localization.GetMessage("Label {0} not found", word.text);
+				const errorMsg = Localization.GetMessage("Label {0} not found", word.text);
 				MyDiagnostic.PushException(word, errorMsg);
 				return;
 			}
 
 			if (match.groups?.["minus"]) {
-				let labels = collection.upLabels;
+				const labels = collection.upLabels;
 				for (let i = 0; i < labels.length; ++i) {
 					if (labels[i].token.length == count && labels[i].token.line < word.line)
-						return labels[i];
+						return {
+							label: labels[i],
+							hash: LabelUtils.GetLebalHash(labels[i].token.text, word.fileHash, LabelScope.Temporary, labels[i].token.line)
+						};
 				}
 			} else {
-				let labels = collection.downLabels;
+				const labels = collection.downLabels;
 				for (let i = 0; i < labels.length; ++i) {
 					if (labels[i].token.length == count && labels[i].token.line > word.line)
-						return labels[i];
+						return {
+							label: labels[i],
+							hash: LabelUtils.GetLebalHash(labels[i].token.text, word.fileHash, LabelScope.Temporary, labels[i].token.line)
+						};
 				}
 			}
 
@@ -186,53 +206,57 @@ export class LabelUtils {
 
 		// 函数内标签
 		if (macro) {
-			let hash = Utils.GetHashcode(word.text);
-			let label = macro.params.get(hash) ?? macro.labels.get(hash);
+			const hash = Utils.GetHashcode(word.text);
+			const label = macro.params.get(hash) ?? macro.labels.get(hash);
 			if (label)
-				return label;
+				return { label, hash };
 		}
 
 		// 数组下标
 		if (word.text.includes(":")) {
-			let part = word.Split(/\:/g, { count: 2 });
+			const part = word.Split(/\:/g, { count: 2 });
 			if (part[0].isEmpty || part[1].isEmpty) {
-				let errorMsg = Localization.GetMessage("Data group {0} do not found", word.text);
+				const errorMsg = Localization.GetMessage("Data group {0} do not found", word.text);
 				MyDiagnostic.PushException(word, errorMsg);
 				return;
 			}
 
-			let scope = part[0].text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
-			let hash = LabelUtils.GetLebalHash(part[0].text, part[0].fileHash, scope);
-			let datagroup = Compiler.enviroment.allDataGroup.get(hash);
+			const scope = part[0].text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
+			const hash = LabelUtils.GetLebalHash(part[0].text, part[0].fileHash, scope);
+			const datagroup = Compiler.enviroment.allDataGroup.get(hash);
 			if (!datagroup) {
-				let errorMsg = Localization.GetMessage("Data group {0} do not found", word.text);
+				const errorMsg = Localization.GetMessage("Data group {0} do not found", word.text);
 				MyDiagnostic.PushException(word, errorMsg);
 				return;
 			}
 
 			let index = 0;
 			if (!part[2].isEmpty) {
-				let temp = ExpressionUtils.GetNumber(part[2].text);
+				const temp = ExpressionUtils.GetNumber(part[2].text);
 				if (temp.success) {
 					index = temp.value;
 				} else {
-					let errorMsg = Localization.GetMessage("Label {0} not found", part[2].text);
+					const errorMsg = Localization.GetMessage("Label {0} not found", part[2].text);
 					MyDiagnostic.PushException(part[2], errorMsg);
 					return;
 				}
 			}
 
-			let data = datagroup.FindData(part[1].text, index);
+			const data = datagroup.FindData(part[1].text, index);
 			if (!data)
 				return;
 
-			let label: ILabel = { token: data.token, labelType: LabelType.Variable, value: data.index };
-			return label;
+			const label: ILabel = { token: data.token, labelType: LabelType.DataGroup, value: data.index };
+			return { label, hash: 0 };
 		}
 
-		let scope = word.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
-		let hash = LabelUtils.GetLebalHash(word.text, word.fileHash, scope);
-		return Compiler.enviroment.allLabel.get(hash);
+		const scope = word.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
+		const hash = LabelUtils.GetLebalHash(word.text, word.fileHash, scope);
+		const label = Compiler.enviroment.allLabel.get(hash);
+		if (!label)
+			return;
+
+		return { label, hash };
 	}
 	//#endregion 查找标签
 
@@ -243,11 +267,15 @@ export class LabelUtils {
 	 * @param macro 函数
 	 * @returns 查找到的Label
 	 */
-	static GetLabelWithHash(labelHash?: number, macro?: Macro) {
-		if (!labelHash)
+	static FindLabelWithHash(labelHash?: number, macro?: Macro) {
+		if (labelHash === undefined)
 			return;
 
 		let label = macro?.labels.get(labelHash);
+		if (label)
+			return label;
+
+		label = macro?.params.get(labelHash);
 		if (label)
 			return label;
 

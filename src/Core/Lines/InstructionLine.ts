@@ -9,7 +9,7 @@ import { Localization } from "../I18n/Localization";
 import { AsmCommon, IAddressingMode } from "../Platform/AsmCommon";
 import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
-
+/**汇编行 */
 export class InstructionLine implements ICommonLine {
 
 	type = LineType.Instruction;
@@ -25,7 +25,7 @@ export class InstructionLine implements ICommonLine {
 
 	instruction!: Token;
 	expression?: Token;
-	exprParts: ExpressionPart[][] = [];
+	expParts: ExpressionPart[][] = [];
 	addressingMode!: IAddressingMode;
 	result: number[] = [];
 
@@ -56,7 +56,7 @@ export class InstructionLine implements ICommonLine {
 			result.push({ type: HighlightType.Label, token: this.labelToken });
 
 		result.push({ type: HighlightType.Keyword, token: this.instruction });
-		result.push(...ExpressionUtils.GetHighlightingTokens(this.exprParts));
+		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
 		return result;
 	}
 }
@@ -78,10 +78,10 @@ export class InstructionLineUtils {
 			for (let i = 0; i < temp.exprs.length; i++) {
 				let temp2 = ExpressionUtils.SplitAndSort(temp.exprs[i]);
 				if (temp2) {
-					line.exprParts[i] = temp2;
+					line.expParts[i] = temp2;
 				} else {
 					line.compileType = LineCompileType.Error;
-					line.exprParts[i] = [];
+					line.expParts[i] = [];
 				}
 			}
 		} else {
@@ -92,22 +92,30 @@ export class InstructionLineUtils {
 	//#endregion 第一次分析
 
 	//#region 第三次分析，并检查表达式是否有误
+	/**
+	 * 第三次分析，并检查表达式是否有误
+	 * @param option 编译选项
+	 */
 	static ThirdAnalyse(option: DecodeOption): void {
 		const line = option.GetCurrectLine<InstructionLine>();
-		for (let i = 0; i < line.exprParts.length; ++i)
-			ExpressionUtils.CheckLabelsAndShowError(line.exprParts[i], option);
+		for (let i = 0; i < line.expParts.length; ++i)
+			ExpressionUtils.CheckLabelsAndShowError(line.expParts[i], option);
 	}
 	//#endregion 第三次分析，并检查表达式是否有误
 
 	//#region 编译汇编指令
-	/**编译汇编指令 */
+	/**
+	 * 编译汇编指令
+	 * @param option 编译选项
+	 * @returns 
+	 */
 	static CompileInstruction(option: DecodeOption): void {
 		const line = option.GetCurrectLine<InstructionLine>();
 		line.SetAddress();
 		if (line.compileType === LineCompileType.Error)
 			return;
 
-		let label = LabelUtils.GetLabelWithHash(line.labelHash, option.macro);
+		const label = LabelUtils.FindLabelWithHash(line.labelHash, option.macro);
 		if (label) {
 			label.value = Compiler.enviroment.orgAddress;
 			delete (line.labelHash);
@@ -120,16 +128,16 @@ export class InstructionLineUtils {
 		}
 
 		line.compileType = LineCompileType.Finished;
-		if (!line.exprParts[0]) {
+		if (!line.expParts[0]) {
 			line.SetResult(line.addressingMode.opCode[0]!, 0, line.addressingMode.opCodeLength[0]!);
 			line.AddAddress();
 			return;
 		}
 
 		const tryValue = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
-		let temp = ExpressionUtils.GetExpressionValue(line.exprParts[0], tryValue, option);
+		const temp = ExpressionUtils.GetExpressionValue(line.expParts[0], tryValue, option);
 		if (!temp.success) {
-			let index = line.addressingMode.opCode.length - 1;
+			const index = line.addressingMode.opCode.length - 1;
 			line.result.length = line.addressingMode.opCodeLength[index]! + index;
 			line.compileType = LineCompileType.None;
 		} else {
@@ -149,13 +157,13 @@ export class InstructionLineUtils {
 				}
 			}
 
-			let opCodeLength = line.addressingMode.opCodeLength[length]!;
+			const opCodeLength = line.addressingMode.opCodeLength[length]!;
 			line.SetResult(line.addressingMode.opCode[length]!, 0, opCodeLength);
-			let tempValue = line.SetResult(temp.value, opCodeLength, length);
+			const tempValue = line.SetResult(temp.value, opCodeLength, length);
 
 			if (orgLength > length || temp.value < 0) {
-				let errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.value, tempValue);
-				let token = ExpressionUtils.CombineExpressionPart(line.exprParts[0]);
+				const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.value, tempValue);
+				const token = ExpressionUtils.CombineExpressionPart(line.expParts[0]);
 				MyDiagnostic.PushWarning(token, errorMsg);
 			}
 		}

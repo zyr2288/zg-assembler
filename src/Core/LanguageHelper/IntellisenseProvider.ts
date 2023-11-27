@@ -8,7 +8,6 @@ import { Commands } from "../Commands/Commands";
 import { Macro } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
 import { AsmCommon } from "../Platform/AsmCommon";
-import { Platform } from "../Platform/Platform";
 import { HelperUtils } from "./HelperUtils";
 
 const ignoreWordStr = /;|(^|\s+)(\.HEX|\.DBG|\.DWG|\.MACRO)(\s+|$)/ig;
@@ -21,8 +20,10 @@ enum CompletionType {
 
 //#region 提示项
 export class Completion {
+
+	/**复制所有提示 */
 	static CopyList(all: Completion[]) {
-		let result: Completion[] = [];
+		const result: Completion[] = [];
 		for (let i = 0; i < all.length; i++) {
 			result.push(all[i]);
 		}
@@ -96,8 +97,13 @@ export interface TriggerSuggestTag {
 /**智能提示类 */
 export class IntellisenseProvider {
 
+	/**编译器命令提示 */
 	private static commandCompletions: Completion[] = [];
+
+	/**在Macro里的命令提示 */
 	private static commandNotInMacroCompletions: Completion[] = [];
+
+	/**汇编指令提示类 */
 	private static instructionCompletions: Completion[] = [];
 
 	//#region 智能提示
@@ -114,44 +120,44 @@ export class IntellisenseProvider {
 		const fileHash = FileUtils.GetFilePathHashcode(filePath);
 		const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
 		const prefix = line.Substring(0, lineCurrect);
-		
+
 		if (ignoreWordStr.test(prefix.text))
 			return [];
 
-		let rangeType = HelperUtils.GetRange(fileHash, lineNumber);
+		const rangeType = HelperUtils.GetRange(fileHash, lineNumber);
 		let macro: Macro | undefined;
 		switch (rangeType?.type) {
 			case "DataGroup":
 				if (trigger === " ")
 					return [];
 
-				let prefix = HelperUtils.GetWord(lineText, lineCurrect);
+				const prefix = HelperUtils.GetWord(lineText, lineCurrect);
 				return IntellisenseProvider.GetLabel(fileHash, prefix.leftText);
 			case "Macro":
 				macro = Compiler.enviroment.allMacro.get(rangeType.key);
 				break;
 		}
 
-		let tempMatch = HelperUtils.BaseSplit(lineText);
+		const tempMatch = HelperUtils.BaseSplit(lineText);
 		if (tempMatch.type === "none" || lineCurrect < tempMatch.start)
 			return IntellisenseProvider.GetEmptyLineHelper({ fileHash, range: rangeType, trigger: trigger });
 
-		let matchIndex = tempMatch.start + tempMatch.text.length + 1;
+		const matchIndex = tempMatch.start + tempMatch.text.length + 1;
 		switch (tempMatch.type) {
 			case "instruction":
 				if (trigger === " " && lineCurrect === matchIndex) {
 					return IntellisenseProvider.GetInstructionAddressingModes(tempMatch.text);
 				} else if (trigger === ":" && lineCurrect > matchIndex) {
-					let prefix = HelperUtils.GetWord(lineText, lineCurrect);
+					const prefix = HelperUtils.GetWord(lineText, lineCurrect);
 					return IntellisenseProvider.GetDataGroup(prefix.leftText);
 				} else if (trigger !== " " && lineCurrect > matchIndex) {
 					const restText = lineText.substring(matchIndex);
 					const tempCurrect = lineCurrect - matchIndex - 1;
-					let ignoreContent = AsmCommon.MatchLinePosition(tempMatch.text, restText, tempCurrect);
+					const ignoreContent = AsmCommon.MatchLinePosition(tempMatch.text, restText, tempCurrect);
 					if (ignoreContent)
 						return [];
 
-					let prefix = HelperUtils.GetWord(lineText, lineCurrect);
+					const prefix = HelperUtils.GetWord(lineText, lineCurrect);
 					return IntellisenseProvider.GetLabel(fileHash, prefix.leftText, macro);
 				}
 				break;
@@ -160,7 +166,7 @@ export class IntellisenseProvider {
 				if (lineCurrect < matchIndex || trigger === " ")
 					return [];
 
-				let prefix = HelperUtils.GetWord(lineText, lineCurrect);
+				const prefix = HelperUtils.GetWord(lineText, lineCurrect);
 				return IntellisenseProvider.GetLabel(fileHash, prefix.leftText, macro);
 		}
 		return [];
@@ -192,7 +198,28 @@ export class IntellisenseProvider {
 				if (option.range?.type === "DataGroup") {
 					return IntellisenseProvider.GetLabel(option.fileHash, "");
 				} else {
-					return IntellisenseProvider.instructionCompletions;
+					const completions: Completion[] = [];
+					completions.push(...IntellisenseProvider.instructionCompletions);
+					Compiler.enviroment.allMacro.forEach((macro) => {
+						let insertText: string | undefined;
+						if (macro.paramHashIndex.length !== 0) {
+							insertText = macro.name.text + " ";
+							for(let i=0;i<macro.paramHashIndex.length;i++) 
+								insertText += `{${i}}, `;
+							
+							insertText = insertText.substring(0, -2);
+						}
+
+						const com = new Completion({
+							showText: macro.name.text,
+							index: 0,
+							type: CompletionType.Macro,
+							insertText
+						});
+
+						completions.push(com);
+					});
+					return completions;
 				}
 		}
 
@@ -316,20 +343,25 @@ export class IntellisenseProvider {
 	//#endregion 获取Label
 
 	//#region 获取DataGroup
+	/**
+	 * 获取DataGroup
+	 * @param prefix 数据组名称
+	 * @returns 
+	 */
 	private static GetDataGroup(prefix: string): Completion[] {
-		let result: Completion[] = [];
-		let parts = prefix.split(/\s*:\s*/, 2);
+		const result: Completion[] = [];
+		const parts = prefix.split(/\s*:\s*/, 2);
 		if (!parts[0])
 			return result;
 
 		let hash = Utils.GetHashcode(parts[0]);
-		let datagroup = Compiler.enviroment.allDataGroup.get(hash);
+		const datagroup = Compiler.enviroment.allDataGroup.get(hash);
 		if (!datagroup)
 			return result;
 
 		if (!parts[1]) {
 			datagroup.labelHashAndIndex.forEach((value) => {
-				let com = new Completion({
+				const com = new Completion({
 					showText: value.token.text,
 					insertText: value.token.text
 				});
@@ -340,12 +372,12 @@ export class IntellisenseProvider {
 
 
 		hash = Utils.GetHashcode(parts[1]);
-		let members = datagroup.labelHashAndIndex.get(hash);
+		const members = datagroup.labelHashAndIndex.get(hash);
 		if (!members)
 			return result;
 
 		for (let i = 0; i < members.index.length; ++i) {
-			let com = new Completion({ showText: i.toString() });
+			const com = new Completion({ showText: i.toString() });
 			result.push(com);
 		}
 		return result;
@@ -361,9 +393,9 @@ export class IntellisenseProvider {
 		if (!modes)
 			return [];
 
-		let completions: Completion[] = [];
+		const completions: Completion[] = [];
 		for (let j = 0; j < modes.length; ++j) {
-			let com = new Completion({ showText: "" });
+			const com = new Completion({ showText: "" });
 			if (!modes[j].addressingMode) {
 				com.showText = Localization.GetMessage("empty addressing mode");
 				com.insertText = "\n";
@@ -392,11 +424,7 @@ export class IntellisenseProvider {
 				insertText += "\n";
 			}
 
-			let completion = new Completion({
-				showText: instruction,
-				insertText,
-				type: CompletionType.Instruction
-			});
+			const completion = new Completion({ showText: instruction, index: 10, insertText, type: CompletionType.Instruction });
 			IntellisenseProvider.instructionCompletions.push(completion);
 		}
 	}

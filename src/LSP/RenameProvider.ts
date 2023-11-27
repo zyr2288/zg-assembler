@@ -32,8 +32,10 @@ export class RenameProvider {
 
 		const line = document.lineAt(position.line);
 		const charRange = renameClass.RenameLabel(line.text, position.character, position.line, document.fileName, newName);
-		if (!charRange) 
+		if (typeof (charRange) === "string") {
+			LSPUtils.ShowMessageBox(charRange, "error");
 			return;
+		}
 
 		position.line
 		position.character

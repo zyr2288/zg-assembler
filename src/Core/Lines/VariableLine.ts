@@ -65,7 +65,7 @@ export class VariableLineUtils {
 		}
 
 		let temp = ExpressionUtils.GetExpressionValue(line.exprParts, ExpressionResult.TryToGetResult, option);
-		let label = LabelUtils.GetLabelWithHash(line.labelHash, option.macro);
+		let label = LabelUtils.FindLabelWithHash(line.labelHash, option.macro);
 		if (label && temp.success)
 			label.value = temp.value;
 	}

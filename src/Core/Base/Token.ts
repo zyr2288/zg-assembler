@@ -49,7 +49,7 @@ export class Token {
 	text: string = "";
 
 	get length() { return this.text.length; }
-	get isEmpty() { return this.text.length == 0; }
+	get isEmpty() { return this.text.length === 0; }
 
 	//#region 拷贝
 	Copy() {

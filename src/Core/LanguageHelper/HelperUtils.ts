@@ -40,14 +40,14 @@ export class HelperUtils {
 	 * 获取光标所在字符
 	 * @param lineText 一行文本
 	 * @param currect 当前光标未知
-	 * @returns { rangeText 为光标左边文本和光标右边文本, start: range[0] + start }
+	 * @returns rangeText: 为光标左边文本和光标右边文本, start: range[0] + start 
 	 */
 	static GetWord(lineText: string, currect: number, start = 0) {
 
 		let inString = false;
 		let lastString = "";
 
-		let range = [0, 0];
+		const range = [0, 0];
 		currect -= start;
 
 		const match = "\t +-*/&|!^#,()[]{}<>";
@@ -92,8 +92,8 @@ export class HelperUtils {
 		if (!findEnd)
 			range[1] = lineText.length;
 
-		let leftText = lineText.substring(range[0], currect);
-		let rightText = lineText.substring(currect, range[1]);
+		const leftText = lineText.substring(range[0], currect);
+		const rightText = lineText.substring(currect, range[1]);
 
 		return { leftText, rightText, start: range[0] + start };
 	}

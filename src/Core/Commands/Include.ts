@@ -9,6 +9,11 @@ import { CommandLine } from "../Lines/CommandLine";
 import { LineCompileType, LineType } from "../Lines/CommonLine";
 import { Commands } from "./Commands";
 
+interface LineTag {
+	path: string;
+	token: Token;
+}
+
 export class Include {
 
 	static Initialize() {
@@ -59,7 +64,7 @@ export class Include {
 
 	private static async FirstAnalyse_Incbin(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		let expressions: Token[] = line.tag;
+		const expressions: Token[] = line.tag;
 
 		const temp = await Include.ChechFile(option);
 		if (!temp.exsist) {
@@ -67,7 +72,6 @@ export class Include {
 			return;
 		}
 
-		line.tag = temp.path;
 		let temp2;
 		if (expressions[1] && (temp2 = ExpressionUtils.SplitAndSort(expressions[1])))
 			line.expParts[0] = temp2;
@@ -77,10 +81,11 @@ export class Include {
 
 	}
 
-	/**编译Incbin */
+	//#region 编译Incbin
 	private static async Compile_Incbin(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		let temp = await FileUtils.ReadFile(line.tag);
+		const tag = line.tag as LineTag;
+		let temp = await FileUtils.ReadFile(tag.path);
 
 		if (Commands.SetOrgAddressAndLabel(option))
 			return;
@@ -107,17 +112,22 @@ export class Include {
 		line.compileType = LineCompileType.Finished;
 		line.AddAddress();
 	}
+	//#endregion 编译Incbin
 
 	/**检查是否满足表达式 */
 	private static CheckString(text: string) {
 		return /^"[^\"]*"$/.test(text)
 	}
 
-	/**检查文件是否存在 */
+	/**
+	 * 检查文件是否存在，会修改 line.tag
+	 * @param option 编译选项
+	 * @returns 
+	 */
 	private static async ChechFile(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		let expressions: Token[] = line.tag;
-		let result = { exsist: false, path: "" };
+		const expressions: Token[] = line.tag;
+		const result = { exsist: false, path: "" };
 
 		if (!Include.CheckString(expressions[0].text)) {
 			let errorMsg = Localization.GetMessage("Command arguments error");
@@ -126,23 +136,25 @@ export class Include {
 			return result;
 		}
 
-		let token = expressions[0].Substring(1, expressions[0].length - 2);
+		const token = expressions[0].Substring(1, expressions[0].length - 2);
 		let type = await FileUtils.PathType(token.text);
 		if (type === "file") {
 			result.exsist = true;
 			result.path = token.text;
 		}
 
-		let file = Compiler.enviroment.GetFile(token.fileHash);
-		let folder = await FileUtils.GetPathFolder(file);
+		const file = Compiler.enviroment.GetFile(token.fileHash);
+		const folder = await FileUtils.GetPathFolder(file);
 		result.path = FileUtils.Combine(folder, token.text);
 
 		type = (await FileUtils.PathType(result.path));
 		result.exsist = type === "file";
 		if (!result.exsist) {
-			let errorMsg = Localization.GetMessage("File {0} is not exist", token.text);
+			const errorMsg = Localization.GetMessage("File {0} is not exist", token.text);
 			MyDiagnostic.PushException(token, errorMsg);
 		}
+
+		line.tag = { token, path: result.path };
 		return result;
 	}
 }

@@ -1,16 +1,15 @@
 import * as vscode from "vscode";
 import { LSPUtils } from "./LSPUtils";
 
-// enum HighlightType {	None, Label, Keyword, Macro, Defined, Variable }
+// enum HighlightType {	None, Label, Keyword, Macro, Defined, Variable, Number }
 
-const VSCodeHighlight = ["label", "struct", "keyword", "function", "enumMember", "variable"];
+const VSCodeHighlight = ["label", "struct", "keyword", "function", "enumMember", "variable", "number"];
 
 export class Highlighting {
 
 	private static leagend: vscode.SemanticTokensLegend;
 
 	static async Initialize(context: vscode.ExtensionContext) {
-
 		Highlighting.leagend = new vscode.SemanticTokensLegend(VSCodeHighlight);
 		context.subscriptions.push(
 			vscode.languages.registerDocumentRangeSemanticTokensProvider(

@@ -17,6 +17,7 @@ export class Environment {
 
 	/**所有标签 Key: Label的Hash值 */
 	allLabel = new Map<number, ILabel>();
+	/**所有自定义函数，Key为函数的名称 */
 	allMacro = new Map<string, Macro>();
 	/**所有数据组 Key: Label的Hash值 */
 	allDataGroup = new Map<number, DataGroup>();
