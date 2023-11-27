@@ -7,6 +7,7 @@ import { Macro } from "../Commands/Macro";
 import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
+import { MacroLine } from "../Lines/MacroLine";
 import { HelperUtils } from "./HelperUtils";
 
 export class DefinitionProvider {
@@ -21,16 +22,25 @@ export class DefinitionProvider {
 		if (!commonLine)
 			return result;
 
-		let findLine: InstructionLine | CommandLine | undefined;
+		let findLine: InstructionLine | CommandLine | MacroLine | undefined;
 		for (let i = 0; i < commonLine.length; i++) {
 			const line = commonLine[i];
-			if (!line.orgText)
-				continue;
+			switch (line.type) {
+				case LineType.Macro:
+					findLine = line as MacroLine;
+					break;
+				default:
+					if (!line.orgText)
+						continue;
 
-			if (line.orgText.line === lineNumber) {
-				findLine = line as InstructionLine | CommandLine;
-				break;
+					if (line.orgText.line === lineNumber) {
+						findLine = line as InstructionLine | CommandLine;
+					}
+					break;
 			}
+
+			if (findLine)
+				break;
 		}
 
 		if (!findLine)
@@ -51,8 +61,13 @@ export class DefinitionProvider {
 
 		const rangeType = HelperUtils.GetRange(fileHash, lineNumber);
 		let macro: Macro | undefined;
-		if (rangeType?.type === "Macro")
-			macro = Compiler.enviroment.allMacro.get(rangeType.key);
+		switch (rangeType?.type) {
+			case "Macro":
+				macro = Compiler.enviroment.allMacro.get(rangeType.key);
+				break;
+			case "DataGroup":
+				break;
+		}
 
 		for (let i = 0; i < findLine.expParts.length; i++) {
 			for (let j = 0; j < findLine.expParts[i].length; j++) {

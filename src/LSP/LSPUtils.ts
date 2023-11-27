@@ -163,6 +163,7 @@ export class LSPUtils {
 				selectButton = await vscode.window.showErrorMessage(message, ...buttons);
 				break;
 		}
+		
 		if (!selectButton)
 			return -1;
 
