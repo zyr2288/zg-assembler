@@ -10,44 +10,32 @@ import { InstructionLine } from "../Lines/InstructionLine";
 import { MacroLine } from "../Lines/MacroLine";
 import { HelperUtils } from "./HelperUtils";
 
+interface DefinitionResult {
+	filePath: string;
+	line: number;
+	start: number;
+	length: number;
+}
+
 export class DefinitionProvider {
 
 	/**获取标签的定义的位置 */
 	static async GetLabelPosition(filePath: string, lineNumber: number, lineText: string, currect: number) {
 
-		const result = { filePath: "", line: 0, start: 0, length: 0 };
+		const result: DefinitionResult = { filePath: "", line: 0, start: 0, length: 0 };
 		const fileHash = FileUtils.GetFilePathHashcode(filePath);
 
 		const commonLine = Compiler.enviroment.allBaseLines.get(fileHash);
 		if (!commonLine)
 			return result;
 
-		let findLine: InstructionLine | CommandLine | MacroLine | undefined;
-		for (let i = 0; i < commonLine.length; i++) {
-			const line = commonLine[i];
-			switch (line.type) {
-				case LineType.Macro:
-					findLine = line as MacroLine;
-					break;
-				default:
-					if (!line.orgText)
-						continue;
+		const match = HelperUtils.FindMatchLine(fileHash, lineNumber);
 
-					if (line.orgText.line === lineNumber) {
-						findLine = line as InstructionLine | CommandLine;
-					}
-					break;
-			}
-
-			if (findLine)
-				break;
-		}
-
-		if (!findLine)
+		if (!match.matchLine)
 			return result;
 
-		if (findLine.type === LineType.Command) {
-			const commandLine = findLine as CommandLine;
+		if (match.matchLine.type === LineType.Command) {
+			const commandLine = match.matchLine as CommandLine;
 			switch (commandLine.command.text) {
 				case ".INCLUDE":
 				case ".INCBIN":
@@ -59,91 +47,42 @@ export class DefinitionProvider {
 			}
 		}
 
-		const rangeType = HelperUtils.GetRange(fileHash, lineNumber);
-		let macro: Macro | undefined;
-		switch (rangeType?.type) {
-			case "Macro":
-				macro = Compiler.enviroment.allMacro.get(rangeType.key);
-				break;
-			case "DataGroup":
+		switch (match.matchLine.type) {
+			case LineType.Macro:
+				const macroLine = match.matchLine as MacroLine;
+				if (macroLine.macroToken.start <= currect && macroLine.macroToken.start + macroLine.macroToken.length >= currect) {
+					DefinitionProvider.SetResultToken(result, macroLine.macro.name);
+					return result;
+				}
 				break;
 		}
 
-		for (let i = 0; i < findLine.expParts.length; i++) {
-			for (let j = 0; j < findLine.expParts[i].length; j++) {
-				const part = findLine.expParts[i][j];
+		for (let i = 0; i < match.matchLine.expParts.length; i++) {
+			for (let j = 0; j < match.matchLine.expParts[i].length; j++) {
+				const part = match.matchLine.expParts[i][j];
 				if (part.type !== PriorityType.Level_1_Label ||
+					part.token.line !== lineNumber ||
 					part.token.start > currect ||
-					part.token.start + part.token.text.length < currect)
+					part.token.start + part.token.length < currect)
 					continue;
 
-				const label = LabelUtils.FindLabelWithHash(part.value, macro);
+				const label = LabelUtils.FindLabelWithHash(part.value, match.macro);
 				if (!label)
 					return result;
 
-				result.filePath = Compiler.enviroment.GetFile(label.token.fileHash);
-				result.line = label.token.line;
-				result.start = label.token.start;
-				result.length = label.token.text.length;
+				DefinitionProvider.SetResultToken(result, label.token);
 				return result;
-
 			}
 		}
-
-
-		// const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
-		// const { content } = Compiler.GetContent(line);
-		// if (currect > content.start + content.text.length)
-		// 	return result;
-
-		// const word = HelperUtils.GetWord(line.text, currect, line.start);
-		// const tempMatch = HelperUtils.BaseSplit(line.text, line.start);
-		// if (tempMatch.type === "command") {
-		// 	switch (tempMatch.text) {
-		// 		case ".HEX":
-		// 			return result;
-		// 		case ".INCLUDE":
-		// 		case ".INCBIN":
-		// 			const start = tempMatch.start + tempMatch.text.length;
-		// 			if (start < word.start &&
-		// 				lineText.substring(start, word.start).trim() === "") {
-		// 				const path = word.leftText.substring(1) + word.rightText.substring(0, word.rightText.length - 1);
-		// 				result.filePath = await DefinitionProvider.GetFilePath(filePath, path);
-		// 			}
-		// 			return result;
-		// 	}
-		// }
-
-		// const rangeType = HelperUtils.GetRange(fileHash, lineNumber);
-		// let macro: Macro | undefined;
-
-		// if (rangeType?.type === "Macro")
-		// 	macro = Compiler.enviroment.allMacro.get(rangeType.key);
-
-		// const wordText = word.leftText + word.rightText;
-		// const token = Token.CreateToken(fileHash, lineNumber, word.start, wordText);
-		// const labelResult = LabelUtils.FindLabel(token, macro);
-		// if (labelResult) {
-		// 	result.filePath = Compiler.enviroment.GetFile(labelResult.label.token.fileHash);
-		// 	result.line = labelResult.label.token.line;
-		// 	result.start = labelResult.label.token.start;
-		// 	result.length = labelResult.label.token.text.length;
-		// } else if (new RegExp(Compiler.enviroment.macroRegexString).test(wordText)) {
-		// 	const macro = Compiler.enviroment.allMacro.get(wordText);
-		// 	if (macro) {
-		// 		result.filePath = Compiler.enviroment.GetFile(macro.name.fileHash);
-		// 		result.line = macro.name.line;
-		// 		result.start = macro.name.start;
-		// 		result.length = macro.name.text.length;
-		// 	}
-		// }
 
 		return result;
 	}
 
-	private static async GetFilePath(filePath: string, path: string) {
-		let folder = await FileUtils.GetPathFolder(filePath);
-		return FileUtils.Combine(folder, path);
+	private static SetResultToken(result: DefinitionResult, token: Token) {
+		result.filePath = Compiler.enviroment.GetFile(token.fileHash);
+		result.line = token.line;
+		result.start = token.start;
+		result.length = token.length;
 	}
 }
 

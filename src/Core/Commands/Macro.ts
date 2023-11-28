@@ -62,6 +62,7 @@ export class MacroUtils {
 		const macro = Compiler.enviroment.allMacro.get(macroToken.text)!;
 
 		const macroLine = new MacroLine();
+		macroLine.orgText = option.GetCurrectLine().orgText;
 		macroLine.macro = macro;
 		macroLine.macroToken = macroToken;
 
@@ -173,7 +174,6 @@ export class MacroUtils {
 			}
 		}
 
-		// 编译完成并加入结果行
 		const tempOption = new DecodeOption(macro.lines);
 		tempOption.macro = macro;
 		await Compiler.CompileResult(tempOption);

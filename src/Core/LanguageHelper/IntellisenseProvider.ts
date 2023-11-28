@@ -204,10 +204,10 @@ export class IntellisenseProvider {
 						let insertText: string | undefined;
 						if (macro.paramHashIndex.length !== 0) {
 							insertText = macro.name.text + " ";
-							for(let i=0;i<macro.paramHashIndex.length;i++) 
-								insertText += `{${i}}, `;
-							
-							insertText = insertText.substring(0, -2);
+							for (let i = 0; i < macro.paramHashIndex.length; i++)
+								insertText += `[exp], `;
+
+							insertText = insertText.substring(0, insertText.length - 2);
 						}
 
 						const com = new Completion({

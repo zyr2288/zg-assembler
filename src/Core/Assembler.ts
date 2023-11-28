@@ -53,12 +53,12 @@ export class Assembler {
 	}
 
 	GetUpdateLines(filePath: string) {
-		let hash = FileUtils.GetFilePathHashcode(filePath);
+		const hash = FileUtils.GetFilePathHashcode(filePath);
 		return Compiler.enviroment.allBaseLines.get(hash) ?? [];
 	}
 
 	ClearFile(filePath: string) {
-		let hash = FileUtils.GetFilePathHashcode(filePath);
+		const hash = FileUtils.GetFilePathHashcode(filePath);
 		Compiler.enviroment.ClearFile(hash);
 	}
 

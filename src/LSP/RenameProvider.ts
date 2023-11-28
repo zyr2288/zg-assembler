@@ -20,7 +20,11 @@ export class RenameProvider {
 	private static PrepareRename(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
 		const renameClass = LSPUtils.assembler.languageHelper.rename;
 		const line = document.lineAt(position.line);
-		const charRange = renameClass.PreRename(line.text, position.character);
+		const charRange = renameClass.PreRename(document.fileName, position.line, line.text, position.character);
+		if (typeof (charRange) === "string") {
+			throw charRange;
+		}
+
 		const range = new vscode.Range(position.line, charRange.start, position.line, charRange.start + charRange.length);
 		return range;
 	}
@@ -31,14 +35,22 @@ export class RenameProvider {
 		const edit = new vscode.WorkspaceEdit();
 
 		const line = document.lineAt(position.line);
-		const charRange = renameClass.RenameLabel(line.text, position.character, position.line, document.fileName, newName);
+		const charRange = renameClass.RenameLabel(newName);
 		if (typeof (charRange) === "string") {
-			LSPUtils.ShowMessageBox(charRange, "error");
-			return;
+			throw charRange;
 		}
 
-		position.line
-		position.character
+		const keys = charRange.keys();
+		for (const key of keys) {
+			const tokens = charRange.get(key)!;
+			for (let i = 0; i < tokens.length; i++) {
+				const token = tokens[i];
+
+				const uri = vscode.Uri.file(key);
+				const range = new vscode.Range(token.line, token.start, token.line, token.start + token.length);
+				edit.replace(uri, range, newName);
+			}
+		}
 
 		return edit;
 	}

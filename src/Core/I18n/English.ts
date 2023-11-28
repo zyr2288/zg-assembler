@@ -21,7 +21,7 @@ export const English = {
 	"Macro arguments count is {0}, but got {1}": "Macro arguments count is \"{0}\", but got \"{1}\"",
 	"Data group {0} do not found": "Data group \"{0}\" do not found",
 
-	"rename error": "Can not rename to instruction or command",
+	"rename error": "Can not rename",
 
 	"compiling": "compiling",
 	"compile finished": "compile finished",

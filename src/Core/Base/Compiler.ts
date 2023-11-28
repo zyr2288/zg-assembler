@@ -209,6 +209,7 @@ export class Compiler {
 
 	//#region 第二次分析
 	static async SecondAnalyse(option: DecodeOption) {
+		Compiler.enviroment.UpdateMacroRegexString();
 		for (let i = 0; i < option.allLines.length; i++) {
 			const line = option.allLines[i];
 			if (line.compileType === LineCompileType.Error || line.compileType === LineCompileType.Finished)
@@ -228,6 +229,7 @@ export class Compiler {
 					} else {
 						const onlyLabelLine = new OnlyLabelLine();
 						onlyLabelLine.comment = unknowLine.comment;
+						onlyLabelLine.orgText = line.orgText;
 						option.ReplaceLine(onlyLabelLine, unknowLine.orgText.fileHash);
 						onlyLabelLine.Initialize(unknowLine.orgText, option);
 					}

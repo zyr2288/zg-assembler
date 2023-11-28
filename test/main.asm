@@ -17,16 +17,13 @@
 	.BASE $10
 
 	.MACRO WriteToPPU, address	;地址内容写入PPU，这里做一个自定义函数写法
-	
-	LDA #<address
-	STA $0
-	LDA #>address
-	STA $1
-	JSR ppuWrite
-
+		LDA #<address
+		STA $0
+		LDA #>address
+		STA $1
+		JSR ppu.Write
 	.ENDM
 	
-
 RESET
 IRQ
 
@@ -66,8 +63,8 @@ NMI
 	STA $2005
 	STA $2005
 	JMP *
-
-ppuWrite	;+写入PPU
+	
+ppu.Write	;+写入PPU
 	LDY #$0
 	LDA ($0),y
 	STA $2006
@@ -82,6 +79,8 @@ ppuWrite	;+写入PPU
 	STA $2007
 	JMP -
 +	RTS
+
+
 	;-写入PPU
 
 	.INCLUDE "data.asm"
@@ -89,6 +88,7 @@ ppuWrite	;+写入PPU
 	.MSG "Currect line address {0},${0},@{0}", *
 
 	.ORG $FFFA
+
 	.DW NMI
 	.DW RESET
 	.DW IRQ

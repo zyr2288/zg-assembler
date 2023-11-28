@@ -1,5 +1,13 @@
 import { Compiler } from "../Base/Compiler";
+import { Macro } from "../Commands/Macro";
+import { CommandLine } from "../Lines/CommandLine";
+import { ICommonLine, LineType } from "../Lines/CommonLine";
+import { InstructionLine } from "../Lines/InstructionLine";
+import { MacroLine } from "../Lines/MacroLine";
+import { OnlyLabelLine } from "../Lines/OnlyLabelLine";
 import { MatchNames, Platform } from "../Platform/Platform";
+
+type MacthLineType = InstructionLine | MacroLine | CommandLine;
 
 export interface MatchRange {
 	type: "none" | "command" | "instruction" | "variable" | "macro";
@@ -119,5 +127,57 @@ export class HelperUtils {
 		return rangeType;
 	}
 	//#endregion 所在行的作用域，例如 Macro 或 DataGroup
+
+	//#region 获取匹配的行
+	/**
+	 * 获取匹配的行
+	 * @param fileHash 文件名Hash
+	 * @param line 匹配的行
+	 * @returns macro 和 matchLine
+	 */
+	static FindMatchLine(fileHash: number, line: number) {
+		let allLine = Compiler.enviroment.allBaseLines.get(fileHash);
+		if (!allLine)
+			return { macro: undefined, matchLine: undefined };
+
+		let findLineNumber = line;
+		const rangeType = HelperUtils.GetRange(fileHash, line);
+
+		let macro: Macro | undefined;
+		let matchLine: MacthLineType | undefined;
+
+		switch (rangeType?.type) {
+			case "Macro":
+				macro = Compiler.enviroment.allMacro.get(rangeType.key)!;
+				matchLine = HelperUtils._FindMatchLine(findLineNumber, macro.lines);
+				break;
+			case "DataGroup":
+				findLineNumber = rangeType.start;
+				break;
+		}
+
+		if (!matchLine)
+			matchLine = HelperUtils._FindMatchLine(findLineNumber, allLine);
+
+		return { macro, matchLine };
+	}
+
+	private static _FindMatchLine(lineNumber: number, allLine: ICommonLine[]) {
+		let matchLine: MacthLineType | undefined;
+		for (let i = 0; i < allLine.length; i++) {
+			const line = allLine[i];
+			if (!line.orgText) {
+				console.log(line);
+				continue;
+			}
+
+			if (line.orgText.line === lineNumber) {
+				matchLine = line as MacthLineType;
+				break;
+			}
+		}
+		return matchLine;
+	}
+	//#endregion 获取匹配的行
 
 }

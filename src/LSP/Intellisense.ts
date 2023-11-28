@@ -16,6 +16,10 @@ interface FileHelperData {
 	exclude: string;
 }
 
+// enum CompletionType {
+// 	Instruction, Command, Macro, Defined, Label, MacroLabel, Folder, File
+// }
+
 export class Intellisense {
 
 	static suggestData?: TriggerSuggestTag;
@@ -23,7 +27,7 @@ export class Intellisense {
 	/**智能提示显示类型 */
 	private static CompletionShowType: vscode.CompletionItemKind[] = [
 		vscode.CompletionItemKind.Keyword, vscode.CompletionItemKind.Method, vscode.CompletionItemKind.Function,
-		vscode.CompletionItemKind.Enum, vscode.CompletionItemKind.Struct, vscode.CompletionItemKind.TypeParameter,
+		vscode.CompletionItemKind.Constant, vscode.CompletionItemKind.Struct, vscode.CompletionItemKind.TypeParameter,
 		vscode.CompletionItemKind.Folder, vscode.CompletionItemKind.File
 	];
 
@@ -141,7 +145,7 @@ export class Intellisense {
 
 		let regx = /\[exp\]/g;
 		let start = 0;
-		let index = 0;
+		let index = 1;
 		while (match = regx.exec(text)) {
 			result += text.substring(start, match.index) + `$\{${index}}`;
 			start = match.index + match[0].length;
