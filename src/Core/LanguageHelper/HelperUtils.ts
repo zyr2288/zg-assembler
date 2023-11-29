@@ -1,4 +1,5 @@
 import { Compiler } from "../Base/Compiler";
+import { Token } from "../Base/Token";
 import { Macro } from "../Commands/Macro";
 import { CommandLine } from "../Lines/CommandLine";
 import { ICommonLine, LineType } from "../Lines/CommonLine";
@@ -166,17 +167,21 @@ export class HelperUtils {
 		let matchLine: MacthLineType | undefined;
 		for (let i = 0; i < allLine.length; i++) {
 			const line = allLine[i];
-			if (!line.orgText) {
-				console.log(line);
+			if (line.orgText.line !== lineNumber)
 				continue;
-			}
+			
+			switch(line.type) {
+				case LineType.Instruction:
+					const insLine = line as InstructionLine;
 
-			if (line.orgText.line === lineNumber) {
-				matchLine = line as MacthLineType;
-				break;
+					break;
 			}
 		}
 		return matchLine;
+	}
+
+	private static _FindMatchToken(...tokens:Token[]) {
+		
 	}
 	//#endregion 获取匹配的行
 
