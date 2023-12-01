@@ -169,8 +169,8 @@ export class HelperUtils {
 			const line = allLine[i];
 			if (line.orgText.line !== lineNumber)
 				continue;
-			
-			switch(line.type) {
+
+			switch (line.type) {
 				case LineType.Instruction:
 					const insLine = line as InstructionLine;
 
@@ -180,8 +180,38 @@ export class HelperUtils {
 		return matchLine;
 	}
 
-	private static _FindMatchToken(...tokens:Token[]) {
-		
+	private static FindMatchToken(fileHash: number, lineNumber: number, currect: number) {
+		let allLines = Compiler.enviroment.allBaseLines.get(fileHash);
+		if (!allLines)
+			return;
+
+		const rangeType = HelperUtils.GetRange(fileHash, lineNumber);
+		let macro: Macro | undefined;
+		let findLineNumber = lineNumber;
+
+		switch (rangeType?.type) {
+			case "Macro":
+				macro = Compiler.enviroment.allMacro.get(rangeType.key)!;
+				allLines = macro.lines;
+				break;
+			case "DataGroup":
+				findLineNumber = rangeType.start;
+				break;
+		}
+
+		for (let i = 0; i < allLines.length; i++) {
+
+		}
+	}
+
+	private static _FindMatchToken(lineNumber: number, currect: number, ...tokens: Token[]) {
+		for (let i = 0; i < tokens.length; i++) {
+			const token = tokens[i];
+			if (token.line === lineNumber &&
+				token.start <= currect &&
+				token.start + token.length >= currect)
+				return token;
+		}
 	}
 	//#endregion 获取匹配的行
 
