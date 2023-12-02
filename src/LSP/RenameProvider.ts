@@ -20,7 +20,7 @@ export class RenameProvider {
 	private static PrepareRename(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
 		const renameClass = LSPUtils.assembler.languageHelper.rename;
 		const line = document.lineAt(position.line);
-		const charRange = renameClass.PreRename(document.fileName, position.line, line.text, position.character);
+		const charRange = renameClass.PreRename(document.fileName, position.line, position.character);
 		if (typeof (charRange) === "string") {
 			throw charRange;
 		}

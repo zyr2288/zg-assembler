@@ -95,7 +95,7 @@ export class MacroUtils {
 	 * @returns 创建成功返回macro
 	 */
 	static CreateMacro(name: Token, params: Token[]) {
-		if (!LabelUtils.CheckIllegal(name, false))
+		if (!LabelUtils.CheckIllegal(name.text, false))
 			return;
 
 		if (new RegExp(Platform.regexString, "ig").test(name.text)) {
@@ -117,7 +117,7 @@ export class MacroUtils {
 			for (let i = 0; i < params.length; ++i) {
 				const part = params[i];
 				const label: ILabel = { token: part, labelType: LabelType.Variable };
-				if (!LabelUtils.CheckIllegal(part, false)) {
+				if (!LabelUtils.CheckIllegal(part.text, false)) {
 					const errorMsg = Localization.GetMessage("Label {0} illegal", part.text);
 					MyDiagnostic.PushException(part, errorMsg);
 					continue;
@@ -155,10 +155,10 @@ export class MacroUtils {
 	 */
 	static async CompileMacroLine(option: DecodeOption) {
 		const line = option.GetCurrectLine<MacroLine>();
-		const label = LabelUtils.FindLabel(line.labelToken, option.macro);
+		const label = LabelUtils.FindLabelWithHash(line.label?.hash, option.macro);
 		if (label) {
-			label.label.value = Compiler.enviroment.orgAddress;
-			delete (line.labelToken);		// 删除，不再编译
+			label.value = Compiler.enviroment.orgAddress;
+			delete (line.label?.hash);		// 删除，不再编译
 		}
 
 		if (Compiler.compileTimes === 0)

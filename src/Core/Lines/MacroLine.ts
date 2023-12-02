@@ -8,7 +8,8 @@ export class MacroLine implements ICommonLine {
 	compileType = LineCompileType.None;
 	orgText!: Token;
 
-	labelToken?: Token;
+	label?: { token: Token, hash?: number }
+
 	orgAddress: number = -1;
 	baseAddress: number = 0;
 	/**所关联的自定义函数 */
@@ -21,8 +22,8 @@ export class MacroLine implements ICommonLine {
 
 	GetTokens() {
 		const result: HighlightToken[] = [];
-		if (this.labelToken)
-			result.push({ type: HighlightType.Label, token: this.labelToken });
+		if (this.label)
+			result.push({ type: HighlightType.Label, token: this.label.token });
 
 		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
 		result.push({ type: HighlightType.Macro, token: this.macroToken });

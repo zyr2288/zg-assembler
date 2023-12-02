@@ -8,8 +8,7 @@ export class OnlyLabelLine implements ICommonLine {
 	compileType = LineCompileType.None;
 	orgText!: Token;
 
-	labelToken?: Token;
-	labelHash?: number;
+	label: { token: Token, hash?: number } = { token: {} as Token };
 
 	comment?: string;
 
@@ -17,13 +16,13 @@ export class OnlyLabelLine implements ICommonLine {
 		if (labelToken.isEmpty)
 			return;
 
-		this.labelToken = labelToken;
+		this.label.token = labelToken;
 		LabelUtils.GetLineLabelToken(option);
 	}
 
 	GetTokens() {
-		if (this.labelToken)
-			return [{ type: HighlightType.Label, token: this.labelToken }];
+		if (this.label.hash)
+			return [{ type: HighlightType.Label, token: this.label.token }];
 
 		return [];
 	}

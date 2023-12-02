@@ -308,17 +308,17 @@ export class Compiler {
 					break;
 				case LineType.OnlyLabel:
 					const onlyLabelLine = option.GetCurrectLine<OnlyLabelLine>();
-					const labelResult1 = LabelUtils.FindLabelWithHash(onlyLabelLine.labelHash, option.macro);
+					const labelResult1 = LabelUtils.FindLabelWithHash(onlyLabelLine.label.hash, option.macro);
 					if (labelResult1) {
 						labelResult1.value = Compiler.enviroment.orgAddress;
-						delete (onlyLabelLine.labelHash);
+						delete (onlyLabelLine.label.hash);
 					}
 					onlyLabelLine.compileType = LineCompileType.Finished;
 					break;
 				case LineType.Variable:
 					const varLine = option.GetCurrectLine<VariableLine>();
 					const labelResult2 = LabelUtils.FindLabel(varLine.labelToken, option.macro);
-					const result = ExpressionUtils.GetExpressionValue(varLine.exprParts, isFinal, option);
+					const result = ExpressionUtils.GetExpressionValue(varLine.expParts[0], isFinal, option);
 					if (labelResult2 && result.success) {
 						labelResult2.label.value = result.value;
 						varLine.compileType = LineCompileType.Finished;

@@ -14,8 +14,7 @@ export class CommandLine implements ICommonLine {
 	orgAddress = -1;
 	baseAddress = 0;
 
-	labelToken?: Token;
-	labelHash?: number;
+	label?: { token: Token, hash?: number }
 
 	command!: Token;
 	expression?: Token;
@@ -34,7 +33,8 @@ export class CommandLine implements ICommonLine {
 		this.command = option.command;
 		this.command.text = this.command.text.toUpperCase();
 		this.expression = option.expression;
-		this.labelToken = option.labelToken;
+		if (option.labelToken)
+			this.label = { token: option.labelToken };
 	}
 
 	SetResult(value: number, index: number, length: number): number {
@@ -52,8 +52,8 @@ export class CommandLine implements ICommonLine {
 	GetTokens() {
 		let result: HighlightToken[] = [];
 
-		if (this.labelToken)
-			result.push({ type: HighlightType.Label, token: this.labelToken });
+		if (this.label)
+			result.push({ type: HighlightType.Label, token: this.label.token });
 
 		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
 		return result;

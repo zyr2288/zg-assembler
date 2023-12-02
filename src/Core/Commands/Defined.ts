@@ -20,18 +20,18 @@ export class Defined {
 
 	private static FirstAnalyse_Def(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		let expressions: Token[] = line.tag;
+		const expressions: Token[] = line.tag;
 
-		line.labelToken = expressions[0];
+		line.label = { token: expressions[0] };
 
-		let labelMark = LabelUtils.CreateLabel(line.labelToken, option);
+		const labelMark = LabelUtils.CreateLabel(line.label.token, option);
 		if (labelMark) {
 			labelMark.label.labelType = LabelType.Defined;
 			labelMark.label.comment = line.comment;
-			line.labelHash = labelMark.hash;
+			line.label.hash = labelMark.hash;
 		}
 
-		let temp = ExpressionUtils.SplitAndSort(expressions[1]);
+		const temp = ExpressionUtils.SplitAndSort(expressions[1]);
 		if (temp)
 			line.expParts[0] = temp;
 		else
@@ -49,7 +49,7 @@ export class Defined {
 			return;
 		}
 
-		let label = LabelUtils.FindLabelWithHash(line.labelHash, option.macro);
+		let label = LabelUtils.FindLabelWithHash(line.label?.hash, option.macro);
 		let temp2 = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.TryToGetResult, option);
 		if (label && temp2.success)
 			label.value = temp2.value;
@@ -59,7 +59,7 @@ export class Defined {
 		const line = option.GetCurrectLine<CommandLine>();
 		let type = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.GetResultAndShowError;
 		let temp = ExpressionUtils.GetExpressionValue(line.expParts[0], type);
-		let label = LabelUtils.FindLabelWithHash(line.labelHash, option.macro);
+		let label = LabelUtils.FindLabelWithHash(line.label?.hash, option.macro);
 		if (label && temp.success) {
 			label.value = temp.value;
 			line.compileType = LineCompileType.Finished;

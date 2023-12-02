@@ -77,7 +77,7 @@ export class DataGroupCommand {
 			return;
 		}
 
-		line.labelHash = labelMark.hash;
+		line.label = { token: expressions[0], hash: labelMark.hash };
 		Compiler.enviroment.SetRange(line.command.fileHash, {
 			type: "DataGroup",
 			key: labelMark.label.token.text,

@@ -73,18 +73,16 @@ export class LabelUtils {
 	 */
 	static GetLineLabelToken(option: DecodeOption, labelType: LabelType = LabelType.Label) {
 		const line = option.GetCurrectLine<InstructionLine | VariableLine | CommandLine>();
-		if (line.labelToken && line.labelToken.isEmpty === false) {
+		if (line.label?.token && line.label?.token.isEmpty === false) {
 
-			if (line.labelToken.text.endsWith(":"))
-				line.labelToken = line.labelToken.Substring(0, line.labelToken.length - 1);
+			if (line.label.token.text.endsWith(":"))
+				line.label.token = line.label.token.Substring(0, line.label.token.length - 1);
 
-			const labelResult = LabelUtils.CreateLabel(line.labelToken, option);
+			const labelResult = LabelUtils.CreateLabel(line.label.token, option);
 			if (labelResult) {
 				labelResult.label.comment = line.comment;
 				labelResult.label.labelType = labelType;
-				line.labelHash = labelResult.hash;
-
-				LabelReferences.SetOrgLabel(labelResult.label, labelResult.hash);
+				line.label.hash = labelResult.hash;
 			}
 		}
 	}
@@ -114,7 +112,7 @@ export class LabelUtils {
 			return item;
 		}
 
-		if (!LabelUtils.CheckIllegal(token, !option.macro)) {
+		if (!LabelUtils.CheckIllegal(token.text, !option.macro)) {
 			const errorMsg = Localization.GetMessage("Label {0} illegal", token.text);
 			MyDiagnostic.PushException(token, errorMsg);
 			return;
@@ -314,13 +312,13 @@ export class LabelUtils {
 	 * @param allowDot 允许点
 	 * @returns true为合法
 	 */
-	static CheckIllegal(word: Token, allowDot: boolean) {
+	static CheckIllegal(word: string, allowDot: boolean) {
 		if (allowDot) {
-			if (/(^\d)|\s|\,|\+|\-|\*|\/|\>|\<|\=|\!|\~|:|#|&|\||%|\$|"/g.test(word.text)) {
+			if (/(^\d)|\s|\,|\+|\-|\*|\/|\>|\<|\=|\!|\~|:|#|&|\||%|\$|"/g.test(word)) {
 				return false;
 			}
 		} else {
-			if (/(^\d)|\s|\,|\+|\-|\*|\/|\>|\<|\=|\!|\~|:|#|&|\||%|\$|"|\./g.test(word.text)) {
+			if (/(^\d)|\s|\,|\+|\-|\*|\/|\>|\<|\=|\!|\~|:|#|&|\||%|\$|"|\./g.test(word)) {
 				return false;
 			}
 		}
@@ -384,7 +382,7 @@ export class LabelUtils {
 	 * @returns 
 	 */
 	private static SplitLabel(token: Token, type: LabelScope) {
-		let tokens = token.Split(/\./g);
+		const tokens = token.Split(/\./g);
 		let text = "";
 
 		if (tokens[0].isEmpty) {
@@ -392,7 +390,7 @@ export class LabelUtils {
 			text += ".";
 		}
 
-		let fileLabelSet = LabelUtils.GetFileLabelHash(token.fileHash);
+		const fileLabelSet = LabelUtils.GetFileLabelHash(token.fileHash);
 		let parentHash = 0;
 		if (type === LabelScope.Local)
 			parentHash = Utils.GetHashcode(token.fileHash);
@@ -437,13 +435,13 @@ export class LabelUtils {
 					return;
 				}
 
-				result = { token: tokens[0].Copy(), labelType: LabelType.Defined };
-				result.token.text = text;
+				result = { token: token.Copy(), labelType: LabelType.Defined };
+				// result.token.text = text;
 				Compiler.enviroment.allLabel.set(labelHash, result);
 				fileLabelSet.add(labelHash);
 			} else if (!Compiler.enviroment.allLabel.has(labelHash)) {
-				result = { token: tokens[0].Copy(), labelType: LabelType.None };
-				result.token.text = text;
+				result = { token: token.Copy(), labelType: LabelType.None };
+				// result.token.text = text;
 				Compiler.enviroment.allLabel.set(labelHash, result);
 			}
 

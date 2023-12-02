@@ -19,9 +19,13 @@ export class InstructionLine implements ICommonLine {
 	orgAddress = -1;
 	baseAddress = 0;
 
-	labelToken?: Token;
-	/**使用 labelHash 记忆，以免深拷贝时无法正确使用 */
-	labelHash?: number;
+	/**标签 */
+	label?: {
+		/**标签的Token */
+		token: Token;
+		/**标签的Hash */
+		hash?: number;
+	}
 
 	instruction!: Token;
 	expression?: Token;
@@ -35,7 +39,8 @@ export class InstructionLine implements ICommonLine {
 		this.instruction = option.instruction;
 		this.instruction.text = this.instruction.text.toUpperCase();
 		this.expression = option.expression;
-		this.labelToken = option.labelToken;
+		if (option.labelToken)
+			this.label = { token: option.labelToken };
 	}
 
 	SetResult(value: number, index: number, length: number): number {
@@ -52,8 +57,8 @@ export class InstructionLine implements ICommonLine {
 
 	GetTokens() {
 		let result: HighlightToken[] = [];
-		if (this.labelToken)
-			result.push({ type: HighlightType.Label, token: this.labelToken });
+		if (this.label)
+			result.push({ type: HighlightType.Label, token: this.label.token });
 
 		result.push({ type: HighlightType.Keyword, token: this.instruction });
 		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
@@ -115,10 +120,11 @@ export class InstructionLineUtils {
 		if (line.compileType === LineCompileType.Error)
 			return;
 
-		const label = LabelUtils.FindLabelWithHash(line.labelHash, option.macro);
+		
+		const label = LabelUtils.FindLabelWithHash(line.label?.hash, option.macro);
 		if (label) {
 			label.value = Compiler.enviroment.orgAddress;
-			delete (line.labelHash);
+			delete(line.label?.hash);
 		}
 
 		if (line.addressingMode.spProcess) {

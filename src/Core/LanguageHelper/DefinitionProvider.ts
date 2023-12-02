@@ -20,65 +20,47 @@ interface DefinitionResult {
 export class DefinitionProvider {
 
 	/**获取标签的定义的位置 */
-	static async GetLabelPosition(filePath: string, lineNumber: number, lineText: string, currect: number) {
+	static async GetLabelPosition(filePath: string, lineNumber: number, currect: number) {
 
 		const result: DefinitionResult = { filePath: "", line: 0, start: 0, length: 0 };
 		const fileHash = FileUtils.GetFilePathHashcode(filePath);
 
-		const commonLine = Compiler.enviroment.allBaseLines.get(fileHash);
-		if (!commonLine)
-			return result;
-
-		const match = HelperUtils.FindMatchLine(fileHash, lineNumber);
-
-		if (!match.matchLine)
-			return result;
-
-		if (match.matchLine.type === LineType.Command) {
-			const commandLine = match.matchLine as CommandLine;
-			switch (commandLine.command.text) {
-				case ".INCLUDE":
-				case ".INCBIN":
-					const tag: { path: string, token: Token } = commandLine.tag;
-					if (currect >= tag.token.start && currect <= tag.token.start + tag.token.length)
-						result.filePath = tag.path;
-
-					return result;
-			}
-		}
-
-		switch (match.matchLine.type) {
-			case LineType.Macro:
-				const macroLine = match.matchLine as MacroLine;
-				if (macroLine.macroToken.start <= currect && macroLine.macroToken.start + macroLine.macroToken.length >= currect) {
-					DefinitionProvider.SetResultToken(result, macroLine.macro.name);
-					return result;
-				}
+		const match = HelperUtils.FindMatchToken(fileHash, lineNumber, currect);
+		switch(match.matchType) {
+			case "None":
 				break;
-		}
 
-		for (let i = 0; i < match.matchLine.expParts.length; i++) {
-			for (let j = 0; j < match.matchLine.expParts[i].length; j++) {
-				const part = match.matchLine.expParts[i][j];
-				if (part.type !== PriorityType.Level_1_Label ||
-					part.token.line !== lineNumber ||
-					part.token.start > currect ||
-					part.token.start + part.token.length < currect)
-					continue;
+			case "Include":
+				result.filePath = match.matchToken!.text;
+				break;
 
-				const label = LabelUtils.FindLabelWithHash(part.value, match.macro);
+			case "Label":
+				const labelHash = match.tag as number;
+				if (!labelHash)
+					break;
+
+				const label = LabelUtils.FindLabelWithHash(labelHash, match.macro);
 				if (!label)
-					return result;
+					break;
 
 				DefinitionProvider.SetResultToken(result, label.token);
-				return result;
-			}
+				break;
+			case "Macro":
+				if (!match.matchToken)
+					break;
+
+				const macro = Compiler.enviroment.allMacro.get(match.matchToken.text);
+				DefinitionProvider.SetResultToken(result, macro?.name);
+				break;
 		}
 
 		return result;
 	}
 
-	private static SetResultToken(result: DefinitionResult, token: Token) {
+	private static SetResultToken(result: DefinitionResult, token?: Token) {
+		if (!token)
+			return;
+
 		result.filePath = Compiler.enviroment.GetFile(token.fileHash);
 		result.line = token.line;
 		result.start = token.start;

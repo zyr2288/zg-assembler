@@ -1,17 +1,15 @@
 import { Compiler } from "../Base/Compiler";
+import { ExpressionPart, PriorityType } from "../Base/ExpressionUtils";
 import { Token } from "../Base/Token";
 import { Macro } from "../Commands/Macro";
 import { CommandLine } from "../Lines/CommandLine";
-import { ICommonLine, LineType } from "../Lines/CommonLine";
+import { LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
 import { MacroLine } from "../Lines/MacroLine";
-import { OnlyLabelLine } from "../Lines/OnlyLabelLine";
 import { MatchNames, Platform } from "../Platform/Platform";
 
-type MacthLineType = InstructionLine | MacroLine | CommandLine;
-
 export interface MatchRange {
-	type: "none" | "command" | "instruction" | "variable" | "macro";
+	type: "None" | "Command" | "Instruction" | "Variable" | "Macro";
 	start: number;
 	text: string;
 }
@@ -25,16 +23,18 @@ export class HelperUtils {
 	 * @returns 分割结果
 	 */
 	static BaseSplit(lineText: string, start = 0): MatchRange {
-		let result: MatchRange = { type: "none", start: 0, text: "" };
+		const result: MatchRange = { type: "None", start: 0, text: "" };
 		let match = new RegExp(Platform.regexString, "ig").exec(lineText);
 		if (match?.groups?.[MatchNames.command]) {
-			result.type = "command";
+			result.type = "Command";
 			result.text = match.groups[MatchNames.command];
 		} else if (match?.groups?.[MatchNames.instruction]) {
-			result.type = "instruction";
+			result.type = "Instruction";
 			result.text = match.groups[MatchNames.instruction];
 		} else if ((match?.groups?.[MatchNames.variable])) {
-			result.type = "variable"
+			result.type = "Variable";
+		} else if (match = new RegExp(Compiler.enviroment.macroRegexString).exec(lineText)) {
+			result.type = "Macro";
 		}
 
 		if (match)
@@ -129,90 +129,113 @@ export class HelperUtils {
 	}
 	//#endregion 所在行的作用域，例如 Macro 或 DataGroup
 
-	//#region 获取匹配的行
+	//#region 找到光标匹配的Token
 	/**
-	 * 获取匹配的行
-	 * @param fileHash 文件名Hash
-	 * @param line 匹配的行
-	 * @returns macro 和 matchLine
+	 * 找到光标匹配的Token
+	 * @param fileHash 文件Hash
+	 * @param lineNumber 行号
+	 * @param currect 光标位置
+	 * @returns 
 	 */
-	static FindMatchLine(fileHash: number, line: number) {
-		let allLine = Compiler.enviroment.allBaseLines.get(fileHash);
-		if (!allLine)
-			return { macro: undefined, matchLine: undefined };
+	static FindMatchToken(fileHash: number, lineNumber: number, currect: number) {
+		const matchResult = {
+			macro: undefined as Macro | undefined,
+			matchToken: undefined as Token | undefined,
+			matchType: "None" as "None" | "Label" | "Macro" | "Include",
+			/**匹配结果附加值，Label是labelHash，Include是path */
+			tag: undefined as any
+		};
 
-		let findLineNumber = line;
-		const rangeType = HelperUtils.GetRange(fileHash, line);
-
-		let macro: Macro | undefined;
-		let matchLine: MacthLineType | undefined;
-
-		switch (rangeType?.type) {
-			case "Macro":
-				macro = Compiler.enviroment.allMacro.get(rangeType.key)!;
-				matchLine = HelperUtils._FindMatchLine(findLineNumber, macro.lines);
-				break;
-			case "DataGroup":
-				findLineNumber = rangeType.start;
-				break;
-		}
-
-		if (!matchLine)
-			matchLine = HelperUtils._FindMatchLine(findLineNumber, allLine);
-
-		return { macro, matchLine };
-	}
-
-	private static _FindMatchLine(lineNumber: number, allLine: ICommonLine[]) {
-		let matchLine: MacthLineType | undefined;
-		for (let i = 0; i < allLine.length; i++) {
-			const line = allLine[i];
-			if (line.orgText.line !== lineNumber)
-				continue;
-
-			switch (line.type) {
-				case LineType.Instruction:
-					const insLine = line as InstructionLine;
-
-					break;
-			}
-		}
-		return matchLine;
-	}
-
-	private static FindMatchToken(fileHash: number, lineNumber: number, currect: number) {
 		let allLines = Compiler.enviroment.allBaseLines.get(fileHash);
 		if (!allLines)
-			return;
+			return matchResult;
 
 		const rangeType = HelperUtils.GetRange(fileHash, lineNumber);
-		let macro: Macro | undefined;
 		let findLineNumber = lineNumber;
 
 		switch (rangeType?.type) {
 			case "Macro":
-				macro = Compiler.enviroment.allMacro.get(rangeType.key)!;
-				allLines = macro.lines;
+				matchResult.macro = Compiler.enviroment.allMacro.get(rangeType.key)!;
+				allLines = matchResult.macro.lines;
 				break;
 			case "DataGroup":
 				findLineNumber = rangeType.start;
 				break;
 		}
 
+		let temp: { token: Token, hash: number } | undefined;
 		for (let i = 0; i < allLines.length; i++) {
+			const line = allLines[i] as InstructionLine | CommandLine | MacroLine;
+			if (line.orgText.line !== findLineNumber)
+				continue;
 
+			switch (line.type) {
+				case LineType.Macro:
+					const macroLine = line as MacroLine;
+					if (HelperUtils._MatchToken(lineNumber, currect, macroLine.macroToken)) {
+						matchResult.matchType = "Macro";
+						matchResult.matchToken = macroLine.macroToken;
+						return matchResult;
+					}
+					break;
+				case LineType.Command:
+					const commandLine = line as CommandLine;
+					switch (commandLine.command.text) {
+						case ".INCLUDE":
+						case ".INCBIN":
+							if (HelperUtils._MatchToken(lineNumber, currect, commandLine.expParts[0][0]?.token)) {
+								matchResult.matchType = "Include";
+								matchResult.tag = commandLine.tag.path;
+								return matchResult;
+							}
+							break;
+					}
+					break;
+			}
+
+			if (HelperUtils._MatchToken(lineNumber, currect, line.label?.token)) {
+				matchResult.matchType = "Label";
+				matchResult.matchToken = line.label?.token;
+				matchResult.tag = line.label?.hash;
+				return matchResult;
+			} else if (temp = HelperUtils._FindMatchExp(lineNumber, currect, line.expParts)) {
+				matchResult.matchType = "Label";
+				matchResult.matchToken = temp.token;
+				matchResult.tag = temp.hash;
+				return matchResult;
+			}
+		}
+
+		return matchResult;
+	}
+
+	private static _FindMatchExp(lineNumber: number, currect: number, expParts?: ExpressionPart[][]) {
+		if (!expParts)
+			return;
+
+		for (let i = 0; i < expParts.length; i++) {
+			for (let j = 0; j < expParts[i].length; j++) {
+				const part = expParts[i][j];
+				if (part.type !== PriorityType.Level_1_Label)
+					continue;
+
+				if (HelperUtils._MatchToken(lineNumber, currect, part.token))
+					return { token: part.token, hash: part.value };
+			}
 		}
 	}
 
-	private static _FindMatchToken(lineNumber: number, currect: number, ...tokens: Token[]) {
-		for (let i = 0; i < tokens.length; i++) {
-			const token = tokens[i];
-			if (token.line === lineNumber &&
-				token.start <= currect &&
-				token.start + token.length >= currect)
-				return token;
-		}
+	private static _MatchToken(lineNumber: number, currect: number, token?: Token) {
+		if (!token)
+			return false;
+
+		if (token.line === lineNumber &&
+			token.start <= currect &&
+			token.start + token.length >= currect)
+			return true;
+
+		return false;
 	}
-	//#endregion 获取匹配的行
+	//#endregion 找到光标匹配的Token
 
 }

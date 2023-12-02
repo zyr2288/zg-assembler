@@ -23,11 +23,6 @@ export class LabelReferences {
 		LabelReferences.labelRef.delete(labelHash);
 	}
 
-	static SetOrgLabel(label: ILabel, labelHash: number) {
-		const labelRef = LabelReferences.labelRef.get(labelHash) ?? { orgFileHash: labelHash, orgToken: label.token, refTokens: [] };
-		LabelReferences.labelRef.set(labelHash, labelRef);
-	}
-
 	static SetLabelRef(labelHash: number, token: Token) {
 		const labelRef = LabelReferences.labelRef.get(labelHash);
 		if (!labelRef)

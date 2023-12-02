@@ -9,7 +9,7 @@ import { CommandLine } from "../Lines/CommandLine";
 import { ICommonLine, LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
 import { MacroLine } from "../Lines/MacroLine";
-import { OnlyLabelLine } from "../Lines/OnlyLabelLine";
+import { VariableLine } from "../Lines/VariableLine";
 import { Platform } from "../Platform/Platform";
 import { HelperUtils } from "./HelperUtils";
 
@@ -27,128 +27,70 @@ export class RenameProvider {
 		macro: undefined as Macro | undefined
 	};
 
+	//#region 预备命名，获取重命名的范围
 	/**
 	 * 预备命名，获取重命名的范围
 	 * @param lineText 一行文本
 	 * @param currect 当前光标位置
 	 * @returns 文本起始位置和长度
 	 */
-	static PreRename(filePath: string, lineNumber: number, lineText: string, currect: number) {
+	static PreRename(filePath: string, lineNumber: number, currect: number) {
 		RenameProvider.ClearRename();
 
 		const fileHash = FileUtils.GetFilePathHashcode(filePath);
-		const temp = HelperUtils.FindMatchLine(fileHash, lineNumber);
-		if (!temp.matchLine) {
-			return Localization.GetMessage("rename error");
-		}
+		const temp = HelperUtils.FindMatchToken(fileHash, lineNumber, currect);
 
-		let token: Token | undefined;
-		switch (temp.matchLine.type) {
-			case LineType.Command:
-				const commandLine = temp.matchLine as CommandLine;
-				switch (commandLine.command.text) {
-					case ".DEF":
-					case ".DBG": case ".DWG": case ".DLG":
-						RenameProvider.SaveRename.type = "Label";
-						RenameProvider.SaveRename.labelHash = commandLine.labelHash;
-						token = commandLine.labelToken!;
-						break;
-					case ".MACRO":
-						RenameProvider.SaveRename.type = "Macro";
+		const result = { start: 0, length: 0 };
+		switch (temp.matchType) {
+			case "None":
+			case "Include":
+				return Localization.GetMessage("rename error");
+			case "Label":
+				result.start = temp.matchToken!.start;
+				result.length = temp.matchToken!.length;
+				RenameProvider.SaveRename.token = temp.matchToken;
+				RenameProvider.SaveRename.type = "Label";
+				RenameProvider.SaveRename.labelHash = temp.tag as number;
+				if (temp.macro) {
+					const label = temp.macro.labels.get(RenameProvider.SaveRename.labelHash) ?? temp.macro.params.get(RenameProvider.SaveRename.labelHash);
+					if (label) {
 						RenameProvider.SaveRename.macro = temp.macro;
-						token = temp.macro!.name;
-						break;
+						RenameProvider.SaveRename.type = "MacroLabel";
+					}
 				}
 				break;
-			case LineType.Macro:
-				const macroLine = temp.matchLine as MacroLine;
-				RenameProvider.SaveRename.type = "Macro";
-				RenameProvider.SaveRename.macro = macroLine.macro;
-				token = macroLine.macroToken;
-				break;
-			case LineType.OnlyLabel:
-				const onlyLabelLine = temp.matchLine as any as OnlyLabelLine;
-				RenameProvider.SaveRename.type = "Label";
-				RenameProvider.SaveRename.labelHash = onlyLabelLine.labelHash;
-				token = onlyLabelLine.labelToken!;
+			case "Macro":
 				break;
 		}
 
-		if (token && token.start <= currect && token.start + token.length >= currect) {
-			RenameProvider.SaveRename.token = token;
-			return { start: token.start, length: token.length };
-		}
-
-		RenameProvider.FindExpPart(lineNumber, currect, temp.matchLine.expParts, temp.macro);
-		if (RenameProvider.SaveRename.type !== "None") {
-			token = RenameProvider.SaveRename.token!;
-			return { start: token.start, length: token.length };
-		}
-
-		RenameProvider.ClearRename();
-		return Localization.GetMessage("rename error");
+		return result;
 	}
+	//#endregion 预备命名，获取重命名的范围
 
 	//#region 重命名标签
 	/**
 	 * 重命名标签
-	 * @param lineText 行文本
-	 * @param currect 当前光标位置
-	 * @param line 行号
-	 * @param filePath 文件路径
+	 * @param newLabelStr 新名字
 	 * @returns 文件ID与Token[]，空为命名错误
 	 */
 	static RenameLabel(newLabelStr: string) {
 		if (RenameProvider.SaveRename.type === "None")
 			return Localization.GetMessage("rename error");
 
-		const newToken = RenameProvider.SaveRename.token!.Copy();
-		newToken.text = newLabelStr;
-
+		// 检查新名称是否合法
 		const match = new RegExp(Platform.regexString, "ig").exec(newLabelStr);
-		const labelIllegal = LabelUtils.CheckIllegal(newToken, RenameProvider.SaveRename.type !== "Macro");
+		const labelIllegal = LabelUtils.CheckIllegal(newLabelStr, RenameProvider.SaveRename.type !== "Macro");
 		if (match || !labelIllegal)
 			return Localization.GetMessage("rename error");
 
 		const result = new Map<string, Token[]>();
 
-
-		let macroOrLabelOrgToken = { fileHash: undefined as number | undefined, token: {} as Token };
-		switch (RenameProvider.SaveRename.type) {
-			case "Label":
-				const label = LabelUtils.FindLabelWithHash(RenameProvider.SaveRename.labelHash, RenameProvider.SaveRename.macro);
-				if (label) {
-					macroOrLabelOrgToken.fileHash = label.token.fileHash;
-					macroOrLabelOrgToken.token = label.token;
-				}
-				break;
-			case "Macro":
-				const macro = Compiler.enviroment.allMacro.get(RenameProvider.SaveRename.token!.text);
-				if (macro) {
-					macroOrLabelOrgToken.fileHash = macro.name.fileHash;
-					macroOrLabelOrgToken.token = macro.name;
-				}
-				break;
-		}
-
-		if (macroOrLabelOrgToken.fileHash !== undefined) {
-			const fileName = Compiler.enviroment.GetFile(macroOrLabelOrgToken.fileHash);
-			const tokens = result.get(fileName) ?? [];
-			tokens.push(macroOrLabelOrgToken.token);
-			result.set(fileName, tokens);
-		}
-
-
-		const allLineKeys = Compiler.enviroment.allBaseLines.keys();
-		for (const key of allLineKeys) {
-			const lines = Compiler.enviroment.allBaseLines.get(key)!;
-			const fileName = Compiler.enviroment.GetFile(key);
-			const tokens = result.get(fileName) ?? [];
+		const SaveLineToken = (lines: ICommonLine[], tokens: Token[]) => {
 			for (let i = 0; i < lines.length; i++) {
 				const line = lines[i];
 				switch (RenameProvider.SaveRename.type) {
 					case "Macro":
-						switch(line.type) {
+						switch (line.type) {
 							case LineType.Macro:
 								const macroLine = line as MacroLine;
 								tokens.push(macroLine.macroToken);
@@ -156,102 +98,56 @@ export class RenameProvider {
 						}
 						break;
 					case "Label":
+					case "MacroLabel":
 						switch (line.type) {
 							case LineType.Instruction:
 							case LineType.Command:
 							case LineType.Macro:
-								const insLine = line as InstructionLine | CommandLine | MacroLine;
+								const insLine = line as InstructionLine | CommandLine | MacroLine | VariableLine;
 								tokens.push(...RenameProvider.RenameMatchToken(insLine.expParts));
 								break;
 						}
 						break;
 				}
-
-
 			}
+		}
+
+		// 原始位置重命名
+		switch (RenameProvider.SaveRename.type) {
+			case "Label":
+				const label = LabelUtils.FindLabelWithHash(RenameProvider.SaveRename.labelHash, RenameProvider.SaveRename.macro);
+				if (label) {
+					const fileName = Compiler.enviroment.GetFile(label.token.fileHash);
+					const tokens = result.get(fileName) ?? [];
+					tokens.push(label.token);
+					result.set(fileName, tokens);
+				}
+				break;
+			case "MacroLabel":
+				const macroLabel = LabelUtils.FindLabelWithHash(RenameProvider.SaveRename.labelHash, RenameProvider.SaveRename.macro);
+				if (macroLabel) {
+					const fileName = Compiler.enviroment.GetFile(macroLabel.token.fileHash);
+					const tokens = result.get(fileName) ?? [];
+					tokens.push(macroLabel.token);
+					SaveLineToken(RenameProvider.SaveRename.macro!.lines, tokens);
+					result.set(fileName, tokens);
+					return result;
+				}
+				break;
+		}
+
+		// 所有引用重命名
+		const allLineKeys = Compiler.enviroment.allBaseLines.keys();
+		for (const key of allLineKeys) {
+			const lines = Compiler.enviroment.allBaseLines.get(key)!;
+			const fileName = Compiler.enviroment.GetFile(key);
+			const tokens = result.get(fileName) ?? [];
+			SaveLineToken(lines, tokens);
 			result.set(fileName, tokens);
 		}
 		return result;
-
-		// if (RenameProvider.TokenCanRename(oldToken, newToken))
-		// 	return [];
-
-		// const rangeType = HelperUtils.GetRange(fileHash, line);
-		// let macro = undefined;
-		// switch (rangeType?.type) {
-		// 	case "Macro":
-		// 		macro = Compiler.enviroment.allMacro.get(rangeType.key);
-		// 		break;
-		// }
-
-		// /**Key是fileHash */
-		// const result = new Map<number, Token[]>();
-
-		// const oldLabel = LabelUtils.FindLabel(oldToken, macro);
-		// const newLabel = LabelUtils.FindLabel(newToken, macro);
-		// if (!oldLabel || newLabel)
-		// 	return result;
-
-		// const allLines = Compiler.enviroment.allBaseLines;
-
-		// // for (let i = 0; i < option.allLines.length; i++) {
-		// // 	const line = option.GetLine(i);
-		// // 	const fileHash = line.orgText.fileHash;
-		// // 	const tokens = result.get(fileHash) ?? [];
-		// // 	switch (line.type) {
-		// // 		case LineType.Instruction:
-		// // 			const insLine = line as InstructionLine;
-		// // 			tokens.push(...RenameProvider.GetReplaceToken(oldToken, insLine.exprParts));
-		// // 			break;
-		// // 	}
-		// // 	result.set(fileHash, tokens);
-		// // }
-		// return result;
 	}
 	//#endregion 重命名标签
-
-	/**
-	 * 查找满足的表达式Token
-	 * @param currect 当前光标行位置
-	 * @param exps 所有表达式
-	 * @param macro 自定义函数
-	 * @returns 
-	 */
-	private static FindExpPart(line: number, currect: number, exps: ExpressionPart[][], macro?: Macro) {
-		for (let i = 0; i < exps.length; i++) {
-			for (let j = 0; j < exps[i].length; j++) {
-				const part = exps[i][j];
-				if (part.type !== PriorityType.Level_1_Label)
-					continue;
-
-				if (part.token.line !== line ||
-					part.token.start > currect ||
-					part.token.start + part.token.length < currect)
-					continue;
-
-				RenameProvider.SaveRename.type = "Label";
-				RenameProvider.SaveRename.labelHash = part.value;
-				RenameProvider.SaveRename.token = part.token;
-				break;
-			}
-		}
-	}
-
-	/**
-	 * 查找满足光标位置的Token
-	 * @param currect 一行当前光标位置
-	 * @param tokens 所有要查找的Token
-	 * @returns 
-	 */
-	private static FindToken(currect: number, tokens: Token[]) {
-		for (let i = 0; i < tokens.length; i++) {
-			const token = tokens[i];
-			if (token.start > currect || token.start + token.length < currect)
-				continue;
-
-			return token;
-		}
-	}
 
 	private static RenameMatchToken(exps: ExpressionPart[][]) {
 		const result: Token[] = [];

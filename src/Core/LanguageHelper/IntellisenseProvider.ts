@@ -139,12 +139,12 @@ export class IntellisenseProvider {
 		}
 
 		const tempMatch = HelperUtils.BaseSplit(lineText);
-		if (tempMatch.type === "none" || lineCurrect < tempMatch.start)
+		if (tempMatch.type === "None" || lineCurrect < tempMatch.start)
 			return IntellisenseProvider.GetEmptyLineHelper({ fileHash, range: rangeType, trigger: trigger });
 
 		const matchIndex = tempMatch.start + tempMatch.text.length + 1;
 		switch (tempMatch.type) {
-			case "instruction":
+			case "Instruction":
 				if (trigger === " " && lineCurrect === matchIndex) {
 					return IntellisenseProvider.GetInstructionAddressingModes(tempMatch.text);
 				} else if (trigger === ":" && lineCurrect > matchIndex) {
@@ -161,8 +161,9 @@ export class IntellisenseProvider {
 					return IntellisenseProvider.GetLabel(fileHash, prefix.leftText, macro);
 				}
 				break;
-			case "command":
-			case "variable":
+			case "Command":
+			case "Variable":
+			case "Macro":
 				if (lineCurrect < matchIndex || trigger === " ")
 					return [];
 

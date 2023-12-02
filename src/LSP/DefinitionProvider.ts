@@ -15,9 +15,7 @@ export class DefinitionProvider {
 	private static async Definition(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
 		const result: vscode.Location[] = [];
 
-		const temp = await LSPUtils.assembler.languageHelper.definition.GetLabelPosition(
-			document.uri.fsPath, position.line, document.lineAt(position.line).text, position.character
-		);
+		const temp = await LSPUtils.assembler.languageHelper.definition.GetLabelPosition(document.uri.fsPath, position.line, position.character);
 
 		if (temp.filePath !== "") {
 			const fileUri = vscode.Uri.file(temp.filePath);

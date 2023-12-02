@@ -11,23 +11,24 @@ export class VariableLine implements ICommonLine {
 	compileType = LineCompileType.None;
 	orgText!: Token;
 
+	label!: { token: Token, hash?: number };
 	labelToken?: Token;
 	/**使用 labelHash 记忆，以免深拷贝时无法正确使用 */
 	labelHash?: number;
 
 	expression?: Token;
-	exprParts: ExpressionPart[] = [];
+	expParts: ExpressionPart[][] = [];
 
 	comment?: string;
 
 	Initialize(option: { labelToken: Token, expression: Token }) {
-		this.labelToken = option.labelToken;
+		this.label = { token: option.labelToken };
 		this.expression = option.expression;
 	}
 
 	GetTokens() {
 		let result: HighlightToken[] = [];
-		result.push(...ExpressionUtils.GetHighlightingTokens([this.exprParts]));
+		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
 		return result;
 	}
 }
@@ -35,7 +36,7 @@ export class VariableLine implements ICommonLine {
 export class VariableLineUtils {
 	static FirstAnalyse(option: DecodeOption) {
 		const line = option.GetCurrectLine<VariableLine>();
-		let labelMark = LabelUtils.CreateLabel(line.labelToken!, option);
+		const labelMark = LabelUtils.CreateLabel(line.label.token, option);
 		if (labelMark) {
 			labelMark.label.labelType = LabelType.Variable;
 			line.labelHash = labelMark.hash;
@@ -44,13 +45,13 @@ export class VariableLineUtils {
 		}
 
 		if (line.expression!.isEmpty) {
-			let errorMsg = Localization.GetMessage("Expression error");
+			const errorMsg = Localization.GetMessage("Expression error");
 			MyDiagnostic.PushException(line.expression!, errorMsg);
 			line.compileType = LineCompileType.Error;
 		} else {
-			let parts = ExpressionUtils.SplitAndSort(line.expression!);
+			const parts = ExpressionUtils.SplitAndSort(line.expression!);
 			if (parts)
-				line.exprParts = parts;
+				line.expParts[0] = parts;
 			else
 				line.compileType = LineCompileType.Error;
 		}
@@ -59,12 +60,12 @@ export class VariableLineUtils {
 
 	static ThirdAnalyse(option: DecodeOption) {
 		const line = option.GetCurrectLine<VariableLine>();
-		if (ExpressionUtils.CheckLabelsAndShowError(line.exprParts, option)) {
+		if (ExpressionUtils.CheckLabelsAndShowError(line.expParts[0], option)) {
 			line.compileType = LineCompileType.Error;
 			return;
 		}
 
-		let temp = ExpressionUtils.GetExpressionValue(line.exprParts, ExpressionResult.TryToGetResult, option);
+		let temp = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.TryToGetResult, option);
 		let label = LabelUtils.FindLabelWithHash(line.labelHash, option.macro);
 		if (label && temp.success)
 			label.value = temp.value;
