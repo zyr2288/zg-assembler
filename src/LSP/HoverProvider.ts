@@ -11,10 +11,13 @@ export class HoverProvider {
 		)
 	}
 
-	static Hover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
-		let result: vscode.MarkdownString[] = [];
+	static async Hover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
 
-		let temp = LSPUtils.assembler.languageHelper.hoverProvider.Hover(
+		await LSPUtils.WaitingCompileFinished();
+
+		const result: vscode.MarkdownString[] = [];
+
+		const temp = LSPUtils.assembler.languageHelper.hoverProvider.Hover(
 			document.uri.fsPath,
 			position.line,
 			document.lineAt(position.line).text,
@@ -26,7 +29,7 @@ export class HoverProvider {
 		}
 
 		if (temp.value !== undefined) {
-			let temp2 = LSPUtils.ConvertValue(temp.value);
+			const temp2 = LSPUtils.ConvertValue(temp.value);
 			result.push(new vscode.MarkdownString(`HEX: $${temp2.hex}`));
 			result.push(new vscode.MarkdownString(`DEC: ${temp2.dec}`));
 			result.push(new vscode.MarkdownString(`BIN: @${temp2.bin}`));

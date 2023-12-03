@@ -11,7 +11,7 @@ export class UpdateFile {
 	private static updateFiles = new Map<string, string>();
 	private static errorCollection: vscode.DiagnosticCollection;
 
-	static async Initialize(context: vscode.ExtensionContext) {
+	static Initialize(context: vscode.ExtensionContext) {
 		UpdateFile.errorCollection ??= vscode.languages.createDiagnosticCollection(LSPUtils.assembler.config.FileExtension.language);
 		context.subscriptions.push(
 			vscode.workspace.onDidChangeTextDocument(UpdateFile.ChangeDocument)

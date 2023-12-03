@@ -11,8 +11,7 @@ export class IOImplementation {
 
 	private static messageOutput = vscode.window.createOutputChannel("ZG Assembler");
 
-	static async Initialize() {
-
+	static Initialize() {
 		LSPUtils.assembler.fileUtils.BytesToString = IOImplementation.BytesToString;
 		LSPUtils.assembler.fileUtils.GetFolderFiles = IOImplementation.GetFolderFiles;
 		LSPUtils.assembler.fileUtils.PathType = IOImplementation.PathType;

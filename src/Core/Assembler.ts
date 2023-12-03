@@ -8,6 +8,7 @@ import { Commands } from "./Commands/Commands";
 import { Localization } from "./I18n/Localization";
 import { DefinitionProvider } from "./LanguageHelper/DefinitionProvider";
 import { DocumentChangeProvider } from "./LanguageHelper/DocumentChangeProvider";
+import { FormatProvide } from "./LanguageHelper/FormatProvider";
 import { HighlightingProvider } from "./LanguageHelper/HighlightingProvider";
 import { HoverProvider } from "./LanguageHelper/HoverProvider";
 import { IntellisenseProvider } from "./LanguageHelper/IntellisenseProvider";
@@ -35,6 +36,7 @@ export class Assembler {
 		definition: DefinitionProvider,
 		rename: RenameProvider,
 		references: LabelReferences,
+		format: FormatProvide,
 	};
 
 	utils = {
@@ -64,8 +66,6 @@ export class Assembler {
 		Compiler.enviroment.ClearFile(hash);
 	}
 
-	private get compiling() {
-		return Compiler.compiling;
-	}
+	private get compiling() { return Compiler.compiling; }
 
 }

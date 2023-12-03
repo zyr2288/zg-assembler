@@ -38,20 +38,39 @@ export class MyDiagnostic {
 	//#endregion 添加错误
 
 	//#region 获取错误
-	/**获取所有错误 */
-	static GetExceptions() {
-		let errors: OutDiagnosticMsg[] = [];
-		MyDiagnostic.allErrors.forEach((errorMap, fileHash) => {
-			errorMap.forEach((errorMsg, wordHash) => {
-				errors.push({
-					filePath: Compiler.enviroment.GetFile(fileHash),
-					line: errorMsg.word.line,
-					start: errorMsg.word.start,
-					length: errorMsg.word.text.length,
-					message: errorMsg.msg
+	/**
+	 * 获取所有错误
+	 * @param fileHash 文件的Hash，若为undefined则获取所有文件
+	 * @returns 
+	 */
+	static GetExceptions(fileHash?: number) {
+		const errors: OutDiagnosticMsg[] = [];
+		if (fileHash !== undefined) {
+			const errorMap = MyDiagnostic.allErrors.get(fileHash);
+			if (errorMap) {
+				errorMap.forEach((errorMsg, wordHash) => {
+					errors.push({
+						filePath: Compiler.enviroment.GetFile(fileHash),
+						line: errorMsg.word.line,
+						start: errorMsg.word.start,
+						length: errorMsg.word.text.length,
+						message: errorMsg.msg
+					});
+				})
+			}
+		} else {
+			MyDiagnostic.allErrors.forEach((errorMap, fileHash) => {
+				errorMap.forEach((errorMsg, wordHash) => {
+					errors.push({
+						filePath: Compiler.enviroment.GetFile(fileHash),
+						line: errorMsg.word.line,
+						start: errorMsg.word.start,
+						length: errorMsg.word.text.length,
+						message: errorMsg.msg
+					});
 				});
 			});
-		});
+		}
 		return errors;
 	}
 	//#endregion 获取错误
@@ -72,7 +91,7 @@ export class MyDiagnostic {
 	//#region 获取警告
 	/**获取所有错误 */
 	static GetWarnings() {
-		let warnings: OutDiagnosticMsg[] = [];
+		const warnings: OutDiagnosticMsg[] = [];
 		MyDiagnostic.allWarning.forEach((warningMap, fileHash) => {
 			warningMap.forEach((warningMsg, wordHash) => {
 				warnings.push({

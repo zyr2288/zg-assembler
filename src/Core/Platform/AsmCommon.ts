@@ -8,7 +8,7 @@ import { Completion } from "../LanguageHelper/IntellisenseProvider";
 export interface IAddressingMode {
 	/**寻址正则表达式的分割 */
 	addressType: string[];
-	/**寻址模式，可用正则表达式 或例如：([exp]),Y */
+	/**寻址模式，正则表达式 或例如：([exp]),Y */
 	addressingMode?: string;
 	opCode: Array<number | undefined>;
 	opCodeLength: Array<number | undefined>;

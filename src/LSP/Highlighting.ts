@@ -9,7 +9,7 @@ export class Highlighting {
 
 	private static leagend: vscode.SemanticTokensLegend;
 
-	static async Initialize(context: vscode.ExtensionContext) {
+	static Initialize(context: vscode.ExtensionContext) {
 		Highlighting.leagend = new vscode.SemanticTokensLegend(VSCodeHighlight);
 		context.subscriptions.push(
 			vscode.languages.registerDocumentRangeSemanticTokensProvider(
@@ -21,8 +21,9 @@ export class Highlighting {
 	}
 
 	private static async HighlightingDocument(document: vscode.TextDocument, range: vscode.Range, token: vscode.CancellationToken) {
-		const tokenBuilder = new vscode.SemanticTokensBuilder(Highlighting.leagend);
 		await LSPUtils.WaitingCompileFinished();
+		
+		const tokenBuilder = new vscode.SemanticTokensBuilder(Highlighting.leagend);
 		let highlightingTokens = LSPUtils.assembler.languageHelper.highlightingProvider.HighlightDocument(document.uri.fsPath);
 		for (let i = 0; i < highlightingTokens.length; ++i) {
 			const token = highlightingTokens[i];

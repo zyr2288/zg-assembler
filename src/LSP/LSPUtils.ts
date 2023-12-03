@@ -174,7 +174,7 @@ export class LSPUtils {
 	//#region 等待编译完成
 	static async WaitingCompileFinished(): Promise<void> {
 		return new Promise((resolve, reject) => {
-			let temp = setInterval(() => {
+			const temp = setInterval(() => {
 				if (LSPUtils.fileUpdateFinished) {
 					clearInterval(temp);
 					resolve();
@@ -183,21 +183,5 @@ export class LSPUtils {
 		});
 	}
 	//#endregion 等待编译完成
-
-	/***** private *****/
-
-	//#region 将文件名自动小写
-	/**将文件名自动小写 */
-	private static async FileNameLowcase(...paths: string[]) {
-		let result: string[] = [];
-		for (let i = 0; i < paths.length; i++) {
-			const filePath = paths[i];
-			let folder = await LSPUtils.assembler.fileUtils.GetPathFolder(filePath);
-			let fileName = (await LSPUtils.assembler.fileUtils.GetFileName(filePath)).toLocaleLowerCase();
-			result.push(LSPUtils.assembler.fileUtils.Combine(folder, fileName));
-		}
-		return result;
-	}
-	//#endregion 将文件名自动小写
 
 }

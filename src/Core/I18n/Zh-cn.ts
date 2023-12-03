@@ -24,6 +24,7 @@ export const Chinese: LocalizationMsg = {
 	"Data group {0} do not found": "数据组 \"{0}\" 未找到",
 
 	"rename error": "重命名错误",
+	"format error": "格式化错误",
 
 	"compiling": "编译中",
 	"compile finished": "编译完成",

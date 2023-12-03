@@ -22,6 +22,7 @@ export const English = {
 	"Data group {0} do not found": "Data group \"{0}\" do not found",
 
 	"rename error": "Can not rename",
+	"format error": "Can not format",
 
 	"compiling": "compiling",
 	"compile finished": "compile finished",

@@ -4,8 +4,6 @@ import { LSPUtils } from "./LSPUtils";
 export class RenameProvider {
 
 	static Initialize(context: vscode.ExtensionContext) {
-		// return;		// 屏蔽注入
-
 		context.subscriptions.push(
 			vscode.languages.registerRenameProvider(
 				LSPUtils.assembler.config.FileExtension,
@@ -17,7 +15,10 @@ export class RenameProvider {
 		);
 	}
 
-	private static PrepareRename(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
+	private static async PrepareRename(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
+
+		await LSPUtils.WaitingCompileFinished();
+
 		const renameClass = LSPUtils.assembler.languageHelper.rename;
 		const charRange = renameClass.PreRename(document.fileName, position.line, position.character);
 		if (typeof (charRange) === "string") {
@@ -28,12 +29,11 @@ export class RenameProvider {
 		return range;
 	}
 
-	private static Rename(document: vscode.TextDocument, position: vscode.Position, newName: string, token: vscode.CancellationToken) {
+	private static async Rename(document: vscode.TextDocument, position: vscode.Position, newName: string, token: vscode.CancellationToken) {
+		await LSPUtils.WaitingCompileFinished();
+
 		const renameClass = LSPUtils.assembler.languageHelper.rename;
-
 		const edit = new vscode.WorkspaceEdit();
-
-		const line = document.lineAt(position.line);
 		const charRange = renameClass.RenameLabel(newName);
 		if (typeof (charRange) === "string") {
 			throw charRange;

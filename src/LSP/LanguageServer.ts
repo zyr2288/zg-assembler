@@ -11,6 +11,7 @@ import { LSPUtils } from "./LSPUtils";
 import { UpdateFile } from "./UpdateFile";
 import { RenameProvider } from "./RenameProvider";
 import { ReferencesProvider } from "./ReferencesProvider";
+import { FormatProvide } from "./FormatProvider";
 
 export class LanguageServer {
 
@@ -21,18 +22,19 @@ export class LanguageServer {
 		LSPUtils.assembler = this.assembler = new Assembler();
 		LSPUtils.StatueBarShowText(` $(sync~spin) ${LSPUtils.assembler.localization.GetMessage("plugin loading")}...`);
 
-		await IOImplementation.Initialize();
+		IOImplementation.Initialize();
 		await ConfigUtils.ReadConfig();
 		this.assembler.Initialize();
 		this.SetLanguage(vscode.env.language);
 
 		// 怕看不懂，直接改成这个形式，顺序不能变动
-		await Highlighting.Initialize(context);
-		await UpdateFile.Initialize(context);
-		await DefinitionProvider.Initialize(context);
+		Highlighting.Initialize(context);
+		UpdateFile.Initialize(context);
+		DefinitionProvider.Initialize(context);
 		RenameProvider.Initialize(context);
 		ReferencesProvider.Initialize(context);
-		await Intellisense.Initialize(context);
+		Intellisense.Initialize(context);
+		// FormatProvide.Initialize(context);
 
 		HoverProvider.Initialize(context);
 		AssCommands.Initialize(context);

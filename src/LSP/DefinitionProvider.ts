@@ -3,7 +3,7 @@ import { LSPUtils } from "./LSPUtils";
 
 export class DefinitionProvider {
 
-	static async Initialize(context: vscode.ExtensionContext) {
+	static Initialize(context: vscode.ExtensionContext) {
 		context.subscriptions.push(
 			vscode.languages.registerDefinitionProvider(
 				LSPUtils.assembler.config.FileExtension,
@@ -13,6 +13,8 @@ export class DefinitionProvider {
 	}
 
 	private static async Definition(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
+		await LSPUtils.WaitingCompileFinished();
+
 		const result: vscode.Location[] = [];
 
 		const temp = await LSPUtils.assembler.languageHelper.definition.GetLabelPosition(document.uri.fsPath, position.line, position.character);

@@ -32,7 +32,7 @@ export class Intellisense {
 	];
 
 	/**初始化 */
-	static async Initialize(context: vscode.ExtensionContext) {
+	static Initialize(context: vscode.ExtensionContext) {
 		context.subscriptions.push(
 			vscode.languages.registerCompletionItemProvider(LSPUtils.assembler.config.FileExtension, {
 				provideCompletionItems: Intellisense.ShowCompletion
@@ -46,6 +46,8 @@ export class Intellisense {
 		token: vscode.CancellationToken,
 		context: vscode.CompletionContext
 	): Promise<vscode.CompletionItem[]> {
+
+		await LSPUtils.WaitingCompileFinished();
 
 		if (Intellisense.suggestData) {
 			let result = await Intellisense.ProcessSuggest();

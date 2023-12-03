@@ -10,9 +10,10 @@ export class ReferencesProvider {
 		)
 	}
 
-	private static References(document: vscode.TextDocument, position: vscode.Position, context: vscode.ReferenceContext, token: vscode.CancellationToken) {
-		const referencesClass = LSPUtils.assembler.languageHelper.references;
-		const locResult = referencesClass.GetReferences(document.fileName, position.line, position.character);
+	private static async References(document: vscode.TextDocument, position: vscode.Position, context: vscode.ReferenceContext, token: vscode.CancellationToken) {
+		await LSPUtils.WaitingCompileFinished();
+
+		const locResult = LSPUtils.assembler.languageHelper.references.GetReferences(document.fileName, position.line, position.character);
 
 		const locations: vscode.Location[] = [];
 
