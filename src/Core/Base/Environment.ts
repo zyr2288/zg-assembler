@@ -37,7 +37,7 @@ export class Environment {
 	/**用于记忆文件内macro */
 	fileMacros = new Map<number, Set<string>>();
 
-	macroRegexString = "";
+	private macroRegexString = "";
 
 	private files = new Map<number, string>();
 	private highlightRanges = new Map<number, HighlightRange[]>();
@@ -148,6 +148,10 @@ export class Environment {
 	//#endregion 清除所有标记
 
 	//#region 更新Macro的正则
+	/**
+	 * 更新Macro的正则
+	 * @returns 
+	 */
 	UpdateMacroRegexString() {
 		if (this.allMacro.size === 0) {
 			this.macroRegexString = "";
@@ -162,5 +166,19 @@ export class Environment {
 		this.macroRegexString += ")(\\s+|$)";
 	}
 	//#endregion 更新Macro的正则
+
+	//#region 匹配自定义函数的正则表达式
+	/**
+	 * 匹配自定义函数的正则表达式
+	 * @param text 要匹配的文本
+	 * @returns 
+	 */
+	MatchMacroRegex(text:string) {
+		if (!this.macroRegexString)
+			return null;
+
+		return new RegExp(this.macroRegexString, "ig").exec(text);
+	}
+	//#endregion 匹配自定义函数的正则表达式
 
 }

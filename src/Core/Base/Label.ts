@@ -436,12 +436,12 @@ export class LabelUtils {
 				}
 
 				result = { token: token.Copy(), labelType: LabelType.Defined };
-				// result.token.text = text;
+				result.token.text = text;
 				Compiler.enviroment.allLabel.set(labelHash, result);
 				fileLabelSet.add(labelHash);
 			} else if (!Compiler.enviroment.allLabel.has(labelHash)) {
 				result = { token: token.Copy(), labelType: LabelType.None };
-				// result.token.text = text;
+				result.token.text = text;
 				Compiler.enviroment.allLabel.set(labelHash, result);
 			}
 

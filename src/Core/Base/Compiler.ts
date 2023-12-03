@@ -219,7 +219,7 @@ export class Compiler {
 			switch (line.type) {
 				case LineType.Unknow:
 					const unknowLine = option.GetCurrectLine<UnknowLine>();
-					const match = new RegExp(Compiler.enviroment.macroRegexString).exec(unknowLine.orgText.text);
+					const match = Compiler.enviroment.MatchMacroRegex(unknowLine.orgText.text);
 					const macroName = match?.groups?.["macro"];
 					if (macroName) {
 						const pre = unknowLine.orgText.Substring(0, match!.index);

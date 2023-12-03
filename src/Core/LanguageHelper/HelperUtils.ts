@@ -33,7 +33,7 @@ export class HelperUtils {
 			result.text = match.groups[MatchNames.instruction];
 		} else if ((match?.groups?.[MatchNames.variable])) {
 			result.type = "Variable";
-		} else if (match = new RegExp(Compiler.enviroment.macroRegexString).exec(lineText)) {
+		} else if (match = Compiler.enviroment.MatchMacroRegex(lineText)) {
 			result.type = "Macro";
 		}
 
