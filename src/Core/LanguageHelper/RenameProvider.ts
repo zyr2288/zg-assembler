@@ -60,6 +60,10 @@ export class RenameProvider {
 				}
 				break;
 			case "Macro":
+				result.start = temp.matchToken!.start;
+				result.length = temp.matchToken!.length;
+				RenameProvider.SaveRename.token = temp.matchToken;
+				RenameProvider.SaveRename.type = "Macro";
 				break;
 		}
 
@@ -103,6 +107,7 @@ export class RenameProvider {
 							case LineType.Instruction:
 							case LineType.Command:
 							case LineType.Macro:
+							case LineType.Variable:
 								const insLine = line as InstructionLine | CommandLine | MacroLine | VariableLine;
 								tokens.push(...RenameProvider.RenameMatchToken(insLine.expParts));
 								break;
@@ -132,6 +137,15 @@ export class RenameProvider {
 					SaveLineToken(RenameProvider.SaveRename.macro!.lines, tokens);
 					result.set(fileName, tokens);
 					return result;
+				}
+				break;
+			case "Macro":
+				const macro = Compiler.enviroment.allMacro.get(RenameProvider.SaveRename.token!.text);
+				if (macro) {
+					const fileName = Compiler.enviroment.GetFile(macro.name.fileHash);
+					const tokens = result.get(fileName) ?? [];
+					tokens.push(macro.name);
+					result.set(fileName, tokens);
 				}
 				break;
 		}

@@ -2,7 +2,7 @@
 	"name": "zg-assembler",
 	"displayName": "ZG Assembler",
 	"description": "A simple assembler for 6502 / 65c816 / z80-gb",
-	"version": "0.2.36",
+	"version": "0.2.37",
 	"engines": {
 		"vscode": "^1.67.0"
 	},
@@ -15,12 +15,10 @@
 		"name": "ZENG GE"
 	},
 	"categories": [
-		"Debuggers",
 		"Programming Languages",
 		"Other"
 	],
 	"activationEvents": [
-		"onDebugResolve:zg-assembly-debug",
 		"onLanguage:zg-assembly"
 	],
 	"icon": "syntaxes/chip.png",
@@ -59,11 +57,6 @@
 				"path": "./syntaxes/zg-assembly.json"
 			}
 		],
-		"breakpoints": [
-			{
-				"language": "zg-assembly"
-			}
-		],
 		"menus": {
 			"editor/context": [
 				{
@@ -89,33 +82,7 @@
 				"editor.wordBasedSuggestions": false,
 				"editor.tabSize": 8
 			}
-		},
-		"debuggers": [
-			{
-				"type": "zg-assembly-debug",
-				"languages": [
-					"zg-assembly"
-				],
-				"label": "Debugger for zg-assembly",
-				"initialConfigurations": [
-					{
-						"name": "ZG-assembly Debugger",
-						"type": "zg-assembly-debug",
-						"request": "launch",
-						"emuPath": "${workspaceFolder}/path/to/mesen.exe",
-						"romPath": "${workspaceFolder}/game.bin"
-					}
-				],
-				"configurationAttributes": {
-					"attach": {
-						"required": [
-							"emuPath",
-							"romPath"
-						]
-					}
-				}
-			}
-		]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run package",

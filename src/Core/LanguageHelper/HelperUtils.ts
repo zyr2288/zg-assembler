@@ -156,6 +156,11 @@ export class HelperUtils {
 		switch (rangeType?.type) {
 			case "Macro":
 				matchResult.macro = Compiler.enviroment.allMacro.get(rangeType.key)!;
+				if (HelperUtils._MatchToken(lineNumber, currect, matchResult.macro.name)) {
+					matchResult.matchToken = matchResult.macro.name;
+					matchResult.matchType = "Macro";
+					return matchResult;
+				}
 				allLines = matchResult.macro.lines;
 				break;
 			case "DataGroup":
