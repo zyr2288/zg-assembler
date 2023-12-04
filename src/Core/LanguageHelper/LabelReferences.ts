@@ -58,6 +58,8 @@ export class LabelReferences {
 								break;
 						}
 						break;
+					case "DataGroup":
+						break;
 				}
 			}
 			result.set(fileName, res);

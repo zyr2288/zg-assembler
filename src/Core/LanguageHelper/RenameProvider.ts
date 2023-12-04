@@ -65,6 +65,9 @@ export class RenameProvider {
 				RenameProvider.SaveRename.token = temp.matchToken;
 				RenameProvider.SaveRename.type = "Macro";
 				break;
+			case "DataGroup":
+				return Localization.GetMessage("rename error");
+
 		}
 
 		return result;

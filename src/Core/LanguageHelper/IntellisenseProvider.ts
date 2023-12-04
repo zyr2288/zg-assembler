@@ -164,8 +164,12 @@ export class IntellisenseProvider {
 			case "Command":
 			case "Variable":
 			case "Macro":
-				if (lineCurrect < matchIndex || trigger === " ")
+				if (lineCurrect < matchIndex || trigger === " ") {
 					return [];
+				} else if (trigger === ":" && lineCurrect > matchIndex) {
+					const prefix = HelperUtils.GetWord(lineText, lineCurrect);
+					return IntellisenseProvider.GetDataGroup(prefix.leftText);
+				}
 
 				const prefix = HelperUtils.GetWord(lineText, lineCurrect);
 				return IntellisenseProvider.GetLabel(fileHash, prefix.leftText, macro);
@@ -362,11 +366,13 @@ export class IntellisenseProvider {
 
 		if (!parts[1]) {
 			datagroup.labelHashAndIndex.forEach((value) => {
-				const com = new Completion({
-					showText: value.token.text,
-					insertText: value.token.text
-				});
-				result.push(com);
+				const values = value.values();
+				for (const v of values) {
+					const com = new Completion({ showText: v.text, insertText: v.text });
+					result.push(com);
+					break;
+				}
+
 			});
 			return result;
 		}
@@ -377,9 +383,11 @@ export class IntellisenseProvider {
 		if (!members)
 			return result;
 
-		for (let i = 0; i < members.index.length; ++i) {
-			const com = new Completion({ showText: i.toString() });
+		let index = 0;
+		for (const key of members.keys()) {
+			const com = new Completion({ showText: index.toString() });
 			result.push(com);
+			index++;
 		}
 		return result;
 	}

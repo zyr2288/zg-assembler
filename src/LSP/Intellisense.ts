@@ -47,8 +47,6 @@ export class Intellisense {
 		context: vscode.CompletionContext
 	): Promise<vscode.CompletionItem[]> {
 
-		await LSPUtils.WaitingCompileFinished();
-
 		if (Intellisense.suggestData) {
 			let result = await Intellisense.ProcessSuggest();
 			delete (Intellisense.suggestData);

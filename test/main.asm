@@ -27,7 +27,7 @@
 RESET
 IRQ
 
--	LDA $2002
+-	LDA ($2002 + 1 + 2 + 65),y
 	BPL -
 -	LDA $2002
 	BPL -
@@ -41,11 +41,11 @@ IRQ
 
 	INX
 	TXA
--	STA $00,x
+-	STA $00,X
 	DEX
 	BNE -
 
-	WriteToPPU palette
+	WriteToPPU help:palette
 	WriteToPPU helloWorld
 
 -	LDA $2002
@@ -57,8 +57,7 @@ IRQ
 	LDA #@00001110
 	STA $2001
 
-NMI
-	LDA $2002
+NMI:	LDA $2002	;这里是NMI
 	LDA #0
 	STA $2005
 	STA $2005
@@ -66,13 +65,13 @@ NMI
 	
 ppu.Write	;+写入PPU
 	LDY #$0
-	LDA ($0),y
+	LDA ($0),Y
 	STA $2006
 	INY
-	LDA ($0),y
+	LDA ($0),Y
 	STA $2006
 	INY
--	LDA ($0),y
+-	LDA ($0),Y
 	CMP #$FF
 	BEQ +
 	INY

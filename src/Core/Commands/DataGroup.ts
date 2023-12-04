@@ -13,15 +13,15 @@ import { Commands } from "./Commands";
 export class DataGroup {
 
 	label!: ILabel;
-	labelHashAndIndex: Map<number, { token: Token, index: number[] }> = new Map();
+	labelHashAndIndex: Map<number, Map<number, Token>> = new Map();
 
 	PushData(token: Token, index: number) {
-		let hash = Utils.GetHashcode(token.text);
-		let labelSet = this.labelHashAndIndex.get(hash) ?? { token, index: [] };
-		if (!labelSet.index.includes(index))
-			labelSet.index.push(index);
+		const hash = Utils.GetHashcode(token.text);
+		const labelMap = this.labelHashAndIndex.get(hash) ?? new Map<number, Token>();
+		if (!labelMap.get(index))
+			labelMap.set(index, token);
 
-		this.labelHashAndIndex.set(hash, labelSet);
+		this.labelHashAndIndex.set(hash, labelMap);
 	}
 
 	/**
@@ -31,12 +31,12 @@ export class DataGroup {
 	 * @returns 
 	 */
 	FindData(text: string, index: number) {
-		let hash = Utils.GetHashcode(text);
-		let labelSet = this.labelHashAndIndex.get(hash);
-		if (!labelSet)
+		const hash = Utils.GetHashcode(text);
+		const labelMap = this.labelHashAndIndex.get(hash);
+		if (!labelMap)
 			return;
 
-		return { token: labelSet.token, index: labelSet.index[index] };
+		return labelMap.get(index);
 	}
 }
 

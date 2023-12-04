@@ -244,7 +244,7 @@ export class LabelUtils {
 			if (!data)
 				return;
 
-			const label: ILabel = { token: data.token, labelType: LabelType.DataGroup, value: data.index };
+			const label: ILabel = { token: data, labelType: LabelType.DataGroup, value: index };
 			return { label, hash: 0 };
 		}
 

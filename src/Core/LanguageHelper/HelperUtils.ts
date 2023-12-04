@@ -1,6 +1,9 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, PriorityType } from "../Base/ExpressionUtils";
+import { LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
+import { Utils } from "../Base/Utils";
+import { DataGroup } from "../Commands/DataGroup";
 import { Macro } from "../Commands/Macro";
 import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
@@ -139,9 +142,10 @@ export class HelperUtils {
 	 */
 	static FindMatchToken(fileHash: number, lineNumber: number, currect: number) {
 		const matchResult = {
+			dataGroup: undefined as DataGroup | undefined,
 			macro: undefined as Macro | undefined,
 			matchToken: undefined as Token | undefined,
-			matchType: "None" as "None" | "Label" | "Macro" | "Include",
+			matchType: "None" as "None" | "Label" | "Number" | "Macro" | "Include" | "DataGroup",
 			/**匹配结果附加值，Label是labelHash，Include是path */
 			tag: undefined as any
 		};
@@ -161,14 +165,40 @@ export class HelperUtils {
 					matchResult.matchType = "Macro";
 					return matchResult;
 				}
+
+				for (const key of matchResult.macro.labels.keys()) {
+					const label = matchResult.macro.labels.get(key)!;
+					if (HelperUtils._MatchToken(lineNumber, currect, label.token)) {
+						matchResult.matchToken = label.token;
+						matchResult.matchType = "Label";
+						matchResult.tag = key;
+						return matchResult;
+					}
+				}
+
+				for (const key of matchResult.macro.params.keys()) {
+					const label = matchResult.macro.params.get(key)!;
+					if (HelperUtils._MatchToken(lineNumber, currect, label.token)) {
+						matchResult.matchToken = label.token;
+						matchResult.matchType = "Label";
+						matchResult.tag = key;
+						return matchResult;
+					}
+				}
+
 				allLines = matchResult.macro.lines;
 				break;
 			case "DataGroup":
 				findLineNumber = rangeType.start;
+				const keyHash = Utils.GetHashcode(rangeType.key);
+				const dataGroup = Compiler.enviroment.allDataGroup.get(keyHash);
+				if (dataGroup) {
+					matchResult.dataGroup = dataGroup;
+				}
 				break;
 		}
 
-		let temp: { token: Token, hash: number } | undefined;
+		let temp: { token: Token, hash: number, type: PriorityType } | undefined;
 		for (let i = 0; i < allLines.length; i++) {
 			const line = allLines[i] as InstructionLine | CommandLine | MacroLine;
 			if (line.orgText.line !== findLineNumber)
@@ -204,9 +234,22 @@ export class HelperUtils {
 				matchResult.tag = line.label?.hash;
 				return matchResult;
 			} else if (temp = HelperUtils._FindMatchExp(lineNumber, currect, line.expParts)) {
-				matchResult.matchType = "Label";
 				matchResult.matchToken = temp.token;
 				matchResult.tag = temp.hash;
+				switch (temp.type) {
+					case PriorityType.Level_1_Label:
+						const label = LabelUtils.FindLabel(matchResult.matchToken, matchResult.macro);
+						if (label && label.label.labelType === LabelType.DataGroup) {
+							matchResult.matchType = "DataGroup";
+							matchResult.tag = label.label.value;
+						} else {
+							matchResult.matchType = "Label";
+						}
+						break;
+					case PriorityType.Level_2_Number:
+						matchResult.matchType = "Number";
+						break;
+				}
 				return matchResult;
 			}
 		}
@@ -221,11 +264,11 @@ export class HelperUtils {
 		for (let i = 0; i < expParts.length; i++) {
 			for (let j = 0; j < expParts[i].length; j++) {
 				const part = expParts[i][j];
-				if (part.type !== PriorityType.Level_1_Label)
+				if (part.type !== PriorityType.Level_1_Label && part.type !== PriorityType.Level_2_Number)
 					continue;
 
 				if (HelperUtils._MatchToken(lineNumber, currect, part.token))
-					return { token: part.token, hash: part.value };
+					return { token: part.token, hash: part.value, type: part.type };
 			}
 		}
 	}

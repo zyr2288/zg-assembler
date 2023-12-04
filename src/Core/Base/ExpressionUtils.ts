@@ -17,6 +17,8 @@ export enum PriorityType {
 	Level_2_Number,
 	/**字符串 */
 	Level_3_String,
+	/**虚拟括号，不存在的，用作表达式初始时候加入的括号，方便二叉树分析 */
+	Level_3_Brackets,
 	/**括号 */
 	Level_4_Brackets,
 	/**非 负 取高位 取低位 */
@@ -396,7 +398,7 @@ export class ExpressionUtils {
 					case PriorityType.Level_2_Number:
 						if (part.token.text === "$" || part.token.text === "*")
 							result.push({ token: part.token, type: HighlightType.Number });
-						
+
 						break;
 				}
 			}
@@ -551,7 +553,7 @@ export class ExpressionUtils {
 					isLabel = true;
 					break;
 				case "=":
-					let errorMsg = Localization.GetMessage("Expression error");
+					const errorMsg = Localization.GetMessage("Expression error");
 					MyDiagnostic.PushException(part.token, errorMsg);
 					result.success = false;
 					break;
@@ -566,7 +568,7 @@ export class ExpressionUtils {
 			}
 
 			if (!result.success) {
-				let errorMsg = Localization.GetMessage("Expression error");
+				const errorMsg = Localization.GetMessage("Expression error");
 				MyDiagnostic.PushException(part.token, errorMsg);
 				break;
 			}
@@ -576,18 +578,18 @@ export class ExpressionUtils {
 		}
 
 		if (result.success && isLabel) {
-			let errorMsg = Localization.GetMessage("Expression error");
+			const errorMsg = Localization.GetMessage("Expression error");
 			MyDiagnostic.PushException(result.parts[result.parts.length - 1].token, errorMsg);
 			result.success = false;
 		}
 
 		if (result.success) {
-			let left = Token.EmptyToken();
-			let right = Token.EmptyToken();
+			const left = Token.EmptyToken();
+			const right = Token.EmptyToken();
 			left.text = "(";
 			right.text = ")";
-			result.parts.unshift({ token: left, type: PriorityType.Level_4_Brackets, value: 0, highlightingType: HighlightType.None });
-			result.parts.push({ token: right, type: PriorityType.Level_4_Brackets, value: 0, highlightingType: HighlightType.None });
+			result.parts.unshift({ type: PriorityType.Level_3_Brackets, token: left, value: 0, highlightingType: HighlightType.None });
+			result.parts.push({ type: PriorityType.Level_3_Brackets, token: right, value: 0, highlightingType: HighlightType.None });
 		}
 
 		return result;
@@ -600,9 +602,10 @@ export class ExpressionUtils {
 	 * @param exprParts 所有部分
 	 */
 	private static LexerSort(exprParts: ExpressionPart[]) {
-		let result = { success: true, parts: [] as ExpressionPart[] };
+		const result = { success: true, parts: [] as ExpressionPart[] };
 		const stack: ExpressionPart[] = [];
 
+		let matchBarket!: ExpressionPart;
 		for (let i = 0; i < exprParts.length; i++) {
 			const part = exprParts[i];
 			switch (part.type) {
@@ -610,25 +613,36 @@ export class ExpressionUtils {
 				case PriorityType.Level_1_Label:
 				case PriorityType.Level_2_Number:
 				case PriorityType.Level_3_String:
-					let temp = ExpressionUtils.GetNumber(part.token.text);
+					const temp = ExpressionUtils.GetNumber(part.token.text);
 					if (temp.success) {
 						part.value = temp.value;
 						part.type = PriorityType.Level_2_Number;
 					}
 					result.parts.push(part);
 					break;
+				case PriorityType.Level_3_Brackets:
 				case PriorityType.Level_4_Brackets:
 					if (part.token.text === "(") {
 						stack.push(part);
 					} else {
 						while (true) {
-							let lex = stack.pop();
+							const lex = stack.pop();
 							if (!lex) {
 								const erroMsg = Localization.GetMessage("Expression error");
-								MyDiagnostic.PushException(part.token, erroMsg);
+								if (part.type === PriorityType.Level_3_Brackets) {
+									MyDiagnostic.PushException(matchBarket.token, erroMsg);
+								} else {
+									MyDiagnostic.PushException(part.token, erroMsg);
+								}
 								result.success = false;
 								break;
 							} else if (lex.type === PriorityType.Level_4_Brackets) {
+								matchBarket = lex;
+								break;
+							} else if (lex.type === PriorityType.Level_3_Brackets) {
+								if (part.type !== PriorityType.Level_3_Brackets) {
+									matchBarket = part;
+								}
 								break;
 							}
 							result.parts.push(lex);
@@ -637,7 +651,7 @@ export class ExpressionUtils {
 					break;
 				default:
 					while (true) {
-						let top = stack.pop();
+						const top = stack.pop();
 						if (!top) {
 							const erroMsg = Localization.GetMessage("Expression error");
 							MyDiagnostic.PushException(part.token, erroMsg);
@@ -645,7 +659,7 @@ export class ExpressionUtils {
 							break;
 						}
 
-						if (part.type >= top.type && top.type !== PriorityType.Level_4_Brackets) {
+						if (part.type >= top.type && top.type !== PriorityType.Level_4_Brackets && top.type !== PriorityType.Level_3_Brackets) {
 							result.parts.push(top);
 							continue;
 						}
@@ -654,14 +668,16 @@ export class ExpressionUtils {
 						stack.push(part);
 						break;
 					}
-
 					break;
 			}
 
 			if (!result.success)
 				break;
 		}
+
 		if (stack.length !== 0) {
+			const erroMsg = Localization.GetMessage("Expression error");
+			MyDiagnostic.PushException(matchBarket.token, erroMsg);
 			result.success = false;
 		}
 
