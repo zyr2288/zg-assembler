@@ -17,6 +17,15 @@ export interface MatchRange {
 	text: string;
 }
 
+export interface TokenResult {
+	dataGroup?: DataGroup;
+	macro?: Macro;
+	matchToken?: Token;
+	matchType: "None" | "Label" | "Number" | "Macro" | "Include" | "DataGroup";
+/**Label是hash */
+	tag: any;
+}
+
 export class HelperUtils {
 
 	//#region 基础分割行
@@ -141,13 +150,13 @@ export class HelperUtils {
 	 * @returns 
 	 */
 	static FindMatchToken(fileHash: number, lineNumber: number, currect: number) {
-		const matchResult = {
-			dataGroup: undefined as DataGroup | undefined,
-			macro: undefined as Macro | undefined,
-			matchToken: undefined as Token | undefined,
-			matchType: "None" as "None" | "Label" | "Number" | "Macro" | "Include" | "DataGroup",
+		const matchResult: TokenResult = {
+			dataGroup: undefined,
+			macro: undefined,
+			matchToken: undefined,
+			matchType: "None",
 			/**匹配结果附加值，Label是labelHash，Include是path */
-			tag: undefined as any
+			tag: undefined
 		};
 
 		let allLines = Compiler.enviroment.allBaseLines.get(fileHash);
@@ -241,7 +250,9 @@ export class HelperUtils {
 						const label = LabelUtils.FindLabel(matchResult.matchToken, matchResult.macro);
 						if (label && label.label.labelType === LabelType.DataGroup) {
 							matchResult.matchType = "DataGroup";
-							matchResult.tag = label.label.value;
+							const tempResult = HelperUtils._MatchDatagroup(matchResult.matchToken, currect);
+							if (tempResult)
+								matchResult.tag = { index: tempResult.index, tokens: tempResult.tokens, value: label.label.value };
 						} else {
 							matchResult.matchType = "Label";
 						}
@@ -283,6 +294,15 @@ export class HelperUtils {
 			return true;
 
 		return false;
+	}
+
+	private static _MatchDatagroup(token: Token, currect: number) {
+		const tokens = token.Split(/\:/ig);
+		for (let i = 0; i < tokens.length; i++) {
+			const t = tokens[i];
+			if (t.start <= currect && t.start + t.length >= currect)
+				return { index: i, tokens };
+		}
 	}
 	//#endregion 找到光标匹配的Token
 

@@ -33,7 +33,7 @@ export class HoverProvider {
 				result.value = tempValue.value;
 				break;
 			case "DataGroup":
-				result.value = temp.tag as number;
+				result.value = temp.tag as {number};
 				break; 
 		}
 		return result;

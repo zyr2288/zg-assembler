@@ -66,7 +66,8 @@ export class Token {
 	/**
 	 * 用正则表达式分割字符串
 	 * @param regex 要分割的正则表达式
-	 * @param count 分割次数，不填写则最大分割
+	 * @param option.saveToken 是否保存分隔符
+	 * @param option.count 分割次数，不填写则最大分割
 	 * @returns 返回分割的OneWord[]
 	 */
 	Split(regex: RegExp, option?: { saveToken?: boolean, count?: number }): Token[] {

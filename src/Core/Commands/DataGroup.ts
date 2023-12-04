@@ -13,14 +13,12 @@ import { Commands } from "./Commands";
 export class DataGroup {
 
 	label!: ILabel;
-	labelHashAndIndex: Map<number, Map<number, Token>> = new Map();
+	labelHashAndIndex: Map<number, { token: Token, index: number }[]> = new Map();
 
 	PushData(token: Token, index: number) {
 		const hash = Utils.GetHashcode(token.text);
-		const labelMap = this.labelHashAndIndex.get(hash) ?? new Map<number, Token>();
-		if (!labelMap.get(index))
-			labelMap.set(index, token);
-
+		const labelMap = this.labelHashAndIndex.get(hash) ?? [];
+		labelMap.push({ token, index });
 		this.labelHashAndIndex.set(hash, labelMap);
 	}
 
@@ -36,7 +34,7 @@ export class DataGroup {
 		if (!labelMap)
 			return;
 
-		return labelMap.get(index);
+		return labelMap[index];
 	}
 }
 
@@ -171,12 +169,12 @@ export class DataGroupCommand {
 		// Compiler.AddAddress(line);
 	}
 
-	private static AddExpressionPart(datagroup: DataGroup, parts: ExpressionPart[], index: number) {
+	private static AddExpressionPart(datagroup: DataGroup, parts: ExpressionPart[], dataIndex: number) {
 		for (let i = 0; i < parts.length; i++) {
 			if (parts[i].type !== PriorityType.Level_1_Label)
 				continue;
 
-			datagroup.PushData(parts[i].token, index);
+			datagroup.PushData(parts[i].token, dataIndex);
 		}
 	}
 }
