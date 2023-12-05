@@ -366,11 +366,8 @@ export class IntellisenseProvider {
 
 		if (!parts[1]) {
 			datagroup.labelHashAndIndex.forEach((value) => {
-				const values = value.values();
-				for (const v of values) {
-					const com = new Completion({ showText: v.text, insertText: v.text });
-					result.push(com);
-					break;
+				for (let i = 0; i < value.length; i++) {
+					result.push(new Completion({ showText: value[i].token.text }));
 				}
 
 			});
@@ -383,11 +380,9 @@ export class IntellisenseProvider {
 		if (!members)
 			return result;
 
-		let index = 0;
-		for (const key of members.keys()) {
-			const com = new Completion({ showText: index.toString() });
+		for (let i = 0; i < members.length; i++) {
+			const com = new Completion({ showText: i.toString() });
 			result.push(com);
-			index++;
 		}
 		return result;
 	}

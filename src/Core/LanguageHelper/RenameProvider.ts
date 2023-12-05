@@ -1,7 +1,7 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, PriorityType } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
-import { ILabel, LabelUtils } from "../Base/Label";
+import { ILabel, LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Macro } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
@@ -179,8 +179,26 @@ export class RenameProvider {
 				if (exp.type !== PriorityType.Level_1_Label)
 					continue;
 
-				if (exp.value === RenameProvider.SaveRename.labelHash)
+				if (exp.value === RenameProvider.SaveRename.labelHash) {
 					result.push(exp.token);
+					continue;
+				}
+
+				if (exp.value !== 0)
+					continue;
+
+				const label = LabelUtils.FindLabel(exp.token);
+				if (!label || label.label.labelType !== LabelType.DataGroup)
+					continue;
+
+				const parts = exp.token.Split(/\:/g, { count: 2 });
+				const scope = parts[0].text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
+				const hash = LabelUtils.GetLebalHash(parts[0].text, parts[0].fileHash, scope);
+				const dataGroup = Compiler.enviroment.allDataGroup.get(hash);
+				if (!dataGroup)
+					continue;
+
+				dataGroup.labelHashAndIndex
 			}
 
 		}

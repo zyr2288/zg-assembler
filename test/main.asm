@@ -57,12 +57,15 @@ IRQ
 	LDA #@00001110
 	STA $2001
 
-NMI:	LDA $2002	;这里是NMI
+NMI	LDA $2002
 	LDA #0
 	STA $2005
 	STA $2005
 	JMP *
+	JMP .temp
 	
+.temp
+
 ppu.Write	;+写入PPU
 	LDY #$0
 	LDA ($0),Y
