@@ -22,8 +22,14 @@ export interface TokenResult {
 	macro?: Macro;
 	matchToken?: Token;
 	matchType: "None" | "Label" | "Number" | "Macro" | "Include" | "DataGroup";
-/**Label是hash */
+	/**Label是hash(number)，DataGroup */
 	tag: any;
+}
+
+export interface TokenResultTag {
+	index: number;
+	tokens: Token[];
+	value: number;
 }
 
 export class HelperUtils {

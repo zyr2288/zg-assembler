@@ -22,7 +22,7 @@ export class RenameProvider {
 
 	private static SaveRename = {
 		token: undefined as Token | undefined,
-		type: "None" as "None" | "Macro" | "Label" | "MacroLabel",
+		type: "None" as "None" | "Macro" | "Label" | "MacroLabel" | "DataGroup",
 		labelHash: undefined as number | undefined,
 		macro: undefined as Macro | undefined
 	};
@@ -115,6 +115,8 @@ export class RenameProvider {
 								tokens.push(...RenameProvider.RenameMatchToken(insLine.expParts));
 								break;
 						}
+						break;
+					case "DataGroup":
 						break;
 				}
 			}

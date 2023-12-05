@@ -4,7 +4,7 @@ import { FileUtils } from "../Base/FileUtils";
 import { LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Macro } from "../Commands/Macro";
-import { HelperUtils } from "./HelperUtils";
+import { HelperUtils, TokenResultTag } from "./HelperUtils";
 
 export class HoverProvider {
 
@@ -33,7 +33,8 @@ export class HoverProvider {
 				result.value = tempValue.value;
 				break;
 			case "DataGroup":
-				result.value = temp.tag as {number};
+				const tag = temp.tag as TokenResultTag;
+				result.value = tag.value;
 				break; 
 		}
 		return result;

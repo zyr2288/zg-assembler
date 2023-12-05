@@ -27,7 +27,7 @@
 RESET
 IRQ
 
--	LDA ($2002 + 1 + 2 + 65),y
+-	LDA $2002
 	BPL -
 -	LDA $2002
 	BPL -
@@ -45,7 +45,7 @@ IRQ
 	DEX
 	BNE -
 
-	WriteToPPU help:palette
+	WriteToPPU palette
 	WriteToPPU helloWorld
 
 -	LDA $2002

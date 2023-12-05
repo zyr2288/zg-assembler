@@ -8,7 +8,7 @@ import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
 import { MacroLine } from "../Lines/MacroLine";
-import { HelperUtils } from "./HelperUtils";
+import { HelperUtils, TokenResultTag } from "./HelperUtils";
 
 interface DefinitionResult {
 	filePath: string;
@@ -52,8 +52,15 @@ export class DefinitionProvider {
 				const macro = Compiler.enviroment.allMacro.get(match.matchToken.text);
 				DefinitionProvider.SetResultToken(result, macro?.name);
 				break;
-		}
+			case "DataGroup":
+				if (!match.matchToken)
+					break;
 
+				const tag = match.tag as TokenResultTag;
+				const data = LabelUtils.FindLabel(match.matchToken);
+				DefinitionProvider.SetResultToken(result, data?.label.token);
+				break;
+		}
 		return result;
 	}
 
