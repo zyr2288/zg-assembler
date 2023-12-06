@@ -1,5 +1,7 @@
 # Zeng Ge Assembler
 
+> Note: Only support `*.asm` files, not `*.65s` files.
+
 [简体中文](./doc/README-zhcn.md)
 
 * [ZG Assembler in Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZENG-GE.zg-assembler)

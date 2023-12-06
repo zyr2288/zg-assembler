@@ -16,10 +16,10 @@ export class DataGroup {
 	labelHashAndIndex: Map<number, { token: Token, index: number }[]> = new Map();
 
 	PushData(token: Token, index: number) {
-		const hash = Utils.GetHashcode(token.text);
-		const labelMap = this.labelHashAndIndex.get(hash) ?? [];
+		const textHash = Utils.GetHashcode(token.text);
+		const labelMap = this.labelHashAndIndex.get(textHash) ?? [];
 		labelMap.push({ token, index });
-		this.labelHashAndIndex.set(hash, labelMap);
+		this.labelHashAndIndex.set(textHash, labelMap);
 	}
 
 	/**
@@ -66,10 +66,10 @@ export class DataGroupCommand {
 
 	private static FirstAnalyse_DataGroup(option: DecodeOption, include?: IncludeLine[]) {
 		const line = option.GetCurrectLine<CommandLine>();
-		let expressions: Token[] = line.tag;
-		let lines = Commands.CollectBaseLines(option, include!);
+		const expressions: Token[] = line.tag;
+		const lines = Commands.CollectBaseLines(option, include!);
 
-		let labelMark = LabelUtils.CreateLabel(expressions[0], option);
+		const labelMark = LabelUtils.CreateLabel(expressions[0], option);
 		if (!labelMark) {
 			line.compileType = LineCompileType.Error;
 			return;
@@ -83,11 +83,13 @@ export class DataGroupCommand {
 			end: include![1].line
 		});
 
-		let scope = labelMark.label.token.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
-		let hash = LabelUtils.GetLebalHash(labelMark.label.token.text, labelMark.label.token.fileHash, scope);
+		const scope = labelMark.label.token.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
+		const hash = LabelUtils.GetLebalHash(labelMark.label.token.text, labelMark.label.token.fileHash, scope);
 
 		labelMark.label.labelType = LabelType.Label;
-		let datagroup = new DataGroup();
+		const datagroup = new DataGroup();
+		datagroup.label = labelMark.label;
+
 		Compiler.enviroment.allDataGroup.set(hash, datagroup);
 
 		let dataIndex = 0;
@@ -103,7 +105,7 @@ export class DataGroupCommand {
 				let temp2 = ExpressionUtils.SplitAndSort(p);
 				if (temp2) {
 					line.expParts.push(temp2);
-					DataGroupCommand.AddExpressionPart(datagroup, temp2, dataIndex);
+					DataGroupCommand.AddExpressionPart(datagroup, temp2, i);
 				} else {
 					line.expParts.push([]);
 					line.compileType = LineCompileType.Error;
@@ -117,7 +119,8 @@ export class DataGroupCommand {
 	private static ThirdAnalyse_DataGroup(option: DecodeOption) {
 		const line = option.allLines[option.lineIndex] as CommandLine;
 		for (let i = 0; i < line.expParts.length; ++i) {
-			let temp = ExpressionUtils.CheckLabelsAndShowError(line.expParts[i]);
+			const exps = line.expParts[i];
+			const temp = ExpressionUtils.CheckLabelsAndShowError(exps);
 			if (temp)
 				line.compileType = LineCompileType.Error;
 
@@ -171,10 +174,11 @@ export class DataGroupCommand {
 
 	private static AddExpressionPart(datagroup: DataGroup, parts: ExpressionPart[], dataIndex: number) {
 		for (let i = 0; i < parts.length; i++) {
-			if (parts[i].type !== PriorityType.Level_1_Label)
+			const part = parts[i];
+			if (part.type !== PriorityType.Level_1_Label)
 				continue;
 
-			datagroup.PushData(parts[i].token, dataIndex);
+			datagroup.PushData(part.token, dataIndex);
 		}
 	}
 }

@@ -2,6 +2,8 @@
 
 [English](./doc/README-en.md)
 
+> 注意：编译器只监视 `*.asm` 文件，并不是 `*.65s` 文件
+
 ## 配置文件
 
 * [编译器插件地址](https://marketplace.visualstudio.com/items?itemName=ZENG-GE.zg-assembler)

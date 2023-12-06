@@ -1,6 +1,6 @@
+import { DataGroup } from "../Commands/DataGroup";
 import { Macro } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
-import { LabelReferences } from "../LanguageHelper/LabelReferences";
 import { CommandLine } from "../Lines/CommandLine";
 import { InstructionLine } from "../Lines/InstructionLine";
 import { VariableLine } from "../Lines/VariableLine";
@@ -207,7 +207,7 @@ export class LabelUtils {
 			const hash = Utils.GetHashcode(word.text);
 			const label = macro.params.get(hash) ?? macro.labels.get(hash);
 			if (label)
-				return { label, hash };
+				return { label, hash: hash };
 		}
 
 		// 数组下标
@@ -254,7 +254,7 @@ export class LabelUtils {
 		if (!label)
 			return;
 
-		return { label, hash };
+		return { label, hash: hash };
 	}
 	//#endregion 查找标签
 

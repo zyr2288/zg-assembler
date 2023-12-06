@@ -38,38 +38,5 @@ export class HoverProvider {
 				break; 
 		}
 		return result;
-
-		// const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
-		// const { content } = Compiler.GetContent(line);
-		// if (currect > content.start + content.text.length)
-		// 	return result;
-
-		// const word = HelperUtils.GetWord(content.text, currect, content.start);
-		// const tempWord = word.leftText + word.rightText;
-		// const value = ExpressionUtils.GetNumber(tempWord);
-		// if (value.success) {
-		// 	result.value = value.value;
-		// 	return result;
-		// }
-
-		// const range = HelperUtils.GetRange(fileHash, lineNumber);
-		// let macro: Macro | undefined;
-		// if (range?.type === "Macro")
-		// 	macro = Compiler.enviroment.allMacro.get(range.key);
-
-		// const token = Token.CreateToken(fileHash, lineNumber, word.start, tempWord);
-		// const labelResult = LabelUtils.FindLabel(token, macro);
-		// if (labelResult) {
-		// 	result.value = labelResult.label.value;
-		// 	result.comment = labelResult.label.comment;
-		// 	return result;
-		// }
-
-		// macro = Compiler.enviroment.allMacro.get(token.text);
-		// if (!macro)
-		// 	return result;
-
-		// result.comment = macro.comment
-		return result;
 	}
 }

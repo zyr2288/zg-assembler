@@ -2,7 +2,7 @@ import { Localization } from "../I18n/Localization";
 import { LabelReferences } from "../LanguageHelper/LabelReferences";
 import { HighlightToken, HighlightType } from "../Lines/CommonLine";
 import { Compiler } from "./Compiler";
-import { LabelType, LabelUtils } from "./Label";
+import { ILabel, LabelType, LabelUtils } from "./Label";
 import { MyDiagnostic } from "./MyException";
 import { DecodeOption } from "./Options";
 import { Token } from "./Token";
@@ -211,14 +211,20 @@ export class ExpressionUtils {
 				}
 
 				const temp = ExpressionUtils.GetNumber(element.token.text);
-				if (temp.success) {
+				if (temp.success) {		// 如果是数字
 					element.value = temp.value;
 					element.type = PriorityType.Level_0_Sure;
-				} else {
-					const label = LabelUtils.FindLabelWithHash(element.value, option?.macro);
+				} else {				// 如果是标签
+					let label: ILabel | undefined;
+					if (element.value) {		// 如果标签有Hash值
+						label = LabelUtils.FindLabelWithHash(element.value, option?.macro);
+					} else {					// 如果Hash值是0
+						label = LabelUtils.FindLabel(element.token, option?.macro)?.label;
+					}
+
 					if (label?.value === undefined) {
 						if (analyseOption === ExpressionResult.GetResultAndShowError) {
-							let errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
+							const errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
 							MyDiagnostic.PushException(element.token, errorMsg);
 							result.success = false;
 							break;

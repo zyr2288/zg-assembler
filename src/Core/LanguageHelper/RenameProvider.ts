@@ -112,7 +112,7 @@ export class RenameProvider {
 							case LineType.Macro:
 							case LineType.Variable:
 								const insLine = line as InstructionLine | CommandLine | MacroLine | VariableLine;
-								tokens.push(...RenameProvider.RenameMatchToken(insLine.expParts));
+								tokens.push(...RenameProvider.RenameMatchLabel(insLine.expParts));
 								break;
 						}
 						break;
@@ -168,18 +168,19 @@ export class RenameProvider {
 	}
 	//#endregion 重命名标签
 
-	private static RenameMatchToken(exps: ExpressionPart[][]) {
+	private static RenameMatchLabel(exps: ExpressionPart[][]) {
 		const result: Token[] = [];
 		if (!exps)
 			return result;
 
+		const labelHash = RenameProvider.SaveRename.labelHash!;
 		for (let i = 0; i < exps.length; i++) {
 			for (let j = 0; j < exps[i].length; j++) {
 				const exp = exps[i][j];
 				if (exp.type !== PriorityType.Level_1_Label)
 					continue;
 
-				if (exp.value === RenameProvider.SaveRename.labelHash) {
+				if (exp.value === labelHash) {
 					result.push(exp.token);
 					continue;
 				}
@@ -187,22 +188,41 @@ export class RenameProvider {
 				if (exp.value !== 0)
 					continue;
 
-				const label = LabelUtils.FindLabel(exp.token);
-				if (!label || label.label.labelType !== LabelType.DataGroup)
+				const tempLabel = LabelUtils.FindLabel(exp.token);
+				if (!tempLabel || tempLabel.label.labelType !== LabelType.DataGroup)
 					continue;
 
 				const parts = exp.token.Split(/\:/g, { count: 2 });
-				const scope = parts[0].text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
+
+				const scope = RenameProvider.GetScopeAndHash(parts[0].text)
 				const hash = LabelUtils.GetLebalHash(parts[0].text, parts[0].fileHash, scope);
-				const dataGroup = Compiler.enviroment.allDataGroup.get(hash);
+				const dataGroup = Compiler.enviroment.allDataGroup.get(hash)!;
+
 				if (!dataGroup)
 					continue;
 
-				dataGroup.labelHashAndIndex
+				if (RenameProvider.GetScopeAndHash(RenameProvider.SaveRename.token!.text) === LabelScope.Local &&
+					RenameProvider.SaveRename.token?.fileHash !== dataGroup.label.token.fileHash)
+					continue;
+
+
+				if (RenameProvider.SaveRename.token!.text === parts[0].text) {
+					result.push(parts[0]);
+					continue;
+				}
+
+				if (RenameProvider.SaveRename.token!.text === parts[1].text) {
+					result.push(parts[1]);
+					continue;
+				}
 			}
 
 		}
 		return result;
+	}
+
+	private static GetScopeAndHash(text: string) {
+		return text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
 	}
 
 	private static ClearRename() {
