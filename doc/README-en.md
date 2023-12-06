@@ -5,11 +5,8 @@
 [简体中文](./doc/README-zhcn.md)
 
 * [ZG Assembler in Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZENG-GE.zg-assembler)
-
 * An extensible compiler for [VSCode](https://code.visualstudio.com/), supporting `6502` `65c816` (Special thanks Thirteen) `z80-gb`.
-
 * When the assembly file is opened, a `project-settings.json` file is created in project directory.
-
 * If you want to use core, use `npm run build-core` to build core source.
 
 ```json
@@ -38,7 +35,6 @@
 ### Label
 
 * You can use sub labels, such as `player.x` `player.y`.
-
 * Press vscode's Find Definition shortcut key (default F12) to find the label definition location directly.
 
 
@@ -87,7 +83,6 @@
 ```
 
 * Set the generated file address, the default is `.BASE 0`, it is not same as `.ORG`.
-
 * For example, if `.BASE $10`, the generated file will be written from `$10`, and the previous `$F` address will be `0`.
 
 > Note: 
@@ -104,7 +99,6 @@
 ```
 
 * Set the start compile address, e.g. `.ORG $8000`, then the compile will start at $8000.
-
 * You can also use `.ORG *`, which means compilation will start from the current address. But the current address has to be known, otherwise the compiler reports an error.
 
 > Note: If you use the `.BASE` command, after `.ORG`, otherwise it compiles with an error.
