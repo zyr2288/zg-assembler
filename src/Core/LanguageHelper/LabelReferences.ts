@@ -20,10 +20,10 @@ interface ReferencesToken {
 export class LabelReferences {
 
 	/**获取引用 */
-	static GetReferences(filePath: string, lineNumber: number, currect: number) {
+	static GetReferences(filePath: string, lineNumber: number, lineText:string, currect: number) {
 
 		const fileHash = FileUtils.GetFilePathHashcode(filePath);
-		const temp = HelperUtils.FindMatchToken(fileHash, lineNumber, currect);
+		const temp = HelperUtils.FindMatchToken(fileHash, lineNumber, lineText, currect);
 
 		const result = new Map<string, ReferencesToken[]>();
 

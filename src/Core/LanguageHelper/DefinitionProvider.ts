@@ -20,13 +20,13 @@ interface DefinitionResult {
 export class DefinitionProvider {
 
 	/**获取标签的定义的位置 */
-	static async GetLabelPosition(filePath: string, lineNumber: number, currect: number) {
+	static async GetLabelPosition(filePath: string, lineNumber: number, lineText: string, currect: number) {
 
 		const result: DefinitionResult = { filePath: "", line: 0, start: 0, length: 0 };
 		const fileHash = FileUtils.GetFilePathHashcode(filePath);
 
-		const match = HelperUtils.FindMatchToken(fileHash, lineNumber, currect);
-		switch(match.matchType) {
+		const match = HelperUtils.FindMatchToken(fileHash, lineNumber, lineText, currect);
+		switch (match.matchType) {
 			case "None":
 				break;
 

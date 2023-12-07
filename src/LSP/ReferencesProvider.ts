@@ -13,7 +13,9 @@ export class ReferencesProvider {
 	private static async References(document: vscode.TextDocument, position: vscode.Position, context: vscode.ReferenceContext, token: vscode.CancellationToken) {
 		await LSPUtils.WaitingCompileFinished();
 
-		const locResult = LSPUtils.assembler.languageHelper.references.GetReferences(document.fileName, position.line, position.character);
+		const lineText = document.lineAt(position.line).text;
+		const locResult = LSPUtils.assembler.languageHelper.references.GetReferences(
+			document.fileName, position.line, lineText, position.character);
 
 		const locations: vscode.Location[] = [];
 

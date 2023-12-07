@@ -2,8 +2,7 @@ import { Compiler } from "../Base/Compiler";
 import { ExpressionUtils } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
 import { LabelUtils } from "../Base/Label";
-import { Token } from "../Base/Token";
-import { Macro } from "../Commands/Macro";
+import { Localization } from "../I18n/Localization";
 import { HelperUtils, TokenResultTag } from "./HelperUtils";
 
 export class HoverProvider {
@@ -13,7 +12,7 @@ export class HoverProvider {
 		const fileHash = FileUtils.GetFilePathHashcode(filePath);
 		const result = { value: undefined as number | undefined, comment: undefined as string | undefined };
 
-		const temp = HelperUtils.FindMatchToken(fileHash, lineNumber, currect);
+		const temp = HelperUtils.FindMatchToken(fileHash, lineNumber, lineText, currect);
 		switch (temp.matchType) {
 			case "Label":
 				const label = LabelUtils.FindLabelWithHash(temp.tag as number, temp.macro);
@@ -35,8 +34,22 @@ export class HoverProvider {
 			case "DataGroup":
 				const tag = temp.tag as TokenResultTag;
 				result.value = tag.value;
-				break; 
+				break;
+			case "Command":
+				result.comment = HoverProvider.HoverCommandTip(temp.matchToken!.text);
+				break;
 		}
+		return result;
+	}
+
+	private static HoverCommandTip(command: string) {
+		command = command.substring(1).toLowerCase();
+		const tip = Localization.GetCommandTip(command as any);
+		let result = tip.comment + "\n\n```\n";
+		result += tip.format + "\n```";
+		if (tip.exp)
+			result += "\n---\n" + Localization.GetMessage("example") + "\n```\n" + tip.exp + "\n```";
+
 		return result;
 	}
 }

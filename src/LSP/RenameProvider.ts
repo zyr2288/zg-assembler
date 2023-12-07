@@ -20,7 +20,8 @@ export class RenameProvider {
 		await LSPUtils.WaitingCompileFinished();
 
 		const renameClass = LSPUtils.assembler.languageHelper.rename;
-		const charRange = renameClass.PreRename(document.fileName, position.line, position.character);
+		const lineText = document.lineAt(position.line).text;
+		const charRange = renameClass.PreRename(document.fileName, position.line, lineText, position.character);
 		if (typeof (charRange) === "string") {
 			throw charRange;
 		}

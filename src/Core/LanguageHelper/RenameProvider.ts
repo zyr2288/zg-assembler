@@ -30,15 +30,17 @@ export class RenameProvider {
 	//#region 预备命名，获取重命名的范围
 	/**
 	 * 预备命名，获取重命名的范围
-	 * @param lineText 一行文本
+	 * @param filePath 文件路径
+	 * @param lineNumber 行号，从0开始
+	 * @param lineText 该行文本内容
 	 * @param currect 当前光标位置
 	 * @returns 文本起始位置和长度
 	 */
-	static PreRename(filePath: string, lineNumber: number, currect: number) {
+	static PreRename(filePath: string, lineNumber: number, lineText: string, currect: number) {
 		RenameProvider.ClearRename();
 
 		const fileHash = FileUtils.GetFilePathHashcode(filePath);
-		const temp = HelperUtils.FindMatchToken(fileHash, lineNumber, currect);
+		const temp = HelperUtils.FindMatchToken(fileHash, lineNumber, lineText, currect);
 
 		const result = { start: 0, length: 0 };
 		switch (temp.matchType) {

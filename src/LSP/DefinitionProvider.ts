@@ -17,7 +17,9 @@ export class DefinitionProvider {
 
 		const result: vscode.Location[] = [];
 
-		const temp = await LSPUtils.assembler.languageHelper.definition.GetLabelPosition(document.uri.fsPath, position.line, position.character);
+		const lineText = document.lineAt(position.line).text;
+		const temp = await LSPUtils.assembler.languageHelper.definition.GetLabelPosition(
+			document.uri.fsPath, position.line, lineText, position.character);
 
 		if (temp.filePath !== "") {
 			const fileUri = vscode.Uri.file(temp.filePath);

@@ -21,7 +21,7 @@ export interface TokenResult {
 	dataGroup?: DataGroup;
 	macro?: Macro;
 	matchToken?: Token;
-	matchType: "None" | "Label" | "Number" | "Macro" | "Include" | "DataGroup";
+	matchType: "None" | "Command" | "Label" | "Number" | "Macro" | "Include" | "DataGroup";
 	/**Label是hash(number)，DataGroup */
 	tag: any;
 }
@@ -155,7 +155,7 @@ export class HelperUtils {
 	 * @param currect 光标位置
 	 * @returns 
 	 */
-	static FindMatchToken(fileHash: number, lineNumber: number, currect: number) {
+	static FindMatchToken(fileHash: number, lineNumber: number, lineText: string, currect: number) {
 		const matchResult: TokenResult = {
 			dataGroup: undefined,
 			macro: undefined,
@@ -164,6 +164,17 @@ export class HelperUtils {
 			/**匹配结果附加值，Label是labelHash，Include是path */
 			tag: undefined
 		};
+
+		const tempMatch = HelperUtils.BaseSplit(lineText);
+		matchResult.matchToken = Token.CreateToken(fileHash, lineNumber, tempMatch.start, tempMatch.text);
+		if (HelperUtils._MatchToken(lineNumber, currect, matchResult.matchToken)) {
+			switch (tempMatch.type) {
+				case "Command":
+					matchResult.matchType = "Command";
+					return matchResult;
+			}
+		}
+		delete(matchResult.matchToken);
 
 		let allLines = Compiler.enviroment.allBaseLines.get(fileHash);
 		if (!allLines)
@@ -272,6 +283,12 @@ export class HelperUtils {
 		}
 
 		return matchResult;
+	}
+
+	private static _MatchCommand(lineNumber: number, currect: number, comLine: CommandLine) {
+		if (HelperUtils._MatchToken(lineNumber, currect, comLine.command))
+			return comLine.command;
+
 	}
 
 	private static _FindMatchExp(lineNumber: number, currect: number, expParts?: ExpressionPart[][]) {

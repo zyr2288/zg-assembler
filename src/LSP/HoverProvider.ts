@@ -17,15 +17,12 @@ export class HoverProvider {
 
 		const result: vscode.MarkdownString[] = [];
 
+		const lineText = document.lineAt(position.line).text;
 		const temp = LSPUtils.assembler.languageHelper.hoverProvider.Hover(
-			document.uri.fsPath,
-			position.line,
-			document.lineAt(position.line).text,
-			position.character
-		);
+			document.uri.fsPath, position.line, lineText, position.character);
 
 		if (temp.comment) {
-			result.push(new vscode.MarkdownString(`**${temp.comment}**`));
+			result.push(new vscode.MarkdownString(`${temp.comment}`));
 		}
 
 		if (temp.value !== undefined) {

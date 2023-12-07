@@ -1,4 +1,4 @@
-import { LocalizationMsg } from "./Localization";
+import { LocalizationMsg, LocalizationTip } from "./Localization";
 
 export const Chinese: LocalizationMsg = {
 	"Unsupport platform {0}": "尚未支持的编译平台 \"{0}\"",
@@ -33,11 +33,48 @@ export const Chinese: LocalizationMsg = {
 	"plugin loaded": "编译器插件载入完成",
 
 	"empty addressing mode": "空",
+	"example": "例子：",
 
-	"out put message File{0}, Line{1}, Message{2}":"文件: \"{0}\"\n第 {1} 行\n{2}\n\n",
+	"out put message File{0}, Line{1}, Message{2}": "文件: \"{0}\"\n第 {1} 行\n{2}\n\n",
 
 	"Please compile the file before Debug": "请在Debug之前编译文件",
 	"Cannot find launch.json": "找不到 launch.json",
-	"Cannot find rom file {0}" : "找不到 rom {0}",
+	"Cannot find rom file {0}": "找不到 rom {0}",
 	"Cannot find program path {0}": "找不到启动程序  {0}",
+}
+
+export const CommandTip_Chinese: LocalizationTip = {
+	def: { comment: "定义一个常量。", format: ".DEF 名称, 表达式", exp: ".DEF PPU.CTRL_REG1, $2000" },
+	macro: {
+		comment: "定义一个宏。", format: ".MACRO 名称[, 参数0, 参数1...]\n;你的代码\n.ENDM",
+		exp: ".MACRO TXY\n\tTXA\n\tTAY\n.ENDM"
+	},
+	org: {
+		comment: "设定编译起始地址。\n\n注意：如果使用 `.BASE` 命令，则在 `.ORG` 之后，否则编译错误。", format: ".ORG 表达式",
+		exp: ".ORG $8000\n.ORG *\t;'*'代表当前 ORG 地址"
+	},
+	base: {
+		comment: "设定文件起始地址。\n\n注意：如果使用 `.BASE` 命令，则在 `.ORG` 之后，否则编译错误。", format: ".BASE 表达式",
+		exp: ".BASE $0000\n.BASE $\t;'$'代表当前 BASE 地址"
+	},
+	include: {
+		comment: "引用另一个汇编文件", format: ".INCLUDE \"文件.asm\"",
+		exp: ".INCLUDE \"../文件夹/文件.asm\"\t;相对路径\n.INCLUDE \"D:/文件夹/文件.asm\"\t;绝对路径"
+	},
+	incbin: {
+		comment: "编译文件的二进制到编译结果内，路径用法基本和 `.INCLUDE` 用法一致", format: ".INCBIN \"文件.bin\"[, 文件读取起始位置, 读取长度]",
+		exp: ".INCBIN \"chr-rom.bin\", 0, $1000"
+	},
+	db: { comment: "单字节数据", format: ".DB 参数0[, 参数1, 参数2...]" },
+	dw: { comment: "双字节数据", format: ".DW 参数0[, 参数1, 参数2...]" },
+	dl: { comment: "四字节数据", format: ".DL 参数0[, 参数1, 参数2...]" },
+	hex: {
+		comment: "一段16进制数据，可以用空格隔开。",
+		format: ".HEX 16进制字符",
+		exp: ".HEX 456789ABCDEF\t;类似 .DB $45,$67,$89,$AB,$CD,$EF\n.HEX 0 1 23 4567\t;类似 .DB $00,$01,$23,$45,$67"
+	},
+	msg: {
+		comment: "输出信息，你可以格式化输出数据，具体参考例子。", format: ".MSG \"你要输出的信息\"",
+		exp: ".ORG $8000\n.MSG \"当前编译地址: {0} @{0}, ${0}\", *\n\n;当前编译地址: 32768, @1000 0000 0000 0000, $8000"
+	}
 }
