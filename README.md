@@ -4,16 +4,27 @@
 
 > 注意：编译器只监视 `*.asm` 文件，并不是 `*.65s` 文件
 
+## 所有编译器命令
+1. [.BASE](#base)
+2. [.ORG](#org)
+3. [.DEF](#def)
+4. [.DB .DW .DL](#db-dw-dl)
+5. [.DBG .DWG .DLG .ENDD](#dbg-dwg-dlg-endd)
+6. [.HEX](#hex)
+7. [.IF .ELSEIF .ELSE .ENDIF](#if-elseif-else-endif)
+8. [.IFDEF .IFNDEF .ELSE .ENDIF](#ifdef-ifndef-else-endif)
+9. [.INCBIN](#incbin)
+10. [.INCLUDE](#include)
+11. [.MACRO .ENDM](#macro-endm)
+12. [.REPEAT .ENDR](#repeat-endr)
+13. [.MSG](#msg)
+
 ## 配置文件
 
 * [编译器插件地址](https://marketplace.visualstudio.com/items?itemName=ZENG-GE.zg-assembler)
-
 * 或者可以在 VSCode 插件里搜索 `ZG Assembler` 即可找到插件
-
 * 一个 [VSCode](https://code.visualstudio.com/) 的可扩展的编译器，目前支持 `6502` `65c816`(感谢Thirteen) `z80-gb`，将来会加入更多适应平台。
-
 * 配置文件，当打开汇编文件会在目录下创建 `project-settings.json` 文件，默认以下配置
-
 * 如果你想单独编译内核，请使用 `npm run build-core`，详情请查看 [内核单独编译方法](doc/内核单独编译方法.md)
 
 ```json
@@ -41,7 +52,7 @@
 
 ### 标签
 
-* 在这个版本增加了子标签的功能，可以使用例如 player.x player.y 这样的子标签，并且智能提示能更好的协助你。
+* 在这个版本增加了子标签的功能，可以使用例如 `player.x` `player.y` 这样的子标签，并且智能提示能更好的协助你。
 * 按 vscode 的查找定义快捷键（默认F12）可直接找到标签定义位置。
 
 

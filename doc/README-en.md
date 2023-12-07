@@ -1,8 +1,23 @@
 # Zeng Ge Assembler
 
+[简体中文](./doc/README-zhcn.md)
+
 > Note: Only support `*.asm` files, not `*.65s` files.
 
-[简体中文](./doc/README-zhcn.md)
+## All assembly commands
+1. [.BASE](#base)
+2. [.ORG](#org)
+3. [.DEF](#def)
+4. [.DB .DW .DL](#db-dw-dl)
+5. [.DBG .DWG .DLG .ENDD](#dbg-dwg-dlg-endd)
+6. [.HEX](#hex)
+7. [.IF .ELSEIF .ELSE .ENDIF](#if-elseif-else-endif)
+8. [.IFDEF .IFNDEF .ELSE .ENDIF](#ifdef-ifndef-else-endif)
+9. [.INCBIN](#incbin)
+10. [.INCLUDE](#include)
+11. [.MACRO .ENDM](#macro-endm)
+12. [.REPEAT .ENDR](#repeat-endr)
+13. [.MSG](#msg)
 
 * [ZG Assembler in Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZENG-GE.zg-assembler)
 * An extensible compiler for [VSCode](https://code.visualstudio.com/), supporting `6502` `65c816` (Special thanks Thirteen) `z80-gb`.
