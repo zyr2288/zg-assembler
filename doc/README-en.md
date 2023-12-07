@@ -1,6 +1,6 @@
 # Zeng Ge Assembler
 
-[简体中文](./doc/README-zhcn.md)
+[简体中文](../README.md)
 
 > Note: Only support `*.asm` files, not `*.65s` files.
 
