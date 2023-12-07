@@ -5,19 +5,19 @@
 > 注意：编译器只监视 `*.asm` 文件，并不是 `*.65s` 文件
 
 ## 所有编译器命令
-1. [.BASE](#base)
-2. [.ORG](#org)
-3. [.DEF](#def)
-4. [.DB .DW .DL](#db-dw-dl)
-5. [.DBG .DWG .DLG .ENDD](#dbg-dwg-dlg-endd)
-6. [.HEX](#hex)
-7. [.IF .ELSEIF .ELSE .ENDIF](#if-elseif-else-endif)
-8. [.IFDEF .IFNDEF .ELSE .ENDIF](#ifdef-ifndef-else-endif)
-9. [.INCBIN](#incbin)
-10. [.INCLUDE](#include)
-11. [.MACRO .ENDM](#macro-endm)
-12. [.REPEAT .ENDR](#repeat-endr)
-13. [.MSG](#msg)
+1. [`.BASE`](#base)
+2. [`.ORG`](#org)
+3. [`.DEF`](#def)
+4. [`.DB` `.DW` `.DL`](#db-dw-dl)
+5. [`.DBG` `.DWG` `.DLG` `.ENDD`](#dbg-dwg-dlg-endd)
+6. [`.HEX`](#hex)
+7. [`.IF` `.ELSEIF` `.ELSE` `.ENDIF`](#if-elseif-else-endif)
+8. [`.IFDEF` `.IFNDEF` `.ELSE` `.ENDIF`](#ifdef-ifndef-else-endif)
+9. [`.INCBIN`](#incbin)
+10. [`.INCLUDE`](#include)
+11. [`.MACRO` `.ENDM`](#macro-endm)
+12. [`.REPEAT` `.ENDR`](#repeat-endr)
+13. [`.MSG`](#msg)
 
 ## 配置文件
 
