@@ -38,7 +38,6 @@ export class Config {
 		outputEntryFile: "",
 		outputSingleFile: "",
 		copyToClipboard: false,
-		patchFile: "",
 		includes: ["**/*.asm"],
 		excludes: [] as string[]
 	}
@@ -52,7 +51,6 @@ export class Config {
 		outputEntryFile: "",
 		outputSingleFile: "",
 		copyToClipboard: false,
-		patchFile: "",
 		includes: ["**/*.asm"],
 		excludes: [] as string[]
 	}
@@ -85,9 +83,6 @@ export class Config {
 
 		if (typeof (Config.ProjectSetting.copyToClipboard) !== "boolean")
 			Config.ProjectSetting.copyToClipboard = false;
-
-		if (typeof (Config.ProjectSetting.patchFile) !== "string")
-			Config.ProjectSetting.patchFile = "";
 
 		if (!(Config.ProjectSetting.includes instanceof Array)) {
 			Config.ProjectSetting.includes = ["**/*.asm"];

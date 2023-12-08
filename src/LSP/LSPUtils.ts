@@ -62,7 +62,7 @@ export class LSPUtils {
 	//#endregion 讲结果值运算成其他进制
 
 	//#region 结果值输出
-	static async OutputResult(result: Int16Array, option: { toFile?: string, patchFile?: string, toClipboard?: boolean }) {
+	static async OutputResult(result: Int16Array, option: { toFile?: string,toClipboard?: boolean }) {
 		if (option.toFile) {
 			if (!vscode.workspace.workspaceFolders)
 				return;
@@ -72,32 +72,13 @@ export class LSPUtils {
 			for (let i = 0; i < buffer.length; ++i)
 				buffer[i] = result[i] < 0 ? 0 : result[i];
 
-			let filePath = this.assembler.fileUtils.Combine(vscode.workspace.workspaceFolders[0].uri.fsPath, option.toFile);
-			await this.assembler.fileUtils.SaveFile(filePath, buffer);
+			let filePath = LSPUtils.assembler.fileUtils.Combine(vscode.workspace.workspaceFolders[0].uri.fsPath, option.toFile);
+			await LSPUtils.assembler.fileUtils.SaveFile(filePath, buffer);
 		}
 
 		if (option.toClipboard) {
 			let temp = LSPUtils.GetResultString(result);
 			vscode.env.clipboard.writeText(temp);
-		}
-
-		if (option.patchFile) {
-			if (!vscode.workspace.workspaceFolders)
-				return;
-
-			let filePath = this.assembler.fileUtils.Combine(vscode.workspace.workspaceFolders[0].uri.fsPath, option.patchFile);
-			if (await this.assembler.fileUtils.PathType(filePath) !== "file")
-				return;
-
-			let fileBuffer = await this.assembler.fileUtils.ReadFile(filePath);
-			for (let i = 0; i < result.length; i++) {
-				if (result[i] < 0)
-					continue;
-
-				fileBuffer[i] = result[i];
-			}
-
-			await this.assembler.fileUtils.SaveFile(filePath, fileBuffer);
 		}
 	}
 	//#endregion 结果值输出

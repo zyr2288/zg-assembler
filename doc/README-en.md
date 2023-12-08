@@ -34,7 +34,6 @@
     "outputEntryFile": "",
     "outputSingleFile": "",
     "copyToClipboard": true,       // Copy result bytes to the clipboard
-    "patchFile": "",               // It will overwrite patch file
     "includes": ["**/*.asm"],
     "excludes": []
 }

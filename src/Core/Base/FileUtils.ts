@@ -84,9 +84,9 @@ export class FileUtils {
 	 * @param paths 所有文件路径
 	 */
 	static Combine(...paths: string[]): string {
-		let result: string[] = [];
+		const result: string[] = [];
 		for (let pathIndex = 0; pathIndex < paths.length; ++pathIndex) {
-			let part = paths[pathIndex].split(/[\\\/]/g);
+			const part = paths[pathIndex].split(/[\\\/]/g);
 			for (let partIndex = 0; partIndex < part.length; ++partIndex) {
 				switch (part[partIndex]) {
 					case "..":

@@ -51,8 +51,7 @@ export class AssCommands {
 		if (result) {
 			await LSPUtils.OutputResult(result, {
 				toFile: LSPUtils.assembler.config.ProjectSetting.outputSingleFile,
-				toClipboard: LSPUtils.assembler.config.ProjectSetting.copyToClipboard,
-				patchFile: LSPUtils.assembler.config.ProjectSetting.patchFile
+				toClipboard: LSPUtils.assembler.config.ProjectSetting.copyToClipboard
 			});
 		}
 
@@ -94,8 +93,7 @@ export class AssCommands {
 		if (result) {
 			await LSPUtils.OutputResult(result, {
 				toFile: LSPUtils.assembler.config.ProjectSetting.outputEntryFile,
-				toClipboard: LSPUtils.assembler.config.ProjectSetting.copyToClipboard,
-				patchFile: LSPUtils.assembler.config.ProjectSetting.patchFile
+				toClipboard: LSPUtils.assembler.config.ProjectSetting.copyToClipboard
 			});
 		}
 

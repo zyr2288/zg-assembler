@@ -7,7 +7,6 @@
 	"outputEntryFile": "",
 	"outputSingleFile": "test.nes",
 	"copyToClipboard": false,
-	"patchFile": "",
 	"includes": ["**/*.asm"],
 	"excludes": []
 }

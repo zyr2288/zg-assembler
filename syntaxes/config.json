@@ -1,5 +1,5 @@
 {
-	"$schema": "http://json-schema.org/schema",
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"type": "object",
 	"description": "Assembler configurations",
 	"properties": {
@@ -17,21 +17,8 @@
 			"type": "boolean",
 			"description": "Copy result bytes to clipboard"
 		},
-		"patchFile": { "type": "string", "default": "" },
 		"includes": { "type": "array", "default": "**/*.asm", "items": { "type": "string" } },
 		"excludes": { "type": "array", "default": "", "items": { "type": "string" } }
 	},
-	"required": [
-		"platform",
-		"intellisense",
-		"outOfRangeWarning",
-		"entry",
-		"compileTimes",
-		"outputEntryFile",
-		"outputSingleFile",
-		"copyToClipboard",
-		"patchFile",
-		"includes",
-		"excludes"
-	]
+	"required": ["platform", "intellisense", "outOfRangeWarning", "entry", "compileTimes", "outputEntryFile", "outputSingleFile", "copyToClipboard", "includes", "excludes"]
 }
