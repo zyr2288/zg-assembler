@@ -2,7 +2,7 @@
 	"name": "zg-assembler",
 	"displayName": "ZG Assembler",
 	"description": "A simple assembler for 6502 / 65c816 / z80-gb",
-	"version": "0.2.41",
+	"version": "0.2.42",
 	"engines": {
 		"vscode": "^1.67.0"
 	},
@@ -32,13 +32,6 @@
 			{
 				"command": "zg-assembly.compliteMain",
 				"title": "%Compile Entry File%"
-			},
-			{
-				"command": "extension.mock-debug.debugEditorContents",
-				"title": "Debug File",
-				"category": "Mock Debug",
-				"enablement": "!inDebugMode",
-				"icon": "$(debug-alt)"
 			}
 		],
 		"languages": [

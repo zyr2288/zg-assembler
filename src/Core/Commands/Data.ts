@@ -53,7 +53,7 @@ export class Data {
 
 		line.compileType = LineCompileType.Finished;
 		let index = 0;
-		let finalCompile = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
+		const finalCompile = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
 
 		for (let i = 0; i < line.expParts.length; i++) {
 			const part: ExpressionPart[] = line.expParts[i];

@@ -79,8 +79,8 @@ export class DataGroupCommand {
 		Compiler.enviroment.SetRange(line.command.fileHash, {
 			type: "DataGroup",
 			key: labelMark.label.token.text,
-			start: include![0].line,
-			end: include![1].line
+			startLine: include![0].line,
+			endLine: include![1].line
 		});
 
 		const scope = labelMark.label.token.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
@@ -95,14 +95,14 @@ export class DataGroupCommand {
 		let dataIndex = 0;
 		for (let i = 0; i < lines.length; i++) {
 			const tempLine = lines[i];
-			let temp = tempLine.orgText.Split(/\,/g);
+			const temp = tempLine.orgText.Split(/\,/g);
 
 			if (temp[temp.length - 1].isEmpty)
 				temp.splice(temp.length - 1, 1);
 
 			for (let j = 0; j < temp.length; j++, dataIndex++) {
 				const p = temp[j];
-				let temp2 = ExpressionUtils.SplitAndSort(p);
+				const temp2 = ExpressionUtils.SplitAndSort(p);
 				if (temp2) {
 					line.expParts.push(temp2);
 					DataGroupCommand.AddExpressionPart(datagroup, temp2, i);
@@ -117,7 +117,7 @@ export class DataGroupCommand {
 	}
 
 	private static ThirdAnalyse_DataGroup(option: DecodeOption) {
-		const line = option.allLines[option.lineIndex] as CommandLine;
+		const line = option.GetCurrectLine<CommandLine>();
 		for (let i = 0; i < line.expParts.length; ++i) {
 			const exps = line.expParts[i];
 			const temp = ExpressionUtils.CheckLabelsAndShowError(exps);
@@ -148,20 +148,20 @@ export class DataGroupCommand {
 		line.compileType = LineCompileType.Finished;
 
 		let index = 0;
-		let finalCompile = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
+		const finalCompile = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
 
 		for (let i = 0; i < line.expParts.length; i++) {
 			const lex = line.expParts[i];
-			let temp = ExpressionUtils.GetExpressionValue(lex, finalCompile, option);
+			const temp = ExpressionUtils.GetExpressionValue(lex, finalCompile, option);
 			if (!temp.success) {
 				line.compileType = LineCompileType.None;
 				break;
 			} else {
-				let byteLength = Utils.GetNumberByteLength(temp.value);
-				let tempValue = line.SetResult(temp.value, index, dataLength);
+				const byteLength = Utils.GetNumberByteLength(temp.value);
+				const tempValue = line.SetResult(temp.value, index, dataLength);
 				if (temp.value < 0 || byteLength > dataLength) {
-					let token = ExpressionUtils.CombineExpressionPart(lex);
-					let errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.value, tempValue);
+					const token = ExpressionUtils.CombineExpressionPart(lex);
+					const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.value, tempValue);
 					MyDiagnostic.PushWarning(token, errorMsg);
 				}
 			}

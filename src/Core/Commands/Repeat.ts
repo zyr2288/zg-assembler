@@ -19,10 +19,10 @@ export class Repeat {
 
 	private static FirstAnalyse(option: DecodeOption, include?: IncludeLine[]) {
 		const line = option.GetCurrectLine<CommandLine>();
-		let expressions: Token[] = line.tag;
+		const expressions: Token[] = line.tag;
 		line.tag = include![1].index - include![0].index;
 
-		let temp = ExpressionUtils.SplitAndSort(expressions[0]);
+		const temp = ExpressionUtils.SplitAndSort(expressions[0]);
 		if (temp)
 			line.expParts[0] = temp;
 		else

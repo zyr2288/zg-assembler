@@ -75,13 +75,13 @@ export class Completion {
 //#endregion 提示项
 
 interface HighlightRange {
-	type: "DataGroup" | "Macro";
+	type: "DataGroup" | "Macro" | "Enum";
 	key: string;
-	start: number;
-	end: number;
+	startLine: number;
+	endLine: number;
 }
 
-const NotInMacroCommands = [".DBG", ".DWG", ".MACRO", ".DEF", ".INCLUDE", ".INCBIN", ".BASE", ".ORG"];
+const NotInMacroCommands = [".DBG", ".DWG", ".MACRO", ".DEF", ".INCLUDE", ".INCBIN", ".ENUM"];
 
 export enum CompletionRange { None, Base, Label, Macro, Path, AddressingMode }
 
@@ -113,13 +113,13 @@ export class IntellisenseProvider {
 	 * @param option 
 	 * @returns 
 	 */
-	static Intellisense(filePath: string, lineNumber: number, lineText: string, lineCurrect: number, trigger?: string): Completion[] {
+	static Intellisense(filePath: string, lineNumber: number, lineText: string, currect: number, trigger?: string): Completion[] {
 		if (!Config.ProjectSetting.intellisense)
 			return [];
 
 		const fileHash = FileUtils.GetFilePathHashcode(filePath);
 		const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
-		const prefix = line.Substring(0, lineCurrect);
+		const prefix = line.Substring(0, currect);
 
 		if (ignoreWordStr.test(prefix.text))
 			return [];
@@ -131,47 +131,57 @@ export class IntellisenseProvider {
 				if (trigger === " ")
 					return [];
 
-				const prefix = HelperUtils.GetWord(lineText, lineCurrect);
-				return IntellisenseProvider.GetLabel(fileHash, prefix.leftText);
+				const prefix1 = HelperUtils.GetWord(lineText, currect);
+				return IntellisenseProvider.GetLabel(fileHash, prefix1.leftText);
 			case "Macro":
 				macro = Compiler.enviroment.allMacro.get(rangeType.key);
 				break;
+			case "Enum":
+				if (lineNumber === rangeType.startLine)
+					break;
+
+				const comma = lineText.indexOf(",");
+				if (comma < 0 || currect < comma)
+					return [];
+
+				const prefix2 = HelperUtils.GetWord(lineText, currect);
+				return IntellisenseProvider.GetLabel(fileHash, prefix2.leftText, macro);
 		}
 
 		const tempMatch = HelperUtils.BaseSplit(lineText);
-		if (tempMatch.type === "None" || lineCurrect < tempMatch.start)
+		if (tempMatch.type === "None" || currect < tempMatch.start)
 			return IntellisenseProvider.GetEmptyLineHelper({ fileHash, range: rangeType, trigger: trigger });
 
 		const matchIndex = tempMatch.start + tempMatch.text.length + 1;
 		switch (tempMatch.type) {
 			case "Instruction":
-				if (trigger === " " && lineCurrect === matchIndex) {
+				if (trigger === " " && currect === matchIndex) {
 					return IntellisenseProvider.GetInstructionAddressingModes(tempMatch.text);
-				} else if (trigger === ":" && lineCurrect > matchIndex) {
-					const prefix = HelperUtils.GetWord(lineText, lineCurrect);
+				} else if (trigger === ":" && currect > matchIndex) {
+					const prefix = HelperUtils.GetWord(lineText, currect);
 					return IntellisenseProvider.GetDataGroup(prefix.leftText);
-				} else if (trigger !== " " && lineCurrect > matchIndex) {
+				} else if (trigger !== " " && currect > matchIndex) {
 					const restText = lineText.substring(matchIndex);
-					const tempCurrect = lineCurrect - matchIndex - 1;
+					const tempCurrect = currect - matchIndex - 1;
 					const ignoreContent = AsmCommon.MatchLinePosition(tempMatch.text, restText, tempCurrect);
 					if (ignoreContent)
 						return [];
 
-					const prefix = HelperUtils.GetWord(lineText, lineCurrect);
+					const prefix = HelperUtils.GetWord(lineText, currect);
 					return IntellisenseProvider.GetLabel(fileHash, prefix.leftText, macro);
 				}
 				break;
 			case "Command":
 			case "Variable":
 			case "Macro":
-				if (lineCurrect < matchIndex || trigger === " ") {
+				if (currect < matchIndex || trigger === " ") {
 					return [];
-				} else if (trigger === ":" && lineCurrect > matchIndex) {
-					const prefix = HelperUtils.GetWord(lineText, lineCurrect);
+				} else if (trigger === ":" && currect > matchIndex) {
+					const prefix = HelperUtils.GetWord(lineText, currect);
 					return IntellisenseProvider.GetDataGroup(prefix.leftText);
 				}
 
-				const prefix = HelperUtils.GetWord(lineText, lineCurrect);
+				const prefix = HelperUtils.GetWord(lineText, currect);
 				return IntellisenseProvider.GetLabel(fileHash, prefix.leftText, macro);
 		}
 		return [];
@@ -464,6 +474,9 @@ export class IntellisenseProvider {
 					break;
 				case ".REPEAT":
 					completion.insertText = completion.insertText + " [exp]\n\n.ENDR";
+					break;
+				case ".ENUM":
+					completion.insertText = completion.insertText + " [exp]\n\n.ENDE";
 					break;
 				case ".ORG": case ".BASE": case ".MSG": case ".DB": case ".DW": case ".DL": case ".DEF":
 					completion.insertText = completion.insertText + " ";

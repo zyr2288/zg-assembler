@@ -42,18 +42,18 @@ export class IfCondition {
 	//#region IF命令
 	private static FirstAnalyse_If(option: DecodeOption, include?: IncludeLine[]) {
 		const line = option.GetCurrectLine<CommandLine>();
-		let result = include!;
+		const result = include!;
 		let index = 0;
-		let commands = [".ELSEIF", ".ELSE", ".ENDIF"];
+		const commands = [".ELSEIF", ".ELSE", ".ENDIF"];
 
-		let tag: ConfidentLine[] = [{ offsetFirstLine: 0, confident: false }];
+		const tag: ConfidentLine[] = [{ offsetFirstLine: 0, confident: false }];
 		IfCondition.SplitExpression(line);
 
-		let startLindeIndex = result[0].index;
+		const startLindeIndex = result[0].index;
 		for (let i = 1; i < result.length; i++) {
-			let lineIndex = result[i].index;
+			const lineIndex = result[i].index;
 			const tempLine = option.GetLine<CommandLine>(lineIndex);
-			let searchIndex = commands.indexOf(tempLine.command.text);
+			const searchIndex = commands.indexOf(tempLine.command.text);
 			if (searchIndex < index)
 				continue;
 
@@ -74,8 +74,8 @@ export class IfCondition {
 
 	private static ThirdAnalyse_If(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		let tag: ConfidentLine[] = line.tag;
-		let currectLineIndex = option.allLines.indexOf(line);
+		const tag: ConfidentLine[] = line.tag;
+		const currectLineIndex = option.allLines.indexOf(line);
 		for (let i = 0; i < tag.length - 1; ++i) {
 			const tempLine = option.GetLine<CommandLine>(currectLineIndex + tag[i].offsetFirstLine);
 			if (tempLine.expParts[0] && ExpressionUtils.CheckLabelsAndShowError(tempLine.expParts[0], option))
@@ -85,9 +85,9 @@ export class IfCondition {
 
 	private static async Compile_If(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		let tag: ConfidentLine[] = line.tag;
+		const tag: ConfidentLine[] = line.tag;
 
-		let startLineIndex = option.allLines.indexOf(line);
+		const startLineIndex = option.allLines.indexOf(line);
 		for (let i = 0; i < tag.length - 1; i++) {
 			const tempLine = option.GetLine<CommandLine>(startLineIndex + tag[i].offsetFirstLine);
 			if (tempLine.command.text === ".ELSE") {
@@ -95,7 +95,7 @@ export class IfCondition {
 				break;
 			}
 
-			let value = ExpressionUtils.GetExpressionValue(tempLine.expParts[0], ExpressionResult.GetResultAndShowError, option);
+			const value = ExpressionUtils.GetExpressionValue(tempLine.expParts[0], ExpressionResult.GetResultAndShowError, option);
 			if (value.success && value.value) {
 				tag[i].confident = true;
 				break;
@@ -109,16 +109,18 @@ export class IfCondition {
 	//#region IFDEF IFNDEF 命令
 	private static FirstAnalyse_IfDefOrNot(option: DecodeOption, include?: IncludeLine[]) {
 		const line = option.GetCurrectLine<CommandLine>();
-		let result = include!;
-		let index = 0;
-		let commands = [".ELSE", ".ENDIF"];
+		const result = include!;
+		const commands = [".ELSE", ".ENDIF"];
 
-		let tag: ConfidentLine[] = [{ offsetFirstLine: 0, confident: false }];
+		const tag: ConfidentLine[] = [{ offsetFirstLine: 0, confident: false }];
+
+		let index = 0;
 		let startLindeIndex = result[0].index;
+		
 		for (let i = 1; i < result.length; ++i) {
-			let lineIndex = result[i].index;
+			const lineIndex = result[i].index;
 			const tempLine = option.GetLine<CommandLine>(result[i].index);
-			let temp = commands.indexOf(tempLine.command.text);
+			const temp = commands.indexOf(tempLine.command.text);
 			if (temp < index)
 				continue;
 
@@ -143,16 +145,16 @@ export class IfCondition {
 
 	private static Compile_IfDefOrNot(labelExist: boolean, option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		let tag: ConfidentLine[] = line.tag;
+		const tag: ConfidentLine[] = line.tag;
 
-		let startLine = option.allLines.indexOf(line);
+		const startLine = option.allLines.indexOf(line);
 		for (let i = 0; i < tag.length - 1; ++i) {
 			const tempLine = option.GetLine<CommandLine>(startLine + tag[i].offsetFirstLine);
 			if (line.command.text === ".ELSE") {
 				tag[i].confident = true;
 				break;
 			}
-			let label = LabelUtils.FindLabel(tempLine.expParts[0][0].token, option.macro);
+			const label = LabelUtils.FindLabel(tempLine.expParts[0][0].token, option.macro);
 			if (!!label === labelExist) {
 				tag[i].confident = true;
 				break;
@@ -177,8 +179,8 @@ export class IfCondition {
 			if (line.confident) {
 				option.allLines.splice(startLineIndex + line.offsetFirstLine, 1);
 			} else {
-				let startIndex = startLineIndex + line.offsetFirstLine
-				let length = lines[i + 1].offsetFirstLine - line.offsetFirstLine;
+				const startIndex = startLineIndex + line.offsetFirstLine
+				const length = lines[i + 1].offsetFirstLine - line.offsetFirstLine;
 				option.allLines.splice(startIndex, length);
 			}
 		}
@@ -193,8 +195,8 @@ export class IfCondition {
 			return;
 		}
 
-		let expression: Token[] = line.tag;
-		let temp = ExpressionUtils.SplitAndSort(expression[0]);
+		const expression: Token[] = line.tag;
+		const temp = ExpressionUtils.SplitAndSort(expression[0]);
 		if (temp)
 			line.expParts[0] = temp;
 		else

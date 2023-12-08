@@ -24,8 +24,20 @@
 		JSR ppu.Write
 	.ENDM
 	
+	.ENUM $400
+		label1,  	1
+		label2,		2
+		label3,		3
+	.ENDE
+	
+	LDA label1
+	LDA label2
+	LDA label3
+
 RESET
 IRQ
+
+	
 
 -	LDA $2002
 	BPL -

@@ -9,14 +9,14 @@ export class BaseAndOrg {
 
 	static Initialize() {
 		Commands.AddCommand({
-			name: ".BASE", min: 1, label: false, ableMacro: false,
+			name: ".BASE", min: 1, label: false, ableMacro: true,
 			firstAnalyse: Commands.FirstAnalyse_Common,
 			thirdAnalyse: Commands.ThirdAnalyse_Common,
 			compile: BaseAndOrg.Compile_Base
 		});
 
 		Commands.AddCommand({
-			name: ".ORG", min: 1, label: false, ableMacro: false,
+			name: ".ORG", min: 1, label: false, ableMacro: true,
 			firstAnalyse: Commands.FirstAnalyse_Common,
 			thirdAnalyse: Commands.ThirdAnalyse_Common,
 			compile: BaseAndOrg.Compile_Org

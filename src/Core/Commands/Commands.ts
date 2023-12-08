@@ -12,6 +12,7 @@ import { BaseAndOrg } from "./BaseAndOrg";
 import { Data } from "./Data";
 import { DataGroupCommand } from "./DataGroup";
 import { Defined } from "./Defined";
+import { EnumData } from "./EnumData";
 import { Hexadecimal } from "./Hexadecimal";
 import { IfCondition } from "./IfCondition";
 import { Include } from "./Include";
@@ -60,7 +61,7 @@ export class Commands {
 
 	//#region 初始化
 	static Initialize() {
-		const classes = [BaseAndOrg, Data, DataGroupCommand, Defined, Hexadecimal, IfCondition, Include, MacroCommand, Message, Repeat];
+		const classes = [BaseAndOrg, Data, DataGroupCommand, Defined, Hexadecimal, IfCondition, Include, MacroCommand, Message, EnumData, Repeat];
 		for (let i = 0; i < classes.length; ++i) {
 			let func = Reflect.get(classes[i], "Initialize");
 			func();
@@ -86,10 +87,10 @@ export class Commands {
 		const line = option.GetCurrectLine<CommandLine>();
 
 		// 不应找到未配对的行
-		let temp = Commands.notMatchLine.get(line.command.text);
+		const temp = Commands.notMatchLine.get(line.command.text);
 		if (temp) {
 			line.compileType = LineCompileType.Error;
-			let errorMsg = Localization.GetMessage("Unmatched command {0}", line.command.text);
+			const errorMsg = Localization.GetMessage("Unmatched command {0}", line.command.text);
 			MyDiagnostic.PushException(line.command, errorMsg);
 			return;
 		}
@@ -120,7 +121,7 @@ export class Commands {
 			includeLines = Commands.FindNextMatchCommand(com.startCommand, com.endCommand, com.nested, option, com.includeCommand);
 			if (includeLines.length === 0) {
 				line.compileType = LineCompileType.Error;
-				let errorMsg = Localization.GetMessage("Unmatched command {0}", com.endCommand);
+				const errorMsg = Localization.GetMessage("Unmatched command {0}", com.endCommand);
 				MyDiagnostic.PushException(line.command, errorMsg);
 				return;
 			}
@@ -131,8 +132,9 @@ export class Commands {
 			}
 		}
 
-		let args = Commands.SplitParams(line);
-		if (!args) return;
+		const args = Commands.SplitParams(line);
+		if (!args)
+			return;
 
 		line.tag = args;
 		await com.FirstAnalyse?.(option, includeLines);
@@ -263,9 +265,9 @@ export class Commands {
 	 * @returns 
 	 */
 	static CollectBaseLines(option: DecodeOption, includeLines: IncludeLine[]) {
-		let start = includeLines![0].index;
-		let end = includeLines![1].index;
-		let tag = option.allLines.splice(start + 1, end - start);
+		const start = includeLines![0].index;
+		const end = includeLines![1].index;
+		const tag = option.allLines.splice(start + 1, end - start);
 		tag.splice(tag.length - 1, 1);
 		return tag;
 	}
@@ -348,7 +350,7 @@ export class Commands {
 		let deep = 0;
 		let found = false;
 		for (let i = option.lineIndex + 1; i < option.allLines.length; i++) {
-			let line = option.GetLine<CommandLine>(i);
+			const line = option.GetLine<CommandLine>(i);
 			if (line.type !== LineType.Command)
 				continue;
 

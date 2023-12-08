@@ -245,8 +245,8 @@ export class MacroCommand {
 		Compiler.enviroment.SetRange(line.command.fileHash, {
 			type: "Macro",
 			key: macro.name.text,
-			start: include![0].line,
-			end: include![1].line,
+			startLine: include![0].line,
+			endLine: include![1].line,
 		});
 
 		line.tag = macro;

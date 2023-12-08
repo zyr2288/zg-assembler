@@ -137,7 +137,7 @@ export class HelperUtils {
 		let ranges = Compiler.enviroment.GetRange(fileHash);
 		let rangeType = undefined;
 		for (let i = 0; i < ranges.length; ++i) {
-			if (lineNumber < ranges[i].start || lineNumber > ranges[i].end)
+			if (lineNumber < ranges[i].startLine || lineNumber > ranges[i].endLine)
 				continue;
 
 			rangeType = ranges[i];
@@ -215,7 +215,7 @@ export class HelperUtils {
 				allLines = matchResult.macro.lines;
 				break;
 			case "DataGroup":
-				findLineNumber = rangeType.start;
+				findLineNumber = rangeType.startLine;
 				const keyHash = Utils.GetHashcode(rangeType.key);
 				const dataGroup = Compiler.enviroment.allDataGroup.get(keyHash);
 				if (dataGroup) {

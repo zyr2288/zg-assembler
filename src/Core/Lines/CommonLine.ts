@@ -49,8 +49,8 @@ export interface IOnlyLabel extends ICommonLine {
 }
 
 export interface HighlightRange {
-	type: "DataGroup" | "Macro";
+	type: "DataGroup" | "Macro" | "Enum";
 	key: string;
-	start: number;
-	end: number;
+	startLine: number;
+	endLine: number;
 }
