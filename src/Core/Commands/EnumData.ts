@@ -48,11 +48,12 @@ export class EnumData {
 		for (let i = 0; i < lines.length; i++) {
 			lines[i].compileType = LineCompileType.Finished;
 			const parts = Utils.SplitWithComma(lines[i].orgText, { count: 1 });
-			const temp = LabelUtils.CreateLabel(parts[0], option);
+			const temp = LabelUtils.CreateLabel(parts[0], option, false);
 			if (!temp)
 				continue;
 
 			temp.label.labelType = LabelType.Defined;
+			temp.label.comment = lines[i].comment;
 			const exps = ExpressionUtils.SplitAndSort(parts[1]);
 			if (!exps) {
 				lines[i].compileType = LineCompileType.Error;

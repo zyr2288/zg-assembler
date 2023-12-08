@@ -78,7 +78,7 @@ export class LabelUtils {
 			if (line.label.token.text.endsWith(":"))
 				line.label.token = line.label.token.Substring(0, line.label.token.length - 1);
 
-			const labelResult = LabelUtils.CreateLabel(line.label.token, option);
+			const labelResult = LabelUtils.CreateLabel(line.label.token, option, true);
 			if (labelResult) {
 				labelResult.label.comment = line.comment;
 				labelResult.label.labelType = labelType;
@@ -95,12 +95,12 @@ export class LabelUtils {
 	 * @param option 编译选项
 	 * @returns 返回创建的label和hash
 	 */
-	static CreateLabel(token: Token, option: DecodeOption): { label: ICommonLabel, hash: number } | undefined {
+	static CreateLabel(token: Token, option: DecodeOption, allowNameless: boolean): { label: ICommonLabel, hash: number } | undefined {
 		if (token.isEmpty)
 			return;
 
 		// 判断临时标签
-		if (LabelUtils.namelessLabelRegex.test(token.text)) {
+		if (allowNameless && LabelUtils.namelessLabelRegex.test(token.text)) {
 			if (option?.macro) {
 				const errorMsg = Localization.GetMessage("Can not use nameless label in Macro");
 				MyDiagnostic.PushException(token, errorMsg);

@@ -71,5 +71,9 @@ export const CommandTip_English = {
 	msg: {
 		comment: "Out put a message. You can format value to binary, decimal or hexadecimal.", format: ".MSG message[, arg0, arg1...]\n",
 		exp: ".ORG $8000\n.MSG \"Now ORG address: {0}, @{0}, ${0}\", *\n\n;Now ORG address: 32768, @1000 0000 0000 0000, $8000"
+	},
+	enum: {
+		comment: "Reassign PC and suppress assembly output.\n\nUseful for defining variables in RAM.", format: ".ENUM startAddress\nlabelName, byteLength\n...\n.ENDE",
+		exp: ".ENUM $300\n\tmusic.counter, 1\t; .DEF music.counter, $300\n\tmusic.addrHigh, 2\t; .DEF music.addrHigh, music.counter + 1 ($301)\n\tmusic.addrLow, 3\t; .DEF music.addrLow, music.addrHigh + 2 ($303)\n.ENDE"
 	}
 }

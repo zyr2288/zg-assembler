@@ -69,7 +69,7 @@ export class DataGroupCommand {
 		const expressions: Token[] = line.tag;
 		const lines = Commands.CollectBaseLines(option, include!);
 
-		const labelMark = LabelUtils.CreateLabel(expressions[0], option);
+		const labelMark = LabelUtils.CreateLabel(expressions[0], option, false);
 		if (!labelMark) {
 			line.compileType = LineCompileType.Error;
 			return;

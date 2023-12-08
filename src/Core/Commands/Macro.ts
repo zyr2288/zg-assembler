@@ -57,7 +57,7 @@ export class MacroUtils {
 	 */
 	static MatchMacroLine(labelToken: Token, macroToken: Token, expression: Token, option: DecodeOption) {
 		if (!labelToken.isEmpty)
-			LabelUtils.CreateLabel(labelToken, option);
+			LabelUtils.CreateLabel(labelToken, option, true);
 
 		const macro = Compiler.enviroment.allMacro.get(macroToken.text)!;
 

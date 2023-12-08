@@ -24,7 +24,7 @@ export class Defined {
 
 		line.label = { token: expressions[0] };
 
-		const labelMark = LabelUtils.CreateLabel(line.label.token, option);
+		const labelMark = LabelUtils.CreateLabel(line.label.token, option, false);
 		if (labelMark) {
 			labelMark.label.labelType = LabelType.Defined;
 			labelMark.label.comment = line.comment;

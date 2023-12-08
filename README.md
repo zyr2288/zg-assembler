@@ -8,16 +8,17 @@
 1. [.BASE](#base)
 2. [.ORG](#org)
 3. [.DEF](#def)
-4. [.DB .DW .DL](#db-dw-dl)
-5. [.DBG .DWG .DLG .ENDD](#dbg-dwg-dlg-endd)
-6. [.HEX](#hex)
-7. [.IF .ELSEIF .ELSE .ENDIF](#if-elseif-else-endif)
-8. [.IFDEF .IFNDEF .ELSE .ENDIF](#ifdef-ifndef-else-endif)
-9. [.INCBIN](#incbin)
-10. [.INCLUDE](#include)
-11. [.MACRO .ENDM](#macro-endm)
-12. [.REPEAT .ENDR](#repeat-endr)
-13. [.MSG](#msg)
+4. [.ENUM .ENDE](#enum-ende)
+5. [.DB .DW .DL](#db-dw-dl)
+6. [.DBG .DWG .DLG .ENDD](#dbg-dwg-dlg-endd)
+7. [.HEX](#hex)
+8. [.IF .ELSEIF .ELSE .ENDIF](#if-elseif-else-endif)
+9. [.IFDEF .IFNDEF .ELSE .ENDIF](#ifdef-ifndef-else-endif)
+10. [.INCBIN](#incbin)
+11. [.INCLUDE](#include)
+12. [.MACRO .ENDM](#macro-endm)
+13. [.REPEAT .ENDR](#repeat-endr)
+14. [.MSG](#msg)
 
 ## 配置文件
 
@@ -130,6 +131,27 @@
 
 ---
 
+### `.ENUM` `.ENDE`
+
+```
+    .ENUM 起始地址
+    标签, 字节长度
+    ...
+    .ENDE
+```
+
+* 定义一系列连续的地址，通常用于定义一系列连续的地址
+* 例如：
+
+```
+   .ENUM $300
+   music.counter,  1    ; 类似 .DEF music.counter,  $300
+   music.addrHigh, 2    ; 类似 .DEF music.addrHigh, $301
+   music.addrLow,  3    ; 类似 .DEF music.addrLow,  $303
+   .ENDE
+```
+
+---
 
 ### `.DB` `.DW` `.DL`
 

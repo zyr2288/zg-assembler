@@ -36,7 +36,7 @@ export class VariableLine implements ICommonLine {
 export class VariableLineUtils {
 	static FirstAnalyse(option: DecodeOption) {
 		const line = option.GetCurrectLine<VariableLine>();
-		const labelMark = LabelUtils.CreateLabel(line.label.token, option);
+		const labelMark = LabelUtils.CreateLabel(line.label.token, option, false);
 		if (labelMark) {
 			labelMark.label.labelType = LabelType.Variable;
 			line.labelHash = labelMark.hash;

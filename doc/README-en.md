@@ -132,6 +132,27 @@
 
 ---
 
+### `.ENUM` `.ENDE`
+
+```
+    .ENUM startAddress
+    label, byteLength
+    ...
+    .ENDE
+```
+
+* Reassign PC and suppress assembly output. Useful for defining variables in RAM. 
+* Example：
+
+```
+   .ENUM $300
+   music.counter,  1    ; Same as .DEF music.counter,  $300
+   music.addrHigh, 2    ; Same as .DEF music.addrHigh, $301
+   music.addrLow,  3    ; Same as .DEF music.addrLow,  $303
+   .ENDE
+```
+
+---
 
 ### `.DB` `.DW` `.DL`
 

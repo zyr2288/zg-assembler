@@ -42,6 +42,7 @@ export class Localization {
 
 	private static ChangeCommandTip() {
 		Localization.CopyValue("macro", "endm");
+		Localization.CopyValue("enum", "ende");
 	}
 
 	private static CopyValue(key: string, value: string, ...args: string[]) {

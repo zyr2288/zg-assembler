@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, PriorityType } from "../Base/ExpressionUtils";
+import { ExpressionPart, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
 import { LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
@@ -222,6 +222,22 @@ export class HelperUtils {
 					matchResult.dataGroup = dataGroup;
 				}
 				break;
+			case "Enum":
+				const range = HelperUtils.GetWord(lineText, currect);
+				matchResult.matchToken = Token.CreateToken(fileHash, lineNumber, range.start, range.leftText + range.rightText);
+				const temp = ExpressionUtils.GetNumber(matchResult.matchToken.text);
+				if (temp.success) {
+					matchResult.matchType = "Number";
+					return matchResult;
+				}
+
+				const label = LabelUtils.FindLabel(matchResult.matchToken, matchResult.macro);
+				if (label) {
+					matchResult.matchType = "Label";
+					matchResult.tag = label.hash;
+					return matchResult;
+				}
+				break;
 		}
 
 		let temp: { token: Token, hash: number, type: PriorityType } | undefined;
@@ -283,12 +299,6 @@ export class HelperUtils {
 		}
 
 		return matchResult;
-	}
-
-	private static _MatchCommand(lineNumber: number, currect: number, comLine: CommandLine) {
-		if (HelperUtils._MatchToken(lineNumber, currect, comLine.command))
-			return comLine.command;
-
 	}
 
 	private static _FindMatchExp(lineNumber: number, currect: number, expParts?: ExpressionPart[][]) {
