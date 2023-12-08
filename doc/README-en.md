@@ -147,8 +147,8 @@
 ```
    .ENUM $300
    music.counter,  1    ; Same as .DEF music.counter,  $300
-   music.addrHigh, 2    ; Same as .DEF music.addrHigh, $301
-   music.addrLow,  3    ; Same as .DEF music.addrLow,  $303
+   music.addrHigh, 2    ; Same as .DEF music.addrHigh, $301 (music.counter + 1)
+   music.addrLow,  3    ; Same as .DEF music.addrLow,  $303 (music.addrHigh + 2)
    .ENDE
 ```
 

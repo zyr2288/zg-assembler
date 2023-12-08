@@ -140,14 +140,14 @@
     .ENDE
 ```
 
-* 定义一系列连续的地址，通常用于定义一系列连续的地址
+* 定义一系列连续的地址，通常用于定义一系列内存地址
 * 例如：
 
 ```
    .ENUM $300
    music.counter,  1    ; 类似 .DEF music.counter,  $300
-   music.addrHigh, 2    ; 类似 .DEF music.addrHigh, $301
-   music.addrLow,  3    ; 类似 .DEF music.addrLow,  $303
+   music.addrHigh, 2    ; 类似 .DEF music.addrHigh, $301 (music.counter + 1)
+   music.addrLow,  3    ; 类似 .DEF music.addrLow,  $303 (music.addrHigh + 2)
    .ENDE
 ```
 
