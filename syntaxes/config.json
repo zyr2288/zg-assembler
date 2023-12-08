@@ -1,24 +1,29 @@
 {
-	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$schema": "https://json-schema.org/schema",
 	"type": "object",
 	"description": "Assembler configurations",
 	"properties": {
-		"platform": {
-			"enum": ["6502", "65c816", "z80-gb"],
-			"description": "Target Platform"
-		},
+		"platform": { "enum": ["6502", "65c816", "z80-gb"], "description": "Target Platform" },
 		"intellisense": { "type": "boolean", "default": true },
 		"outOfRangeWarning": { "type": "boolean", "default": true },
 		"entry": { "type": "string", "default": "main.asm" },
 		"compileTimes": { "type": "number", "default": 2, "minimum": 2 },
 		"outputEntryFile": { "type": "string" },
 		"outputSingleFile": { "type": "string" },
-		"copyToClipboard": {
-			"type": "boolean",
-			"description": "Copy result bytes to clipboard"
-		},
+		"copyToClipboard": { "type": "boolean", "description": "Copy result bytes to clipboard" },
 		"includes": { "type": "array", "default": "**/*.asm", "items": { "type": "string" } },
 		"excludes": { "type": "array", "default": "", "items": { "type": "string" } }
 	},
-	"required": ["platform", "intellisense", "outOfRangeWarning", "entry", "compileTimes", "outputEntryFile", "outputSingleFile", "copyToClipboard", "includes", "excludes"]
+	"required": [
+		"platform",
+		"intellisense",
+		"outOfRangeWarning",
+		"entry",
+		"compileTimes",
+		"outputEntryFile",
+		"outputSingleFile",
+		"copyToClipboard",
+		"includes",
+		"excludes"
+	]
 }

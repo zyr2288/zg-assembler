@@ -12,21 +12,12 @@
 		{ "include": "#variable" }
 	],
 	"repository": {
-		"comment": {
-			"name": "comment.base",
-			"begin": ";",
-			"end": "$"
-		},
+		"comment": { "name": "comment.base", "begin": ";", "end": "$" },
 		"strings": {
 			"name": "string.quoted.double.zg-assembly",
 			"begin": "\"",
 			"end": "\"",
-			"patterns": [
-				{
-					"match": "\\\\\"",
-					"name": "constant.character.escape.zg-assembly"
-				}
-			]
+			"patterns": [{ "match": "\\\\\"", "name": "constant.character.escape.zg-assembly" }]
 		},
 		"asmCommand": {
 			"name": "keyword.other.zg-assembly.commands",
@@ -36,65 +27,33 @@
 			"name": "keyword.other.zg-assembly.commands",
 			"begin": "(?i)(^|\\s+)\\.DEF\\s+",
 			"end": "(?=\\,|;)|$",
-			"patterns": [
-				{
-					"name": "variable.other.enummember",
-					"match": "[^,]+"
-				}
-			]
+			"patterns": [{ "name": "variable.other.enummember", "match": "[^,]+" }]
 		},
 		"dataGroup": {
 			"name": "keyword.other.zg-assembly.commands",
 			"begin": "(?i)(^|\\s+)(\\.DBG|\\.DWG|\\.DLG)\\s+",
 			"end": "(?=;)|$",
-			"patterns": [
-				{
-					"name": "entity.name.class",
-					"match": "[^;]+"
-				}
-			]
+			"patterns": [{ "name": "entity.name.class", "match": "[^;]+" }]
 		},
 		"function": {
 			"name": "keyword.other.zg-assembly.commands",
 			"begin": "(?i)(^|\\s+)\\.MACRO\\s+",
 			"end": "(?=[,;])|$",
-			"patterns": [
-				{
-					"name": "entity.name.function",
-					"match": "[^,;]+"
-				}
-			]
+			"patterns": [{ "name": "entity.name.function", "match": "[^,;]+" }]
 		},
 		"number": {
 			"patterns": [
-				{
-					"name": "constant.numeric.hex.zg-assembly",
-					"match": "\\$[0-9a-fA-F]+\\b"
-				},
-				{
-					"name": "constant.numeric.binary.zg-assembly",
-					"match": "\\@[0-1]+\\b"
-				},
-				{
-					"name": "constant.numeric.zg-assembly",
-					"match": "\\b[0-9]+\\b"
-				},
+				{ "name": "constant.numeric.hex.zg-assembly", "match": "\\$[0-9a-fA-F]+\\b" },
+				{ "name": "constant.numeric.binary.zg-assembly", "match": "\\@[0-1]+\\b" },
+				{ "name": "constant.numeric.zg-assembly", "match": "\\b[0-9]+\\b" },
 				{
 					"name": "keyword.other.zg-assembly.commands",
 					"begin": "(?i)(^|\\s+)\\.HEX\\s+",
 					"end": "(?=;)|$",
-					"patterns": [
-						{
-							"name": "constant.numeric.hex.zg-assembly",
-							"match": "[0-9a-fA-F ]+"
-						}
-					]
+					"patterns": [{ "name": "constant.numeric.hex.zg-assembly", "match": "[0-9a-fA-F ]+" }]
 				}
 			]
 		},
-		"variable": {
-			"name": "variable.name.zg-assembly",
-			"match": "[^\\+\\-\\*\\/\\>\\<\\(\\)\\,\\#\\=\\!\\[\\]\\&\\|]"
-		}
+		"variable": { "name": "variable.name.zg-assembly", "match": "[^\\+\\-\\*\\/\\>\\<\\(\\)\\,\\#\\=\\!\\[\\]\\&\\|]" }
 	}
 }
