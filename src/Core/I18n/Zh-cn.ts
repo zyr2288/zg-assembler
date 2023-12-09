@@ -78,7 +78,7 @@ export const CommandTip_Chinese: LocalizationTip = {
 		exp: ".ORG $8000\n.MSG \"当前编译地址: {0} @{0}, ${0}\", *\n\n;当前编译地址: 32768, @1000 0000 0000 0000, $8000"
 	},
 	enum: {
-		comment: "用于定义一连串的常量，一般用于定义连续的内存地址作为标记", format: ".ENUM 起始地址\n常量名称, 字节长度\n...\n.ENDE",
+		comment: "用于定义一连串的常量，一般用于定义连续的内存地址作为标记", format: ".ENUM 起始地址\n常量名称, 占用字节长度\n...\n.ENDE",
 		exp: ".ENUM $300\n\tmusic.counter, 1\t; .DEF music.counter, $300\n\tmusic.addrHigh, 2\t; .DEF music.addrHigh, music.counter + 1 ($301)\n\tmusic.addrLow, 3\t; .DEF music.addrLow, music.addrHigh + 2 ($303)\n.ENDE"
 	}
 }

@@ -1,9 +1,11 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
+import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption, IncludeLine } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
+import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
 import { HighlightToken, HighlightType, LineCompileType } from "../Lines/CommonLine";
 import { Commands } from "./Commands";
@@ -17,7 +19,7 @@ export class EnumData {
 
 	static Initialize() {
 		Commands.AddCommand({
-			name: ".ENUM", min: 1, label: false, ableMacro: false, 
+			name: ".ENUM", min: 1, label: false, ableMacro: false,
 			firstAnalyse: EnumData.FirstAnalyse,
 			thirdAnalyse: EnumData.ThirdAnalyse,
 			compile: EnumData.Compile,
@@ -48,12 +50,24 @@ export class EnumData {
 		for (let i = 0; i < lines.length; i++) {
 			lines[i].compileType = LineCompileType.Finished;
 			const parts = Utils.SplitWithComma(lines[i].orgText, { count: 1 });
+			if (parts.length !== 2) {
+				const error = Localization.GetMessage("Command arguments error");
+				MyDiagnostic.PushException(lines[i].orgText, error);
+				continue;
+			}
+
 			const temp = LabelUtils.CreateLabel(parts[0], option, false);
 			if (!temp)
 				continue;
 
 			temp.label.labelType = LabelType.Defined;
 			temp.label.comment = lines[i].comment;
+			if (parts[1].isEmpty) {
+				const error = Localization.GetMessage("Expression error");
+				MyDiagnostic.PushException(parts[1], error);
+				continue;
+			}
+
 			const exps = ExpressionUtils.SplitAndSort(parts[1]);
 			if (!exps) {
 				lines[i].compileType = LineCompileType.Error;
