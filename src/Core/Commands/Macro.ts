@@ -80,7 +80,14 @@ export class MacroUtils {
 
 		let temp: ExpressionPart[] | undefined;
 		for (let i = 0; i < parts.length; ++i) {
-			if (temp = ExpressionUtils.SplitAndSort(parts[i]))
+			const part = parts[i];
+			if (part.isEmpty) {
+				const error = Localization.GetMessage("Macro arguments error");
+				MyDiagnostic.PushException(part, error);
+				continue;
+			}
+
+			if (temp = ExpressionUtils.SplitAndSort(part))
 				macroLine.expParts[i] = temp;
 		}
 

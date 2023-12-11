@@ -414,6 +414,11 @@ export class ExpressionUtils {
 	//#endregion 将所有表达式部分转换成高亮Token
 
 	//#region 拼合ExpressionPart成Token
+	/**
+	 * 拼合ExpressionPart成Token
+	 * @param parts 表达式
+	 * @returns 
+	 */
 	static CombineExpressionPart(parts: ExpressionPart[]) {
 		let tempToken = { start: parts[0].token.start, end: parts[0].token.start + parts[0].token.length };
 
