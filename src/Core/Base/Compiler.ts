@@ -182,7 +182,6 @@ export class Compiler {
 	//#region 第一次分析
 	/**第一次分析 */
 	static async FirstAnalyse(option: DecodeOption) {
-
 		for (let i = 0; i < option.allLines.length; ++i) {
 			const line = option.allLines[i];
 			if (line.compileType == LineCompileType.Error || line.compileType === LineCompileType.Finished)
@@ -287,7 +286,7 @@ export class Compiler {
 	 * @param option 
 	 */
 	static async CompileResult(option: DecodeOption) {
-		let isFinal = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
+		const isFinal = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
 		for (let i = 0; i < option.allLines.length; ++i) {
 			const line = option.allLines[i];
 			if (line.compileType === LineCompileType.Finished)

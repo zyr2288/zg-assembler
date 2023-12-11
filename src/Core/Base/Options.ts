@@ -34,16 +34,11 @@ export class DecodeOption {
 	InsertLines(fileHash: number, index: number, newLines: ICommonLine[]) {
 		this.allLines.splice(index, 0, ...newLines);
 
-		let temp: ICommonLine[] | undefined;
-		for (let i = 0; i < newLines.length; ++i) {
-			temp = Compiler.enviroment.allBaseLines.get(fileHash);
-			if (!temp) {
-				temp = [];
-				Compiler.enviroment.allBaseLines.set(fileHash, temp);
-			}
-
+		const temp = Compiler.enviroment.allBaseLines.get(fileHash) ?? [];
+		for (let i = 0; i < newLines.length; ++i)
 			temp.push(newLines[i]);
-		}
+		
+		Compiler.enviroment.allBaseLines.set(fileHash, temp);
 	}
 
 	GetLine<T extends ICommonLine>(index: number) {
