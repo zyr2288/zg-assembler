@@ -10,7 +10,7 @@ import { Localization } from "../I18n/Localization";
 import { AsmCommon } from "../Platform/AsmCommon";
 import { HelperUtils } from "./HelperUtils";
 
-const ignoreWordStr = /;|(^|\s+)(\.HEX|\.DBG|\.DWG|\.MACRO)(\s+|$)/ig;
+const ignoreWordStr = ";|(^|\\s+)(\\.HEX|\\.DBG|\\.DWG|\\.MACRO)(\\s+|$)";
 
 //#region 提示类型
 enum CompletionType {
@@ -121,7 +121,7 @@ export class IntellisenseProvider {
 		const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
 		const prefix = line.Substring(0, currect);
 
-		if (ignoreWordStr.test(prefix.text))
+		if (new RegExp(ignoreWordStr, "ig").test(prefix.text))
 			return [];
 
 		const rangeType = HelperUtils.GetRange(fileHash, lineNumber);
