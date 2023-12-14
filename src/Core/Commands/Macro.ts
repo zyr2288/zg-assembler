@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpressionPart, ExpressionResult, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption, IncludeLine } from "../Base/Options";
@@ -7,7 +7,7 @@ import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
-import { HighlightToken, ICommonLine, LineCompileType } from "../Lines/CommonLine";
+import { HighlightToken, ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
 import { MacroLine } from "../Lines/MacroLine";
 import { Platform } from "../Platform/Platform";
@@ -32,9 +32,7 @@ export class Macro {
 	name!: Token;
 
 	/**自定义函数所有参数 */
-	params = new Map<number, ILabel>();
-	/**自定义函数所有参数的Hash值，按顺序排列 */
-	paramHashIndex: number[] = [];
+	params = new Map<number, { label: ILabel, exps: ExpressionPart[] }>();
 
 	/**函数内所有的标签 */
 	labels = new Map<number, ILabel>();
@@ -56,12 +54,14 @@ export class MacroUtils {
 	 * @returns 
 	 */
 	static MatchMacroLine(labelToken: Token, macroToken: Token, expression: Token, option: DecodeOption) {
-		if (!labelToken.isEmpty)
-			LabelUtils.CreateLabel(labelToken, option, true);
-
 		const macro = Compiler.enviroment.allMacro.get(macroToken.text)!;
-
 		const macroLine = new MacroLine();
+		if (!labelToken.isEmpty) {
+			const label = LabelUtils.CreateLabel(labelToken, option, true);
+			if (label)
+				macroLine.label = { token: label.label.token, hash: label.hash };
+		}
+
 		macroLine.orgText = option.GetCurrectLine().orgText;
 		macroLine.macro = macro;
 		macroLine.macroToken = macroToken;
@@ -136,8 +136,7 @@ export class MacroUtils {
 					MyDiagnostic.PushException(part, errorMsg);
 					continue;
 				}
-				macro.params.set(hash, label);
-				macro.paramHashIndex.push(hash);
+				macro.params.set(hash, { label, exps: [] });
 			}
 
 		}
@@ -173,16 +172,23 @@ export class MacroUtils {
 
 		const macro = line.macro;
 
-		const tryValue = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
-		for (let i = 0; i < line.expParts.length; ++i) {
-			const result = ExpressionUtils.GetExpressionValue(line.expParts[i], tryValue, option);
-			if (result.success) {
-				macro.params.get(macro.paramHashIndex[i])!.value = result.value;
-			}
+		// const tryValue = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
+		// for (let i = 0; i < line.expParts.length; ++i) {
+		// 	const result = ExpressionUtils.GetExpressionValue(line.expParts[i], tryValue, option);
+		// 	if (result.success) {
+		// 		macro.params.get(macro.paramHashIndex[i])!.value = result.value;
+		// 	}
+		// }
+
+		let index = 0;
+		for (const key of macro.params.keys()) {
+			let param = macro.params.get(key)!;
+			param.exps = line.expParts[index];
 		}
 
 		const tempOption = new DecodeOption(macro.lines);
 		tempOption.macro = macro;
+		MacroUtils.ReplaceExpressions(tempOption.allLines, macro);
 		await Compiler.CompileResult(tempOption);
 		// option.InsertLines(line.macroToken.fileHash, option.lineIndex + 1, macro.lines);
 
@@ -208,6 +214,39 @@ export class MacroUtils {
 		}
 	}
 	//#endregion 填充编译结果值
+
+	private static ReplaceExpressions(lines: ICommonLine[], macro: Macro) {
+		if (!macro)
+			return;
+
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+			switch (line.type) {
+				case LineType.Instruction:
+				case LineType.Command:
+					const insLine = line as InstructionLine | CommandLine;
+					MacroUtils._ReplaceExpression(insLine.expParts, macro);
+					break;
+			}
+		}
+
+	}
+
+	private static _ReplaceExpression(exps: ExpressionPart[][], macro: Macro) {
+		for (let i = 0; i < exps.length; i++) {
+			for (let j = 0; j < exps[i].length; j++) {
+				const exp = exps[i][j];
+				if (exp.type !== PriorityType.Level_1_Label)
+					continue;
+
+				const param = macro.params.get(exp.value);
+				if (!param)
+					continue;
+
+				exps.splice(i, 1, param.exps);
+			}
+		}
+	}
 
 }
 

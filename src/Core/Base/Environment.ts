@@ -173,11 +173,11 @@ export class Environment {
 	 * @param text 要匹配的文本
 	 * @returns 
 	 */
-	MatchMacroRegex(text:string) {
+	MatchMacroRegex(text: string) {
 		if (!this.macroRegexString)
 			return null;
 
-		return new RegExp(this.macroRegexString, "ig").exec(text);
+		return new RegExp(this.macroRegexString, "g").exec(text);
 	}
 	//#endregion 匹配自定义函数的正则表达式
 

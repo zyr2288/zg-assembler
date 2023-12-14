@@ -217,9 +217,9 @@ export class IntellisenseProvider {
 					completions.push(...IntellisenseProvider.instructionCompletions);
 					Compiler.enviroment.allMacro.forEach((macro) => {
 						let insertText: string | undefined;
-						if (macro.paramHashIndex.length !== 0) {
+						if (macro.params.size !== 0) {
 							insertText = macro.name.text + " ";
-							for (let i = 0; i < macro.paramHashIndex.length; i++)
+							for (let i = 0; i < macro.params.size; i++)
 								insertText += `[exp], `;
 
 							insertText = insertText.substring(0, insertText.length - 2);
@@ -304,14 +304,14 @@ export class IntellisenseProvider {
 	private static GetLabel(fileHash: number, prefix: string, macro?: Macro): Completion[] {
 		let result: Completion[] = [];
 		if (macro) {
-
-			const GetCompletion = (value: ILabel) => {
-				let com = new Completion({ showText: value.token.text });
+			macro.labels.forEach((value) => {
+				const com = new Completion({ showText: value.token.text });
 				result.push(com);
-			}
-
-			macro.labels.forEach(GetCompletion);
-			macro.params.forEach(GetCompletion);
+			});
+			macro.params.forEach((value) => {
+				const com = new Completion({ showText: value.label.token.text });
+				result.push(com);
+			});
 		}
 
 		let labelScope = prefix.startsWith(".") ? LabelScope.Local : LabelScope.Global;

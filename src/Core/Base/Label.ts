@@ -205,9 +205,9 @@ export class LabelUtils {
 		// 函数内标签
 		if (macro) {
 			const hash = Utils.GetHashcode(word.text);
-			const label = macro.params.get(hash) ?? macro.labels.get(hash);
+			let label = macro.params.get(hash)?.label ?? macro.labels.get(hash);
 			if (label)
-				return { label, hash: hash };
+				return { label, hash };
 		}
 
 		// 数组下标
@@ -273,7 +273,7 @@ export class LabelUtils {
 		if (label)
 			return label;
 
-		label = macro?.params.get(labelHash);
+		label = macro?.params.get(labelHash)?.label;
 		if (label)
 			return label;
 

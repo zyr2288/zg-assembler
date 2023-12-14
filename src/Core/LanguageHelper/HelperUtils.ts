@@ -204,8 +204,8 @@ export class HelperUtils {
 
 				for (const key of matchResult.macro.params.keys()) {
 					const label = matchResult.macro.params.get(key)!;
-					if (HelperUtils._MatchToken(lineNumber, currect, label.token)) {
-						matchResult.matchToken = label.token;
+					if (HelperUtils._MatchToken(lineNumber, currect, label.label.token)) {
+						matchResult.matchToken = label.label.token;
 						matchResult.matchType = "Label";
 						matchResult.tag = key;
 						return matchResult;
