@@ -193,6 +193,12 @@ export class ExpressionUtils {
 			if (element.type === PriorityType.Level_0_Sure)
 				continue;
 
+			if (element.type === PriorityType.Level_3_String) {
+				const error = Localization.GetMessage("Expression error");
+				MyDiagnostic.PushException(element.token, error);
+				continue;
+			}
+
 			// 用于判断标签等
 			if (element.type < PriorityType.Level_4_Brackets && element.type >= 0) {
 				if (labelUnknow)

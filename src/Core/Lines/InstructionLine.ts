@@ -120,7 +120,6 @@ export class InstructionLineUtils {
 		if (line.compileType === LineCompileType.Error)
 			return;
 
-		
 		const label = LabelUtils.FindLabelWithHash(line.label?.hash, option.macro);
 		if (label) {
 			label.value = Compiler.enviroment.orgAddress;

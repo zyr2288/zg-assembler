@@ -20,7 +20,7 @@ interface ReferencesToken {
 export class LabelReferences {
 
 	/**获取引用 */
-	static GetReferences(filePath: string, lineNumber: number, lineText:string, currect: number) {
+	static GetReferences(filePath: string, lineNumber: number, lineText: string, currect: number) {
 
 		const fileHash = FileUtils.GetFilePathHashcode(filePath);
 		const temp = HelperUtils.FindMatchToken(fileHash, lineNumber, lineText, currect);
@@ -36,7 +36,9 @@ export class LabelReferences {
 					case "Macro":
 						if (line.type === LineType.Macro) {
 							const macroLine = line as MacroLine;
-							LabelReferences.AddResultTokens(res, macroLine.macroToken);
+							if (macroLine.macro.name.text === temp.matchToken!.text)
+								LabelReferences.AddResultTokens(res, macroLine.macroToken);
+
 							break;
 						}
 						break;

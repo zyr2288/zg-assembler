@@ -102,7 +102,9 @@ export class RenameProvider {
 						switch (line.type) {
 							case LineType.Macro:
 								const macroLine = line as MacroLine;
-								tokens.push(macroLine.macroToken);
+								if (macroLine.macro.name.text === RenameProvider.SaveRename.token?.text)
+									tokens.push(macroLine.macroToken);
+								
 								break;
 						}
 						break;

@@ -243,7 +243,7 @@ export class MacroUtils {
 				if (!param)
 					continue;
 
-				exps.splice(i, 1, param.exps);
+				exps[i].splice(j, 1, ...param.exps);
 			}
 		}
 	}
