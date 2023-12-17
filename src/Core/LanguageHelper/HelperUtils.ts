@@ -203,9 +203,9 @@ export class HelperUtils {
 				}
 
 				for (const key of matchResult.macro.params.keys()) {
-					const label = matchResult.macro.params.get(key)!;
-					if (HelperUtils._MatchToken(lineNumber, currect, label.label.token)) {
-						matchResult.matchToken = label.label.token;
+					const param = matchResult.macro.params.get(key)!;
+					if (HelperUtils._MatchToken(lineNumber, currect, param.label.token)) {
+						matchResult.matchToken = param.label.token;
 						matchResult.matchType = "Label";
 						matchResult.tag = key;
 						return matchResult;
@@ -312,7 +312,7 @@ export class HelperUtils {
 					continue;
 
 				if (HelperUtils._MatchToken(lineNumber, currect, part.token))
-					return { token: part.token, hash: part.value, type: part.type };
+					return { token: part.token, hash: part.value as number, type: part.type };
 			}
 		}
 	}

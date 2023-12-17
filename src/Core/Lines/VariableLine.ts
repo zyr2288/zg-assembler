@@ -1,4 +1,4 @@
-import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpressionPart, ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
 import { LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
@@ -65,8 +65,9 @@ export class VariableLineUtils {
 			return;
 		}
 
-		let temp = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.TryToGetResult, option);
-		let label = LabelUtils.FindLabelWithHash(line.labelHash, option.macro);
+		const analyseOption: ExpAnalyseOption = { analyseType: "Try" };
+		const temp = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option, analyseOption);
+		const label = LabelUtils.FindLabelWithHash(line.labelHash, option.macro);
 		if (label && temp.success)
 			label.value = temp.value;
 	}

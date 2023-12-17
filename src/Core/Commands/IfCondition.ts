@@ -1,4 +1,4 @@
-import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
 import { LabelUtils } from "../Base/Label";
 import { DecodeOption, IncludeLine } from "../Base/Options";
 import { Token } from "../Base/Token";
@@ -95,7 +95,8 @@ export class IfCondition {
 				break;
 			}
 
-			const value = ExpressionUtils.GetExpressionValue(tempLine.expParts[0], ExpressionResult.GetResultAndShowError, option);
+			const analyseOption: ExpAnalyseOption = { analyseType: "GetAndShowError" };
+			const value = ExpressionUtils.GetExpressionValue<number>(tempLine.expParts[0], option, analyseOption);
 			if (value.success && value.value) {
 				tag[i].confident = true;
 				break;
@@ -116,7 +117,7 @@ export class IfCondition {
 
 		let index = 0;
 		let startLindeIndex = result[0].index;
-		
+
 		for (let i = 1; i < result.length; ++i) {
 			const lineIndex = result[i].index;
 			const tempLine = option.GetLine<CommandLine>(result[i].index);
@@ -172,7 +173,7 @@ export class IfCondition {
 	 * @param option 
 	 * @param lines 
 	 */
-	private static RemoveBaseLines(option: DecodeOption, startLineIndex:number, lines: ConfidentLine[]) {
+	private static RemoveBaseLines(option: DecodeOption, startLineIndex: number, lines: ConfidentLine[]) {
 		option.allLines.splice(startLineIndex + lines[lines.length - 1].offsetFirstLine, 1);
 		for (let i = lines.length - 2; i >= 0; --i) {
 			const line = lines[i];

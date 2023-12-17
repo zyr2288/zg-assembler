@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, ExpressionResult, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
+import { ExpressionPart, ExpAnalyseOption, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption, IncludeLine } from "../Base/Options";
@@ -32,10 +32,11 @@ export class Macro {
 	name!: Token;
 
 	/**自定义函数所有参数 */
-	params = new Map<number, { label: ILabel, exps: ExpressionPart[] }>();
+	params = new Map<number, { label: ILabel, values: number[] }>();
 
 	/**函数内所有的标签 */
 	labels = new Map<number, ILabel>();
+
 	/**函数所有行 */
 	lines: ICommonLine[] = [];
 	/**函数注释 */
@@ -123,7 +124,7 @@ export class MacroUtils {
 		if (params.length !== 0) {
 			for (let i = 0; i < params.length; ++i) {
 				const part = params[i];
-				const label: ILabel = { token: part, labelType: LabelType.Variable };
+				const label: ILabel = { token: part, labelType: LabelType.Parameter };
 				if (!LabelUtils.CheckIllegal(part.text, false)) {
 					const errorMsg = Localization.GetMessage("Label {0} illegal", part.text);
 					MyDiagnostic.PushException(part, errorMsg);
@@ -136,7 +137,7 @@ export class MacroUtils {
 					MyDiagnostic.PushException(part, errorMsg);
 					continue;
 				}
-				macro.params.set(hash, { label, exps: [] });
+				macro.params.set(hash, { label, values: [] });
 			}
 
 		}
@@ -172,19 +173,33 @@ export class MacroUtils {
 
 		const macro = line.macro;
 
-		// const tryValue = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
+		const analyseOption: ExpAnalyseOption = { resultType: "ArrayNumber" };
+		const keys = macro.params.keys();
+		let index = 0;
+
+		for (const key of keys) {
+			const result = ExpressionUtils.GetExpressionValue<number[]>(line.expParts[index], option, analyseOption);
+			if (result.success) {
+				const param = macro.params.get(key)!;
+				result.value.forEach((value, index) => {
+					param.values[index] = value;
+				});
+			}
+			index++;
+		}
+
 		// for (let i = 0; i < line.expParts.length; ++i) {
 		// 	const result = ExpressionUtils.GetExpressionValue(line.expParts[i], tryValue, option);
 		// 	if (result.success) {
-		// 		macro.params.get(macro.paramHashIndex[i])!.value = result.value;
+		// 		macro.params.get(keys[i])!.value = result.value;
 		// 	}
 		// }
 
-		let index = 0;
-		for (const key of macro.params.keys()) {
-			let param = macro.params.get(key)!;
-			param.exps = line.expParts[index];
-		}
+		// let index = 0;
+		// for (const key of macro.params.keys()) {
+		// 	let param = macro.params.get(key)!;
+		// 	param.exps = line.expParts[index];
+		// }
 
 		const tempOption = new DecodeOption(macro.lines);
 		tempOption.macro = macro;
@@ -215,6 +230,8 @@ export class MacroUtils {
 	}
 	//#endregion 填充编译结果值
 
+	/***** private *****/
+
 	private static ReplaceExpressions(lines: ICommonLine[], macro: Macro) {
 		if (!macro)
 			return;
@@ -243,7 +260,9 @@ export class MacroUtils {
 				if (!param)
 					continue;
 
-				exps[i].splice(j, 1, ...param.exps);
+				exp.type = PriorityType.Level_3_CharArray;
+				if (param.values.length !== 0)
+					exp.chars = param.values;
 			}
 		}
 	}
@@ -336,4 +355,5 @@ export class MacroCommand {
 		return result;
 	}
 	//#endregion 获取 Macro 命令行内所有 Line 的高亮 Token
+
 }

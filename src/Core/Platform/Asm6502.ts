@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Localization } from "../I18n/Localization";
@@ -116,14 +116,13 @@ export class Asm6502 {
 
 	private ConditionBranch(option: DecodeOption) {
 		const line = option.GetCurrectLine<InstructionLine>();
-		let tryValue = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
-		let tempValue = ExpressionUtils.GetExpressionValue(line.expParts[0], tryValue, option);
+		const tempValue = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
 		if (!tempValue.success) {
 			line.result.length = 2;
 			return;
 		}
 
-		let temp = tempValue.value - line.orgAddress - 2;
+		const temp = tempValue.value - line.orgAddress - 2;
 		if (temp > 127 || temp < -128) {
 			line.compileType = LineCompileType.Error;
 			let errorMsg = Localization.GetMessage("Argument out of range")

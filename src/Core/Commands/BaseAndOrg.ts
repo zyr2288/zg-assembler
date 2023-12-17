@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
 import { DecodeOption } from "../Base/Options";
 import { CommandLine } from "../Lines/CommandLine";
 import { LineCompileType } from "../Lines/CommonLine";
@@ -25,8 +25,9 @@ export class BaseAndOrg {
 
 	private static Compile_Base(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		let temp = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.GetResultAndShowError, option);
-		if (temp.success && temp.value < 0) {
+		const analyseOption: ExpAnalyseOption = { analyseType: "GetAndShowError" };
+		const temp = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option, analyseOption);
+		if (!temp.success || temp.value < 0) {
 			line.compileType = LineCompileType.Error;
 			return;
 		}
@@ -38,7 +39,8 @@ export class BaseAndOrg {
 
 	private static Compile_Org(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		let temp = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.GetResultAndShowError);
+		const analyseOption: ExpAnalyseOption = { analyseType: "GetAndShowError" };
+		const temp = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option, analyseOption);
 		if (!temp.success || temp.value < 0) {
 			line.compileType = LineCompileType.Error;
 			return;

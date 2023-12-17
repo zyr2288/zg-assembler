@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpressionPart, ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Utils } from "../Base/Utils";
@@ -53,22 +53,22 @@ export class Data {
 
 		line.compileType = LineCompileType.Finished;
 		let index = 0;
-		const finalCompile = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
 
+		const analyseOption: ExpAnalyseOption = { resultType: "ArrayNumber" };
 		for (let i = 0; i < line.expParts.length; i++) {
 			const part: ExpressionPart[] = line.expParts[i];
-			let temp = ExpressionUtils.GetExpressionValues(part, finalCompile, option);
+			const temp = ExpressionUtils.GetExpressionValue<number[]>(part, option, analyseOption);
 			if (!temp.success) {
 				line.compileType = LineCompileType.None;
-				line.result.length += temp.values.length * dataLength;
+				line.result.length += temp.value.length * dataLength;
 				index += line.result.length;
 			} else {
-				for (let j = 0; j < temp.values.length; j++) {
-					let tempLength = Utils.GetNumberByteLength(temp.values[j]);
-					let tempValue = line.SetResult(temp.values[j], index, dataLength);
+				for (let j = 0; j < temp.value.length; j++) {
+					let tempLength = Utils.GetNumberByteLength(temp.value[j]);
+					let tempValue = line.SetResult(temp.value[j], index, dataLength);
 					index += dataLength;
-					if (tempLength > dataLength || temp.values[j] < 0) {
-						let errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.values[j], tempValue);
+					if (tempLength > dataLength || temp.value[j] < 0) {
+						let errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.value[j], tempValue);
 						let token = ExpressionUtils.CombineExpressionPart(part);
 						MyDiagnostic.PushWarning(token, errorMsg);
 					}

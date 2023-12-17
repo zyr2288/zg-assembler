@@ -1,4 +1,4 @@
-import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
 import { DecodeOption, IncludeLine } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
@@ -33,20 +33,24 @@ export class Repeat {
 
 	private static Compile(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		let result = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.GetResultAndShowError, option);
+		const analyseOption: ExpAnalyseOption = { analyseType: "GetAndShowError" };
+
+		const result = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option, analyseOption);
 		if (!result.success)
 			return;
 
 		line.compileType = LineCompileType.Finished;
 
-		let length: number = line.tag;
+		const length: number = line.tag;
+		let resultValue = result.value;
+
 		option.allLines.splice(option.lineIndex, 1);
-		let tempLines = option.allLines.splice(option.lineIndex, length);
+		const tempLines = option.allLines.splice(option.lineIndex, length);
 		tempLines.splice(tempLines.length - 1, 1);
-		while (result.value > 0) {
-			let tempArray = Utils.DeepClone(tempLines);
+		while (resultValue > 0) {
+			const tempArray = Utils.DeepClone(tempLines);
 			option.allLines.splice(option.lineIndex, 0, ...tempArray);
-			result.value--;
+			resultValue--;
 		}
 		option.lineIndex--;
 	}

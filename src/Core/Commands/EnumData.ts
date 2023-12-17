@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpressionPart, ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption, IncludeLine } from "../Base/Options";
@@ -87,7 +87,8 @@ export class EnumData {
 		if (ExpressionUtils.CheckLabelsAndShowError(commandLinie.expParts[0], option))
 			return;
 
-		const temp = ExpressionUtils.GetExpressionValue(commandLinie.expParts[0], ExpressionResult.TryToGetResult, option);
+		const analyseOption: ExpAnalyseOption = { analyseType: "Try" };
+		const temp = ExpressionUtils.GetExpressionValue<number>(commandLinie.expParts[0], option, analyseOption);
 		if (!temp.success)
 			return;
 
@@ -106,14 +107,11 @@ export class EnumData {
 				continue;
 			}
 
-			const temp2 = ExpressionUtils.GetExpressionValue(line.exps, ExpressionResult.TryToGetResult, option);
-			if (!temp2.success) {
+			const temp2 = ExpressionUtils.GetExpressionValue<number>(line.exps, option, analyseOption);
+			if (unknowValue || !temp2.success) {
 				unknowValue = true;
 				continue;
 			}
-
-			if (unknowValue)
-				continue;
 
 			label.value = startValue;
 			startValue += temp2.value;
@@ -124,10 +122,8 @@ export class EnumData {
 		const line = option.GetCurrectLine<CommandLine>();
 		const tag: EnumDataTag = line.tag;
 
-		const finalCompile = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
-
 		if (tag.startValue === undefined) {
-			const temp = ExpressionUtils.GetExpressionValue(line.expParts[0], finalCompile, option);
+			const temp = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
 			if (!temp.success)
 				return;
 
@@ -147,13 +143,14 @@ export class EnumData {
 			if (!label)
 				return;
 
-			const temp = ExpressionUtils.GetExpressionValue(l.exps, finalCompile, option);
+			const temp = ExpressionUtils.GetExpressionValue<number>(l.exps, option);
 			if (!temp.success)
 				return;
 
+			const value = temp.value;
 			label.value = startValue;
-			l.length = temp.value;
-			startValue += temp.value;
+			l.length = value;
+			startValue += value;
 		}
 	}
 

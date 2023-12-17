@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, ExpressionResult, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
+import { ExpressionPart, ExpAnalyseOption, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
 import { ILabel, LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption, IncludeLine } from "../Base/Options";
@@ -148,11 +148,10 @@ export class DataGroupCommand {
 		line.compileType = LineCompileType.Finished;
 
 		let index = 0;
-		const finalCompile = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
 
 		for (let i = 0; i < line.expParts.length; i++) {
 			const lex = line.expParts[i];
-			const temp = ExpressionUtils.GetExpressionValue(lex, finalCompile, option);
+			const temp = ExpressionUtils.GetExpressionValue<number>(lex, option);
 			if (!temp.success) {
 				line.compileType = LineCompileType.None;
 				break;

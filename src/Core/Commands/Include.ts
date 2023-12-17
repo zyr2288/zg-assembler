@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
@@ -92,8 +92,10 @@ export class Include {
 
 		line.result = [];
 		let start = 0;
+
+		const analyseOption: ExpAnalyseOption = { analyseType: "GetAndShowError" };
 		if (line.expParts[0]) {
-			let result = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.GetResultAndShowError, option);
+			let result = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option, analyseOption);
 			if (result.success)
 				start = result.value;
 		}
@@ -101,7 +103,7 @@ export class Include {
 
 		let length = temp.length;
 		if (line.expParts[1]) {
-			let result = ExpressionUtils.GetExpressionValue(line.expParts[1], ExpressionResult.GetResultAndShowError, option);
+			let result = ExpressionUtils.GetExpressionValue<number>(line.expParts[1], option, analyseOption);
 			if (result.success)
 				length = result.value;
 		}

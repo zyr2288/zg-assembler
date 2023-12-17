@@ -23,6 +23,8 @@ export const Chinese: LocalizationMsg = {
 	"Macro arguments count is {0}, but got {1}": "自定义函数参数个数应该为 \"{0}\", 但目前参数个数为 \"{1}\"",
 	"Data group {0} do not found": "数据组 \"{0}\" 未找到",
 
+	"Unsupport string": "这个表达式不支持字符串",
+
 	"rename error": "重命名错误",
 	"format error": "格式化错误",
 

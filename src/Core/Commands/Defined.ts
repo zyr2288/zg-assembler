@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
 import { LabelType, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
@@ -50,15 +50,15 @@ export class Defined {
 		}
 
 		const label = LabelUtils.FindLabelWithHash(line.label?.hash, option.macro);
-		const temp2 = ExpressionUtils.GetExpressionValue(line.expParts[0], ExpressionResult.TryToGetResult, option);
+		const analyseOption: ExpAnalyseOption = { analyseType: "Try" };
+		const temp2 = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option, analyseOption);
 		if (label && temp2.success)
 			label.value = temp2.value;
 	}
 
 	private static Compile_Def(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		const type = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.GetResultAndShowError;
-		const temp = ExpressionUtils.GetExpressionValue(line.expParts[0], type);
+		const temp = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
 		const label = LabelUtils.FindLabelWithHash(line.label?.hash, option.macro);
 		if (label && temp.success) {
 			label.value = temp.value;

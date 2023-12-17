@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, ExpressionResult, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpressionPart, ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
 import { LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
@@ -123,7 +123,7 @@ export class InstructionLineUtils {
 		const label = LabelUtils.FindLabelWithHash(line.label?.hash, option.macro);
 		if (label) {
 			label.value = Compiler.enviroment.orgAddress;
-			delete(line.label?.hash);
+			delete (line.label?.hash);
 		}
 
 		if (line.addressingMode.spProcess) {
@@ -139,8 +139,7 @@ export class InstructionLineUtils {
 			return;
 		}
 
-		const tryValue = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
-		const temp = ExpressionUtils.GetExpressionValue(line.expParts[0], tryValue, option);
+		const temp = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
 		if (!temp.success) {
 			const index = line.addressingMode.opCode.length - 1;
 			line.result.length = line.addressingMode.opCodeLength[index]! + index;

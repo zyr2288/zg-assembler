@@ -308,8 +308,8 @@ export class IntellisenseProvider {
 				const com = new Completion({ showText: value.token.text });
 				result.push(com);
 			});
-			macro.params.forEach((value) => {
-				const com = new Completion({ showText: value.label.token.text });
+			macro.params.forEach((param) => {
+				const com = new Completion({ showText: param.label.token.text });
 				result.push(com);
 			});
 		}

@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionResult, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
+import { ExpAnalyseOption, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
@@ -23,7 +23,7 @@ export class Message {
 	private static FirstAnalyse_Msg(option: DecodeOption) {
 		Commands.FirstAnalyse_Common(option);
 		const line = option.GetCurrectLine<CommandLine>();
-		if (line.expParts[0]?.length !== 1 || line.expParts[0][0].type !== PriorityType.Level_3_String) {
+		if (line.expParts[0]?.length !== 1 || line.expParts[0][0].type !== PriorityType.Level_3_CharArray) {
 			let errorMsg = Localization.GetMessage("Command arguments error");
 			let token = ExpressionUtils.CombineExpressionPart(line.expParts[0]);
 			MyDiagnostic.PushException(token, errorMsg);
@@ -43,8 +43,10 @@ export class Message {
 		const line = option.GetCurrectLine<CommandLine>();
 		line.tag ??= [];
 		line.compileType = LineCompileType.Finished;
+		const analyseOption: ExpAnalyseOption = { analyseType: "GetAndShowError" };
+
 		for (let i = 1; i < line.expParts.length; ++i) {
-			let temp = ExpressionUtils.GetExpressionValue(line.expParts[i], ExpressionResult.GetResultAndShowError, option);
+			const temp = ExpressionUtils.GetExpressionValue<number>(line.expParts[i], option, analyseOption);
 			if (temp.success) {
 				line.tag[i - 1] ??= temp.value;
 			} else {
@@ -87,7 +89,7 @@ export class Message {
 			}
 			start = match.index! + match[0].length;
 		}
-		
+
 		if (line.compileType === LineCompileType.Error)
 			return;
 

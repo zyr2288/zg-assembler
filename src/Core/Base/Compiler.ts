@@ -11,7 +11,7 @@ import { VariableLine, VariableLineUtils } from "../Lines/VariableLine";
 import { Platform } from "../Platform/Platform";
 import { Config } from "./Config";
 import { Environment } from "./Environment";
-import { ExpressionResult, ExpressionUtils } from "./ExpressionUtils";
+import { ExpAnalyseOption, ExpressionUtils } from "./ExpressionUtils";
 import { LabelUtils } from "./Label";
 import { MyDiagnostic } from "./MyException";
 import { DecodeOption } from "./Options";
@@ -286,7 +286,6 @@ export class Compiler {
 	 * @param option 
 	 */
 	static async CompileResult(option: DecodeOption) {
-		const isFinal = Compiler.isLastCompile ? ExpressionResult.GetResultAndShowError : ExpressionResult.TryToGetResult;
 		for (let i = 0; i < option.allLines.length; ++i) {
 			const line = option.allLines[i];
 			if (line.compileType === LineCompileType.Finished)
@@ -308,16 +307,15 @@ export class Compiler {
 				case LineType.OnlyLabel:
 					const onlyLabelLine = option.GetCurrectLine<OnlyLabelLine>();
 					const labelResult1 = LabelUtils.FindLabelWithHash(onlyLabelLine.label.hash, option.macro);
-					if (labelResult1) {
+					if (labelResult1)
 						labelResult1.value = Compiler.enviroment.orgAddress;
-						delete (onlyLabelLine.label.hash);
-					}
+
 					onlyLabelLine.compileType = LineCompileType.Finished;
 					break;
 				case LineType.Variable:
 					const varLine = option.GetCurrectLine<VariableLine>();
 					const labelResult2 = LabelUtils.FindLabel(varLine.labelToken, option.macro);
-					const result = ExpressionUtils.GetExpressionValue(varLine.expParts[0], isFinal, option);
+					const result = ExpressionUtils.GetExpressionValue<number>(varLine.expParts[0], option);
 					if (labelResult2 && result.success) {
 						labelResult2.label.value = result.value;
 						varLine.compileType = LineCompileType.Finished;

@@ -21,6 +21,8 @@ export const English = {
 	"Macro arguments count is {0}, but got {1}": "Macro arguments count is \"{0}\", but got \"{1}\"",
 	"Data group {0} do not found": "Data group \"{0}\" do not found",
 
+	"Unsupport string": "This expression do not support using string",
+
 	"rename error": "Can not rename",
 	"format error": "Can not format",
 

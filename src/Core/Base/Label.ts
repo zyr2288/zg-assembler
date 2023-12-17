@@ -26,6 +26,8 @@ export enum LabelType {
 	Label,
 	/**数据组数据 */
 	DataGroup,
+	/**Macro参数 */
+	Parameter,
 }
 
 export enum LabelScope { Global, Local, Temporary, AllParent }
@@ -205,7 +207,7 @@ export class LabelUtils {
 		// 函数内标签
 		if (macro) {
 			const hash = Utils.GetHashcode(word.text);
-			let label = macro.params.get(hash)?.label ?? macro.labels.get(hash);
+			const label = macro.params.get(hash)?.label ?? macro.labels.get(hash);
 			if (label)
 				return { label, hash };
 		}
