@@ -179,11 +179,18 @@ export class MacroUtils {
 
 		for (const key of keys) {
 			const result = ExpressionUtils.GetExpressionValue<number[]>(line.expParts[index], option, analyseOption);
+			const param = macro.params.get(key)!;
+			if (result.value.length > 1) {
+				param.values = [];
+				param.values.length = result.value.length;
+			}
+
 			if (result.success) {
-				const param = macro.params.get(key)!;
-				result.value.forEach((value, index) => {
-					param.values[index] = value;
-				});
+				if (result.value.length === 1) {
+					param.label.value = result.value[0];
+				} else {
+					param.values = result.value;
+				}
 			}
 			index++;
 		}
@@ -253,16 +260,24 @@ export class MacroUtils {
 		for (let i = 0; i < exps.length; i++) {
 			for (let j = 0; j < exps[i].length; j++) {
 				const exp = exps[i][j];
-				if (exp.type !== PriorityType.Level_1_Label)
-					continue;
+				switch (exp.type) {
+					case PriorityType.Level_1_Label:
+						const param1 = macro.params.get(exp.value);
+						if (!param1)
+							continue;
 
-				const param = macro.params.get(exp.value);
-				if (!param)
-					continue;
+						if (param1.values.length > 1) {
+							exp.type = PriorityType.Level_3_CharArray;
+							exp.chars = param1.values;
+						}
+						break;
+					case PriorityType.Level_3_CharArray:
+						const param2 = macro.params.get(exp.value);
+						if (!param2 || param2.values[0] === undefined)
+							continue;
 
-				exp.type = PriorityType.Level_3_CharArray;
-				if (param.values.length !== 0)
-					exp.chars = param.values;
+						exp.chars = param2.values;
+				}
 			}
 		}
 	}

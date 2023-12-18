@@ -68,11 +68,6 @@ export interface ExpResultType<T> {
 	value: T;
 }
 
-interface Overloading {
-	<T = number>(parts: ExpressionPart[], option: DecodeOption, analyseOption?: ExpAnalyseOption): ExpResultType<T>;
-	<T = number[]>(parts: ExpressionPart[], option: DecodeOption, analyseOption?: ExpAnalyseOption): ExpResultType<T>;
-}
-
 export class ExpressionUtils {
 
 	/**符号优先级 */
@@ -191,7 +186,7 @@ export class ExpressionUtils {
 	 * @param option 选项
 	 * @returns 结果
 	 */
-	static GetExpressionValue: Overloading = <T = number | number[]>(parts: ExpressionPart[], option: DecodeOption, analyseOption?: ExpAnalyseOption): ExpResultType<T> => {
+	static GetExpressionValue<T = number | number[]>(parts: ExpressionPart[], option: DecodeOption, analyseOption?: ExpAnalyseOption): ExpResultType<T> {
 		const strIndex = ExpressionUtils.CheckString(parts);
 		const result: ExpResultType<T> = { success: false, value: [] as T };
 
@@ -202,11 +197,7 @@ export class ExpressionUtils {
 		if (strIndex < 0) {
 			const temp = ExpressionUtils._GetExpressionValue(parts, analyseOption, option);
 			result.success = temp.success;
-			if (analyseOption.resultType === "Number") {
-				result.value = temp.value as T;
-			} else {
-				result.value = [temp.value] as T;
-			}
+			result.value = (analyseOption.resultType === "Number" ? temp.value : [temp.value]) as T;
 			return result;
 		}
 
@@ -214,20 +205,27 @@ export class ExpressionUtils {
 		if (analyseOption.resultType === "Number" && strPart.chars!.length > 1) {
 			const error = Localization.GetMessage("Unsupport string");
 			MyDiagnostic.PushException(strPart.token, error);
-			return { success: false, value: 0 as T };
+			result.success = false;
+			return result;
 		}
 
 
-		const tempWord = strPart.token.Copy();
 		(result.value as number[]) = [];
-		(result.value as number[]).length = tempWord.length;
+		(result.value as number[]).length = strPart.chars!.length;
 		result.success = true;
 
+		strPart.type = PriorityType.Level_0_Sure;
 		for (let i = 0; i < strPart.chars!.length; i++) {
-			strPart.type = PriorityType.Level_0_Sure;
+			if (!strPart.chars![i]) {
+				strPart.type = PriorityType.Level_3_CharArray;
+				result.success = false;
+				break;
+			}
+
 			strPart.value = strPart.chars![i];
 			const temp3 = ExpressionUtils._GetExpressionValue(parts, analyseOption, option);
 			if (!temp3.success) {
+				strPart.type = PriorityType.Level_3_CharArray;
 				result.success = false;
 				break;
 			}
@@ -686,11 +684,11 @@ export class ExpressionUtils {
 			const part = exprParts[i];
 			switch (part.type) {
 				case PriorityType.Level_0_Sure:
+				case PriorityType.Level_3_CharArray:
 					result.parts.push(part);
 					break;
 				case PriorityType.Level_1_Label:
 				case PriorityType.Level_2_Number:
-				case PriorityType.Level_3_CharArray:
 					const temp = ExpressionUtils.GetNumber(part.token.text);
 					if (temp.success) {
 						part.value = temp.value;

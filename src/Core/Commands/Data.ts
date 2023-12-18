@@ -56,7 +56,7 @@ export class Data {
 
 		const analyseOption: ExpAnalyseOption = { resultType: "ArrayNumber" };
 		for (let i = 0; i < line.expParts.length; i++) {
-			const part: ExpressionPart[] = line.expParts[i];
+			const part = line.expParts[i];
 			const temp = ExpressionUtils.GetExpressionValue<number[]>(part, option, analyseOption);
 			if (!temp.success) {
 				line.compileType = LineCompileType.None;
@@ -64,12 +64,12 @@ export class Data {
 				index += line.result.length;
 			} else {
 				for (let j = 0; j < temp.value.length; j++) {
-					let tempLength = Utils.GetNumberByteLength(temp.value[j]);
-					let tempValue = line.SetResult(temp.value[j], index, dataLength);
+					const tempLength = Utils.GetNumberByteLength(temp.value[j]);
+					const tempValue = line.SetResult(temp.value[j], index, dataLength);
 					index += dataLength;
 					if (tempLength > dataLength || temp.value[j] < 0) {
-						let errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.value[j], tempValue);
-						let token = ExpressionUtils.CombineExpressionPart(part);
+						const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.value[j], tempValue);
+						const token = ExpressionUtils.CombineExpressionPart(part);
 						MyDiagnostic.PushWarning(token, errorMsg);
 					}
 				}
