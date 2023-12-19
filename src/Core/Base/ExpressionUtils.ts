@@ -7,6 +7,9 @@ import { DecodeOption } from "./Options";
 import { Token } from "./Token";
 import { Utils } from "./Utils";
 
+/**运算符的正则表达式 */
+const OperationRegex = /((?<!\\)")|\(|\)|\~|\!=|==|\!|\>\>|\>=|\<\<|\<=|\>|\<|=|\+|\-|\*|\/|%|&&|&|\|\||\||\^|\$(?![0-9a-fA-F])/g;
+
 //#region 算数优先级
 export enum PriorityType {
 	Level_0_Sure = -1,
@@ -400,6 +403,9 @@ export class ExpressionUtils {
 					case "<":
 						operation.value = value2 & 0xFF;
 						break;
+					case "~":
+						operation.value = ~value2;
+						break;
 				}
 				operation.type = PriorityType.Level_0_Sure;
 				tempPart.splice(index - 1, 1);
@@ -506,9 +512,7 @@ export class ExpressionUtils {
 			return result;
 		}
 
-		const regex = /((?<!\\)")|\(|\)|\!=|==|\>\>|\>=|\<\<|\<=|\>|\<|=|\+|\-|\*|\/|%|&&|&|\|\||\||\^|\$(?![0-9a-fA-F])/g;
-
-		const tokens = expression.Split(regex, { saveToken: true });
+		const tokens = expression.Split(OperationRegex, { saveToken: true });
 		let isLabel = true;
 
 		let part!: ExpressionPart;
@@ -586,10 +590,11 @@ export class ExpressionUtils {
 					part.type = ExpressionUtils.onlyOnePriority.get(part.token.text)!;
 					break;
 				case "!":
-					if (isLabel) {
+				case "~":
+					if (!isLabel) {
 						result.success = false;
 						break;
-					};
+					}
 
 					part.type = PriorityType.Level_5;
 					isLabel = true;

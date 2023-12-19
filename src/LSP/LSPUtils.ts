@@ -62,7 +62,7 @@ export class LSPUtils {
 	//#endregion 讲结果值运算成其他进制
 
 	//#region 结果值输出
-	static async OutputResult(result: Int16Array, option: { toFile?: string,toClipboard?: boolean }) {
+	static async OutputResult(result: Int16Array, option: { toFile?: string, toClipboard?: boolean }) {
 		if (option.toFile) {
 			if (!vscode.workspace.workspaceFolders)
 				return;
@@ -144,7 +144,7 @@ export class LSPUtils {
 				selectButton = await vscode.window.showErrorMessage(message, ...buttons);
 				break;
 		}
-		
+
 		if (!selectButton)
 			return -1;
 
@@ -164,5 +164,17 @@ export class LSPUtils {
 		});
 	}
 	//#endregion 等待编译完成
+
+	//#region 讲注释转换成Markdown
+	static ConvertToMarkdown(text: string, type: "Comment" | "Code") {
+		if (type === "Comment") {
+			return text.replace(/\n/g, "\n\n");
+		}
+
+		if (type === "Code") {
+			let result = "```\n    ";
+		}
+	}
+	//#endregion 讲注释转换成Markdown
 
 }

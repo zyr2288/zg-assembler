@@ -16,7 +16,10 @@
 	.ORG $C000
 	.BASE $10
 
-	.MACRO WriteToPPU, address	;地址内容写入PPU，这里做一个自定义函数写法
+
+	; 地址内容写入PPU，这里做一个自定义函数写法
+	; address 为地址
+	.MACRO WriteToPPU, address
 		LDA #<address
 		STA $0
 		LDA #>address

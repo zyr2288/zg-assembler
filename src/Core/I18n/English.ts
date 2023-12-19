@@ -45,13 +45,13 @@ export const English = {
 
 export const CommandTip_English = {
 	def: { comment: "Define a constant.", format: ".DEF name, expression", exp: ".DEF PPU.CTRL_REG1, $2000" },
-	macro: { comment: "Define a macro.", format: ".MACRO name[, arg0, arg1...]\n;Your code\n.ENDM", exp: ".MACRO TXY\n\tTXA\n\tTAY\n.ENDM" },
+	macro: { comment: "Define a macro.", format: ".MACRO name[, arg0, arg1...]\n;Your code\n.ENDM", exp: ".MACRO TXY\nTXA\nTAY\n.ENDM" },
 	org: {
-		comment: "Set the starting address.\n\nNote：If you use the `.BASE` command, after `.ORG`, otherwise it compiles incorrectly.",
+		comment: "Set the starting address.\nNote：If you use the .BASE command, after .ORG, otherwise it compiles incorrectly.",
 		format: ".ORG expression", exp: ".ORG $8000\n.ORG *\t;'*' means currect ORG address"
 	},
 	base: {
-		comment: "Set the program address.\n\nNote：If you use the `.BASE` command, after `.ORG`, otherwise it compiles incorrectly.",
+		comment: "Set the program address.\nNote：If you use the .BASE command, after .ORG, otherwise it compiles incorrectly.",
 		format: ".BASE expression", exp: ".BASE $8000\n.BASE $\t;'$' means currect BASE address"
 	},
 	include: {
@@ -72,7 +72,7 @@ export const CommandTip_English = {
 	},
 	msg: {
 		comment: "Out put a message. You can format value to binary, decimal or hexadecimal.", 
-		format: ".MSG message[, arg0, arg1...]\n",
+		format: ".MSG message[, arg0, arg1...]",
 		exp: ".ORG $8000\n.MSG \"Now ORG address: {0}, @{0}, ${0}\", *\n\n;Now ORG address: 32768, @1000 0000 0000 0000, $8000"
 	},
 	enum: {

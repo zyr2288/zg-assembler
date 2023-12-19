@@ -11,6 +11,7 @@ export class HoverProvider {
 
 		const fileHash = FileUtils.GetFilePathHashcode(filePath);
 		const result = { value: undefined as number | undefined, comment: undefined as string | undefined };
+		let changeTip = true;
 
 		const temp = HelperUtils.FindMatchToken(fileHash, lineNumber, lineText, currect);
 		switch (temp.matchType) {
@@ -37,8 +38,13 @@ export class HoverProvider {
 				break;
 			case "Command":
 				result.comment = HoverProvider.HoverCommandTip(temp.matchToken!.text);
+				changeTip = false;
 				break;
 		}
+
+		if (changeTip && result.comment)
+			result.comment = result.comment.replace(/\n/g, "\n\n");
+
 		return result;
 	}
 
@@ -46,7 +52,8 @@ export class HoverProvider {
 		command = command.substring(1).toLowerCase();
 		const tip = Localization.GetCommandTip(command as any);
 		let result = tip.comment + "\n\n```\n";
-		result += tip.format + "\n```";
+		result += 
+		tip.format + "\n```";
 		if (tip.exp)
 			result += "\n---\n" + Localization.GetMessage("example") + "\n```\n" + tip.exp + "\n```";
 

@@ -11,7 +11,7 @@ import { VariableLine, VariableLineUtils } from "../Lines/VariableLine";
 import { Platform } from "../Platform/Platform";
 import { Config } from "./Config";
 import { Environment } from "./Environment";
-import { ExpAnalyseOption, ExpressionUtils } from "./ExpressionUtils";
+import { ExpressionUtils } from "./ExpressionUtils";
 import { LabelUtils } from "./Label";
 import { MyDiagnostic } from "./MyException";
 import { DecodeOption } from "./Options";
@@ -27,6 +27,7 @@ export class Compiler {
 	static isLastCompile: boolean = false;
 	private static compilerEnv = new Environment(true);
 	private static editorEnv = new Environment(false);
+	private static tempComment = { lastComment: "", saveComment: [] as string[] };
 
 	//#region 解析文本
 	/**
@@ -110,16 +111,18 @@ export class Compiler {
 	//#region 分解文本
 	/**分解文本 */
 	static SplitTexts(fileHash: number, text: string): ICommonLine[] {
-		let match: RegExpExecArray | null = null;
-		let tokens: Token[] = [];
+		const result: ICommonLine[] = [];
+
+		let contentToken: Token;
 		let newLine = {} as ICommonLine;
-		let result: ICommonLine[] = [];
+		let match: RegExpExecArray | null = null;
+		let orgText: Token;
 
 		//#region 保存行Token
 		const SaveToken = (lineType: LineType) => {
-			let labelToken = tokens[0].Substring(0, match!.index);
-			let comOrIntrs = tokens[0].Substring(match!.index, match![0].length);
-			let expression = tokens[0].Substring(match!.index + match![0].length);
+			const labelToken = contentToken.Substring(0, match!.index);
+			const comOrIntrs = contentToken.Substring(match!.index, match![0].length);
+			const expression = contentToken.Substring(match!.index + match![0].length);
 
 			comOrIntrs.text = comOrIntrs.text.toUpperCase();
 
@@ -141,18 +144,20 @@ export class Compiler {
 					break;
 			}
 
-			if (!tokens[1].isEmpty)
-				newLine.comment = tokens[1].text;
+			// if (!tokens[1].isEmpty)
+			// 	newLine.comment = tokens[1].text;
 		}
 		//#endregion 保存行Token
 
-		let allLines = text.split(/\r\n|\r|\n/);
-		let orgText;
+		const allLines = text.split(/\r\n|\r|\n/);
 		for (let index = 0; index < allLines.length; ++index) {
 			orgText = Token.CreateToken(fileHash, index, 0, allLines[index]);
 
 			const { content, comment } = Compiler.GetContent(orgText);
-			tokens = [content, comment];
+			contentToken = content;
+
+			Compiler.CommentAdd(!!content, comment?.text);
+
 			if (content.isEmpty)
 				continue;
 
@@ -168,8 +173,10 @@ export class Compiler {
 				newLine = new UnknowLine();
 			}
 
-			if (comment.text)
-				newLine.comment = comment.text;
+			Compiler.CommentClear();
+			if (Compiler.tempComment.lastComment) {
+				newLine.comment = Compiler.tempComment.lastComment;
+			}
 
 			newLine.orgText = content;
 			result.push(newLine);
@@ -272,9 +279,13 @@ export class Compiler {
 
 	//#region 分割内容与注释
 	/**分割内容与注释 */
-	static GetContent(token: Token) {
-		let temp = token.Split(/;[+-]?/, { count: 1 });
-		return { content: temp[0], comment: temp[1] };
+	private static GetContent(token: Token) {
+		const temp = token.Split(/;[+-]?/, { count: 1 });
+		let comment: Token | undefined = temp[1];
+		if (token.text.indexOf(";") < 0)
+			comment = undefined;
+
+		return { content: temp[0], comment };
 	}
 	//#endregion 分割内容与注
 
@@ -420,6 +431,30 @@ export class Compiler {
 		}
 	}
 	//#endregion 给文件的地址增加偏移
+
+	//#region 添加注释
+	/**
+	 * 添加注释
+	 * @param comment 注释
+	 * @param save 是否保存
+	 */
+	private static CommentAdd(save: boolean, comment?: string) {
+		if (save) {
+			if (comment !== undefined) {
+				Compiler.tempComment.saveComment.push(comment.trim());
+			}
+		} else {
+			Compiler.tempComment.saveComment = [];
+		}
+	}
+	//#endregion 添加注释
+
+	//#region 清除注释
+	private static CommentClear() {
+		Compiler.tempComment.lastComment = Compiler.tempComment.saveComment.join("\n");
+		Compiler.tempComment.saveComment = [];
+	}
+	//#endregion 清除注释
 
 }
 

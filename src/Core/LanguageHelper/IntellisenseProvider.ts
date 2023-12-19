@@ -40,6 +40,7 @@ export class Completion {
 	 * @param option.type 提示类型，默认空
 	 * @param option.command 附加数据
 	 */
+	
 	constructor(option: {
 		showText: string, insertText?: string,
 		index?: number, comment?: string,

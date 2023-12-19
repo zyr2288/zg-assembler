@@ -70,7 +70,7 @@ export class Intellisense {
 			newCom.sortText = com.index.toString();
 
 			if (com.comment)
-				newCom.detail = com.comment;
+				newCom.documentation = com.comment;
 
 			// 不会再走这里
 			switch (com.triggerType) {
@@ -143,7 +143,7 @@ export class Intellisense {
 		let result = "";
 		let match;
 
-		let regx = /\[exp\]/g;
+		const regx = /\[exp\]/g;
 		let start = 0;
 		let index = 1;
 		while (match = regx.exec(text)) {

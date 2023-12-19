@@ -52,11 +52,11 @@ export const CommandTip_Chinese: LocalizationTip = {
 		exp: ".MACRO TXY\n\tTXA\n\tTAY\n.ENDM"
 	},
 	org: {
-		comment: "设定编译起始地址。\n\n注意：如果使用 `.BASE` 命令，则在 `.ORG` 之后，否则编译错误。", format: ".ORG 表达式",
+		comment: "设定编译起始地址。\n\n注意：如果使用 .BASE 命令，则在 .ORG 之后，否则编译错误。", format: ".ORG 表达式",
 		exp: ".ORG $8000\n.ORG *\t;'*'代表当前 ORG 地址"
 	},
 	base: {
-		comment: "设定文件起始地址。\n\n注意：如果使用 `.BASE` 命令，则在 `.ORG` 之后，否则编译错误。", format: ".BASE 表达式",
+		comment: "设定文件起始地址。\n\n注意：如果使用 .BASE 命令，则在 .ORG 之后，否则编译错误。", format: ".BASE 表达式",
 		exp: ".BASE $0000\n.BASE $\t;'$'代表当前 BASE 地址"
 	},
 	include: {
@@ -64,7 +64,7 @@ export const CommandTip_Chinese: LocalizationTip = {
 		exp: ".INCLUDE \"../文件夹/文件.asm\"\t;相对路径\n.INCLUDE \"D:/文件夹/文件.asm\"\t;绝对路径"
 	},
 	incbin: {
-		comment: "编译文件的二进制到编译结果内，路径用法基本和 `.INCLUDE` 用法一致", format: ".INCBIN \"文件.bin\"[, 文件读取起始位置, 读取长度]",
+		comment: "编译文件的二进制到编译结果内，路径用法基本和 .INCLUDE 用法一致", format: ".INCBIN \"文件.bin\"[, 文件读取起始位置, 读取长度]",
 		exp: ".INCBIN \"chr-rom.bin\", 0, $1000"
 	},
 	db: { comment: "单字节数据", format: ".DB 参数0[, 参数1, 参数2...]" },
