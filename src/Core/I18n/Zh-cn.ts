@@ -36,6 +36,7 @@ export const Chinese: LocalizationMsg = {
 
 	"empty addressing mode": "空",
 	"example": "例子：",
+	"paramters": "所有参数: ",
 
 	"out put message File{0}, Line{1}, Message{2}": "文件: \"{0}\"\n第 {1} 行\n{2}\n\n",
 
@@ -52,11 +53,11 @@ export const CommandTip_Chinese: LocalizationTip = {
 		exp: ".MACRO TXY\n\tTXA\n\tTAY\n.ENDM"
 	},
 	org: {
-		comment: "设定编译起始地址。\n\n注意：如果使用 .BASE 命令，则在 .ORG 之后，否则编译错误。", format: ".ORG 表达式",
+		comment: "设定编译起始地址。\n注意：如果使用 .BASE 命令，则在 .ORG 之后，否则编译错误。", format: ".ORG 表达式",
 		exp: ".ORG $8000\n.ORG *\t;'*'代表当前 ORG 地址"
 	},
 	base: {
-		comment: "设定文件起始地址。\n\n注意：如果使用 .BASE 命令，则在 .ORG 之后，否则编译错误。", format: ".BASE 表达式",
+		comment: "设定文件起始地址。\n注意：如果使用 .BASE 命令，则在 .ORG 之后，否则编译错误。", format: ".BASE 表达式",
 		exp: ".BASE $0000\n.BASE $\t;'$'代表当前 BASE 地址"
 	},
 	include: {
@@ -77,7 +78,7 @@ export const CommandTip_Chinese: LocalizationTip = {
 	},
 	msg: {
 		comment: "输出信息，你可以格式化输出数据，具体参考例子。", format: ".MSG \"你要输出的信息\"",
-		exp: ".ORG $8000\n.MSG \"当前编译地址: {0} @{0}, ${0}\", *\n\n;当前编译地址: 32768, @1000 0000 0000 0000, $8000"
+		exp: ".ORG $8000\n.MSG \"当前编译地址: {0} @{0}, ${0}\", *\n;当前编译地址: 32768, @1000 0000 0000 0000, $8000"
 	},
 	enum: {
 		comment: "用于定义一连串的常量，一般用于定义连续的内存地址作为标记", format: ".ENUM 起始地址\n常量名称, 占用字节长度\n...\n.ENDE",

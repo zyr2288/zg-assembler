@@ -174,7 +174,7 @@ export class HelperUtils {
 					return matchResult;
 			}
 		}
-		delete(matchResult.matchToken);
+		delete (matchResult.matchToken);
 
 		let allLines = Compiler.enviroment.allBaseLines.get(fileHash);
 		if (!allLines)

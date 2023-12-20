@@ -1,5 +1,6 @@
-	.DEF prgRomPage, 1
-	.DEF chrRomPage, 1
+	; PRG ROM
+	.DEF prgRomPage, 1	;这里会显示
+	.DEF chrRomPage, 1	;这里也会显示
 
 	.DEF mapper, 0
 	.DEF fourScreen, 0 << 2		;四分屏幕，1为开启
@@ -15,10 +16,9 @@
 	
 	.ORG $C000
 	.BASE $10
-
-
+	
 	; 地址内容写入PPU，这里做一个自定义函数写法
-	; address 为地址
+	; 参数1 为地址
 	.MACRO WriteToPPU, address
 		LDA #<address
 		STA $0
@@ -26,7 +26,7 @@
 		STA $1
 		JSR ppu.Write
 	.ENDM
-
+	
 RESET
 IRQ
 
@@ -65,9 +65,6 @@ NMI	LDA $2002
 	STA $2005
 	STA $2005
 	JMP *
-	JMP .temp
-	
-.temp
 
 ppu.Write	;+写入PPU
 	LDY #$0
@@ -87,7 +84,7 @@ ppu.Write	;+写入PPU
 	;-写入PPU
 
 	.INCLUDE "data.asm"
-
+	
 	.MSG "Currect line address {0}, ${0}, @{0}", *
 
 	.ORG $FFFA

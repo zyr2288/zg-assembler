@@ -56,7 +56,6 @@ export class LSPUtils {
 		result.bin = result.bin.substring(1);
 		result.dec = value.toString();
 		result.hex = value.toString(16).toUpperCase();
-
 		return result;
 	}
 	//#endregion 讲结果值运算成其他进制
@@ -165,16 +164,16 @@ export class LSPUtils {
 	}
 	//#endregion 等待编译完成
 
-	//#region 讲注释转换成Markdown
-	static ConvertToMarkdown(text: string, type: "Comment" | "Code") {
-		if (type === "Comment") {
-			return text.replace(/\n/g, "\n\n");
-		}
+	//#region 将数值结果写入 Markdown
+	static ConvertNumberToMarkdown(markdown: vscode.MarkdownString, value: number) {
+		if (markdown.value)
+			markdown.appendMarkdown("\n\n---\n\n");
 
-		if (type === "Code") {
-			let result = "```\n    ";
-		}
+		const temp = LSPUtils.ConvertValue(value);
+		markdown.appendMarkdown(`BIN: @${temp.bin}\n\n---\n\n`);
+		markdown.appendMarkdown(`DEC: ${temp.dec}\n\n---\n\n`);
+		markdown.appendMarkdown(`HEX: $${temp.hex}`);
 	}
-	//#endregion 讲注释转换成Markdown
+	//#endregion 将数值结果写入 Markdown
 
 }

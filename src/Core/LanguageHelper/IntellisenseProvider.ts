@@ -8,6 +8,7 @@ import { Commands } from "../Commands/Commands";
 import { Macro } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
 import { AsmCommon } from "../Platform/AsmCommon";
+import { CommentHelper } from "./CommentHelper";
 import { HelperUtils } from "./HelperUtils";
 
 const ignoreWordStr = ";|(^|\\s+)(\\.HEX|\\.DBG|\\.DWG|\\.MACRO)(\\s+|$)";
@@ -40,7 +41,7 @@ export class Completion {
 	 * @param option.type 提示类型，默认空
 	 * @param option.command 附加数据
 	 */
-	
+
 	constructor(option: {
 		showText: string, insertText?: string,
 		index?: number, comment?: string,
@@ -217,20 +218,12 @@ export class IntellisenseProvider {
 					const completions: Completion[] = [];
 					completions.push(...IntellisenseProvider.instructionCompletions);
 					Compiler.enviroment.allMacro.forEach((macro) => {
-						let insertText: string | undefined;
-						if (macro.params.size !== 0) {
-							insertText = macro.name.text + " ";
-							for (let i = 0; i < macro.params.size; i++)
-								insertText += `[exp], `;
-
-							insertText = insertText.substring(0, insertText.length - 2);
-						}
-
 						const com = new Completion({
 							showText: macro.name.text,
 							index: 0,
 							type: CompletionType.Macro,
-							insertText
+							insertText: IntellisenseProvider.ReplaceMacro(macro),
+							comment: CommentHelper.FormatComment(macro)
 						});
 
 						completions.push(com);
@@ -332,8 +325,8 @@ export class IntellisenseProvider {
 				if (!label)
 					return [];
 
-				let showText = label.token.text.substring(index + 1);
-				let item = new Completion({ showText, comment: label.comment });
+				const showText = label.token.text.substring(index + 1);
+				const item = new Completion({ showText });
 				switch (label.labelType) {
 					case LabelType.Defined:
 						item.type = CompletionType.Defined;
@@ -342,14 +335,7 @@ export class IntellisenseProvider {
 						item.type = CompletionType.Label;
 						break;
 				}
-				if (label.value) {
-					let value = Utils.ConvertValue(label.value);
-					let tempStr = `HEX: $${value.hex}\nDEC: ${value.dec}\nBIN: @${value.bin}`;
-					if (item.comment)
-						item.comment += "\n-----\n\n" + tempStr;
-					else
-						item.comment = "-----\n\n" + tempStr;
-				}
+				item.comment = CommentHelper.FormatComment(label);
 				result.push(item);
 			});
 		}
@@ -417,7 +403,7 @@ export class IntellisenseProvider {
 				com.index = 0;
 			} else {
 				com.showText = modes[j].addressingMode!;
-				com.insertText = modes[j].addressingMode!;
+				com.insertText = IntellisenseProvider.ReplaceCommon(modes[j].addressingMode!);
 				com.index = 1;
 			}
 			completions.push(com);
@@ -479,16 +465,56 @@ export class IntellisenseProvider {
 				case ".ENUM":
 					completion.insertText = completion.insertText + " [exp]\n\n.ENDE";
 					break;
-				case ".ORG": case ".BASE": case ".MSG": case ".DB": case ".DW": case ".DL": case ".DEF":
+				case ".ORG": case ".BASE": case ".MSG": case ".DB": case ".DW": case ".DL": case ".DEF": case ".HEX":
 					completion.insertText = completion.insertText + " ";
 					break;
 			}
 
+			completion.insertText = IntellisenseProvider.ReplaceCommon(completion.insertText);
 			IntellisenseProvider.commandCompletions.push(completion);
 			if (!NotInMacroCommands.includes(value))
 				IntellisenseProvider.commandNotInMacroCompletions.push(completion);
 		});
 	}
 	//#endregion 更新所有编译器命令
+
+	//#region 处理汇编指令提示插入的内容
+	private static ReplaceCommon(text: string) {
+		let result = "";
+		let match;
+
+		const regx = /\[exp\]/g;
+		let start = 0;
+		let index = 0;
+		while (match = regx.exec(text)) {
+			result += text.substring(start, match.index) + `$${index}`;
+			start = match.index + match[0].length;
+			index++;
+		}
+
+		result += text.substring(start);
+		return result;
+	}
+	//#endregion 处理汇编指令提示插入的内容
+
+	//#region 处理插入Macro
+	private static ReplaceMacro(macro: Macro) {
+		let result = macro.name.text;
+		if (macro.params.size === 0)
+			return result;
+
+		result += " ";
+		let index = 1;
+		macro.params.forEach(v => {
+			if (index === macro.params.size)
+				index = 0;
+			
+			result += `\${${index}:${v.label.token.text}}, `;
+			index++;
+		});
+		result = result.substring(0, result.length - 2);
+		return result;
+	}
+	//#endregion 处理插入Macro
 
 }

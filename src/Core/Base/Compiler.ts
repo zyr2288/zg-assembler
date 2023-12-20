@@ -156,7 +156,7 @@ export class Compiler {
 			const { content, comment } = Compiler.GetContent(orgText);
 			contentToken = content;
 
-			Compiler.CommentAdd(!!content, comment?.text);
+			Compiler.CommentAdd(content.isEmpty, comment?.text);
 
 			if (content.isEmpty)
 				continue;
@@ -439,13 +439,11 @@ export class Compiler {
 	 * @param save 是否保存
 	 */
 	private static CommentAdd(save: boolean, comment?: string) {
-		if (save) {
-			if (comment !== undefined) {
-				Compiler.tempComment.saveComment.push(comment.trim());
-			}
-		} else {
+		if (save && comment === undefined)
 			Compiler.tempComment.saveComment = [];
-		}
+
+		if (comment !== undefined)
+			Compiler.tempComment.saveComment.push(comment.trim());
 	}
 	//#endregion 添加注释
 

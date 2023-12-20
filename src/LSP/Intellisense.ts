@@ -66,11 +66,11 @@ export class Intellisense {
 		for (let i = 0; i < completions.length; ++i) {
 			const com = completions[i];
 			const newCom = new vscode.CompletionItem(com.showText);
-			newCom.insertText = Intellisense.ChangeExp(com.insertText);
+			newCom.insertText = new vscode.SnippetString(com.insertText);
 			newCom.sortText = com.index.toString();
 
 			if (com.comment)
-				newCom.documentation = com.comment;
+				newCom.documentation = new vscode.MarkdownString(com.comment);
 
 			// 不会再走这里
 			switch (com.triggerType) {
@@ -116,7 +116,7 @@ export class Intellisense {
 				for (let i = 0; i < files.length; ++i) {
 					const file = files[i];
 					const com = new vscode.CompletionItem(file.showText);
-					com.insertText = Intellisense.ChangeExp(file.insertText);
+					com.insertText = new vscode.SnippetString(file.insertText);
 					com.sortText = file.index.toString();
 					com.kind = Intellisense.CompletionShowType[file.type!];
 					if (com.kind === vscode.CompletionItemKind.Folder) {
@@ -139,21 +139,21 @@ export class Intellisense {
 		return result;
 	}
 
-	private static ChangeExp(text: string) {
-		let result = "";
-		let match;
+	// private static ChangeExp(text: string) {
+	// 	let result = "";
+	// 	let match;
 
-		const regx = /\[exp\]/g;
-		let start = 0;
-		let index = 1;
-		while (match = regx.exec(text)) {
-			result += text.substring(start, match.index) + `$\{${index}}`;
-			start = match.index + match[0].length;
-			index++;
-		}
+	// 	const regx = /\[exp\]/g;
+	// 	let start = 0;
+	// 	let index = 1;
+	// 	while (match = regx.exec(text)) {
+	// 		result += text.substring(start, match.index) + `$${index}`;
+	// 		start = match.index + match[0].length;
+	// 		index++;
+	// 	}
 
-		result += text.substring(start);
-		return new vscode.SnippetString(result);
-	}
+	// 	result += text.substring(start);
+	// 	return new vscode.SnippetString(result);
+	// }
 
 }

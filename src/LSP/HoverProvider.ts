@@ -15,23 +15,12 @@ export class HoverProvider {
 
 		await LSPUtils.WaitingCompileFinished();
 
-		const result: vscode.MarkdownString[] = [];
+		const result = new vscode.MarkdownString();
 
 		const lineText = document.lineAt(position.line).text;
 		const temp = LSPUtils.assembler.languageHelper.hoverProvider.Hover(
 			document.uri.fsPath, position.line, lineText, position.character);
 
-		if (temp.comment) {
-			result.push(new vscode.MarkdownString(`${temp.comment}`));
-		}
-
-		if (temp.value !== undefined) {
-			const temp2 = LSPUtils.ConvertValue(temp.value);
-			result.push(new vscode.MarkdownString(`HEX: $${temp2.hex}`));
-			result.push(new vscode.MarkdownString(`DEC: ${temp2.dec}`));
-			result.push(new vscode.MarkdownString(`BIN: @${temp2.bin}`));
-		}
-
-		return new vscode.Hover(result);
+		return new vscode.Hover(new vscode.MarkdownString(temp));
 	}
 }
