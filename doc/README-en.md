@@ -77,6 +77,13 @@
         ; AD 02 20 10 FB A5 00 F0 05 10 06 4C 00 90 4C 00 80 4C 00 A0 
 ```
 
+### Operator
+> Note: operators are base Javascript operator. Exp: ~$A -> -11
+```
+	+ - * / & | ~ ^
+	>> << && || !
+	== != >= <=
+```
 
 ### Special Operator
 
