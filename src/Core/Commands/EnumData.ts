@@ -10,7 +10,7 @@ import { CommandLine } from "../Lines/CommandLine";
 import { HighlightToken, HighlightType, LineCompileType } from "../Lines/CommonLine";
 import { Commands } from "./Commands";
 
-interface EnumDataTag {
+export interface EnumDataTag {
 	startValue?: number;
 	lines: { labelHash: number, token: Token, exps: ExpressionPart[], length?: number }[];
 }

@@ -1,8 +1,9 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, PriorityType } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
-import { ILabel, LabelScope, LabelType, LabelUtils } from "../Base/Label";
+import { LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
+import { EnumData, EnumDataTag } from "../Commands/EnumData";
 import { Macro } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
@@ -104,7 +105,7 @@ export class RenameProvider {
 								const macroLine = line as MacroLine;
 								if (macroLine.macro.name.text === RenameProvider.SaveRename.token?.text)
 									tokens.push(macroLine.macroToken);
-								
+
 								break;
 						}
 						break;
@@ -112,11 +113,25 @@ export class RenameProvider {
 					case "MacroLabel":
 						switch (line.type) {
 							case LineType.Instruction:
-							case LineType.Command:
 							case LineType.Macro:
 							case LineType.Variable:
-								const insLine = line as InstructionLine | CommandLine | MacroLine | VariableLine;
+								const insLine = line as InstructionLine | MacroLine | VariableLine;
 								tokens.push(...RenameProvider.RenameMatchLabel(insLine.expParts));
+								break;
+							case LineType.Command:
+								const comLine = line as CommandLine;
+								switch (comLine.command.text) {
+									case ".ENUM":
+										const enumLines = (comLine.tag as EnumDataTag).lines;
+										for (let i = 0; i < enumLines.length; i++) {
+											const line = enumLines[i];
+											tokens.push(...RenameProvider.RenameMatchLabel([line.exps]));
+										}
+										break;
+									default:
+										tokens.push(...RenameProvider.RenameMatchLabel(comLine.expParts));
+										break;
+								}
 								break;
 						}
 						break;
