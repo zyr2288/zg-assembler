@@ -22,7 +22,7 @@ export class IOImplementation {
 	}
 
 	static BytesToString(data: Uint8Array) {
-		let decoder = new TextDecoder();
+		const decoder = new TextDecoder();
 		return decoder.decode(data);
 	}
 
@@ -78,7 +78,7 @@ export class IOImplementation {
 	}
 
 	static StringToByte(text: string) {
-		let encoder = new TextEncoder();
+		const encoder = new TextEncoder();
 		return encoder.encode(text);
 	}
 
