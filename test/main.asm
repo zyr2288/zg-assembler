@@ -1,4 +1,3 @@
-	; PRG ROM
 	.DEF prgRomPage, 1	;这里会显示
 	.DEF chrRomPage, 1	;这里也会显示
 
