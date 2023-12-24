@@ -1,4 +1,4 @@
-import { LabelUtils } from "../Base/Label";
+import { ILabel, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
@@ -8,7 +8,12 @@ export class OnlyLabelLine implements ICommonLine {
 	compileType = LineCompileType.None;
 	orgText!: Token;
 
-	label: { token: Token, hash?: number } = { token: {} as Token };
+	saveLabel: {
+		token?: Token,
+		label: ILabel,
+		/**是否已经处理完毕 */
+		finished: boolean
+	} = { label: {} as ILabel, finished: false };
 
 	comment?: string;
 
@@ -16,13 +21,13 @@ export class OnlyLabelLine implements ICommonLine {
 		if (labelToken.isEmpty)
 			return;
 
-		this.label.token = labelToken;
+		this.saveLabel.token = labelToken;
 		LabelUtils.GetLineLabelToken(option);
 	}
 
 	GetTokens() {
-		if (this.label.hash)
-			return [{ type: HighlightType.Label, token: this.label.token }];
+		if (this.saveLabel.label)
+			return [{ type: HighlightType.Label, token: this.saveLabel.label.token }];
 
 		return [];
 	}

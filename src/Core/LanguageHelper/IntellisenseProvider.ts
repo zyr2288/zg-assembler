@@ -1,7 +1,7 @@
 import { Compiler } from "../Base/Compiler";
 import { Config } from "../Base/Config";
 import { FileUtils } from "../Base/FileUtils";
-import { ILabel, LabelScope, LabelType, LabelUtils } from "../Base/Label";
+import { ILabel, ILabelTree, LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Commands } from "../Commands/Commands";
@@ -296,7 +296,7 @@ export class IntellisenseProvider {
 	 * @returns 
 	 */
 	private static GetLabel(fileHash: number, prefix: string, macro?: Macro): Completion[] {
-		let result: Completion[] = [];
+		const result: Completion[] = [];
 		if (macro) {
 			macro.labels.forEach((value) => {
 				const com = new Completion({ showText: value.token.text });
@@ -308,8 +308,10 @@ export class IntellisenseProvider {
 			});
 		}
 
-		let labelScope = prefix.startsWith(".") ? LabelScope.Local : LabelScope.Global;
+		const labelScope = prefix.startsWith(".") ? LabelScope.Local : LabelScope.Global;
 		let index = prefix.lastIndexOf(".");
+		let labelTree:Map<string, ILabelTree> | undefined;
+		let labels: Map<string, ILabel> | undefined;
 
 		if (index > 0) {
 			prefix = prefix.substring(0, index);
@@ -317,28 +319,60 @@ export class IntellisenseProvider {
 			prefix = "";
 		}
 
-		let labelHash = LabelUtils.GetLebalHash(prefix, fileHash, labelScope);
-		let topLabel = Compiler.enviroment.labelTrees.get(labelHash);
-		if (topLabel) {
-			topLabel.child.forEach((labelHash) => {
-				let label = Compiler.enviroment.allLabel.get(labelHash);
-				if (!label)
-					return [];
-
-				const showText = label.token.text.substring(index + 1);
-				const item = new Completion({ showText });
-				switch (label.labelType) {
-					case LabelType.Defined:
-						item.type = CompletionType.Defined;
-						break;
-					case LabelType.Label:
-						item.type = CompletionType.Label;
-						break;
-				}
-				item.comment = CommentHelper.FormatComment(label);
-				result.push(item);
-			});
+		if (labelScope === LabelScope.Global) {
+			labelTree = Compiler.enviroment.labelTree.global;
+			labels = Compiler.enviroment.allLabel.global;
+		} else {
+			labelTree = Compiler.enviroment.labelTree.local.get(fileHash);
+			labels = Compiler.enviroment.allLabel.local.get(fileHash);
 		}
+
+		// let labelHash = LabelUtils.GetLebalHash(prefix, fileHash, labelScope);
+		// if (prefix === "")
+
+		labelTree?.forEach((tree, key) => {
+			if (tree.parent !== prefix)
+				return;
+
+			const label = labels?.get(key);
+			if (!label)
+				return;
+
+			const showText = label.token.text.substring(index + 1);
+			const item = new Completion({ showText });
+			switch (label.labelType) {
+				case LabelType.Defined:
+					item.type = CompletionType.Defined;
+					break;
+				case LabelType.Label:
+					item.type = CompletionType.Label;
+					break;
+			}
+			item.comment = CommentHelper.FormatComment(label);
+			result.push(item);
+		});
+
+		// let topLabel = Compiler.enviroment.labelTrees.get(labelHash);
+		// if (topLabel) {
+		// 	topLabel.child.forEach((labelHash) => {
+		// 		let label = Compiler.enviroment.allLabels.get(labelHash);
+		// 		if (!label)
+		// 			return [];
+
+		// 		const showText = label.token.text.substring(index + 1);
+		// 		const item = new Completion({ showText });
+		// 		switch (label.labelType) {
+		// 			case LabelType.Defined:
+		// 				item.type = CompletionType.Defined;
+		// 				break;
+		// 			case LabelType.Label:
+		// 				item.type = CompletionType.Label;
+		// 				break;
+		// 		}
+		// 		item.comment = CommentHelper.FormatComment(label);
+		// 		result.push(item);
+		// 	});
+		// }
 
 		return result;
 	}
@@ -356,13 +390,12 @@ export class IntellisenseProvider {
 		if (!parts[0])
 			return result;
 
-		let hash = Utils.GetHashcode(parts[0]);
-		const datagroup = Compiler.enviroment.allDataGroup.get(hash);
+		const datagroup = Compiler.enviroment.allDataGroup.get(parts[0]);
 		if (!datagroup)
 			return result;
 
 		if (!parts[1]) {
-			datagroup.labelHashAndIndex.forEach((value) => {
+			datagroup.labelAndIndex.forEach((value) => {
 				for (let i = 0; i < value.length; i++) {
 					result.push(new Completion({ showText: value[i].token.text }));
 				}
@@ -372,8 +405,7 @@ export class IntellisenseProvider {
 		}
 
 
-		hash = Utils.GetHashcode(parts[1]);
-		const members = datagroup.labelHashAndIndex.get(hash);
+		const members = datagroup.labelAndIndex.get(parts[1]);
 		if (!members)
 			return result;
 
@@ -508,7 +540,7 @@ export class IntellisenseProvider {
 		macro.params.forEach(v => {
 			if (index === macro.params.size)
 				index = 0;
-			
+
 			result += `\${${index}:${v.label.token.text}}, `;
 			index++;
 		});

@@ -32,10 +32,10 @@ export class Macro {
 	name!: Token;
 
 	/**自定义函数所有参数 */
-	params = new Map<number, { label: ILabel, values: number[] }>();
+	params = new Map<string, { label: ILabel, values: number[] }>();
 
 	/**函数内所有的标签 */
-	labels = new Map<number, ILabel>();
+	labels = new Map<string, ILabel>();
 
 	/**函数所有行 */
 	lines: ICommonLine[] = [];
@@ -60,7 +60,7 @@ export class MacroUtils {
 		if (!labelToken.isEmpty) {
 			const label = LabelUtils.CreateLabel(labelToken, option, true);
 			if (label)
-				macroLine.label = { token: label.label.token, hash: label.hash };
+				macroLine.saveLabel = { label, finished: false };
 		}
 
 		macroLine.orgText = option.GetCurrectLine().orgText;
@@ -112,8 +112,7 @@ export class MacroUtils {
 			return;
 		}
 
-		const hash = Utils.GetHashcode(name.text);
-		if (Compiler.enviroment.allLabel.has(hash) || Compiler.enviroment.allMacro.has(name.text)) {
+		if (Compiler.enviroment.allLabel.global.has(name.text) || Compiler.enviroment.allMacro.has(name.text)) {
 			const errorMsg = Localization.GetMessage("Label {0} is already defined", name.text);
 			MyDiagnostic.PushException(name, errorMsg);
 			return;
@@ -131,13 +130,12 @@ export class MacroUtils {
 					continue;
 				}
 
-				const hash = Utils.GetHashcode(part.text);
-				if (macro.params.has(hash)) {
+				if (macro.params.has(part.text)) {
 					const errorMsg = Localization.GetMessage("Label {0} is already defined", part.text);
 					MyDiagnostic.PushException(part, errorMsg);
 					continue;
 				}
-				macro.params.set(hash, { label, values: [] });
+				macro.params.set(part.text, { label, values: [] });
 			}
 
 		}
@@ -162,10 +160,9 @@ export class MacroUtils {
 	 */
 	static async CompileMacroLine(option: DecodeOption) {
 		const line = option.GetCurrectLine<MacroLine>();
-		const label = LabelUtils.FindLabelWithHash(line.label?.hash, option.macro);
-		if (label) {
-			label.value = Compiler.enviroment.orgAddress;
-			delete (line.label?.hash);		// 删除，不再编译
+		if (line.saveLabel && !line.saveLabel.finished) {
+			line.saveLabel.label.value = Compiler.enviroment.orgAddress;
+			line.saveLabel.finished = true;
 		}
 
 		if (Compiler.compileTimes === 0)
@@ -262,7 +259,7 @@ export class MacroUtils {
 				const exp = exps[i][j];
 				switch (exp.type) {
 					case PriorityType.Level_1_Label:
-						const param1 = macro.params.get(exp.value);
+						const param1 = macro.params.get(exp.token.text);
 						if (!param1)
 							continue;
 
@@ -272,7 +269,7 @@ export class MacroUtils {
 						}
 						break;
 					case PriorityType.Level_3_CharArray:
-						const param2 = macro.params.get(exp.value);
+						const param2 = macro.params.get(exp.token.text);
 						if (!param2 || param2.values[0] === undefined)
 							continue;
 

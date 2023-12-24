@@ -1,6 +1,6 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
-import { LabelType, LabelUtils } from "../Base/Label";
+import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { CommandLine } from "../Lines/CommandLine";
@@ -22,13 +22,16 @@ export class Defined {
 		const line = option.GetCurrectLine<CommandLine>();
 		const expressions: Token[] = line.tag;
 
-		line.label = { token: expressions[0] };
+		line.saveLabel = { token: expressions[0], label: {} as ILabel, notFinish: true };
 
-		const labelMark = LabelUtils.CreateLabel(line.label.token, option, false);
-		if (labelMark) {
-			labelMark.label.labelType = LabelType.Defined;
-			labelMark.label.comment = line.comment;
-			line.label.hash = labelMark.hash;
+		const label = LabelUtils.CreateLabel(line.saveLabel.token, option, false);
+		if (label) {
+			label.labelType = LabelType.Defined;
+			label.comment = line.comment;
+			line.saveLabel.label = label;
+			delete(line.saveLabel.token);
+		} else {
+			delete(line.saveLabel);
 		}
 
 		const temp = ExpressionUtils.SplitAndSort(expressions[1]);
@@ -49,7 +52,7 @@ export class Defined {
 			return;
 		}
 
-		const label = LabelUtils.FindLabelWithHash(line.label?.hash, option.macro);
+		const label = line.saveLabel?.label;
 		const analyseOption: ExpAnalyseOption = { analyseType: "Try" };
 		const temp2 = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option, analyseOption);
 		if (label && temp2.success)
@@ -59,12 +62,10 @@ export class Defined {
 	private static Compile_Def(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
 		const temp = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
-		const label = LabelUtils.FindLabelWithHash(line.label?.hash, option.macro);
+		const label = line.saveLabel?.label;
 		if (label && temp.success) {
 			label.value = temp.value;
 			line.compileType = LineCompileType.Finished;
-		} else if (Compiler.isLastCompile) {
-			line.compileType = LineCompileType.Error;
 		}
 	}
 

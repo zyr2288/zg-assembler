@@ -1,6 +1,6 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
-import { LabelUtils } from "../Base/Label";
+import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ILabel, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
@@ -20,11 +20,13 @@ export class InstructionLine implements ICommonLine {
 	baseAddress = 0;
 
 	/**标签 */
-	label?: {
+	saveLabel?: {
+		/**初始化时候暂存的Token，用完即销毁 */
+		token?: Token;
 		/**标签的Token */
-		token: Token;
+		label: ILabel;
 		/**标签的Hash */
-		hash?: number;
+		notFinish: boolean;
 	}
 
 	instruction!: Token;
@@ -35,12 +37,12 @@ export class InstructionLine implements ICommonLine {
 
 	comment?: string;
 
-	Initialize(option: { instruction: Token, expression: Token, labelToken?: Token }) {
+	Initialize(option: { instruction: Token, expression: Token, labelToken: Token }) {
 		this.instruction = option.instruction;
 		this.instruction.text = this.instruction.text.toUpperCase();
 		this.expression = option.expression;
-		if (option.labelToken)
-			this.label = { token: option.labelToken };
+		if (!option.labelToken.isEmpty)
+			this.saveLabel = { token: option.labelToken, label: {} as ILabel, notFinish: true };
 	}
 
 	SetResult(value: number, index: number, length: number): number {
@@ -57,8 +59,8 @@ export class InstructionLine implements ICommonLine {
 
 	GetTokens() {
 		let result: HighlightToken[] = [];
-		if (this.label)
-			result.push({ type: HighlightType.Label, token: this.label.token });
+		if (this.saveLabel?.label)
+			result.push({ type: HighlightType.Label, token: this.saveLabel.label.token });
 
 		result.push({ type: HighlightType.Keyword, token: this.instruction });
 		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
@@ -120,10 +122,9 @@ export class InstructionLineUtils {
 		if (line.compileType === LineCompileType.Error)
 			return;
 
-		const label = LabelUtils.FindLabelWithHash(line.label?.hash, option.macro);
-		if (label) {
-			label.value = Compiler.enviroment.orgAddress;
-			delete (line.label?.hash);
+		if (line.saveLabel?.label && line.saveLabel.notFinish) {
+			line.saveLabel.label.value = Compiler.enviroment.orgAddress;
+			line.saveLabel.notFinish = false;
 		}
 
 		if (line.addressingMode.spProcess) {

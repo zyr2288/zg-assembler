@@ -12,14 +12,15 @@ import { Commands } from "./Commands";
 
 export class DataGroup {
 
+	/**数据组的标签 */
 	label!: ILabel;
-	labelHashAndIndex: Map<number, { token: Token, index: number }[]> = new Map();
+	/**key是标签是文本 */
+	labelAndIndex: Map<string, { token: Token, index: number }[]> = new Map();
 
 	PushData(token: Token, index: number) {
-		const textHash = Utils.GetHashcode(token.text);
-		const labelMap = this.labelHashAndIndex.get(textHash) ?? [];
+		const labelMap = this.labelAndIndex.get(token.text) ?? [];
 		labelMap.push({ token, index });
-		this.labelHashAndIndex.set(textHash, labelMap);
+		this.labelAndIndex.set(token.text, labelMap);
 	}
 
 	/**
@@ -29,8 +30,7 @@ export class DataGroup {
 	 * @returns 
 	 */
 	FindData(text: string, index: number) {
-		const hash = Utils.GetHashcode(text);
-		const labelMap = this.labelHashAndIndex.get(hash);
+		const labelMap = this.labelAndIndex.get(text);
 		if (!labelMap)
 			return;
 
@@ -69,28 +69,28 @@ export class DataGroupCommand {
 		const expressions: Token[] = line.tag;
 		const lines = Commands.CollectBaseLines(option, include!);
 
-		const labelMark = LabelUtils.CreateLabel(expressions[0], option, false);
-		if (!labelMark) {
+		const label = LabelUtils.CreateLabel(expressions[0], option, false);
+		if (!label) {
 			line.compileType = LineCompileType.Error;
 			return;
 		}
 
-		line.label = { token: expressions[0], hash: labelMark.hash };
+		line.saveLabel = { token: expressions[0], label, notFinish: true };
 		Compiler.enviroment.SetRange(line.command.fileHash, {
 			type: "DataGroup",
-			key: labelMark.label.token.text,
+			key: label.token.text,
 			startLine: include![0].line,
 			endLine: include![1].line
 		});
 
-		const scope = labelMark.label.token.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
-		const hash = LabelUtils.GetLebalHash(labelMark.label.token.text, labelMark.label.token.fileHash, scope);
+		const scope = label.token.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
+		const hash = LabelUtils.GetLebalHash(label.token.text, label.token.fileHash, scope);
 
-		labelMark.label.labelType = LabelType.Label;
+		label.labelType = LabelType.Label;
 		const datagroup = new DataGroup();
-		datagroup.label = labelMark.label;
+		datagroup.label = label;
 
-		Compiler.enviroment.allDataGroup.set(hash, datagroup);
+		Compiler.enviroment.allDataGroup.set(label.token.text, datagroup);
 
 		let dataIndex = 0;
 		for (let i = 0; i < lines.length; i++) {

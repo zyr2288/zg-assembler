@@ -15,25 +15,47 @@ export class Environment {
 
 	fileRange = { start: 0, end: 0 };
 
+	allLabel = {
+		/**key 标签名称 */
+		global: new Map<string, ILabel>(),
+		/**key1 文件hash  key2 标签名称 */
+		local: new Map<number, Map<string, ILabel>>(),
+		/**key1 文件hash */
+		nameless: new Map<number, INamelessLabelCollection>()
+	}
+
+	fileLabel = {
+		/**Key1是filehash */
+		global: new Map<number, Set<string>>()
+	}
+
+	/**标签树，用于记录上下级关系 */
+	labelTree = {
+		/**全局，Key1是标签名称 */
+		global: new Map<string, ILabelTree>(),
+		/**局部，Key1是文件hash, Key2是标签名称 */
+		local: new Map<number, Map<string, ILabelTree>>()
+	}
+
 	/**所有标签 Key: Label的Hash值 */
-	allLabel = new Map<number, ILabel>();
+	// allLabels = new Map<number, ILabel>();
 	/**所有自定义函数，Key为函数的名称 */
 	allMacro = new Map<string, Macro>();
 	/**所有数据组 Key: Label的Hash值 */
-	allDataGroup = new Map<number, DataGroup>();
+	allDataGroup = new Map<string, DataGroup>();
 
 	/**所有编译行 key1:fileHash key2:lineNumber */
 	// allBaseLines = new Map<number, Map<number, ICommonLine>>();
 	allBaseLines = new Map<number, ICommonLine[]>();
 
 	/**临时标签 Key: 文件的fileHash */
-	namelessLabel = new Map<number, INamelessLabelCollection>();
+	// namelessLabel = new Map<number, INamelessLabelCollection>();
 
 	/**标签树，key为 Label的Key，用于记忆标签层级关系 */
-	labelTrees = new Map<number, ILabelTree>();
+	// labelTrees = new Map<number, ILabelTree>();
 
 	/**文件标签，用于记忆文件内的所有标签 */
-	fileLabels = new Map<number, Set<number>>();
+	// fileLabels = new Map<number, Set<number>>();
 	/**用于记忆文件内macro */
 	fileMacros = new Map<number, Set<string>>();
 
@@ -88,13 +110,17 @@ export class Environment {
 		this.highlightRanges.set(fileHash, []);
 
 		// 清除标签记录
-		this.namelessLabel.delete(fileHash);
-		let labels = this.fileLabels.get(fileHash);
+		this.allLabel.nameless.delete(fileHash);
+		this.allLabel.local.delete(fileHash);
+
+		this.labelTree.local.delete(fileHash);
+
+		const labels = this.fileLabel.global.get(fileHash);
 		if (labels) {
-			labels.forEach((labelHash) => {
-				this.ClearLabelTree(fileHash, labelHash);
+			labels.forEach((labelString) => {
+				this.ClearGlobalLabelTree(labelString);
 			});
-			this.fileLabels.set(fileHash, new Set());
+			this.fileLabel.global.set(fileHash, new Set());
 		}
 
 		// 清除文件内的所有的自定义函数
@@ -110,23 +136,46 @@ export class Environment {
 		this.highlightRanges.delete(fileHash);
 	}
 
-	private ClearLabelTree(fileHash: number, labelTreeHash: number) {
-		let labelTree = this.labelTrees.get(labelTreeHash);
-		if (!labelTree || labelTreeHash === 0)
+	private ClearGlobalLabelTree(labelString: string) {
+		let labelTree = this.labelTree.global.get(labelString);
+		if (!labelTree)
 			return;
 
 		if (labelTree.child.size === 0) {
-			this.allLabel.delete(labelTreeHash);
-			this.allDataGroup.delete(labelTreeHash);
-			this.labelTrees.get(labelTree.parent)?.child.delete(labelTreeHash);
-			let parentLabel = this.allLabel.get(labelTree.parent);
-			if (parentLabel && parentLabel.token.fileHash === fileHash)
-				this.ClearLabelTree(fileHash, labelTree.parent);
+			this.labelTree.global.delete(labelString);
+			this.allLabel.global.delete(labelString);
+			this.allDataGroup.delete(labelString);
+			let parent = this.labelTree.global.get(labelTree.parent);
+			if (parent) { {
+				parent.child.delete(labelString);
+				this.ClearGlobalLabelTree(labelTree.parent);
+			}
+			}
 		} else {
-			let label = this.allLabel.get(labelTreeHash)!;
-			if (label && label.token.fileHash === fileHash)
+			const label = this.allLabel.global.get(labelString);
+			if (label) {
 				label.labelType = LabelType.None;
+			}
 		}
+
+
+
+		// let labelTree = this.labelTrees.get(labelTreeHash);
+		// if (!labelTree || labelTreeHash === 0)
+		// 	return;
+
+		// if (labelTree.child.size === 0) {
+		// 	this.allLabels.delete(labelTreeHash);
+		// 	this.allDataGroup.delete(labelTreeHash);
+		// 	this.labelTrees.get(labelTree.parent)?.child.delete(labelTreeHash);
+		// 	let parentLabel = this.allLabels.get(labelTree.parent);
+		// 	if (parentLabel && parentLabel.token.fileHash === fileHash)
+		// 		this.ClearLabelTree(fileHash, labelTree.parent);
+		// } else {
+		// 	let label = this.allLabels.get(labelTreeHash)!;
+		// 	if (label && label.token.fileHash === fileHash)
+		// 		label.labelType = LabelType.None;
+		// }
 	}
 	//#endregion 清除文件内的所有标记
 
@@ -136,12 +185,17 @@ export class Environment {
 		this.baseAddress = -1;
 		this.fileRange.start = this.fileRange.end = 0;
 		this.addressOffset = 0;
-		this.allLabel.clear();
+
+		this.allLabel.global.clear();
+		this.allLabel.local.clear();
+		this.allLabel.nameless.clear();
+
 		this.allMacro.clear();
 		this.allDataGroup.clear();
 		this.allBaseLines.clear();
-		this.namelessLabel.clear();
-		this.fileLabels.clear();
+
+		this.fileLabel.global.clear();
+
 		this.fileMacros.clear();
 		this.macroRegexString = "";
 	}

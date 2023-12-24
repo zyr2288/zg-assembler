@@ -23,7 +23,7 @@ export class Utils {
 						const outMap = out[key] as Map<any, any>;
 						for (const mapKey of sourceMap.keys())
 							outMap.set(mapKey, Utils.DeepClone(sourceMap.get(mapKey)))
-						
+
 						break;
 					default:
 						out[key] = source[key];
@@ -82,13 +82,13 @@ export class Utils {
 			switch (typeof (value)) {
 				case "string":
 					for (var j = 0; j < value.length; ++j) {
-						hash = ((hash << 5) - hash) + value.charCodeAt(j);
-						hash &= hash; // Convert to 32bit integer
+						// hash = ((hash << 5) - hash) + value.charCodeAt(j) | 0;
+						hash = Math.imul(31, hash) + value.charCodeAt(j) | 0;
 					}
 					break;
 				case "number":
-					hash = ((hash << 5) - hash) + value;
-					hash &= hash; // Convert to 32bit integer
+					// hash = ((hash << 5) - hash) + value | 0;
+					hash = Math.imul(31, hash) + value | 0;
 					break;
 			}
 		}

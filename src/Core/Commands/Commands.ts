@@ -105,10 +105,10 @@ export class Commands {
 		}
 
 		// 命令不允许有标签
-		if (line.label?.token && line.label.token.isEmpty === false) {
+		if (line.saveLabel?.token && line.saveLabel.token.isEmpty === false) {
 			if (!com.enableLabel) {
 				let errorMsg = Localization.GetMessage("Command {0} can not use label", line.command.text);
-				MyDiagnostic.PushException(line.label.token, errorMsg);
+				MyDiagnostic.PushException(line.saveLabel.token, errorMsg);
 			} else {
 				LabelUtils.GetLineLabelToken(option);
 			}
@@ -285,12 +285,8 @@ export class Commands {
 		if (line.compileType === LineCompileType.Error)
 			return true;
 
-		if (line.label?.hash !== undefined) {
-			const label = Compiler.enviroment.allLabel.get(line.label.hash);
-			if (label)
-				label.value = line.orgAddress;
-
-			delete (line.label.hash);
+		if (line.saveLabel && line.saveLabel.notFinish) {
+			line.saveLabel.label.value = line.orgAddress;
 		}
 		return false;
 	}

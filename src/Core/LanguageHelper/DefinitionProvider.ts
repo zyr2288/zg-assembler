@@ -39,7 +39,7 @@ export class DefinitionProvider {
 				if (!labelHash)
 					break;
 
-				const label = LabelUtils.FindLabelWithHash(labelHash, match.macro);
+				const label = LabelUtils.FindLabel(match.matchToken, match.macro);
 				if (!label)
 					break;
 
@@ -56,9 +56,8 @@ export class DefinitionProvider {
 				if (!match.matchToken)
 					break;
 
-				const tag = match.tag as TokenResultTag;
 				const data = LabelUtils.FindLabel(match.matchToken);
-				DefinitionProvider.SetResultToken(result, data?.label.token);
+				DefinitionProvider.SetResultToken(result, data?.token);
 				break;
 		}
 		return result;

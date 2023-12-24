@@ -139,7 +139,7 @@ export class Compiler {
 					break;
 				case LineType.Variable:
 					let varLine = new VariableLine();
-					varLine.Initialize({ labelToken, expression });
+					varLine.Initialize({ expression, labelToken });
 					newLine = varLine;
 					break;
 			}
@@ -317,20 +317,19 @@ export class Compiler {
 					break;
 				case LineType.OnlyLabel:
 					const onlyLabelLine = option.GetCurrectLine<OnlyLabelLine>();
-					const labelResult1 = LabelUtils.FindLabelWithHash(onlyLabelLine.label.hash, option.macro);
-					if (labelResult1)
-						labelResult1.value = Compiler.enviroment.orgAddress;
+					if (onlyLabelLine.saveLabel.label)
+						onlyLabelLine.saveLabel.label.value = Compiler.enviroment.orgAddress;
 
+					onlyLabelLine.saveLabel.finished = true;
 					onlyLabelLine.compileType = LineCompileType.Finished;
 					break;
 				case LineType.Variable:
 					const varLine = option.GetCurrectLine<VariableLine>();
-					const labelResult2 = LabelUtils.FindLabel(varLine.labelToken, option.macro);
 					const result = ExpressionUtils.GetExpressionValue<number>(varLine.expParts[0], option);
-					if (labelResult2 && result.success) {
-						labelResult2.label.value = result.value;
+					if (!varLine.saveLabel.notFinish || (varLine.saveLabel.label && result.success)) {
+						varLine.saveLabel.label.value = result.value;
 						varLine.compileType = LineCompileType.Finished;
-						delete (varLine.labelToken);
+						varLine.saveLabel.notFinish = true;
 					}
 					break;
 				case LineType.Macro:

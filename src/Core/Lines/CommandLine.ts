@@ -1,5 +1,6 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ILabel } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
@@ -14,7 +15,15 @@ export class CommandLine implements ICommonLine {
 	orgAddress = -1;
 	baseAddress = 0;
 
-	label?: { token: Token, hash?: number }
+	/**标签 */
+	saveLabel?: {
+		/**初始化时候暂存的Token，用完即销毁 */
+		token?: Token;
+		/**标签的Token */
+		label: ILabel;
+		/**标签的Hash */
+		notFinish: boolean;
+	}
 
 	command!: Token;
 	expression?: Token;
@@ -29,12 +38,12 @@ export class CommandLine implements ICommonLine {
 	 * @param option.expression 表达式
 	 * @param option.labelToken Label的Token
 	 */
-	Initialize(option: { command: Token, expression?: Token, labelToken?: Token }) {
+	Initialize(option: { command: Token, expression: Token, labelToken: Token }) {
 		this.command = option.command;
 		this.command.text = this.command.text.toUpperCase();
 		this.expression = option.expression;
-		if (option.labelToken)
-			this.label = { token: option.labelToken };
+		if (!option.labelToken.isEmpty)
+			this.saveLabel = { token: option.labelToken, label: {} as ILabel, notFinish: true };
 	}
 
 	SetResult(value: number, index: number, length: number): number {
@@ -52,8 +61,8 @@ export class CommandLine implements ICommonLine {
 	GetTokens() {
 		let result: HighlightToken[] = [];
 
-		if (this.label)
-			result.push({ type: HighlightType.Label, token: this.label.token });
+		if (this.saveLabel?.label)
+			result.push({ type: HighlightType.Label, token: this.saveLabel.label.token });
 
 		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
 		return result;

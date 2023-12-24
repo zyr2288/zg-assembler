@@ -1,5 +1,5 @@
 import { ExpressionPart, ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
-import { LabelType, LabelUtils } from "../Base/Label";
+import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
@@ -11,10 +11,15 @@ export class VariableLine implements ICommonLine {
 	compileType = LineCompileType.None;
 	orgText!: Token;
 
-	label!: { token: Token, hash?: number };
-	labelToken?: Token;
-	/**使用 labelHash 记忆，以免深拷贝时无法正确使用 */
-	labelHash?: number;
+	/**标签 */
+	saveLabel!: {
+		/**初始化时候暂存的Token，用完即销毁 */
+		token?: Token;
+		/**标签的Token */
+		label: ILabel;
+		/**标签的Hash */
+		notFinish: boolean;
+	}
 
 	expression?: Token;
 	expParts: ExpressionPart[][] = [];
@@ -22,7 +27,7 @@ export class VariableLine implements ICommonLine {
 	comment?: string;
 
 	Initialize(option: { labelToken: Token, expression: Token }) {
-		this.label = { token: option.labelToken };
+		this.saveLabel = { token: option.labelToken, label: {} as ILabel, notFinish: true };
 		this.expression = option.expression;
 	}
 
@@ -33,13 +38,14 @@ export class VariableLine implements ICommonLine {
 	}
 }
 
+/**变量行工具 */
 export class VariableLineUtils {
+
 	static FirstAnalyse(option: DecodeOption) {
 		const line = option.GetCurrectLine<VariableLine>();
-		const labelMark = LabelUtils.CreateLabel(line.label.token, option, false);
-		if (labelMark) {
-			labelMark.label.labelType = LabelType.Variable;
-			line.labelHash = labelMark.hash;
+		const label = line.saveLabel.label;
+		if (label) {
+			label.labelType = LabelType.Variable;
 		} else {
 			line.compileType = LineCompileType.Error;
 		}
@@ -67,8 +73,10 @@ export class VariableLineUtils {
 
 		const analyseOption: ExpAnalyseOption = { analyseType: "Try" };
 		const temp = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option, analyseOption);
-		const label = LabelUtils.FindLabelWithHash(line.labelHash, option.macro);
-		if (label && temp.success)
+		const label = line.saveLabel.label
+		if (label && temp.success) {
 			label.value = temp.value;
+			line.saveLabel.notFinish = true;
+		}
 	}
 }

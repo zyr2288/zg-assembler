@@ -161,7 +161,7 @@ export class HelperUtils {
 			macro: undefined,
 			matchToken: undefined,
 			matchType: "None",
-			/**匹配结果附加值，Label是labelHash，Include是path */
+			/**匹配结果附加值，Include是path */
 			tag: undefined
 		};
 
@@ -216,8 +216,7 @@ export class HelperUtils {
 				break;
 			case "DataGroup":
 				findLineNumber = rangeType.startLine;
-				const keyHash = Utils.GetHashcode(rangeType.key);
-				const dataGroup = Compiler.enviroment.allDataGroup.get(keyHash);
+				const dataGroup = Compiler.enviroment.allDataGroup.get(rangeType.key);
 				if (dataGroup) {
 					matchResult.dataGroup = dataGroup;
 				}
@@ -234,7 +233,6 @@ export class HelperUtils {
 				const label = LabelUtils.FindLabel(matchResult.matchToken, matchResult.macro);
 				if (label) {
 					matchResult.matchType = "Label";
-					matchResult.tag = label.hash;
 					return matchResult;
 				}
 				break;
@@ -270,10 +268,9 @@ export class HelperUtils {
 					break;
 			}
 
-			if (HelperUtils._MatchToken(lineNumber, currect, line.label?.token)) {
+			if (HelperUtils._MatchToken(lineNumber, currect, line.saveLabel?.token)) {
 				matchResult.matchType = "Label";
-				matchResult.matchToken = line.label?.token;
-				matchResult.tag = line.label?.hash;
+				matchResult.matchToken = line.saveLabel?.token;
 				return matchResult;
 			} else if (temp = HelperUtils._FindMatchExp(lineNumber, currect, line.expParts)) {
 				matchResult.matchToken = temp.token;
@@ -281,11 +278,11 @@ export class HelperUtils {
 				switch (temp.type) {
 					case PriorityType.Level_1_Label:
 						const label = LabelUtils.FindLabel(matchResult.matchToken, matchResult.macro);
-						if (label && label.label.labelType === LabelType.DataGroup) {
+						if (label && label.labelType === LabelType.DataGroup) {
 							matchResult.matchType = "DataGroup";
 							const tempResult = HelperUtils._MatchDatagroup(matchResult.matchToken, currect);
 							if (tempResult)
-								matchResult.tag = { index: tempResult.index, tokens: tempResult.tokens, value: label.label.value };
+								matchResult.tag = { index: tempResult.index, tokens: tempResult.tokens, value: label.value };
 						} else {
 							matchResult.matchType = "Label";
 						}

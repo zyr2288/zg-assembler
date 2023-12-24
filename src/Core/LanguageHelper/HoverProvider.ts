@@ -17,7 +17,7 @@ export class HoverProvider {
 		const temp = HelperUtils.FindMatchToken(fileHash, lineNumber, lineText, currect);
 		switch (temp.matchType) {
 			case "Label":
-				const label = LabelUtils.FindLabelWithHash(temp.tag as number, temp.macro);
+				const label = LabelUtils.FindLabel(temp.matchToken, temp.macro);
 				if (label) {
 					result = CommentHelper.FormatComment(label);
 				}

@@ -55,7 +55,7 @@ export class Include {
 		const allLines = Compiler.SplitTexts(hash, text);
 		option.InsertLines(hash, option.lineIndex + 1, allLines);
 
-		if (line.label) {
+		if (line.saveLabel) {
 			line.type = LineType.OnlyLabel;
 		} else {
 			line.compileType = LineCompileType.Finished;

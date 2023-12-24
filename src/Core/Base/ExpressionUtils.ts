@@ -157,14 +157,13 @@ export class ExpressionUtils {
 			if (part.type !== PriorityType.Level_1_Label)
 				continue;
 
-			const labelResult = LabelUtils.FindLabel(part.token, option?.macro);
-			if (!labelResult || labelResult.label.labelType === LabelType.None) {
+			const label = LabelUtils.FindLabel(part.token, option?.macro);
+			if (!label || label.labelType === LabelType.None) {
 				const errorMsg = Localization.GetMessage("Label {0} not found", parts[i].token.text);
 				MyDiagnostic.PushException(parts[i].token, errorMsg);
 				error = true;
 			} else {
-				parts[i].value = labelResult.hash;
-				switch (labelResult.label.labelType) {
+				switch (label.labelType) {
 					case LabelType.Defined:
 						part.highlightingType = HighlightType.Defined;
 						break;
@@ -354,13 +353,7 @@ export class ExpressionUtils {
 					element.value = temp.value;
 					element.type = PriorityType.Level_0_Sure;
 				} else {				// 如果是标签
-					let label: ILabel | undefined;
-					if (element.value) {		// 如果标签有Hash值
-						label = LabelUtils.FindLabelWithHash(element.value, option?.macro);
-					} else {					// 如果Hash值是0
-						label = LabelUtils.FindLabel(element.token, option?.macro)?.label;
-					}
-
+					const label = LabelUtils.FindLabel(element.token, option?.macro);
 					if (label?.value === undefined) {
 						if (analyseOption.analyseType === "GetAndShowError") {
 							const errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);

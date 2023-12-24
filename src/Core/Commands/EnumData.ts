@@ -12,7 +12,7 @@ import { Commands } from "./Commands";
 
 export interface EnumDataTag {
 	startValue?: number;
-	lines: { labelHash: number, token: Token, exps: ExpressionPart[], length?: number }[];
+	lines: { label: ILabel, exps: ExpressionPart[], length?: number }[];
 }
 
 export class EnumData {
@@ -56,12 +56,12 @@ export class EnumData {
 				continue;
 			}
 
-			const temp = LabelUtils.CreateLabel(parts[0], option, false);
-			if (!temp)
+			const label = LabelUtils.CreateLabel(parts[0], option, false);
+			if (!label)
 				continue;
 
-			temp.label.labelType = LabelType.Defined;
-			temp.label.comment = lines[i].comment;
+			label.labelType = LabelType.Defined;
+			label.comment = lines[i].comment;
 			if (parts[1].isEmpty) {
 				const error = Localization.GetMessage("Expression error");
 				MyDiagnostic.PushException(parts[1], error);
@@ -74,7 +74,7 @@ export class EnumData {
 				continue;
 			}
 
-			tag.lines.push({ labelHash: temp.hash, token: parts[0], exps, length: undefined });
+			tag.lines.push({ label, exps, length: undefined });
 		}
 
 		line.tag = tag;
@@ -101,8 +101,7 @@ export class EnumData {
 				continue;
 			}
 
-			const label = LabelUtils.FindLabelWithHash(line.labelHash, option.macro);
-			if (!label) {
+			if (!line.label) {
 				unknowValue = true;
 				continue;
 			}
@@ -113,7 +112,7 @@ export class EnumData {
 				continue;
 			}
 
-			label.value = startValue;
+			line.label.value = startValue;
 			startValue += temp2.value;
 		}
 	}
@@ -139,7 +138,7 @@ export class EnumData {
 				continue;
 			}
 
-			const label = LabelUtils.FindLabelWithHash(l.labelHash, option.macro);
+			const label = l.label
 			if (!label)
 				return;
 
@@ -162,7 +161,7 @@ export class EnumData {
 
 		for (let i = 0; i < tag.lines.length; i++) {
 			const line = tag.lines[i];
-			result.push({ type: HighlightType.Defined, token: line.token });
+			result.push({ type: HighlightType.Defined, token: line.label.token });
 			result.push(...ExpressionUtils.GetHighlightingTokens([line.exps]));
 		}
 

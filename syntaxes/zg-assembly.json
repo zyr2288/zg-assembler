@@ -54,6 +54,6 @@
 				}
 			]
 		},
-		"variable": { "name": "variable.name.zg-assembly", "match": "[^\\+\\-\\*\\/\\>\\<\\(\\)\\,\\#\\=\\!\\[\\]\\&\\|]" }
+		"variable": { "name": "variable.name.zg-assembly", "match": "[^\\!\\~\\+\\-\\*\\/\\>\\<\\(\\)\\,\\#\\=\\!\\[\\]\\&\\|]" }
 	}
 }

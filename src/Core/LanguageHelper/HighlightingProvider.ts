@@ -20,6 +20,9 @@ export class HighlightingProvider {
 			if (highlightingTokens && highlightingTokens.length != 0) {
 				for (let j = 0; j < highlightingTokens.length; ++j) {
 					saveToken = highlightingTokens[j];
+					if (saveToken.token.length === 0)
+						continue;
+					
 					result.push({
 						line: saveToken.token.line,
 						start: saveToken.token.start,

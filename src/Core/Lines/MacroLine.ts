@@ -1,4 +1,5 @@
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ILabel } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Macro } from "../Commands/Macro";
 import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
@@ -8,7 +9,7 @@ export class MacroLine implements ICommonLine {
 	compileType = LineCompileType.None;
 	orgText!: Token;
 
-	label?: { token: Token, hash?: number }
+	saveLabel?: { token?: Token, label: ILabel, finished: boolean };
 
 	orgAddress: number = -1;
 	baseAddress: number = 0;
@@ -22,8 +23,8 @@ export class MacroLine implements ICommonLine {
 
 	GetTokens() {
 		const result: HighlightToken[] = [];
-		if (this.label)
-			result.push({ type: HighlightType.Label, token: this.label.token });
+		if (this.saveLabel)
+			result.push({ type: HighlightType.Label, token: this.saveLabel.label.token });
 
 		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
 		result.push({ type: HighlightType.Macro, token: this.macroToken });

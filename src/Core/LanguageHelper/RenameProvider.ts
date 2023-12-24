@@ -24,7 +24,6 @@ export class RenameProvider {
 	private static SaveRename = {
 		token: undefined as Token | undefined,
 		type: "None" as "None" | "Macro" | "Label" | "MacroLabel" | "DataGroup",
-		labelHash: undefined as number | undefined,
 		macro: undefined as Macro | undefined
 	};
 
@@ -53,9 +52,8 @@ export class RenameProvider {
 				result.length = temp.matchToken!.length;
 				RenameProvider.SaveRename.token = temp.matchToken;
 				RenameProvider.SaveRename.type = "Label";
-				RenameProvider.SaveRename.labelHash = temp.tag as number;
 				if (temp.macro) {
-					const label = temp.macro.labels.get(RenameProvider.SaveRename.labelHash) ?? temp.macro.params.get(RenameProvider.SaveRename.labelHash);
+					const label = temp.macro.labels.get(RenameProvider.SaveRename.token!.text) ?? temp.macro.params.get(RenameProvider.SaveRename.token!.text);
 					if (label) {
 						RenameProvider.SaveRename.macro = temp.macro;
 						RenameProvider.SaveRename.type = "MacroLabel";
@@ -144,7 +142,7 @@ export class RenameProvider {
 		// 原始位置重命名
 		switch (RenameProvider.SaveRename.type) {
 			case "Label":
-				const label = LabelUtils.FindLabelWithHash(RenameProvider.SaveRename.labelHash, RenameProvider.SaveRename.macro);
+				const label = LabelUtils.FindLabel(RenameProvider.SaveRename.token, RenameProvider.SaveRename.macro);
 				if (label) {
 					const fileName = Compiler.enviroment.GetFile(label.token.fileHash);
 					const tokens = result.get(fileName) ?? [];
@@ -153,7 +151,7 @@ export class RenameProvider {
 				}
 				break;
 			case "MacroLabel":
-				const macroLabel = LabelUtils.FindLabelWithHash(RenameProvider.SaveRename.labelHash, RenameProvider.SaveRename.macro);
+				const macroLabel = LabelUtils.FindLabel(RenameProvider.SaveRename.token, RenameProvider.SaveRename.macro);
 				if (macroLabel) {
 					const fileName = Compiler.enviroment.GetFile(macroLabel.token.fileHash);
 					const tokens = result.get(fileName) ?? [];
@@ -192,30 +190,28 @@ export class RenameProvider {
 		if (!exps)
 			return result;
 
-		const labelHash = RenameProvider.SaveRename.labelHash!;
+		const labelHash = RenameProvider.SaveRename.token!;
 		for (let i = 0; i < exps.length; i++) {
 			for (let j = 0; j < exps[i].length; j++) {
 				const exp = exps[i][j];
 				if (exp.type !== PriorityType.Level_1_Label)
 					continue;
 
-				if (exp.value === labelHash) {
-					result.push(exp.token);
-					continue;
-				}
+				// if (exp === labelHash) {
+				// 	result.push(exp.token);
+				// 	continue;
+				// }
 
 				if (exp.value !== 0)
 					continue;
 
 				const tempLabel = LabelUtils.FindLabel(exp.token);
-				if (!tempLabel || tempLabel.label.labelType !== LabelType.DataGroup)
+				if (!tempLabel || tempLabel.labelType !== LabelType.DataGroup)
 					continue;
 
 				const parts = exp.token.Split(/\:/g, { count: 2 });
 
-				const scope = RenameProvider.GetScopeAndHash(parts[0].text)
-				const hash = LabelUtils.GetLebalHash(parts[0].text, parts[0].fileHash, scope);
-				const dataGroup = Compiler.enviroment.allDataGroup.get(hash)!;
+				const dataGroup = Compiler.enviroment.allDataGroup.get(parts[0].text)!;
 
 				if (!dataGroup)
 					continue;
@@ -246,7 +242,7 @@ export class RenameProvider {
 
 	private static ClearRename() {
 		RenameProvider.SaveRename.type = "None";
-		RenameProvider.SaveRename.labelHash = undefined;
+		RenameProvider.SaveRename.token = undefined;
 		RenameProvider.SaveRename.macro = undefined;
 	}
 }
