@@ -1,7 +1,9 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, PriorityType } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
+import { ILabel, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
+import { Macro } from "../Commands/Macro";
 import { CommandLine } from "../Lines/CommandLine";
 import { ICommonLine, LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
@@ -30,6 +32,14 @@ export class LabelReferences {
 		const GetLineToken = (fileHash: number, lines: ICommonLine[]) => {
 			const fileName = Compiler.enviroment.GetFile(fileHash);
 			const res = result.get(fileName) ?? [];
+
+			let tempLabel: ILabel | undefined;
+			switch (temp.matchType) {
+				case "Label":
+					tempLabel = LabelUtils.FindLabel(temp.matchToken, temp.macro);
+					break;
+			}
+
 			for (let i = 0; i < lines.length; i++) {
 				const line = lines[i];
 				switch (temp.matchType) {
@@ -43,19 +53,20 @@ export class LabelReferences {
 						}
 						break;
 					case "Label":
-						const labelHash = temp.tag as number;
 						switch (line.type) {
 							case LineType.Instruction:
 							case LineType.Command:
 							case LineType.Macro:
 							case LineType.Variable:
 								const insLine = line as InstructionLine | CommandLine | MacroLine | VariableLine;
-								const tokens = LabelReferences.GetExpressionPartTokens(labelHash, insLine.expParts);
+								const tokens = LabelReferences.GetExpressionPartTokens(insLine.expParts, tempLabel, temp.macro);
 								LabelReferences.AddResultTokens(res, ...tokens);
 								break;
 							case LineType.OnlyLabel:
 								const onlyLabelLine = line as OnlyLabelLine;
-								LabelReferences.AddResultTokens(res, onlyLabelLine.saveLabel.label.token);
+								if (tempLabel === onlyLabelLine.saveLabel.label)
+									LabelReferences.AddResultTokens(res, onlyLabelLine.saveLabel.label.token);
+
 								break;
 						}
 						break;
@@ -75,18 +86,29 @@ export class LabelReferences {
 		return result;
 	}
 
-	private static GetExpressionPartTokens(hash: number, expParts: ExpressionPart[][]) {
+	private static GetExpressionPartTokens(exps: ExpressionPart[][], label?: ILabel, macro?: Macro) {
 		const tokens: Token[] = [];
-		for (let i = 0; i < expParts.length; i++) {
-			for (let j = 0; j < expParts[i].length; j++) {
-				const part = expParts[i][j];
-				if (part.type !== PriorityType.Level_1_Label)
+		if (!label)
+			return tokens;
+
+		for (let i = 0; i < exps.length; i++) {
+			for (let j = 0; j < exps[i].length; j++) {
+				const exp = exps[i][j];
+				if (exp.type !== PriorityType.Level_1_Label || exp.token.text !== label.token.text)
 					continue;
 
-				if (part.value === hash)
-					tokens.push(part.token);
+				if (exp.token.text.startsWith(".") && exp.token.fileHash === label.token.fileHash ||
+					!exp.token.text.startsWith(".")) {
+					const label = LabelUtils.FindLabel(exp.token, macro);
+					if (label) {
+						tokens.push(exp.token);
+						continue;
+					}
+				}
+
 			}
 		}
+
 		return tokens;
 	}
 

@@ -427,11 +427,16 @@ export class LabelUtils {
 			}
 		} else {
 			labelMap = Compiler.enviroment.allLabel.local.get(token.fileHash);
-			// @ts-ignore
-			labelTreeMap = Compiler.enviroment.labelTree.local.get(token.fileHash);
 			if (!labelMap) {
 				labelMap = new Map<string, ILabel>();
 				Compiler.enviroment.allLabel.local.set(token.fileHash, labelMap);
+			}
+
+			// @ts-ignore
+			labelTreeMap = Compiler.enviroment.labelTree.local.get(token.fileHash);
+			if (!labelTreeMap) {
+				labelTreeMap = new Map();
+				Compiler.enviroment.labelTree.local.set(token.fileHash, labelTreeMap);
 			}
 		}
 

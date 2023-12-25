@@ -35,10 +35,6 @@ export class DefinitionProvider {
 				break;
 
 			case "Label":
-				const labelHash = match.tag as number;
-				if (!labelHash)
-					break;
-
 				const label = LabelUtils.FindLabel(match.matchToken, match.macro);
 				if (!label)
 					break;

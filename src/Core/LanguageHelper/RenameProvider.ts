@@ -1,7 +1,7 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, PriorityType } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
-import { LabelScope, LabelType, LabelUtils } from "../Base/Label";
+import { ILabel, LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { EnumData, EnumDataTag } from "../Commands/EnumData";
 import { Macro } from "../Commands/Macro";
@@ -24,7 +24,8 @@ export class RenameProvider {
 	private static SaveRename = {
 		token: undefined as Token | undefined,
 		type: "None" as "None" | "Macro" | "Label" | "MacroLabel" | "DataGroup",
-		macro: undefined as Macro | undefined
+		macro: undefined as Macro | undefined,
+		fileHash: 0
 	};
 
 	//#region 预备命名，获取重命名的范围
@@ -40,6 +41,7 @@ export class RenameProvider {
 		RenameProvider.ClearRename();
 
 		const fileHash = FileUtils.GetFilePathHashcode(filePath);
+		RenameProvider.SaveRename.fileHash = fileHash;
 		const temp = HelperUtils.FindMatchToken(fileHash, lineNumber, lineText, currect);
 
 		const result = { start: 0, length: 0 };
@@ -48,6 +50,9 @@ export class RenameProvider {
 			case "Include":
 				return Localization.GetMessage("rename error");
 			case "Label":
+				if (LabelUtils.namelessLabelRegex.test(temp.matchToken!.text))
+					return Localization.GetMessage("rename error");
+
 				result.start = temp.matchToken!.start;
 				result.length = temp.matchToken!.length;
 				RenameProvider.SaveRename.token = temp.matchToken;
@@ -86,16 +91,35 @@ export class RenameProvider {
 			return Localization.GetMessage("rename error");
 
 		// 检查新名称是否合法
-		const match = new RegExp(Platform.regexString, "ig").exec(newLabelStr);
+		let match = !!(new RegExp(Platform.regexString, "ig").exec(newLabelStr));
+		const allPart = newLabelStr.split(".");
+		for (let i = 1; i < allPart.length; i++) {
+			if (!allPart[i]) {
+				match = true;
+				break;
+			}
+		}
+
+		if (match)
+			return Localization.GetMessage("rename error");
+
 		const labelIllegal = LabelUtils.CheckIllegal(newLabelStr, RenameProvider.SaveRename.type !== "Macro");
-		if (match || !labelIllegal)
+		if (!labelIllegal)
 			return Localization.GetMessage("rename error");
 
 		const result = new Map<string, Token[]>();
 
+		let tempMacro: Macro | undefined;
+		let tempLabel: ILabel | undefined;
+		if (RenameProvider.SaveRename.type === "Label" || RenameProvider.SaveRename.type === "MacroLabel") {
+			tempLabel = LabelUtils.FindLabel(RenameProvider.SaveRename.token, RenameProvider.SaveRename.macro);
+		}
+
 		const SaveLineToken = (lines: ICommonLine[], tokens: Token[]) => {
 			for (let i = 0; i < lines.length; i++) {
 				const line = lines[i];
+				const rangeType = HelperUtils.GetRange(line.orgText.fileHash, line.orgText.line);
+				tempMacro = rangeType?.type === "Macro" ? Compiler.enviroment.allMacro.get(rangeType.key) : undefined;
 				switch (RenameProvider.SaveRename.type) {
 					case "Macro":
 						switch (line.type) {
@@ -114,7 +138,7 @@ export class RenameProvider {
 							case LineType.Macro:
 							case LineType.Variable:
 								const insLine = line as InstructionLine | MacroLine | VariableLine;
-								tokens.push(...RenameProvider.RenameMatchLabel(insLine.expParts));
+								tokens.push(...RenameProvider.RenameMatchLabel(insLine.expParts, tempLabel!.labelType, tempMacro));
 								break;
 							case LineType.Command:
 								const comLine = line as CommandLine;
@@ -123,11 +147,11 @@ export class RenameProvider {
 										const enumLines = (comLine.tag as EnumDataTag).lines;
 										for (let i = 0; i < enumLines.length; i++) {
 											const line = enumLines[i];
-											tokens.push(...RenameProvider.RenameMatchLabel([line.exps]));
+											tokens.push(...RenameProvider.RenameMatchLabel([line.exps], tempLabel!.labelType, tempMacro));
 										}
 										break;
 									default:
-										tokens.push(...RenameProvider.RenameMatchLabel(comLine.expParts));
+										tokens.push(...RenameProvider.RenameMatchLabel(comLine.expParts, tempLabel!.labelType, tempMacro));
 										break;
 								}
 								break;
@@ -185,25 +209,29 @@ export class RenameProvider {
 	}
 	//#endregion 重命名标签
 
-	private static RenameMatchLabel(exps: ExpressionPart[][]) {
+	/***** private *****/
+
+	private static RenameMatchLabel(exps: ExpressionPart[][], labelType: LabelType, macro?: Macro) {
 		const result: Token[] = [];
 		if (!exps)
 			return result;
 
-		const labelHash = RenameProvider.SaveRename.token!;
+		const labelToken = RenameProvider.SaveRename.token!;
+		const fileHash = RenameProvider.SaveRename.fileHash;
 		for (let i = 0; i < exps.length; i++) {
 			for (let j = 0; j < exps[i].length; j++) {
 				const exp = exps[i][j];
-				if (exp.type !== PriorityType.Level_1_Label)
+				if (exp.type !== PriorityType.Level_1_Label || exp.token.text !== labelToken.text)
 					continue;
 
-				// if (exp === labelHash) {
-				// 	result.push(exp.token);
-				// 	continue;
-				// }
-
-				if (exp.value !== 0)
-					continue;
+				if (exp.token.text.startsWith(".") && exp.token.fileHash === fileHash ||
+					!exp.token.text.startsWith(".")) {
+					const label = LabelUtils.FindLabel(exp.token, macro);
+					if (label && label.labelType === labelType) {
+						result.push(exp.token);
+						continue;
+					}
+				}
 
 				const tempLabel = LabelUtils.FindLabel(exp.token);
 				if (!tempLabel || tempLabel.labelType !== LabelType.DataGroup)
@@ -241,6 +269,7 @@ export class RenameProvider {
 	}
 
 	private static ClearRename() {
+		RenameProvider.SaveRename.fileHash = 0;
 		RenameProvider.SaveRename.type = "None";
 		RenameProvider.SaveRename.token = undefined;
 		RenameProvider.SaveRename.macro = undefined;

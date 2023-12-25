@@ -138,22 +138,4 @@ export class Intellisense {
 		}
 		return result;
 	}
-
-	// private static ChangeExp(text: string) {
-	// 	let result = "";
-	// 	let match;
-
-	// 	const regx = /\[exp\]/g;
-	// 	let start = 0;
-	// 	let index = 1;
-	// 	while (match = regx.exec(text)) {
-	// 		result += text.substring(start, match.index) + `$${index}`;
-	// 		start = match.index + match[0].length;
-	// 		index++;
-	// 	}
-
-	// 	result += text.substring(start);
-	// 	return new vscode.SnippetString(result);
-	// }
-
 }

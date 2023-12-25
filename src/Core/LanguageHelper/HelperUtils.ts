@@ -4,6 +4,7 @@ import { LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { DataGroup } from "../Commands/DataGroup";
+import { IncludeTag } from "../Commands/Include";
 import { Macro } from "../Commands/Macro";
 import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
@@ -258,7 +259,8 @@ export class HelperUtils {
 					switch (commandLine.command.text) {
 						case ".INCLUDE":
 						case ".INCBIN":
-							if (HelperUtils._MatchToken(lineNumber, currect, commandLine.expParts[0][0]?.token)) {
+							const includeTag = commandLine.tag as IncludeTag;
+							if (HelperUtils._MatchToken(lineNumber, currect, includeTag.token)) {
 								matchResult.matchType = "Include";
 								matchResult.tag = commandLine.tag.path;
 								return matchResult;
@@ -268,9 +270,9 @@ export class HelperUtils {
 					break;
 			}
 
-			if (HelperUtils._MatchToken(lineNumber, currect, line.saveLabel?.token)) {
+			if (HelperUtils._MatchToken(lineNumber, currect, line.saveLabel?.label.token)) {
 				matchResult.matchType = "Label";
-				matchResult.matchToken = line.saveLabel?.token;
+				matchResult.matchToken = line.saveLabel?.label.token;
 				return matchResult;
 			} else if (temp = HelperUtils._FindMatchExp(lineNumber, currect, line.expParts)) {
 				matchResult.matchToken = temp.token;

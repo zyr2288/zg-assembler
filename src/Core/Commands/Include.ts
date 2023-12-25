@@ -9,7 +9,7 @@ import { CommandLine } from "../Lines/CommandLine";
 import { LineCompileType, LineType } from "../Lines/CommonLine";
 import { Commands } from "./Commands";
 
-interface LineTag {
+export interface IncludeTag {
 	path: string;
 	token: Token;
 }
@@ -39,6 +39,7 @@ export class Include {
 
 	private static async FirstAnalyse_Include(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
+		
 		let temp = await Include.ChechFile(option);
 		if (!temp.exsist) {
 			line.compileType = LineCompileType.Error;
@@ -84,7 +85,7 @@ export class Include {
 	//#region 编译Incbin
 	private static async Compile_Incbin(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		const tag = line.tag as LineTag;
+		const tag = line.tag as IncludeTag;
 		let temp = await FileUtils.ReadFile(tag.path);
 
 		if (Commands.SetOrgAddressAndLabel(option))

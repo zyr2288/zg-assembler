@@ -19,6 +19,10 @@ enum CompletionType {
 }
 //#endregion 提示类型
 
+export enum CompletionIndex {
+	Folder, File, Macro, Parameter, Command, Label, Instruction, EmptyAddressing, NotEmptyAddressing
+}
+
 //#region 提示项
 export class Completion {
 
@@ -44,7 +48,7 @@ export class Completion {
 
 	constructor(option: {
 		showText: string, insertText?: string,
-		index?: number, comment?: string,
+		index?: CompletionIndex, comment?: string,
 		type?: CompletionType, tag?: TriggerSuggestType
 	}) {
 		this.showText = option.showText;
@@ -61,7 +65,7 @@ export class Completion {
 	/**插入的文本 */
 	insertText: string = "";
 	/**排序 */
-	index: number = 0;
+	index: CompletionIndex = CompletionIndex.Folder;
 	/**注释 */
 	comment?: string;
 	/**提示类型 */
@@ -220,7 +224,7 @@ export class IntellisenseProvider {
 					Compiler.enviroment.allMacro.forEach((macro) => {
 						const com = new Completion({
 							showText: macro.name.text,
-							index: 0,
+							index: CompletionIndex.Macro,
 							type: CompletionType.Macro,
 							insertText: IntellisenseProvider.ReplaceMacro(macro),
 							comment: CommentHelper.FormatComment(macro)
@@ -268,12 +272,12 @@ export class IntellisenseProvider {
 			switch (files[i].type) {
 
 				case "folder":
-					com.index = 1;
+					com.index = CompletionIndex.Folder;
 					com.type = CompletionType.Folder;
 					break;
 
 				case "file":
-					com.index = 2;
+					com.index = CompletionIndex.File;
 					com.type = CompletionType.File;
 					break;
 
@@ -297,13 +301,13 @@ export class IntellisenseProvider {
 	 */
 	private static GetLabel(fileHash: number, prefix: string, macro?: Macro): Completion[] {
 		const result: Completion[] = [];
-		if (macro) {
+		if (macro && !prefix.endsWith(".")) {
 			macro.labels.forEach((value) => {
-				const com = new Completion({ showText: value.token.text });
+				const com = new Completion({ showText: value.token.text, index: CompletionIndex.Label });
 				result.push(com);
 			});
 			macro.params.forEach((param) => {
-				const com = new Completion({ showText: param.label.token.text });
+				const com = new Completion({ showText: param.label.token.text, index: CompletionIndex.Parameter });
 				result.push(com);
 			});
 		}
@@ -327,9 +331,6 @@ export class IntellisenseProvider {
 			labels = Compiler.enviroment.allLabel.local.get(fileHash);
 		}
 
-		// let labelHash = LabelUtils.GetLebalHash(prefix, fileHash, labelScope);
-		// if (prefix === "")
-
 		labelTree?.forEach((tree, key) => {
 			if (tree.parent !== prefix)
 				return;
@@ -343,9 +344,11 @@ export class IntellisenseProvider {
 			switch (label.labelType) {
 				case LabelType.Defined:
 					item.type = CompletionType.Defined;
+					item.index = CompletionIndex.Label;
 					break;
 				case LabelType.Label:
 					item.type = CompletionType.Label;
+					item.index = CompletionIndex.Label;
 					break;
 			}
 			item.comment = CommentHelper.FormatComment(label);
@@ -430,13 +433,13 @@ export class IntellisenseProvider {
 		for (let j = 0; j < modes.length; ++j) {
 			const com = new Completion({ showText: "" });
 			if (!modes[j].addressingMode) {
+				com.index = CompletionIndex.EmptyAddressing;
 				com.showText = Localization.GetMessage("empty addressing mode");
 				com.insertText = "\n";
-				com.index = 0;
 			} else {
+				com.index = CompletionIndex.EmptyAddressing;
 				com.showText = modes[j].addressingMode!;
 				com.insertText = IntellisenseProvider.ReplaceCommon(modes[j].addressingMode!);
-				com.index = 1;
 			}
 			completions.push(com);
 		}
@@ -457,7 +460,7 @@ export class IntellisenseProvider {
 				insertText += "\n";
 			}
 
-			const completion = new Completion({ showText: instruction, index: 10, insertText, type: CompletionType.Instruction });
+			const completion = new Completion({ showText: instruction, index: CompletionIndex.Instruction, insertText, type: CompletionType.Instruction });
 			IntellisenseProvider.instructionCompletions.push(completion);
 		}
 	}
