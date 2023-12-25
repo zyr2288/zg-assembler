@@ -64,7 +64,7 @@ NMI	LDA $2002
 	STA $2005
 	STA $2005
 	JMP *
-
+	
 ppu.Write	;+写入PPU
 	LDY #$0
 	LDA ($0),Y

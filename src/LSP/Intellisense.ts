@@ -17,7 +17,7 @@ interface FileHelperData {
 }
 
 // enum CompletionType {
-// 	Instruction, Command, Macro, Defined, Label, MacroLabel, Folder, File
+// 	Instruction, AddressingType, Command, Macro, Defined, Label, UnknowLabel, MacroLabel, Folder, File
 // }
 
 export class Intellisense {
@@ -26,9 +26,16 @@ export class Intellisense {
 
 	/**智能提示显示类型 */
 	private static CompletionShowType: vscode.CompletionItemKind[] = [
-		vscode.CompletionItemKind.Keyword, vscode.CompletionItemKind.Method, vscode.CompletionItemKind.Function,
-		vscode.CompletionItemKind.Constant, vscode.CompletionItemKind.Struct, vscode.CompletionItemKind.TypeParameter,
-		vscode.CompletionItemKind.Folder, vscode.CompletionItemKind.File
+		vscode.CompletionItemKind.Keyword,
+		vscode.CompletionItemKind.Snippet,
+		vscode.CompletionItemKind.Property,
+		vscode.CompletionItemKind.Function,
+		vscode.CompletionItemKind.Constant,			// Defined
+		vscode.CompletionItemKind.Reference,
+		vscode.CompletionItemKind.Text,				// UnknowLabell
+		vscode.CompletionItemKind.TypeParameter,
+		vscode.CompletionItemKind.Folder,
+		vscode.CompletionItemKind.File
 	];
 
 	/**初始化 */
@@ -89,7 +96,7 @@ export class Intellisense {
 			}
 			result.push(newCom);
 
-			if (!com.type)
+			if (com.type === undefined)
 				continue;
 
 			newCom.kind = Intellisense.CompletionShowType[com.type];

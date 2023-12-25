@@ -32,7 +32,7 @@ export class VariableLine implements ICommonLine {
 	}
 
 	GetTokens() {
-		let result: HighlightToken[] = [];
+		const result: HighlightToken[] = [];
 		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
 		return result;
 	}
@@ -43,9 +43,10 @@ export class VariableLineUtils {
 
 	static FirstAnalyse(option: DecodeOption) {
 		const line = option.GetCurrectLine<VariableLine>();
-		const label = line.saveLabel.label;
+		const label = LabelUtils.CreateLabel(line.saveLabel.token, option, false);
 		if (label) {
 			label.labelType = LabelType.Variable;
+			line.saveLabel.label = label;
 		} else {
 			line.compileType = LineCompileType.Error;
 		}

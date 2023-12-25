@@ -15,12 +15,17 @@ const ignoreWordStr = ";|(^|\\s+)(\\.HEX|\\.DBG|\\.DWG|\\.MACRO)(\\s+|$)";
 
 //#region 提示类型
 enum CompletionType {
-	Instruction, Command, Macro, Defined, Label, MacroLabel, Folder, File
+	Instruction, AddressingType, Command, Macro, Defined, Label, Variable, UnknowLabel, MacroLabel, Folder, File
 }
 //#endregion 提示类型
 
 export enum CompletionIndex {
-	Folder, File, Macro, Parameter, Command, Label, Instruction, EmptyAddressing, NotEmptyAddressing
+	Folder = 0, File = 1, 
+	Macro = 2, Parameter = 3, 
+	Command = 4, 
+	Label = 5, Defined = 5, UnknowLabel = 5, Variable = 5,
+	Instruction = 6, 
+	EmptyAddressing = 7, NotEmptyAddressing = 8
 }
 
 //#region 提示项
@@ -344,38 +349,24 @@ export class IntellisenseProvider {
 			switch (label.labelType) {
 				case LabelType.Defined:
 					item.type = CompletionType.Defined;
-					item.index = CompletionIndex.Label;
+					item.index = CompletionIndex.Defined;
 					break;
 				case LabelType.Label:
 					item.type = CompletionType.Label;
 					item.index = CompletionIndex.Label;
 					break;
+				case LabelType.None:
+					item.type = CompletionType.UnknowLabel;
+					item.index = CompletionIndex.UnknowLabel;
+					break;
+				case LabelType.Variable:
+					item.type = CompletionType.Variable;
+					item.index = CompletionIndex.Variable;
+					break;
 			}
 			item.comment = CommentHelper.FormatComment(label);
 			result.push(item);
 		});
-
-		// let topLabel = Compiler.enviroment.labelTrees.get(labelHash);
-		// if (topLabel) {
-		// 	topLabel.child.forEach((labelHash) => {
-		// 		let label = Compiler.enviroment.allLabels.get(labelHash);
-		// 		if (!label)
-		// 			return [];
-
-		// 		const showText = label.token.text.substring(index + 1);
-		// 		const item = new Completion({ showText });
-		// 		switch (label.labelType) {
-		// 			case LabelType.Defined:
-		// 				item.type = CompletionType.Defined;
-		// 				break;
-		// 			case LabelType.Label:
-		// 				item.type = CompletionType.Label;
-		// 				break;
-		// 		}
-		// 		item.comment = CommentHelper.FormatComment(label);
-		// 		result.push(item);
-		// 	});
-		// }
 
 		return result;
 	}
@@ -432,6 +423,7 @@ export class IntellisenseProvider {
 		const completions: Completion[] = [];
 		for (let j = 0; j < modes.length; ++j) {
 			const com = new Completion({ showText: "" });
+			com.type = CompletionType.AddressingType;
 			if (!modes[j].addressingMode) {
 				com.index = CompletionIndex.EmptyAddressing;
 				com.showText = Localization.GetMessage("empty addressing mode");
