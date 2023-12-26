@@ -1,5 +1,5 @@
-	.DEF prgRomPage, 1	;这里会显示
-	.DEF chrRomPage, 1	;这里也会显示
+	.DEF prgRomPage, 1
+	.DEF chrRomPage, 1
 
 	.DEF mapper, 0
 	.DEF fourScreen, 0 << 2		;四分屏幕，1为开启
