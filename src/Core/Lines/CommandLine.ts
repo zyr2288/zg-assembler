@@ -2,7 +2,7 @@ import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel } from "../Base/Label";
 import { Token } from "../Base/Token";
-import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
+import { CommonSaveLabel, HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
 export class CommandLine implements ICommonLine {
 
@@ -16,14 +16,7 @@ export class CommandLine implements ICommonLine {
 	baseAddress = 0;
 
 	/**标签 */
-	saveLabel?: {
-		/**初始化时候暂存的Token，用完即销毁 */
-		token?: Token;
-		/**标签的Token */
-		label: ILabel;
-		/**标签的Hash */
-		notFinish: boolean;
-	}
+	saveLabel?: CommonSaveLabel;
 
 	command!: Token;
 	expression?: Token;
@@ -59,9 +52,9 @@ export class CommandLine implements ICommonLine {
 	}
 
 	GetTokens() {
-		let result: HighlightToken[] = [];
+		const result: HighlightToken[] = [];
 
-		if (this.saveLabel?.label)
+		if (this.saveLabel)
 			result.push({ type: HighlightType.Label, token: this.saveLabel.label.token });
 
 		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));

@@ -12,6 +12,7 @@ import { HighlightingProvider } from "./LanguageHelper/HighlightingProvider";
 import { HoverProvider } from "./LanguageHelper/HoverProvider";
 import { IntellisenseProvider } from "./LanguageHelper/IntellisenseProvider";
 import { LabelReferences } from "./LanguageHelper/LabelReferences";
+import { LineResultShow } from "./LanguageHelper/LineResultShow";
 import { RenameProvider } from "./LanguageHelper/RenameProvider";
 import { Platform } from "./Platform/Platform";
 
@@ -35,6 +36,7 @@ export class Assembler {
 		definition: DefinitionProvider,
 		rename: RenameProvider,
 		references: LabelReferences,
+		lineResult: LineResultShow,
 	};
 
 	utils = {

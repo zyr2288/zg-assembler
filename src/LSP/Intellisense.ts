@@ -16,9 +16,9 @@ interface FileHelperData {
 	exclude: string;
 }
 
-// enum CompletionType {
-// 	Instruction, AddressingType, Command, Macro, Defined, Label, UnknowLabel, MacroLabel, Folder, File
-// }
+enum CompletionType {
+	Instruction, AddressingType, Command, Macro, Defined, Label, Variable, UnknowLabel, MacroParamter, Folder, File
+}
 
 export class Intellisense {
 
@@ -26,16 +26,17 @@ export class Intellisense {
 
 	/**智能提示显示类型 */
 	private static CompletionShowType: vscode.CompletionItemKind[] = [
-		vscode.CompletionItemKind.Keyword,
-		vscode.CompletionItemKind.Snippet,
-		vscode.CompletionItemKind.Property,
-		vscode.CompletionItemKind.Function,
+		vscode.CompletionItemKind.Keyword,			// Instruction
+		vscode.CompletionItemKind.Snippet,			// AddressingType
+		vscode.CompletionItemKind.Property,			// Command
+		vscode.CompletionItemKind.Function,			// Macro
 		vscode.CompletionItemKind.Constant,			// Defined
-		vscode.CompletionItemKind.Reference,
-		vscode.CompletionItemKind.Text,				// UnknowLabell
-		vscode.CompletionItemKind.TypeParameter,
-		vscode.CompletionItemKind.Folder,
-		vscode.CompletionItemKind.File
+		vscode.CompletionItemKind.Reference,		// Label
+		vscode.CompletionItemKind.Variable,			// Variable
+		vscode.CompletionItemKind.TypeParameter,	// UnknowLabel
+		vscode.CompletionItemKind.Field,			// MacroParamter
+		vscode.CompletionItemKind.Folder,			// Folder
+		vscode.CompletionItemKind.File				// File
 	];
 
 	/**初始化 */
@@ -47,7 +48,15 @@ export class Intellisense {
 		);
 	}
 
-	/**显示智能提示 */
+	//#region 显示智能提示
+	/**
+	 * 显示智能提示
+	 * @param document 
+	 * @param position 
+	 * @param token 
+	 * @param context 
+	 * @returns 
+	 */
 	private static async ShowCompletion(document: vscode.TextDocument,
 		position: vscode.Position,
 		token: vscode.CancellationToken,
@@ -103,7 +112,9 @@ export class Intellisense {
 		}
 		return result;
 	}
+	//#endregion 显示智能提示
 
+	//#region 处理智能提示
 	/**处理智能提示 */
 	private static async ProcessSuggest() {
 		const result: vscode.CompletionItem[] = [];
@@ -145,4 +156,6 @@ export class Intellisense {
 		}
 		return result;
 	}
+	//#endregion 处理智能提示
+
 }

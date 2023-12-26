@@ -1,5 +1,4 @@
-import { Compiler } from "../Base/Compiler";
-import { ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpressionUtils } from "../Base/ExpressionUtils";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Localization } from "../I18n/Localization";

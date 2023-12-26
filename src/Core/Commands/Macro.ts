@@ -59,8 +59,10 @@ export class MacroUtils {
 		const macroLine = new MacroLine();
 		if (!labelToken.isEmpty) {
 			const label = LabelUtils.CreateLabel(labelToken, option, true);
-			if (label)
-				macroLine.saveLabel = { label, finished: false };
+			if (label) {
+				label.labelType = LabelType.Label;
+				macroLine.saveLabel = { label, notFinish: true };
+			}
 		}
 
 		macroLine.orgText = option.GetCurrectLine().orgText;
@@ -160,9 +162,9 @@ export class MacroUtils {
 	 */
 	static async CompileMacroLine(option: DecodeOption) {
 		const line = option.GetCurrectLine<MacroLine>();
-		if (line.saveLabel && !line.saveLabel.finished) {
+		if (line.saveLabel && line.saveLabel.notFinish) {
 			line.saveLabel.label.value = Compiler.enviroment.orgAddress;
-			line.saveLabel.finished = true;
+			line.saveLabel.notFinish = false;
 		}
 
 		if (Compiler.compileTimes === 0)
@@ -191,19 +193,6 @@ export class MacroUtils {
 			}
 			index++;
 		}
-
-		// for (let i = 0; i < line.expParts.length; ++i) {
-		// 	const result = ExpressionUtils.GetExpressionValue(line.expParts[i], tryValue, option);
-		// 	if (result.success) {
-		// 		macro.params.get(keys[i])!.value = result.value;
-		// 	}
-		// }
-
-		// let index = 0;
-		// for (const key of macro.params.keys()) {
-		// 	let param = macro.params.get(key)!;
-		// 	param.exps = line.expParts[index];
-		// }
 
 		const tempOption = new DecodeOption(macro.lines);
 		tempOption.macro = macro;

@@ -15,12 +15,12 @@ export class HighlightingProvider {
 		let result: { line: number, start: number, length: number, type: number }[] = [];
 		let saveToken;
 
-		for (let lineIndex = 0; lineIndex < lines.length; ++lineIndex) {
+		for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
 			const highlightingTokens = lines[lineIndex].GetTokens?.();
 			if (highlightingTokens && highlightingTokens.length != 0) {
-				for (let j = 0; j < highlightingTokens.length; ++j) {
+				for (let j = 0; j < highlightingTokens.length; j++) {
 					saveToken = highlightingTokens[j];
-					if (saveToken.token.length === 0)
+					if (saveToken.token.isEmpty)
 						continue;
 					
 					result.push({

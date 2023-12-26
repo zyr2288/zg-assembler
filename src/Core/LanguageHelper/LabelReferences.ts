@@ -64,7 +64,7 @@ export class LabelReferences {
 								break;
 							case LineType.OnlyLabel:
 								const onlyLabelLine = line as OnlyLabelLine;
-								if (tempLabel === onlyLabelLine.saveLabel.label)
+								if (onlyLabelLine.saveLabel && tempLabel === onlyLabelLine.saveLabel.label)
 									LabelReferences.AddResultTokens(res, onlyLabelLine.saveLabel.label.token);
 
 								break;

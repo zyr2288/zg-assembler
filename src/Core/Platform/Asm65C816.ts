@@ -1,3 +1,10 @@
+import { ExpressionUtils } from "../Base/ExpressionUtils";
+import { MyDiagnostic } from "../Base/MyException";
+import { DecodeOption } from "../Base/Options";
+import { Utils } from "../Base/Utils";
+import { Localization } from "../I18n/Localization";
+import { LineCompileType } from "../Lines/CommonLine";
+import { InstructionLine } from "../Lines/InstructionLine";
 import { AddressOption, AsmCommon } from "./AsmCommon";
 
 export class Asm65C816 {
@@ -36,7 +43,7 @@ export class Asm65C816 {
 		const instrs1 = ["BCC", "BCS", "BEQ", "BNE", "BMI", "BPL", "BVC", "BVS", "BRA"];
 		const opCode3 = [0x90, 0xB0, 0xF0, 0xD0, 0x30, 0x10, 0x50, 0x70];
 		for (let i = 0; i < instrs1.length; ++i)
-			this.AddInstruction(instrs1[i], { addressingMode: "[exp]", opCode: [, opCode3[i]] });
+			this.AddInstruction(instrs1[i], { addressingMode: "[exp]", opCode: [, opCode3[i]], spProcess: this.Condition });
 
 		this.AddInstruction("BRL", { addressingMode: "[exp]", opCode: [, , 0x82] });
 
@@ -104,8 +111,14 @@ export class Asm65C816 {
 		this.AddInstruction("JMP", { addressingMode: "([exp])", opCode: [, , 0x62] });
 		this.AddInstruction("JMP", { addressingMode: "[exp]", opCode: [, , 0x4C, 0x5C] });
 
+		this.AddInstruction("JML", { addressingMode: "[[exp]]", opCode: [, , 0xDC] })
+		this.AddInstruction("JML", { addressingMode: "[exp]", opCode: [, , , 0x5C] });
+
+		this.AddInstruction("JSR", { addressingMode: "([exp],X)", opCode: [, , 0xFC] });
+		this.AddInstruction("JSR", { addressingMode: "[exp]", opCode: [, , 0x20] });
+
 		this.AddInstruction("JSL", { addressingMode: "([exp],X)", opCode: [, , 0xFC] });
-		this.AddInstruction("JSL", { addressingMode: "[exp]", opCode: [, , 0x20, 0x22] });
+		this.AddInstruction("JSL", { addressingMode: "[exp]", opCode: [, , , 0x22] });
 
 		opCode = [
 			[, 0xA9, 0xA9], [, 0xA1], [, 0xB1], [, 0xB7], [, 0xB3],
@@ -125,8 +138,8 @@ export class Asm65C816 {
 		this.AddInstruction("LSR", { addressingMode: "[exp],X", opCode: [, 0x56, 0x5E] });
 		this.AddInstruction("LSR", { addressingMode: "[exp]", opCode: [, 0x46, 0x4E] });
 
-		this.AddInstruction("MVN", { addressingMode: "[exp],[exp]", opCode: [, , 0x54] });
-		this.AddInstruction("MVP", { addressingMode: "[exp],[exp]", opCode: [, , 0x44] });
+		this.AddInstruction("MVN", { addressingMode: "[exp],[exp]", opCode: [, , 0x54], spProcess: this.Move });
+		this.AddInstruction("MVP", { addressingMode: "[exp],[exp]", opCode: [, , 0x44], spProcess: this.Move });
 
 		this.AddInstruction("NOP", { opCode: [0xEA] });
 
@@ -136,6 +149,7 @@ export class Asm65C816 {
 		];
 		this.Add("ORA", modes1, opCode);
 
+		this.AddInstruction("PEA", { addressingMode: "#[exp]", opCode: [, , 0xF4] });
 		this.AddInstruction("PEA", { addressingMode: "[exp]", opCode: [, , 0xF4] });
 		this.AddInstruction("PEI", { addressingMode: "([exp])", opCode: [, 0xD4] });
 		this.AddInstruction("PER", { addressingMode: "[exp]", opCode: [, , 0x62] });
@@ -145,6 +159,10 @@ export class Asm65C816 {
 		this.AddInstruction("ROL", { opCode: [0x2A] });
 		this.AddInstruction("ROL", { addressingMode: "[exp],X", opCode: [, 0x36, 0x3E] });
 		this.AddInstruction("ROL", { addressingMode: "[exp]", opCode: [, 0x26, 0x2E] });
+
+		this.AddInstruction("ROR", { opCode: [0x6A] });
+		this.AddInstruction("ROR", { addressingMode: "[exp],X", opCode: [, 0x76, 0X7E] });
+		this.AddInstruction("ROR", { addressingMode: "[exp]", opCode: [, 0x66, 0X6E] });
 
 		opCode = [
 			[, 0xE9, 0xE9], [, 0xE1], [, 0xF1], [, 0xF7], [, 0xF3],
@@ -186,5 +204,57 @@ export class Asm65C816 {
 
 	private AddInstruction(instruction: string, addressingMode: AddressOption) {
 		AsmCommon.AddInstructionWithLength(instruction, addressingMode);
+	}
+
+	private Condition(option: DecodeOption) {
+		const line = option.GetCurrectLine<InstructionLine>();
+		const tempValue = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
+		if (!tempValue.success) {
+			line.result.length = 2;
+			return;
+		}
+
+		const temp = tempValue.value - line.orgAddress - 2;
+		if (temp > 127 || temp < -128) {
+			line.compileType = LineCompileType.Error;
+			let errorMsg = Localization.GetMessage("Argument out of range")
+			MyDiagnostic.PushException(line.instruction, errorMsg);
+			return;
+		}
+
+		line.SetResult(line.addressingMode.opCode[1]!, 0, 1);
+		line.SetResult(temp & 0xFF, 1, 1);
+		// Compiler.SetResult(line, line.addressingMode.opCode[1]!, 0, 1);
+		// Compiler.SetResult(line, temp & 0xFF, 1, 1);
+		line.compileType = LineCompileType.Finished;
+	}
+
+	private Move(option: DecodeOption) {
+		const line = option.GetCurrectLine<InstructionLine>();
+		const tempValue1 = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
+		const tempValue2 = ExpressionUtils.GetExpressionValue<number>(line.expParts[1], option);
+		line.result.length = 3;
+		if (!tempValue1.success || !tempValue2.success)
+			return;
+
+		line.SetResult(line.addressingMode.opCode[2]!, 0, 1);
+
+		let orgLength = Utils.GetNumberByteLength(tempValue1.value);
+		let setValue = line.SetResult(tempValue1.value, 2, 1);
+		let setValueLength = Utils.GetNumberByteLength(setValue);
+		if (orgLength > setValueLength || setValue < 0) {
+			const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", tempValue1.value, setValue);
+			const token = ExpressionUtils.CombineExpressionPart(line.expParts[0]);
+			MyDiagnostic.PushWarning(token, errorMsg);
+		}
+
+		orgLength = Utils.GetNumberByteLength(tempValue2.value);
+		setValue = line.SetResult(tempValue2.value, 1, 1);
+		setValueLength = Utils.GetNumberByteLength(setValue);
+		if (orgLength > setValueLength || setValue < 0) {
+			const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", tempValue2.value, setValue);
+			const token = ExpressionUtils.CombineExpressionPart(line.expParts[1]);
+			MyDiagnostic.PushWarning(token, errorMsg);
+		}
 	}
 }

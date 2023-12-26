@@ -6,6 +6,7 @@ import { ILabel, ILabelTree, INamelessLabelCollection, LabelType } from "./Label
 
 export class Environment {
 
+	/**是否是编译环境 */
 	isCompileEnv: boolean;
 	compiling: boolean = false;
 

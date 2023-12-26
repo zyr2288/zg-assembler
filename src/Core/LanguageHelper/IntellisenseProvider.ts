@@ -13,18 +13,16 @@ import { HelperUtils } from "./HelperUtils";
 
 const ignoreWordStr = ";|(^|\\s+)(\\.HEX|\\.DBG|\\.DWG|\\.MACRO)(\\s+|$)";
 
-//#region 提示类型
 enum CompletionType {
-	Instruction, AddressingType, Command, Macro, Defined, Label, Variable, UnknowLabel, MacroLabel, Folder, File
+	Instruction, AddressingType, Command, Macro, Defined, Label, Variable, UnknowLabel, MacroParamter, Folder, File
 }
-//#endregion 提示类型
 
 export enum CompletionIndex {
-	Folder = 0, File = 1, 
-	Macro = 2, Parameter = 3, 
-	Command = 4, 
+	Folder = 0, File = 1,
+	Macro = 2, Parameter = 3,
+	Command = 4,
 	Label = 5, Defined = 5, UnknowLabel = 5, Variable = 5,
-	Instruction = 6, 
+	Instruction = 6,
 	EmptyAddressing = 7, NotEmptyAddressing = 8
 }
 
@@ -308,18 +306,25 @@ export class IntellisenseProvider {
 		const result: Completion[] = [];
 		if (macro && !prefix.endsWith(".")) {
 			macro.labels.forEach((value) => {
-				const com = new Completion({ showText: value.token.text, index: CompletionIndex.Label });
+				const com = new Completion({
+					showText: value.token.text,
+					index: CompletionIndex.Label
+				});
 				result.push(com);
 			});
 			macro.params.forEach((param) => {
-				const com = new Completion({ showText: param.label.token.text, index: CompletionIndex.Parameter });
+				const com = new Completion({
+					showText: param.label.token.text,
+					index: CompletionIndex.Parameter,
+					type: CompletionType.MacroParamter
+				});
 				result.push(com);
 			});
 		}
 
 		const labelScope = prefix.startsWith(".") ? LabelScope.Local : LabelScope.Global;
 		let index = prefix.lastIndexOf(".");
-		let labelTree:Map<string, ILabelTree> | undefined;
+		let labelTree: Map<string, ILabelTree> | undefined;
 		let labels: Map<string, ILabel> | undefined;
 
 		if (index > 0) {

@@ -317,15 +317,18 @@ export class Compiler {
 					break;
 				case LineType.OnlyLabel:
 					const onlyLabelLine = option.GetCurrectLine<OnlyLabelLine>();
-					if (onlyLabelLine.saveLabel.label)
+					if (onlyLabelLine.saveLabel) {
 						onlyLabelLine.saveLabel.label.value = Compiler.enviroment.orgAddress;
-
-					onlyLabelLine.saveLabel.finished = true;
+						onlyLabelLine.saveLabel.notFinish = false;
+					}
 					onlyLabelLine.compileType = LineCompileType.Finished;
 					break;
 				case LineType.Variable:
 					const varLine = option.GetCurrectLine<VariableLine>();
 					const result = ExpressionUtils.GetExpressionValue<number>(varLine.expParts[0], option);
+					if (!varLine.saveLabel)
+						break;
+
 					if (!varLine.saveLabel.notFinish || (varLine.saveLabel.label && result.success)) {
 						varLine.saveLabel.label.value = result.value;
 						varLine.compileType = LineCompileType.Finished;

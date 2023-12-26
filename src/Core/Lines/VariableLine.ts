@@ -4,7 +4,7 @@ import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Localization } from "../I18n/Localization";
-import { HighlightToken, ICommonLine, LineCompileType, LineType } from "./CommonLine";
+import { CommonSaveLabel, HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
 export class VariableLine implements ICommonLine {
 	type = LineType.Variable;
@@ -12,14 +12,7 @@ export class VariableLine implements ICommonLine {
 	orgText!: Token;
 
 	/**标签 */
-	saveLabel!: {
-		/**初始化时候暂存的Token，用完即销毁 */
-		token?: Token;
-		/**标签的Token */
-		label: ILabel;
-		/**标签的Hash */
-		notFinish: boolean;
-	}
+	saveLabel?: CommonSaveLabel;
 
 	expression?: Token;
 	expParts: ExpressionPart[][] = [];
@@ -33,6 +26,9 @@ export class VariableLine implements ICommonLine {
 
 	GetTokens() {
 		const result: HighlightToken[] = [];
+		if (this.saveLabel)
+			result.push({ type: HighlightType.Variable, token: this.saveLabel.label.token });
+
 		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
 		return result;
 	}
@@ -43,11 +39,13 @@ export class VariableLineUtils {
 
 	static FirstAnalyse(option: DecodeOption) {
 		const line = option.GetCurrectLine<VariableLine>();
-		const label = LabelUtils.CreateLabel(line.saveLabel.token, option, false);
+		const label = LabelUtils.CreateLabel(line.saveLabel!.token, option, false);
 		if (label) {
 			label.labelType = LabelType.Variable;
-			line.saveLabel.label = label;
+			line.saveLabel!.label = label;
+			delete (line.saveLabel?.token);
 		} else {
+			delete (line.saveLabel);
 			line.compileType = LineCompileType.Error;
 		}
 
@@ -74,10 +72,10 @@ export class VariableLineUtils {
 
 		const analyseOption: ExpAnalyseOption = { analyseType: "Try" };
 		const temp = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option, analyseOption);
-		const label = line.saveLabel.label
+		const label = line.saveLabel!.label;
 		if (label && temp.success) {
 			label.value = temp.value;
-			line.saveLabel.notFinish = true;
+			line.saveLabel!.notFinish = true;
 		}
 	}
 }

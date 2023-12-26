@@ -25,7 +25,7 @@
 		STA $1
 		JSR ppu.Write
 	.ENDM
-	
+
 RESET
 IRQ
 

@@ -54,3 +54,13 @@ export interface HighlightRange {
 	startLine: number;
 	endLine: number;
 }
+
+/**通用前置标签 */
+export interface CommonSaveLabel {
+	/**作为 label 的 token 缓存 */
+	token?: Token;
+	/**所关联的label */
+	label: ILabel;
+	/**是否已经赋值完毕 */
+	notFinish: boolean;
+}

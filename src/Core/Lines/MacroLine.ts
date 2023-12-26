@@ -1,15 +1,14 @@
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
-import { ILabel } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Macro } from "../Commands/Macro";
-import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
+import { CommonSaveLabel, HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
 export class MacroLine implements ICommonLine {
 	type = LineType.Macro;
 	compileType = LineCompileType.None;
 	orgText!: Token;
 
-	saveLabel?: { token?: Token, label: ILabel, finished: boolean };
+	saveLabel?: CommonSaveLabel;
 
 	orgAddress: number = -1;
 	baseAddress: number = 0;

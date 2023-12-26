@@ -7,7 +7,7 @@ import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Localization } from "../I18n/Localization";
 import { AsmCommon, IAddressingMode } from "../Platform/AsmCommon";
-import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
+import { CommonSaveLabel, HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
 /**汇编行 */
 export class InstructionLine implements ICommonLine {
@@ -20,14 +20,7 @@ export class InstructionLine implements ICommonLine {
 	baseAddress = 0;
 
 	/**标签 */
-	saveLabel?: {
-		/**初始化时候暂存的Token，用完即销毁 */
-		token?: Token;
-		/**标签的Token */
-		label: ILabel;
-		/**标签的Hash */
-		notFinish: boolean;
-	}
+	saveLabel?: CommonSaveLabel;
 
 	instruction!: Token;
 	expression?: Token;
@@ -45,6 +38,13 @@ export class InstructionLine implements ICommonLine {
 			this.saveLabel = { token: option.labelToken, label: {} as ILabel, notFinish: true };
 	}
 
+	/**
+	 * 行设定结果值
+	 * @param value 设定值
+	 * @param index 设定的起始位置
+	 * @param length 设定长度
+	 * @returns 返回设定的值
+	 */
 	SetResult(value: number, index: number, length: number): number {
 		return Compiler.SetResult(this, value, index, length);
 	}
@@ -58,8 +58,8 @@ export class InstructionLine implements ICommonLine {
 	}
 
 	GetTokens() {
-		let result: HighlightToken[] = [];
-		if (this.saveLabel?.label)
+		const result: HighlightToken[] = [];
+		if (this.saveLabel)
 			result.push({ type: HighlightType.Label, token: this.saveLabel.label.token });
 
 		result.push({ type: HighlightType.Keyword, token: this.instruction });

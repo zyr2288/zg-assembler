@@ -39,6 +39,7 @@ export const Chinese: LocalizationMsg = {
 	"paramters": "所有参数: ",
 
 	"out put message File{0}, Line{1}, Message{2}": "文件: \"{0}\"\n第 {1} 行\n{2}\n\n",
+	"baseOrgResult": "文件基址:{0}  编译地址:{1}  结果值:{2}",
 
 	"Please compile the file before Debug": "请在Debug之前编译文件",
 	"Cannot find launch.json": "找不到 launch.json",

@@ -11,6 +11,7 @@ import { LSPUtils } from "./LSPUtils";
 import { UpdateFile } from "./UpdateFile";
 import { RenameProvider } from "./RenameProvider";
 import { ReferencesProvider } from "./ReferencesProvider";
+import { TextDecoration } from "./TextDecoration";
 
 export class LanguageServer {
 
@@ -33,6 +34,7 @@ export class LanguageServer {
 		RenameProvider.Initialize(context);
 		ReferencesProvider.Initialize(context);
 		Intellisense.Initialize(context);
+		TextDecoration.Initialize(context);
 
 		HoverProvider.Initialize(context);
 		AssCommands.Initialize(context);

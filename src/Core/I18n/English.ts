@@ -37,6 +37,7 @@ export const English = {
 	"paramters": "All Paramters: ",
 
 	"out put message File{0}, Line{1}, Message{2}": "File: \"{0}\"\nLine: {1}\n{2}\n\n",
+	"baseOrgResult": "BASE:{0}  ORG:{1}  Result:{2}",
 
 	"Please compile the file before Debug": "Please compile the file before Debug",
 	"Cannot find launch.json": "Cannot find launch.json",
