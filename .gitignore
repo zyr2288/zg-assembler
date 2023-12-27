@@ -4,3 +4,4 @@ pnpm-lock.yaml
 dist
 test/test*.**
 *.vsix
+.vscode-test-web
