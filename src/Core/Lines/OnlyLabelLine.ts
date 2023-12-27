@@ -1,4 +1,4 @@
-import { ILabel, LabelUtils } from "../Base/Label";
+import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { CommonSaveLabel, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";

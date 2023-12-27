@@ -147,9 +147,7 @@ export class LabelUtils {
 
 		if (tempLabel || Compiler.enviroment.allMacro.has(token.text)) {
 			if (tempLabel?.labelType === LabelType.Variable || tempLabel?.labelType === LabelType.None) {
-				// const fileLabelHashes = LabelUtils.GetFileLabelHash(token.fileHash);
-				// fileLabelHashes.add(hash);
-				// return { label: tempLabel, hash };
+				tempLabel.token = token;
 				return tempLabel;
 			}
 
