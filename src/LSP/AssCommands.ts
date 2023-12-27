@@ -4,11 +4,9 @@ import { Intellisense, TriggerSuggestTag } from "./Intellisense";
 import { LSPUtils } from "./LSPUtils";
 import { UpdateFile } from "./UpdateFile";
 
-export const CommandName = "zgassembler.triggerSuggest";
+export const CommandName = "zg-assembly.triggerSuggest";
 
 export class AssCommands {
-
-	
 
 	static Initialize(context: vscode.ExtensionContext) {
 		// 注册智能提示
@@ -40,6 +38,7 @@ export class AssCommands {
 			return;
 
 		LSPUtils.StatueBarShowText(` $(sync~spin) ${LSPUtils.assembler.localization.GetMessage("compiling")}...`, 0);
+		await LSPUtils.WaitingCompileFinished();
 
 		let text = vscode.window.activeTextEditor.document.getText();
 		let filePath = vscode.window.activeTextEditor.document.uri.fsPath;
@@ -66,6 +65,9 @@ export class AssCommands {
 		if (!vscode.workspace.workspaceFolders)
 			return;
 
+		LSPUtils.StatueBarShowText(` $(sync~spin) ${LSPUtils.assembler.localization.GetMessage("compiling")}...`, 0);
+
+		await LSPUtils.WaitingCompileFinished();
 		await ConfigUtils.ReadConfig();
 
 		let filePath = LSPUtils.assembler.fileUtils.Combine(
@@ -81,8 +83,6 @@ export class AssCommands {
 		}
 
 		vscode.workspace.saveAll(false);
-
-		LSPUtils.StatueBarShowText(` $(sync~spin) ${LSPUtils.assembler.localization.GetMessage("compiling")}...`, 0);
 
 		let data = await LSPUtils.assembler.fileUtils.ReadFile(filePath);
 		let text = LSPUtils.assembler.fileUtils.BytesToString(data);

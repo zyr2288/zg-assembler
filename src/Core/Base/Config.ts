@@ -16,14 +16,12 @@ export class Config {
 	static readonly ConfigFile = "project-settings.json";
 	static readonly CommonSplit = "/";
 	static readonly ExtensionCommandNames = {
-		/**获取文件路径 */
-		GetThisFilePath: "GetThisFilePath",
+		/**显示标签树 */
+		ShowLabelTree: "zg-assembly.showLabelTree",
 		/**编译当前文件 */
 		CompliteThis: "zg-assembly.compliteThis",
 		/**编译主文件 */
 		CompliteMain: "zg-assembly.compliteMain",
-		/**调试文件 */
-		DebugFile: "zg-assembly.debug"
 	}
 
 	/**是项目还是单文件，true为项目 */

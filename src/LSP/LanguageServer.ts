@@ -35,6 +35,7 @@ export class LanguageServer {
 		ReferencesProvider.Initialize(context);
 		Intellisense.Initialize(context);
 		TextDecoration.Initialize(context);
+		// LabelTreeViewer.Initialize(context);
 
 		HoverProvider.Initialize(context);
 		AssCommands.Initialize(context);
