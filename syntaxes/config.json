@@ -1,18 +1,20 @@
 {
+	"$id": "https://json-schema.org/schem",
 	"$schema": "https://json-schema.org/schema",
 	"type": "object",
-	"description": "Assembler configurations",
+	"description": "汇编器配置文件",
+	"title": "Assembler configuration",
 	"properties": {
-		"platform": { "enum": ["6502", "65c816", "z80-gb"], "description": "Target Platform" },
-		"intellisense": { "type": "boolean", "default": true },
-		"outOfRangeWarning": { "type": "boolean", "default": true },
-		"entry": { "type": "string", "default": "main.asm" },
-		"compileTimes": { "type": "number", "default": 2, "minimum": 2 },
-		"outputEntryFile": { "type": "string" },
-		"outputSingleFile": { "type": "string" },
-		"copyToClipboard": { "type": "boolean", "description": "Copy result bytes to clipboard" },
-		"includes": { "type": "array", "default": "**/*.asm", "items": { "type": "string" } },
-		"excludes": { "type": "array", "default": "", "items": { "type": "string" } }
+		"platform": { "enum": ["6502", "65c816", "z80-gb"], "description": "编译平台" },
+		"intellisense": { "type": "boolean", "default": true, "description": "是否开启智能提示" },
+		"outOfRangeWarning": { "type": "boolean", "default": true, "description": "是否开启编译字节越界警告" },
+		"entry": { "type": "string", "default": "main.asm", "description": "编译的入口文件" },
+		"compileTimes": { "type": "number", "default": 2, "minimum": 2, "description": "编译次数" },
+		"outputEntryFile": { "type": "string", "description": "编译入口文件的输出" },
+		"outputSingleFile": { "type": "string", "description": "编译单个文件的输出" },
+		"copyToClipboard": { "type": "boolean", "description": "是否复制16进制结果到剪贴板" },
+		"includes": { "type": "array", "default": "**/*.asm", "items": { "type": "string" }, "description": "工程包含的文件" },
+		"excludes": { "type": "array", "default": "", "items": { "type": "string" }, "description": "工程排除的文件" }
 	},
 	"required": [
 		"platform",

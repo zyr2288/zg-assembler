@@ -119,7 +119,7 @@ export class Environment {
 		const labels = this.fileLabel.global.get(fileHash);
 		if (labels) {
 			labels.forEach((labelString) => {
-				this.ClearGlobalLabelTree(labelString);
+				this.ClearGlobalLabelTree(fileHash, labelString);
 			});
 			this.fileLabel.global.set(fileHash, new Set());
 		}
@@ -137,7 +137,7 @@ export class Environment {
 		this.highlightRanges.delete(fileHash);
 	}
 
-	private ClearGlobalLabelTree(labelString: string) {
+	private ClearGlobalLabelTree(fileHash: number, labelString: string) {
 		let labelTree = this.labelTree.global.get(labelString);
 		if (!labelTree)
 			return;
@@ -147,14 +147,13 @@ export class Environment {
 			this.allLabel.global.delete(labelString);
 			this.allDataGroup.delete(labelString);
 			let parent = this.labelTree.global.get(labelTree.parent);
-			if (parent) { {
+			if (parent) {
 				parent.child.delete(labelString);
-				this.ClearGlobalLabelTree(labelTree.parent);
-			}
+				this.ClearGlobalLabelTree(fileHash, labelTree.parent);
 			}
 		} else {
 			const label = this.allLabel.global.get(labelString);
-			if (label) {
+			if (label && label.token.fileHash === fileHash) {
 				label.labelType = LabelType.None;
 			}
 		}

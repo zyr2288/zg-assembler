@@ -28,6 +28,8 @@ export enum LabelType {
 	DataGroup,
 	/**Macro参数 */
 	Parameter,
+	/**Macro不定参数 */
+	IndefiniteParam
 }
 
 export enum LabelScope { Global, Local, Temporary, AllParent }
@@ -147,7 +149,12 @@ export class LabelUtils {
 
 		if (tempLabel || Compiler.enviroment.allMacro.has(token.text)) {
 			if (tempLabel?.labelType === LabelType.Variable || tempLabel?.labelType === LabelType.None) {
+				// 获取原来的的label存储的fileLabel并删除，添加的新的label
+				let labelSet = Compiler.enviroment.fileLabel.global.get(tempLabel.token.fileHash);
+				labelSet?.delete(tempLabel.token.text);
 				tempLabel.token = token;
+				labelSet = Compiler.enviroment.fileLabel.global.get(token.fileHash);
+				labelSet?.add(token.text);
 				return tempLabel;
 			}
 
@@ -221,7 +228,7 @@ export class LabelUtils {
 
 		// 函数内标签
 		if (macro) {
-			const label = macro.params.get(token.text)?.label ?? macro.labels.get(token.text);
+			const label = LabelUtils.FindLabelInMacro(token, macro);
 			if (label)
 				return label;
 		}
@@ -545,5 +552,20 @@ export class LabelUtils {
 	// 	return Compiler.enviroment.fileLabels.get(fileHash)!;
 	// }
 	//#endregion 获取文件保存的Labelhash
+
+	//#region 查询Macro内的标签
+	private static FindLabelInMacro(token: Token, macro: Macro) {
+		return macro.params.get(token.text)?.label ?? macro.labels.get(token.text);
+		// 	const parts = token.Split(/\:/g);
+		// if (parts.length != 2)
+
+		// const label = macro.params.get(parts[0].text)?.label;
+		// if (!label)
+		// 	return;
+
+		// if (parts[1].text === "length")
+		// 	return label;
+	}
+	//#endregion 查询Macro内的标签
 
 }

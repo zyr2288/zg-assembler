@@ -28,6 +28,7 @@ export interface IMacroLine extends ICommonLine {
 
 /**自定义函数 */
 export class Macro {
+
 	/**自定义函数名称 */
 	name!: Token;
 
@@ -126,7 +127,12 @@ export class MacroUtils {
 			for (let i = 0; i < params.length; ++i) {
 				const part = params[i];
 				const label: ILabel = { token: part, labelType: LabelType.Parameter };
-				if (!LabelUtils.CheckIllegal(part.text, false)) {
+				// if (i === params.length - 1 && part.text.startsWith("...")) {
+				// 	label.token = part.Substring(3);
+				// 	label.labelType = LabelType.IndefiniteParam;
+				// }
+
+				if (!LabelUtils.CheckIllegal(label.token.text, false)) {
 					const errorMsg = Localization.GetMessage("Label {0} illegal", part.text);
 					MyDiagnostic.PushException(part, errorMsg);
 					continue;
@@ -137,7 +143,7 @@ export class MacroUtils {
 					MyDiagnostic.PushException(part, errorMsg);
 					continue;
 				}
-				macro.params.set(part.text, { label, values: [] });
+				macro.params.set(label.token.text, { label, values: [] });
 			}
 
 		}
