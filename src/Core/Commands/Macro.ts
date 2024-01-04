@@ -38,6 +38,8 @@ export class Macro {
 	/**函数内所有的标签 */
 	labels = new Map<string, ILabel>();
 
+	indefiniteParam?: { name: Token, params: Map<string, ILabel> };
+
 	/**函数所有行 */
 	lines: ICommonLine[] = [];
 	/**函数注释 */
@@ -127,10 +129,13 @@ export class MacroUtils {
 			for (let i = 0; i < params.length; ++i) {
 				const part = params[i];
 				const label: ILabel = { token: part, labelType: LabelType.Parameter };
-				// if (i === params.length - 1 && part.text.startsWith("...")) {
-				// 	label.token = part.Substring(3);
-				// 	label.labelType = LabelType.IndefiniteParam;
-				// }
+
+				if (i === params.length - 1 && part.text.startsWith("...")) {
+					macro.indefiniteParam = {
+						name: part.Substring(3),
+						params: new Map()
+					}
+				}
 
 				if (!LabelUtils.CheckIllegal(label.token.text, false)) {
 					const errorMsg = Localization.GetMessage("Label {0} illegal", part.text);
