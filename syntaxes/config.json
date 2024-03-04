@@ -1,5 +1,4 @@
 {
-	"$id": "https://json-schema.org/schem",
 	"$schema": "https://json-schema.org/schema",
 	"type": "object",
 	"description": "汇编器配置文件",

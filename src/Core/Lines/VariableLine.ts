@@ -1,3 +1,4 @@
+import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
@@ -39,6 +40,10 @@ export class VariableLineUtils {
 
 	static FirstAnalyse(option: DecodeOption) {
 		const line = option.GetCurrectLine<VariableLine>();
+		const macro = option.macro;
+		if (!line.saveLabel?.token?.text.startsWith("."))
+			delete(option.macro);
+		
 		const label = LabelUtils.CreateLabel(line.saveLabel!.token, option, false);
 		if (label) {
 			label.labelType = LabelType.Variable;
@@ -49,6 +54,7 @@ export class VariableLineUtils {
 			line.compileType = LineCompileType.Error;
 		}
 
+		option.macro = macro;
 		if (line.expression!.isEmpty) {
 			const errorMsg = Localization.GetMessage("Expression error");
 			MyDiagnostic.PushException(line.expression!, errorMsg);
