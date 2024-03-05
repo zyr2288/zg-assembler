@@ -5,6 +5,7 @@
 > 注意：编译器只监视 `*.asm` 文件，并不是 `*.65s` 文件
 
 ## 所有编译器命令
+
 1. [.BASE](#base)
 2. [.ORG](#org)
 3. [.DEF](#def)
@@ -54,6 +55,7 @@
 
 * 在这个版本增加了子标签的功能，可以使用例如 `player.x` `player.y` 这样的子标签，并且智能提示能更好的协助你。
 * 按 vscode 的查找定义快捷键（默认F12）可直接找到标签定义位置。
+* 编译器定义的 `xx = yy` 是作为变量，编译器将不会检查重复定义的变量。如要定义常量，请使用 `.DEF` 命令。
 
 
 ### 局部标签
@@ -98,6 +100,9 @@
 
 > 以下命令内中括号为可选参数
 
+<details>
+<summary>.BASE</summary>
+
 ### `.BASE`
 
 ```
@@ -111,8 +116,12 @@
 > 1. 编译自上而下，一些第一次编译需要赋值的变量如果第一次编译未知则编译不成功。
 > 2. 如果使用`.BASE`命令，则在`.ORG`之后，否则编译错误。
 
+</details>
+
 ---
 
+<details>
+<summary>.ORG</summary>
 
 ### `.ORG`
 
@@ -124,8 +133,12 @@
 * 也可以使用`.ORG *`，表示从当前地址开始编译。不过要知道当前地址，否则编译器报错。
 * 注意：如果使用 `.BASE` 命令，则在 `.ORG` 之后，否则编译错误。
 
+</details>
+
 ---
 
+<details>
+<summary>.DEF</summary>
 
 ### `.DEF`
 
@@ -137,7 +150,12 @@
 
 > 注意：`temp = $12` 虽然也能定义，用等号可重复定义。
 
+</details>
+
 ---
+
+<details>
+<summary>.ENUM .ENDE</summary>
 
 ### `.ENUM` `.ENDE`
 
@@ -159,7 +177,12 @@
    .ENDE
 ```
 
+</details>
+
 ---
+
+<details>
+<summary>.DB .DW .DL</summary>
 
 ### `.DB` `.DW` `.DL`
 
@@ -171,8 +194,12 @@
 
 * 一系列数据。
 
+</details>
+
 ---
 
+<details>
+<summary>.DBG .DWG .DLG .ENDD</summary>
 
 ### `.DBG` `.DWG` `.DLG` `.ENDD`
 
@@ -190,8 +217,12 @@
     LDA data:.data1:1   ;3
 ```
 
+</details>
+
 -----
 
+<details>
+<summary>.HEX</summary>
 
 ### `.HEX`
 
@@ -204,9 +235,12 @@
 
 > 注意：之后只能输入16进制数据，否则编译器会报错。
 
+</details>
 
 ---
 
+<details>
+<summary>.IF .ELSEIF .ELSE .ENDIF</summary>
 
 ### `.IF` `.ELSEIF` `.ELSE` `.ENDIF`
 
@@ -226,8 +260,12 @@
     .ENDIF
 ```
 
+</details>
+
 -----
 
+<details>
+<summary>.IFDEF .IFNDEF .ELSE .ENDIF</summary>
 
 ### `.IFDEF` `.IFNDEF` `.ELSE` `.ENDIF`
 
@@ -245,8 +283,12 @@
 
 > 注：必须要在使用这些之前知道参数的信息，否则编译报错
 
+</details>
+
 ---
 
+<details>
+<summary>.INCBIN</summary>
 
 ### `.INCBIN`
 
@@ -261,8 +303,12 @@
     .INCBIN "文件夹\文件.bin", 0, 100
 ```
 
+</details>
+
 -----
 
+<details>
+<summary>.INCLUDE</summary>
 
 ### `.INCLUDE`
 
@@ -279,7 +325,12 @@
     .INCLUDE "文件夹\文件.asm"。
 ```
 
+</details>
+
 -----
+
+<details>
+<summary>.MACRO .ENDM</summary>
 
 ### `.MACRO` `.ENDM`
 
@@ -291,7 +342,9 @@
 
 > 注意：用这里的指令可以自定义函数，所要使用的函数要在编译之前定义好，否则编译器会报错。
 
-> 注意：所有自定义函数内的标签属于局部变量，请勿在函数外部使用。
+> 注意：所有自定义函数内的 **标签** 属于 **局部变量**，请勿在函数外部使用。
+
+> 注意：所有自定义函数内定义的 **变量** 均为 **全局变量**。
 
 实例1：
 ```
@@ -326,9 +379,15 @@
 ```
 * 编译之后结果为：`A5 03 A6 04 A5 06 85 06 A4 05`
 
+</details>
+
 -----
 
+<details>
+<summary>.REPEAT .ENDR</summary>
+
 ### `.REPEAT` `.ENDR`
+
 ```
     .REPEAT 重复次数
      .....
@@ -350,8 +409,12 @@
 
 * 对应编译的结果相当于：`NOP ASL ASL ASL NOP ASL ASL ASL`
 
+</details>
+
 -----
 
+<details>
+<summary>.MSG</summary>
 
 ### `.MSG`
 
@@ -371,3 +434,5 @@
 * 这里输出的信息是：
 
 > 测试案例 10, $B, @0000 1010
+
+</details>

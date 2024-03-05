@@ -10,6 +10,8 @@ import { CommandLine } from "../Lines/CommandLine";
 import { HighlightToken, ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
 import { MacroLine } from "../Lines/MacroLine";
+import { OnlyLabelLine } from "../Lines/OnlyLabelLine";
+import { VariableLine } from "../Lines/VariableLine";
 import { Platform } from "../Platform/Platform";
 import { Commands } from "./Commands";
 
@@ -207,7 +209,7 @@ export class MacroUtils {
 
 		const tempOption = new DecodeOption(macro.lines);
 		tempOption.macro = macro;
-		MacroUtils.ReplaceExpressions(tempOption.allLines, macro);
+		MacroUtils.ReplaceContent(tempOption.allLines, macro);
 		await Compiler.CompileResult(tempOption);
 		// option.InsertLines(line.macroToken.fileHash, option.lineIndex + 1, macro.lines);
 
@@ -236,7 +238,7 @@ export class MacroUtils {
 
 	/***** private *****/
 
-	private static ReplaceExpressions(lines: ICommonLine[], macro: Macro) {
+	private static ReplaceContent(lines: ICommonLine[], macro: Macro) {
 		if (!macro)
 			return;
 
@@ -247,6 +249,33 @@ export class MacroUtils {
 				case LineType.Command:
 					const insLine = line as InstructionLine | CommandLine;
 					MacroUtils._ReplaceExpression(insLine.expParts, macro);
+					break;
+				case LineType.Variable:
+					const varLine = line as VariableLine;
+					if (!varLine.saveLabel)
+						break;
+
+					const tempToken = varLine.saveLabel.label.token;
+					let label: ILabel | undefined = undefined;
+					if (tempToken.text.startsWith(".")) {
+						label = macro.labels.get(tempToken.text);
+					} else {
+						label = LabelUtils.FindLabel(tempToken);
+					}
+					if (label !== undefined)
+						varLine.saveLabel.label = label;
+
+					break;
+				case LineType.OnlyLabel:
+					const olLine = line as OnlyLabelLine;
+					if (!olLine.saveLabel)
+						break;
+
+					const olTempLabel = macro.labels.get(olLine.saveLabel.label.token.text);
+					if (!olTempLabel)
+						break;
+
+					olLine.saveLabel.label = olTempLabel;
 					break;
 			}
 		}

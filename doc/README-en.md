@@ -50,7 +50,7 @@
 
 * You can use sub labels, such as `player.x` `player.y`.
 * Press vscode's Find Definition shortcut key (default F12) to find the label definition location directly.
-
+* All `xx = yy` is used as a variable, the compiler will not check for duplicate definitions. To define constants, use the `.DEF` command.
 
 ### Local label
 
@@ -96,6 +96,8 @@
 
 ## Compiler commands (example of 6502)
 
+<details>
+<summary>.BASE</summary>
 
 ### `.BASE`
 
@@ -110,8 +112,12 @@
 > 1. Compile top-down, some variables need to be assigned for the first compile, if the first compile is unknown then compile is not successful.
 > 2. If you use the `.BASE` command, after `.ORG`, otherwise it compiles incorrectly.
 
+</details>
+
 ---
 
+<details>
+<summary>.ORG</summary>
 
 ### `.ORG`
 
@@ -124,8 +130,12 @@
 
 > Note: If you use the `.BASE` command, after `.ORG`, otherwise it compiles with an error.
 
+</details>
+
 ---
 
+<details>
+<summary>.DEF</summary>
 
 ### `.DEF`
 
@@ -137,7 +147,12 @@
 
 > Note: `temp = $12` can also be defined, but `temp` can be re-value.
 
+</details>
+
 ---
+
+<details>
+<summary>.ENUM .ENDE</summary>
 
 ### `.ENUM` `.ENDE`
 
@@ -159,7 +174,12 @@
    .ENDE
 ```
 
+</details>
+
 ---
+
+<details>
+<summary>.DB .DW .DL</summary>
 
 ### `.DB` `.DW` `.DL`
 
@@ -171,8 +191,12 @@
 
 * A series of bytes data
 
+</details>
+
 ---
 
+<details>
+<summary>.DBG .DWG .DLG .ENDD</summary>
 
 ### `.DBG` `.DWG` `.DLG` `.ENDD`
 
@@ -191,8 +215,12 @@ For example:
     LDA data:.data1:1   ;Result A5 03
 ```
 
+</details>
+
 ---
 
+<details>
+<summary>.HEX</summary>
 
 ### `.HEX`
 
@@ -207,8 +235,12 @@ For example:
     .HEX 12 34567 89     ;Result(Hex) 12 34 56 07 89
 ```
 
+</details>
+
 ---
 
+<details>
+<summary>.IF .ELSEIF .ELSE .ENDIF</summary>
 
 ### `.IF` `.ELSEIF` `.ELSE` `.ENDIF`
 
@@ -229,8 +261,12 @@ For example:
     .ENDIF
 ```
 
+</details>
+
 ---
 
+<details>
+<summary>.IFDEF .IFNDEF .ELSE .ENDIF</summary>
 
 ### `.IFDEF` `.IFNDEF` `.ELSE` `.ENDIF`
 
@@ -244,8 +280,12 @@ For example:
 
 * Process a block of code if a label has been defined / not defined.
 
+</details>
+
 ---
 
+<details>
+<summary>.INCBIN</summary>
 
 ### `.INCBIN`
 
@@ -260,8 +300,12 @@ For example:
     .INCBIN "Folder\file.bin", 0, 100
 ```
 
+</details>
+
 ---
 
+<details>
+<summary>.INCLUDE</summary>
 
 ### `.INCLUDE`
 
@@ -275,8 +319,12 @@ For example:
     .INCLUDE "Folder\file.asm"
 ```
 
+</details>
+
 ---
 
+<details>
+<summary>.MACRO .ENDM</summary>
 
 ### `.MACRO` `.ENDM`
 
@@ -335,8 +383,12 @@ Example 2:
 
 * The compilation result:`A5 03 A6 04 A5 06 85 06 A4 05`
 
+</details>
+
 ---
 
+<details>
+<summary>.REPEAT .ENDR</summary>
 
 ### `.REPEAT` `.ENDR`
 
@@ -359,8 +411,12 @@ For example:
 ```
 * The compilation result is same as:`NOP ASL ASL ASL NOP ASL ASL ASL`
 
+</details>
+
 ---
 
+<details>
+<summary>.MSG</summary>
 
 ### `.MSG`
 
@@ -382,3 +438,5 @@ For example:
 ```
     test 10, $B, @0000 1010
 ```
+
+</details>
