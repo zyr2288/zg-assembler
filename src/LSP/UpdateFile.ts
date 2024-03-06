@@ -133,7 +133,7 @@ export class UpdateFile {
 
 	/**文件创建 */
 	private static async FileCreate(e: vscode.Uri) {
-		let tempFiles = (await UpdateFile.GetWorkspaceFilterFile()).map(value => value.fsPath);
+		let tempFiles = await LSPUtils.GetWorkspaceFilterFile();
 		if (tempFiles.includes(e.fsPath)) {
 			LSPUtils.fileUpdateFinished = false;
 			let buffer = await LSPUtils.assembler.fileUtils.ReadFile(e.fsPath);
@@ -143,16 +143,6 @@ export class UpdateFile {
 		}
 	}
 	//#endregion 监视文件
-
-	//#region 获取工作目录下所筛选出的文件
-	private static async GetWorkspaceFilterFile() {
-		let includes = `{${LSPUtils.assembler.config.ProjectSetting.includes.join(",")}}`;
-		let excludes: string | null = null;
-		if (LSPUtils.assembler.config.ProjectSetting.excludes.length != 0)
-			excludes = `{${LSPUtils.assembler.config.ProjectSetting.excludes.join(",")}}`;
-
-		return await vscode.workspace.findFiles(includes, excludes);
-	}
 
 	/**查询文件是否在工程内 */
 	// private static async FindFileInProject(file: string) {

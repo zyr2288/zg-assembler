@@ -424,8 +424,7 @@ export class LabelUtils {
 		if (type === LabelScope.Global) {
 			labelMap = Compiler.enviroment.allLabel.global;
 			labelTreeMap = Compiler.enviroment.labelTree.global;
-			// @ts-ignore
-			fileLabelSet = Compiler.enviroment.fileLabel.global.get(token.fileHash);
+			fileLabelSet = Compiler.enviroment.fileLabel.global.get(token.fileHash)!;
 			if (!fileLabelSet) {
 				fileLabelSet = new Set();
 				Compiler.enviroment.fileLabel.global.set(token.fileHash, fileLabelSet);
@@ -437,8 +436,7 @@ export class LabelUtils {
 				Compiler.enviroment.allLabel.local.set(token.fileHash, labelMap);
 			}
 
-			// @ts-ignore
-			labelTreeMap = Compiler.enviroment.labelTree.local.get(token.fileHash);
+			labelTreeMap = Compiler.enviroment.labelTree.local.get(token.fileHash)!;
 			if (!labelTreeMap) {
 				labelTreeMap = new Map();
 				Compiler.enviroment.labelTree.local.set(token.fileHash, labelTreeMap);

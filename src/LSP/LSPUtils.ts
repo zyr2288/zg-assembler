@@ -24,8 +24,11 @@ export class LSPUtils {
 			excludes = `{${LSPUtils.assembler.config.ProjectSetting.excludes.join(",")}}`;
 
 		let tempFiles = await vscode.workspace.findFiles(includes, excludes);
-		let files = tempFiles.map(v => v.fsPath);
-		return files;
+		let result: string[] = [];
+		for (let i = 0; i < tempFiles.length; i++)
+			result.push(tempFiles[i].fsPath);
+
+		return result;
 	}
 
 	/**查询文件是否在工程内 */

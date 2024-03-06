@@ -92,7 +92,7 @@ export class Intellisense {
 			switch (com.triggerType) {
 				case TriggerSuggestType.AllAsm:
 				case TriggerSuggestType.AllFile:
-					const path = LSPUtils.assembler.fileUtils.ArrangePath(document.uri.fsPath);
+					const path = await LSPUtils.assembler.fileUtils.ArrangePath(document.uri.fsPath);
 					newCom.command = {
 						title: "Get Folder Files",
 						command: CommandName,
