@@ -9,14 +9,14 @@ const path = require('path');
 
 /** @type WebpackConfig */
 const coreBuilder = {
-	target: "web",
+	target: "node",
 	mode: "production",
 	entry: ["./src/Core/Assembler.ts"],
 	output: {
 		// the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
 		path: path.resolve(__dirname, "dist"),
 		filename: "core.js",
-		library: { name: "zgassembler", type: "var", export: "Assembler" }
+		library: { name: "zgassembler", type: "commonjs", export: "Assembler" }
 	},
 	externals: {
 		vscode: 'commonjs vscode' // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
