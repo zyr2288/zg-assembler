@@ -1,5 +1,5 @@
 import { Commands } from "../Commands/Commands";
-import { IMacroLine, MacroUtils } from "../Commands/Macro";
+import { IMacroLine, Macro, MacroUtils } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
 import { ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
@@ -12,7 +12,7 @@ import { Platform } from "../Platform/Platform";
 import { Config } from "./Config";
 import { Environment } from "./Environment";
 import { ExpressionUtils } from "./ExpressionUtils";
-import { LabelUtils } from "./Label";
+import { ILabel, LabelUtils } from "./Label";
 import { MyDiagnostic } from "./MyException";
 import { DecodeOption } from "./Options";
 import { ResultUtils } from "./ResultUtils";
@@ -120,7 +120,9 @@ export class Compiler {
 
 		//#region 保存行Token
 		const SaveToken = (lineType: LineType) => {
+
 			const labelToken = contentToken.Substring(0, match!.index);
+
 			const comOrIntrs = contentToken.Substring(match!.index, match![0].length);
 			const expression = contentToken.Substring(match!.index + match![0].length);
 
@@ -129,12 +131,14 @@ export class Compiler {
 			switch (lineType) {
 				case LineType.Command:
 					let comLine = new CommandLine();
-					comLine.Initialize({ command: comOrIntrs, expression, labelToken });
+					comLine.Initialize({ command: comOrIntrs, expression });
+					this.GetOnlyLabel(labelToken, result);
 					newLine = comLine;
 					break;
 				case LineType.Instruction:
 					let tempInsLine = new InstructionLine();
-					tempInsLine.Initialize({ instruction: comOrIntrs, expression, labelToken });
+					tempInsLine.Initialize({ instruction: comOrIntrs, expression });
+					this.GetOnlyLabel(labelToken, result);
 					newLine = tempInsLine;
 					break;
 				case LineType.Variable:
@@ -205,6 +209,10 @@ export class Compiler {
 				case LineType.Variable:
 					VariableLineUtils.FirstAnalyse(option);
 					break;
+				case LineType.OnlyLabel:
+					const olLine = line as OnlyLabelLine;
+					olLine.Analyse(option);
+					break;
 			}
 
 			i = option.lineIndex;
@@ -229,9 +237,15 @@ export class Compiler {
 					const macroName = match?.groups?.["macro"];
 					if (macroName) {
 						const pre = unknowLine.orgText.Substring(0, match!.index);
+						const line = this.GetOnlyLabel(pre, option.allLines, option.lineIndex);
+						if (line) {
+							line.Analyse(option);
+							option.lineIndex++;
+						}
+
 						const currect = unknowLine.orgText.Substring(match!.index, match![0].length);
 						const after = unknowLine.orgText.Substring(match!.index + match![0].length);
-						MacroUtils.MatchMacroLine(pre, currect, after, option);
+						MacroUtils.MatchMacroLine(currect, after, option);
 					} else {
 						const onlyLabelLine = new OnlyLabelLine();
 						onlyLabelLine.comment = unknowLine.comment;
@@ -433,6 +447,32 @@ export class Compiler {
 		}
 	}
 	//#endregion 给文件的地址增加偏移
+
+	/***** 辅助方法 *****/
+
+	//#region 提取行前的Label单独转换城OnlyLabelLine
+	/**
+	 * 提取行前的Label单独转换城OnlyLabelLine
+	 * @param token Label的Token
+	 * @param lines 所有行
+	 * @param index 插入的位置，若为undefined则放入最后
+	 * @returns 创建的新行
+	 */
+	private static GetOnlyLabel(token: Token, lines: ICommonLine[], index?: number) {
+		if (token.isEmpty)
+			return;
+
+		const line = new OnlyLabelLine();
+		line.orgText = token;
+		line.saveLabel = { token, label: {} as ILabel, notFinish: true };
+		if (index !== undefined)
+			lines.splice(index, 0, line);
+		else
+			lines.push(line);
+
+		return line;
+	}
+	//#endregion 提取行前的Label单独转换城OnlyLabelLine
 
 	//#region 添加注释
 	/**

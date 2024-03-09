@@ -59,16 +59,9 @@ export class MacroUtils {
 	 * @param option 编译选项
 	 * @returns 
 	 */
-	static MatchMacroLine(labelToken: Token, macroToken: Token, expression: Token, option: DecodeOption) {
+	static MatchMacroLine(macroToken: Token, expression: Token, option: DecodeOption) {
 		const macro = Compiler.enviroment.allMacro.get(macroToken.text)!;
 		const macroLine = new MacroLine();
-		if (!labelToken.isEmpty) {
-			const label = LabelUtils.CreateLabel(labelToken, option, true);
-			if (label) {
-				label.labelType = LabelType.Label;
-				macroLine.saveLabel = { label, notFinish: true };
-			}
-		}
 
 		macroLine.orgText = option.GetCurrectLine().orgText;
 		macroLine.macro = macro;
@@ -175,11 +168,6 @@ export class MacroUtils {
 	 */
 	static async CompileMacroLine(option: DecodeOption) {
 		const line = option.GetCurrectLine<MacroLine>();
-		if (line.saveLabel && line.saveLabel.notFinish) {
-			line.saveLabel.label.value = Compiler.enviroment.orgAddress;
-			line.saveLabel.notFinish = false;
-		}
-
 		if (Compiler.compileTimes === 0)
 			line.macro = Utils.DeepClone(line.macro);
 

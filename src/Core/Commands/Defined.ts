@@ -1,4 +1,3 @@
-import { Compiler } from "../Base/Compiler";
 import { ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
@@ -6,6 +5,8 @@ import { Token } from "../Base/Token";
 import { CommandLine } from "../Lines/CommandLine";
 import { HighlightToken, LineCompileType } from "../Lines/CommonLine";
 import { Commands } from "./Commands";
+
+type DefinedTag = ILabel;
 
 export class Defined {
 
@@ -22,16 +23,13 @@ export class Defined {
 		const line = option.GetCurrectLine<CommandLine>();
 		const expressions: Token[] = line.tag;
 
-		line.saveLabel = { token: expressions[0], label: {} as ILabel, notFinish: true };
+		let labelToken = expressions[0];
 
-		const label = LabelUtils.CreateLabel(line.saveLabel.token, option, false);
+		const label = LabelUtils.CreateLabel(labelToken, option, false);
 		if (label) {
 			label.labelType = LabelType.Defined;
 			label.comment = line.comment;
-			line.saveLabel.label = label;
-			delete(line.saveLabel.token);
-		} else {
-			delete(line.saveLabel);
+			line.tag = label;
 		}
 
 		const temp = ExpressionUtils.SplitAndSort(expressions[1]);
@@ -41,7 +39,6 @@ export class Defined {
 			line.compileType = LineCompileType.Error;
 
 		line.GetTokens = Defined.GetTokens.bind(line);
-		delete (line.tag);
 	}
 
 	private static ThirdAnalyse_Def(option: DecodeOption) {
@@ -52,7 +49,7 @@ export class Defined {
 			return;
 		}
 
-		const label = line.saveLabel?.label;
+		const label = line.tag as DefinedTag;
 		const analyseOption: ExpAnalyseOption = { analyseType: "Try" };
 		const temp2 = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option, analyseOption);
 		if (label && temp2.success)
@@ -62,7 +59,7 @@ export class Defined {
 	private static Compile_Def(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
 		const temp = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
-		const label = line.saveLabel?.label;
+		const label = line.tag as DefinedTag;
 		if (label && temp.success) {
 			label.value = temp.value;
 			line.compileType = LineCompileType.Finished;

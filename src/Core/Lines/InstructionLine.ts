@@ -1,13 +1,13 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
-import { ILabel, LabelUtils } from "../Base/Label";
+import { LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Localization } from "../I18n/Localization";
 import { AsmCommon, IAddressingMode } from "../Platform/AsmCommon";
-import { CommonSaveLabel, HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
+import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
 /**汇编行 */
 export class InstructionLine implements ICommonLine {
@@ -19,9 +19,6 @@ export class InstructionLine implements ICommonLine {
 	orgAddress = -1;
 	baseAddress = 0;
 
-	/**标签 */
-	saveLabel?: CommonSaveLabel;
-
 	instruction!: Token;
 	expression?: Token;
 	expParts: ExpressionPart[][] = [];
@@ -30,12 +27,10 @@ export class InstructionLine implements ICommonLine {
 
 	comment?: string;
 
-	Initialize(option: { instruction: Token, expression: Token, labelToken: Token }) {
+	Initialize(option: { instruction: Token, expression: Token }) {
 		this.instruction = option.instruction;
 		this.instruction.text = this.instruction.text.toUpperCase();
 		this.expression = option.expression;
-		if (!option.labelToken.isEmpty)
-			this.saveLabel = { token: option.labelToken, label: {} as ILabel, notFinish: true };
 	}
 
 	/**
@@ -59,9 +54,6 @@ export class InstructionLine implements ICommonLine {
 
 	GetTokens() {
 		const result: HighlightToken[] = [];
-		if (this.saveLabel)
-			result.push({ type: HighlightType.Label, token: this.saveLabel.label.token });
-
 		result.push({ type: HighlightType.Keyword, token: this.instruction });
 		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
 		return result;
@@ -77,8 +69,6 @@ export class InstructionLineUtils {
 	 */
 	static FirstAnalyse(option: DecodeOption) {
 		const line = option.GetCurrectLine<InstructionLine>();
-		LabelUtils.GetLineLabelToken(option);
-
 		let temp;
 		if (temp = AsmCommon.MatchAddressingMode(line.instruction, line.expression!)) {
 			line.addressingMode = temp.addressingMode;
@@ -121,11 +111,6 @@ export class InstructionLineUtils {
 		line.SetAddress();
 		if (line.compileType === LineCompileType.Error)
 			return;
-
-		if (line.saveLabel?.label && line.saveLabel.notFinish) {
-			line.saveLabel.label.value = Compiler.enviroment.orgAddress;
-			line.saveLabel.notFinish = false;
-		}
 
 		if (line.addressingMode.spProcess) {
 			line.addressingMode.spProcess(option);

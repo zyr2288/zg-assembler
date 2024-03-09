@@ -1,4 +1,3 @@
-import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
@@ -21,6 +20,7 @@ export class VariableLine implements ICommonLine {
 	comment?: string;
 
 	Initialize(option: { labelToken: Token, expression: Token }) {
+		this.orgText = option.labelToken;
 		this.saveLabel = { token: option.labelToken, label: {} as ILabel, notFinish: true };
 		this.expression = option.expression;
 	}

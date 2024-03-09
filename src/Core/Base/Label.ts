@@ -3,6 +3,7 @@ import { Macro } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
 import { InstructionLine } from "../Lines/InstructionLine";
+import { OnlyLabelLine } from "../Lines/OnlyLabelLine";
 import { VariableLine } from "../Lines/VariableLine";
 import { Compiler } from "./Compiler";
 import { ExpressionUtils } from "./ExpressionUtils";
@@ -67,42 +68,17 @@ export interface INamelessLabel extends ICommonLabel {
 /**标签工具类 */
 export class LabelUtils {
 
+	/**临时标签匹配用的正则表达式 */
 	static get namelessLabelRegex() { return new RegExp(/^((?<plus>\+)|(?<minus>\-))+$/g); };
 
 	/** Public */
-
-	//#region 设定line的labelToken
-	/**
-	 * 设定line的labelToken
-	 * @param option 编译选项
-	 * @param labelType Label的类型，默认是Label
-	 */
-	static GetLineLabelToken(option: DecodeOption, labelType: LabelType = LabelType.Label) {
-		const line = option.GetCurrectLine<InstructionLine | VariableLine | CommandLine>();
-		if (line.saveLabel?.token && line.saveLabel.token.isEmpty === false) {
-
-			if (line.saveLabel.token.text.endsWith(":"))
-				line.saveLabel.token = line.saveLabel.token.Substring(0, line.saveLabel.token.length - 1);
-
-			const label = LabelUtils.CreateLabel(line.saveLabel.token, option, true);
-			if (label) {
-				label.comment = line.comment;
-				label.labelType = labelType;
-				line.saveLabel.label = label;
-				line.saveLabel.notFinish = true;
-				delete (line.saveLabel.token);
-			} else {
-				delete (line.saveLabel);
-			}
-		}
-	}
-	//#endregion 设定line的labelToken
 
 	//#region 创建标签
 	/**
 	 * 创建标签
 	 * @param token 标签Token
 	 * @param option 编译选项
+	 * @param allowNameless 允许使用临时标签
 	 * @returns 返回创建的label和hash
 	 */
 	static CreateLabel(token: Token | undefined, option: DecodeOption, allowNameless: boolean): ICommonLabel | undefined {

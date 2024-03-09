@@ -1,6 +1,7 @@
 import { Compiler } from "../Base/Compiler";
 import { FileUtils } from "../Base/FileUtils";
 import { Localization } from "../I18n/Localization";
+import { LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
 
 export class LineResultShow {
@@ -15,6 +16,9 @@ export class LineResultShow {
 			return;
 
 		for (let i = 0; i < allLine.length; i++) {
+			if (allLine[i].type !== LineType.Instruction)
+				continue;
+
 			const line = allLine[i] as InstructionLine;
 			if (line.orgText.line !== lineNumber)
 				continue;

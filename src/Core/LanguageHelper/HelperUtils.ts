@@ -7,9 +7,11 @@ import { DataGroup } from "../Commands/DataGroup";
 import { IncludeTag } from "../Commands/Include";
 import { Macro } from "../Commands/Macro";
 import { CommandLine } from "../Lines/CommandLine";
-import { LineType } from "../Lines/CommonLine";
+import { ICommonLine, LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
 import { MacroLine } from "../Lines/MacroLine";
+import { OnlyLabelLine } from "../Lines/OnlyLabelLine";
+import { VariableLine } from "../Lines/VariableLine";
 import { MatchNames, Platform } from "../Platform/Platform";
 
 export interface MatchRange {
@@ -241,7 +243,7 @@ export class HelperUtils {
 
 		let temp: { token: Token, hash: number, type: PriorityType } | undefined;
 		for (let i = 0; i < allLines.length; i++) {
-			const line = allLines[i] as InstructionLine | CommandLine | MacroLine;
+			const line = allLines[i];
 			if (line.orgText.line !== findLineNumber)
 				continue;
 
@@ -270,11 +272,13 @@ export class HelperUtils {
 					break;
 			}
 
-			if (HelperUtils._MatchToken(lineNumber, currect, line.saveLabel?.label.token)) {
+			const olLine = line as OnlyLabelLine;
+			const tempLine = line as InstructionLine | CommandLine | VariableLine;
+			if (olLine.saveLabel?.label && HelperUtils._MatchToken(lineNumber, currect, olLine.saveLabel.label.token)) {
 				matchResult.matchType = "Label";
-				matchResult.matchToken = line.saveLabel?.label.token;
+				matchResult.matchToken = olLine.saveLabel.label.token;
 				return matchResult;
-			} else if (temp = HelperUtils._FindMatchExp(lineNumber, currect, line.expParts)) {
+			} else if (temp = HelperUtils._FindMatchExp(lineNumber, currect, tempLine.expParts)) {
 				matchResult.matchToken = temp.token;
 				matchResult.tag = temp.hash;
 				switch (temp.type) {

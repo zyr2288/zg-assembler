@@ -13,12 +13,38 @@ export class OnlyLabelLine implements ICommonLine {
 	comment?: string;
 
 	Initialize(labelToken: Token, option: DecodeOption) {
+		this.orgText = labelToken;
 		if (labelToken.isEmpty)
 			return;
 
 		this.saveLabel = { token: labelToken, label: {} as ILabel, notFinish: true };
-		LabelUtils.GetLineLabelToken(option);
+		this.Analyse(option);
 	}
+
+	/**
+	 * 分析标签行，用于编译的第一第二次解析
+	 * @param option 编译选项
+	 * @returns 
+	 */
+	Analyse(option: DecodeOption) {
+		if (!this.saveLabel?.token || this.saveLabel.token.isEmpty)
+			return;
+
+		if (this.saveLabel.token.text.endsWith(":"))
+			this.saveLabel.token = this.saveLabel.token.Substring(0, this.saveLabel.token.length - 1);
+
+		const label = LabelUtils.CreateLabel(this.saveLabel.token, option, true);
+		if (label) {
+			label.comment = this.comment;
+			label.labelType = LabelType.Label;
+			this.saveLabel.label = label;
+			this.saveLabel.notFinish = true;
+			delete (this.saveLabel.token);
+		} else {
+			delete (this.saveLabel);
+		}
+	}
+
 
 	GetTokens() {
 		if (this.saveLabel)

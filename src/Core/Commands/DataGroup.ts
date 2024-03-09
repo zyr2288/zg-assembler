@@ -1,6 +1,6 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, ExpAnalyseOption, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
-import { ILabel, LabelScope, LabelType, LabelUtils } from "../Base/Label";
+import { ExpressionPart, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
+import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption, IncludeLine } from "../Base/Options";
 import { Token } from "../Base/Token";
@@ -10,6 +10,10 @@ import { CommandLine } from "../Lines/CommandLine";
 import { LineCompileType } from "../Lines/CommonLine";
 import { Commands } from "./Commands";
 
+//#region 数据组
+/**
+ * 数据组
+ */
 export class DataGroup {
 
 	/**数据组的标签 */
@@ -37,6 +41,12 @@ export class DataGroup {
 		return labelMap[index];
 	}
 }
+//#endregion 数据组
+
+interface DataGroupTag {
+	label: ILabel;
+	notFinished: boolean;
+};
 
 export class DataGroupCommand {
 
@@ -75,16 +85,13 @@ export class DataGroupCommand {
 			return;
 		}
 
-		line.saveLabel = { token: expressions[0], label, notFinish: true };
+		line.tag = { label, notFinish: true };
 		Compiler.enviroment.SetRange(line.command.fileHash, {
 			type: "DataGroup",
 			key: label.token.text,
 			startLine: include![0].line,
 			endLine: include![1].line
 		});
-
-		const scope = label.token.text.startsWith(".") ? LabelScope.Local : LabelScope.Global;
-		const hash = LabelUtils.GetLebalHash(label.token.text, label.token.fileHash, scope);
 
 		label.labelType = LabelType.Label;
 		const datagroup = new DataGroup();
@@ -168,7 +175,6 @@ export class DataGroupCommand {
 		}
 
 		line.AddAddress();
-		// Compiler.AddAddress(line);
 	}
 
 	private static AddExpressionPart(datagroup: DataGroup, parts: ExpressionPart[], dataIndex: number) {

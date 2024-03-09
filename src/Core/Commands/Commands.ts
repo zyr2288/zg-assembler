@@ -104,16 +104,6 @@ export class Commands {
 			return;
 		}
 
-		// 命令不允许有标签
-		if (line.saveLabel?.token && line.saveLabel.token.isEmpty === false) {
-			if (!com.enableLabel) {
-				let errorMsg = Localization.GetMessage("Command {0} can not use label", line.command.text);
-				MyDiagnostic.PushException(line.saveLabel.token, errorMsg);
-			} else {
-				LabelUtils.GetLineLabelToken(option);
-			}
-		}
-
 		let includeLines: IncludeLine[] | undefined;
 
 		// 查询匹配标签
@@ -285,9 +275,6 @@ export class Commands {
 		if (line.compileType === LineCompileType.Error)
 			return true;
 
-		if (line.saveLabel && line.saveLabel.notFinish) {
-			line.saveLabel.label.value = line.orgAddress;
-		}
 		return false;
 	}
 	//#endregion 设定起始地址并判断Label

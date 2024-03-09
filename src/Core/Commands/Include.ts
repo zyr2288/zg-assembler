@@ -55,12 +55,6 @@ export class Include {
 
 		const allLines = Compiler.SplitTexts(hash, text);
 		option.InsertLines(hash, option.lineIndex + 1, allLines);
-
-		if (line.saveLabel) {
-			line.type = LineType.OnlyLabel;
-		} else {
-			line.compileType = LineCompileType.Finished;
-		}
 	}
 
 	private static async FirstAnalyse_Incbin(option: DecodeOption) {

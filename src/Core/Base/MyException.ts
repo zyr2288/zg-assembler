@@ -114,6 +114,7 @@ export class MyDiagnostic {
 
 	static ClearAll() {
 		MyDiagnostic.allErrors.clear();
+		MyDiagnostic.allWarning.clear();
 	}
 
 }
