@@ -2,7 +2,7 @@
 	"name": "zg-assembler",
 	"displayName": "ZG Assembler",
 	"description": "A simple assembler for 6502 / 65c816 / z80-gb",
-	"version": "0.2.63",
+	"version": "0.2.64",
 	"engines": {
 		"vscode": "^1.67.0"
 	},
