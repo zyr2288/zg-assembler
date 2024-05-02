@@ -6,13 +6,18 @@ import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
-import { LineCompileType, LineType } from "../Lines/CommonLine";
+import { ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
 import { Commands } from "./Commands";
 
-export interface IncludeTag {
+export interface IncbinTag {
 	path: string;
 	token: Token;
 }
+
+interface IncludeTag {
+	lines: ICommonLine[];
+	fileHash: number;
+};
 
 export class Include {
 
@@ -26,6 +31,9 @@ export class Include {
 		Commands.AddCommand({
 			name: ".INCLUDE", min: 1,
 			firstAnalyse: Include.FirstAnalyse_Include,
+			secondAnalyse: Include.SecondAnalyse_Include,
+			thirdAnalyse: Include.ThirdAnalyse_Include,
+			compile: Include.Compile_Include,
 		});
 
 		Commands.AddCommand({
@@ -36,10 +44,12 @@ export class Include {
 		});
 	}
 
+	/***** Include *****/
 
+	//#region 第一次分析Include
 	private static async FirstAnalyse_Include(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		
+
 		let temp = await Include.ChechFile(option);
 		if (!temp.exsist) {
 			line.compileType = LineCompileType.Error;
@@ -54,9 +64,57 @@ export class Include {
 		const text = FileUtils.BytesToString(data);
 
 		const allLines = Compiler.SplitTexts(hash, text);
-		option.InsertLines(hash, option.lineIndex + 1, allLines);
+		line.tag = { lines: allLines, fileHash: hash } as IncludeTag;
+
+		let tempOption = new DecodeOption(allLines);
+		tempOption.macro = option.macro;
+		await Compiler.FirstAnalyse(tempOption)
+		// option.InsertLines(hash, option.lineIndex + 1, allLines);
+	}
+	//#endregion 第一次分析Include
+
+	//#region 第二次分析
+	private static async SecondAnalyse_Include(option: DecodeOption) {
+		if (!Compiler.enviroment.isCompileEnv)
+			return;
+
+		const line = option.GetCurrectLine<CommandLine>();
+		const tag = line.tag as IncludeTag;
+		let tempOption = new DecodeOption(tag.lines);
+		tempOption.macro = option.macro;
+
+		await Compiler.SecondAnalyse(tempOption);
+	}
+	//#endregion 第二次分析
+
+	//#region 第三次分析
+	private static async ThirdAnalyse_Include(option: DecodeOption) {
+		if (!Compiler.enviroment.isCompileEnv)
+			return;
+
+		const line = option.GetCurrectLine<CommandLine>();
+		const tag = line.tag as IncludeTag;
+		let tempOption = new DecodeOption(tag.lines);
+		tempOption.macro = option.macro;
+
+		await Compiler.ThirdAnalyse(tempOption);
+	}
+	//#endregion 第三次分析
+
+	private static async Compile_Include(option: DecodeOption) {
+		const line = option.GetCurrectLine<CommandLine>();
+		const tag = line.tag as IncludeTag;
+		let tempOption = new DecodeOption(tag.lines);
+		tempOption.macro = option.macro;
+
+		await Compiler.CompileResult(tempOption);
+
+		option.InsertLines(tag.fileHash, option.lineIndex + 1, tag.lines);
 	}
 
+	/***** Incbin *****/
+
+	//#region 第一次分析Incbin
 	private static async FirstAnalyse_Incbin(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
 		const expressions: Token[] = line.tag;
@@ -75,11 +133,12 @@ export class Include {
 			line.expParts[1] = temp2;
 
 	}
+	//#endregion 第一次分析Incbin
 
 	//#region 编译Incbin
 	private static async Compile_Incbin(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		const tag = line.tag as IncludeTag;
+		const tag = line.tag as IncbinTag;
 		let temp = await FileUtils.ReadFile(tag.path);
 
 		if (Commands.SetOrgAddressAndLabel(option))
@@ -111,11 +170,14 @@ export class Include {
 	}
 	//#endregion 编译Incbin
 
+	/***** 辅助函数 *****/
+
 	/**检查是否满足表达式 */
 	private static CheckString(text: string) {
 		return /^"[^\"]*"$/.test(text)
 	}
 
+	//#region 检查文件是否存在
 	/**
 	 * 检查文件是否存在，会修改 line.tag
 	 * @param option 编译选项
@@ -154,4 +216,6 @@ export class Include {
 		line.tag = { token, path: result.path };
 		return result;
 	}
+	//#endregion 检查文件是否存在
+
 }

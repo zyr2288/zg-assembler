@@ -4,7 +4,7 @@ import { LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { DataGroup } from "../Commands/DataGroup";
-import { IncludeTag } from "../Commands/Include";
+import { IncbinTag } from "../Commands/Include";
 import { Macro } from "../Commands/Macro";
 import { CommandLine } from "../Lines/CommandLine";
 import { ICommonLine, LineType } from "../Lines/CommonLine";
@@ -261,7 +261,7 @@ export class HelperUtils {
 					switch (commandLine.command.text) {
 						case ".INCLUDE":
 						case ".INCBIN":
-							const includeTag = commandLine.tag as IncludeTag;
+							const includeTag = commandLine.tag as IncbinTag;
 							if (HelperUtils._MatchToken(lineNumber, currect, includeTag.token)) {
 								matchResult.matchType = "Include";
 								matchResult.tag = commandLine.tag.path;
