@@ -107,9 +107,8 @@ export class Include {
 		let tempOption = new DecodeOption(tag.lines);
 		tempOption.macro = option.macro;
 
-		await Compiler.CompileResult(tempOption);
-
 		option.InsertLines(tag.fileHash, option.lineIndex + 1, tag.lines);
+		// await Compiler.CompileResult(tempOption);
 	}
 
 	/***** Incbin *****/
@@ -139,12 +138,11 @@ export class Include {
 	private static async Compile_Incbin(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
 		const tag = line.tag as IncbinTag;
-		let temp = await FileUtils.ReadFile(tag.path);
+		const temp = await FileUtils.ReadFile(tag.path);
 
 		if (Commands.SetOrgAddressAndLabel(option))
 			return;
 
-		line.result = [];
 		let start = 0;
 
 		const analyseOption: ExpAnalyseOption = { analyseType: "GetAndShowError" };
@@ -154,7 +152,6 @@ export class Include {
 				start = result.value;
 		}
 
-
 		let length = temp.length;
 		if (line.expParts[1]) {
 			let result = ExpressionUtils.GetExpressionValue<number>(line.expParts[1], option, analyseOption);
@@ -162,9 +159,10 @@ export class Include {
 				length = result.value;
 		}
 
+		line.result = [];
 		for (let i = start, j = 0; i < temp.length && j < length; ++i, ++j)
 			line.result[j] = temp[i];
-
+		
 		line.compileType = LineCompileType.Finished;
 		line.AddAddress();
 	}

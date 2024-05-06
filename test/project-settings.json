@@ -4,8 +4,8 @@
 	"outOfRangeWarning": true,
 	"entry": "main.asm",
 	"compileTimes": 2,
-	"outputEntryFile": "",
-	"outputSingleFile": "",
+	"outputEntryFile": "test.nes",
+	"outputSingleFile": "test.bin",
 	"copyToClipboard": true,
 	"includes": ["**/*.asm"],
 	"excludes": []
