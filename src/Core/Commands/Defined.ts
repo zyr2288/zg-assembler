@@ -6,7 +6,7 @@ import { CommandLine } from "../Lines/CommandLine";
 import { HighlightToken, LineCompileType } from "../Lines/CommonLine";
 import { Commands } from "./Commands";
 
-type DefinedTag = ILabel;
+export type DefinedTag = ILabel;
 
 export class Defined {
 

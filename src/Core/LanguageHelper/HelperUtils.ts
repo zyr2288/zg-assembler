@@ -4,6 +4,7 @@ import { LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { DataGroup } from "../Commands/DataGroup";
+import { DefinedTag } from "../Commands/Defined";
 import { IncbinTag } from "../Commands/Include";
 import { Macro } from "../Commands/Macro";
 import { CommandLine } from "../Lines/CommandLine";
@@ -268,6 +269,13 @@ export class HelperUtils {
 								return matchResult;
 							}
 							break;
+						case ".DEF":
+							const defTag = commandLine.tag as DefinedTag;
+							if (HelperUtils._MatchToken(lineNumber, currect, defTag.token)) {
+								matchResult.matchType = "Label";
+								matchResult.matchToken = defTag.token;
+								return matchResult;
+							}
 					}
 					break;
 			}
