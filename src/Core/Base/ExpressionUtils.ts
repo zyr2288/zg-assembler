@@ -8,7 +8,7 @@ import { Token } from "./Token";
 import { Utils } from "./Utils";
 
 /**运算符的正则表达式 */
-const OperationRegex = /((?<!\\)")|\(|\)|\~|\!=|==|\!|\>\>|\>=|\<\<|\<=|\>|\<|=|\+|\-|\*|\/|%|&&|&|\|\||\||\^|\$(?![0-9a-fA-F])/g;
+const OperationRegex = /((?<!\\)")|\(|\)|\~|\!=|==|\!|\>\>|\>=|\<=|\<\<|\>|\<|=|\+|\-|\*|\/|%|&&|&|\|\||\||\^|\$(?![0-9a-fA-F])/g;
 
 //#region 算数优先级
 export enum PriorityType {
@@ -612,6 +612,7 @@ export class ExpressionUtils {
 				case "^":
 				case "|":
 				case ">=":
+				case "<=":
 				case "!=":
 				case "==":
 				case "&&":

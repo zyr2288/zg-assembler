@@ -1,8 +1,9 @@
 # Change Log
 
-### 2024-05-07 v0.2.66
+### 2024-05-07 v0.2.67
 * 修复若 `.IF` 命令内包含 `.INCLUDE` 命令编译出错的Bug
 * 修复 `.INCLUDE` `.INCBIN` 命令无法导航到文件的Bug
+* 修复 `<=` 运算符报错
 
 <details>
 <summary>之前版本更新记录</summary>
