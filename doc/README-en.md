@@ -93,6 +93,12 @@
 
 ---
 
+### Comments and folding
+
+* When a `;` character is included, everything after `;` on the line is a comment.
+* Comments of `;+` `;-` are collapsed to make it easier to collapse parts of the code.
+
+---
 
 ## Compiler commands (example of 6502)
 

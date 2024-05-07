@@ -31,7 +31,7 @@ export class DefinitionProvider {
 				break;
 
 			case "Include":
-				result.filePath = match.matchToken!.text;
+				result.filePath = match.tag;
 				break;
 
 			case "Label":
