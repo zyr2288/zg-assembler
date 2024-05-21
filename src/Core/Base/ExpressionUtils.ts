@@ -56,7 +56,6 @@ export interface ExpressionPart {
 	type: PriorityType;
 	token: Token;
 	value: number;
-	chars?: number[];
 }
 //#endregion 表达式分割
 
@@ -68,16 +67,14 @@ export interface ExpAnalyseOption {
 	resultType?: "Number" | "ArrayNumber";
 }
 
-export enum ExpressionType { Number, SingleChar, String }
-
-type ExpressionResult = { success: boolean } & Expression;
-
 /**表达式 */
 export interface Expression {
 	/**所有表达式小节 */
 	parts: ExpressionPart[];
-	/**表达式类型，数字，单字符，包含字符串 */
-	type: ExpressionType;
+	/**所包含的字符串长度 */
+	stringLength: number;
+	/**所在字符串的位置 */
+	stringIndex: number;
 }
 
 export interface ExpResultType<T> {
@@ -121,7 +118,7 @@ export class ExpressionUtils {
 	 */
 	static SplitAndSort(expression: Token): Expression | undefined {
 		if (expression.isEmpty)
-			return { parts: [], type: ExpressionType.Number };
+			return { parts: [], stringLength: 0, stringIndex: -1 };
 
 		let temp = ExpressionUtils.SplitExpression(expression);
 		if (!temp.success)
@@ -131,7 +128,7 @@ export class ExpressionUtils {
 		if (!temp2.success)
 			return;
 
-		return { parts: temp.parts, type: ExpressionType.Number };
+		return { parts: temp.parts, stringLength: temp.stringLength, stringIndex: temp2.stringIndex };
 	}
 	//#endregion 表达式分解与排序，并初步检查是否正确，不检查标签是否存在
 
@@ -506,9 +503,9 @@ export class ExpressionUtils {
 	 * @param expression 整合的表达式Token
 	 * @returns 
 	 */
-	private static SplitExpression(expression: Token): ExpressionResult {
+	private static SplitExpression(expression: Token) {
 
-		const result: ExpressionResult = { success: true, parts: [] as ExpressionPart[], type: ExpressionType.Number };
+		const result = { success: true, parts: [] as ExpressionPart[], stringLength: 0 };
 
 		// 临时标签
 		if (LabelUtils.namelessLabelRegex.test(expression.text)) {
@@ -550,17 +547,13 @@ export class ExpressionUtils {
 							case 1:
 								part.type = PriorityType.Level_0_Sure;
 								part.value = part.token.text.charCodeAt(0);
-								if (result.type < ExpressionType.SingleChar)
-									result.type = ExpressionType.SingleChar;
+								result.stringLength = 1;
+
 								break;
 							default:
 								part.type = PriorityType.Level_3_CharArray;
-								part.chars = [];
-								for (let j = 0; j < part.token.text.length; j++)
-									part.chars[j] = part.token.text.charCodeAt(j);
-
-								if (result.type < ExpressionType.String)
-									result.type = ExpressionType.String;
+								if (result.stringLength < part.token.text.length)
+									result.stringLength = part.token.text.length;
 
 								break;
 						}
@@ -693,14 +686,17 @@ export class ExpressionUtils {
 	 */
 	private static LexerSort(exprParts: ExpressionPart[]) {
 
-		const result = { success: true, parts: [] as ExpressionPart[] };
+		const result = { success: true, parts: [] as ExpressionPart[], stringIndex: -1 };
 		const stack: ExpressionPart[] = [];
 
 		for (let i = 0; i < exprParts.length; i++) {
 			const part = exprParts[i];
 			switch (part.type) {
 				case PriorityType.Level_0_Sure:
+					result.parts.push(part);
+					break;
 				case PriorityType.Level_3_CharArray:
+					result.stringIndex = i;
 					result.parts.push(part);
 					break;
 				case PriorityType.Level_1_Label:
@@ -793,34 +789,9 @@ export class ExpressionUtils {
 		// }
 		// console.log(temp);
 
-		if (!result.success) {
-			console.log("有错误");
-		}
-
 		return result;
 	}
 	//#endregion 表达式优先级排序
-
-	//#region 检查表达式小节是否包含长度大于1的字符串
-	/**
-	 * 检查表达式小节是否包含长度大于1的字符串
-	 * @param parts 所有表达式小节
-	 * @returns 
-	 */
-	private static CheckString(parts: ExpressionPart[]) {
-
-		let index = -1;
-		for (let i = 0; i < parts.length; i++) {
-			const part = parts[i];
-			if (part.type === PriorityType.Level_3_CharArray) {
-				index = i;
-				break;
-			}
-
-		}
-		return index;
-	}
-	//#endregion 检查表达式小节是否包含长度大于1的字符串
 
 }
 
