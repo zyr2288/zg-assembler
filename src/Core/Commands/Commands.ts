@@ -52,7 +52,7 @@ interface IncludeCommand {
 
 export class Commands {
 
-	static allCommandNames = new Set<string>();
+	static commandNames = new Set<string>();
 
 	/**命令的参数个数最小与最大，key是命令 */
 	private static commandsParamsCount = new Map<string, { min: number, max: number }>();
@@ -67,15 +67,15 @@ export class Commands {
 			func();
 		}
 
-		Commands.allCommandNames.clear();
+		Commands.commandNames.clear();
 		Commands.allCommands.forEach((value, key, map) => {
-			Commands.allCommandNames.add(key);
+			Commands.commandNames.add(key);
 			if (value.includeCommand)
 				for (let i = 0; i < value.includeCommand.length; ++i)
-					Commands.allCommandNames.add(value.includeCommand[i].name);
+					Commands.commandNames.add(value.includeCommand[i].name);
 
 			if (value.endCommand)
-				Commands.allCommandNames.add(value.endCommand);
+				Commands.commandNames.add(value.endCommand);
 		});
 	}
 	//#endregion 初始化

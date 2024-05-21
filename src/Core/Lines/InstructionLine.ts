@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
+import { Expression, ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
 import { LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
@@ -11,8 +11,7 @@ import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType }
 
 /**汇编行 */
 export class InstructionLine implements ICommonLine {
-
-	type = LineType.Instruction;
+	type: LineType.Instruction = LineType.Instruction;
 	compileType = LineCompileType.None;
 	orgText!: Token;
 
@@ -21,7 +20,7 @@ export class InstructionLine implements ICommonLine {
 
 	instruction!: Token;
 	expression?: Token;
-	expParts: ExpressionPart[][] = [];
+	expParts: Expression[] = [];
 	addressingMode!: IAddressingMode;
 	result: number[] = [];
 
@@ -78,7 +77,7 @@ export class InstructionLineUtils {
 					line.expParts[i] = temp2;
 				} else {
 					line.compileType = LineCompileType.Error;
-					line.expParts[i] = [];
+					line.expParts[i].parts = [];
 				}
 			}
 		} else {
@@ -96,7 +95,7 @@ export class InstructionLineUtils {
 	static ThirdAnalyse(option: DecodeOption): void {
 		const line = option.GetCurrectLine<InstructionLine>();
 		for (let i = 0; i < line.expParts.length; ++i)
-			ExpressionUtils.CheckLabelsAndShowError(line.expParts[i], option);
+			ExpressionUtils.CheckLabelsAndShowError(line.expParts[i].parts, option);
 	}
 	//#endregion 第三次分析，并检查表达式是否有误
 
@@ -125,7 +124,7 @@ export class InstructionLineUtils {
 			return;
 		}
 
-		const temp = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
+		const temp = ExpressionUtils.GetExpressionValue<number>(line.expParts[0].parts, option);
 		if (!temp.success) {
 			const index = line.addressingMode.opCode.length - 1;
 			line.result.length = line.addressingMode.opCodeLength[index]! + index;
@@ -153,7 +152,7 @@ export class InstructionLineUtils {
 
 			if (orgLength > length || temp.value < 0) {
 				const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.value, tempValue);
-				const token = ExpressionUtils.CombineExpressionPart(line.expParts[0]);
+				const token = ExpressionUtils.CombineExpressionPart(line.expParts[0].parts);
 				MyDiagnostic.PushWarning(token, errorMsg);
 			}
 		}

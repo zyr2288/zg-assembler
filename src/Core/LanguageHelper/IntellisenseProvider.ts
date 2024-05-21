@@ -466,7 +466,7 @@ export class IntellisenseProvider {
 	//#region 更新所有编译器命令
 	/**更新所有编译器命令 */
 	static UpdateCommandCompletions() {
-		Commands.allCommandNames.forEach(value => {
+		Commands.commandNames.forEach(value => {
 			let completion = new Completion({
 				showText: value,
 				insertText: value.substring(1),

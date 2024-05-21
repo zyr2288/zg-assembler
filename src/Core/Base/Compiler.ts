@@ -18,6 +18,18 @@ import { DecodeOption } from "./Options";
 import { ResultUtils } from "./ResultUtils";
 import { Token } from "./Token";
 
+type MatchKey = "instruction" | "command" | "unknow";
+
+interface MatchResult {
+	key?: MatchKey;
+	content: {
+		pre: Token,
+		main: Token,
+		rest: Token,
+	},
+	comment: string
+}
+
 /**编译类 */
 export class Compiler {
 
@@ -28,6 +40,9 @@ export class Compiler {
 	private static compilerEnv = new Environment(true);
 	private static editorEnv = new Environment(false);
 	private static tempComment = { lastComment: "", saveComment: [] as string[] };
+
+	private static comma = new Set<string>(",");
+	private static space = new Set<string>([" ", "\t"]);
 
 	//#region 解析文本
 	/**
@@ -115,7 +130,7 @@ export class Compiler {
 
 		let contentToken: Token;
 		let newLine = {} as ICommonLine;
-		let match: RegExpExecArray | null = null;
+		let match: MatchResult | null = null;
 		let orgText: Token;
 
 		//#region 保存行Token
@@ -155,7 +170,7 @@ export class Compiler {
 
 		const allLines = text.split(/\r\n|\r|\n/);
 		for (let index = 0; index < allLines.length; ++index) {
-			orgText = Token.CreateToken(fileHash, index, 0, allLines[index]);
+			orgText = Token.CreateToken(allLines[index], { fileHash, line: index });
 
 			const { content, comment } = Compiler.GetContent(orgText);
 			contentToken = content;
@@ -165,9 +180,20 @@ export class Compiler {
 			if (content.isEmpty)
 				continue;
 
-			match = new RegExp(Platform.regexString, "ig").exec(content.text);
+			match = Compiler.MatchLineCommon(content.text)
 
-			if (match?.groups?.["command"]) {
+			switch(match.key) {
+				case "instruction":
+					SaveToken(LineType.Instruction);
+					break;
+				case "command":
+					SaveToken(LineType.Command);
+					break;
+				case "unknow":
+					newLine = new UnknowLine();
+					break;
+			}
+			if (match.key) {
 				SaveToken(LineType.Command);
 			} else if (match?.groups?.["instruction"]) {
 				SaveToken(LineType.Instruction);
@@ -302,6 +328,123 @@ export class Compiler {
 		return { content: temp[0], comment };
 	}
 	//#endregion 分割内容与注
+
+	//#region 匹配通用行
+	static MatchLineCommon(lineText: string) {
+		return Compiler.MatchLine(lineText, ["instruction", Platform.allInstruction], ["command", Commands.commandNames]);
+	}
+	//#endregion 匹配通用行
+
+	//#region 基础分析行
+	/**
+	 * 基础分析行，只分析 Command Instruction
+	 * @param lineText 一行内容
+	 * @returns 基础分析内容，Command 和 Instruction
+	 */
+	static MatchLine(lineText: string, ...matchContent: [key: string, value: Set<string>][]) {
+		const result: MatchResult = {
+			key: typeof matchContent[0][0] as MatchKey,
+			content: {
+				pre: {} as Token,
+				main: {} as Token,
+				rest: {} as Token,
+			},
+			comment: ""
+		};
+
+		if (lineText.trim() === "") {
+			return result;
+		}
+
+		// 如果包含注释，则移除注释
+		let index = lineText.indexOf(";");
+		if (index !== -1) {
+			result.comment = lineText.substring(index + 1);
+			if (result.comment[0] === "+" || result.comment[0] === "-")
+				result.comment = result.comment.substring(1);
+
+			lineText = lineText.substring(0, index);
+			if (lineText.trim() === "") {
+				result.key = "comment";
+				return result;
+			}
+		}
+
+		let times = 0;
+		index = 0;
+		while (true) {
+			let tempResult = Compiler.SplitWithChar(index, lineText, Compiler.space);
+			if (times > 1 || tempResult.text === "")
+				break;
+
+			let upCaseMatch = tempResult.text.toUpperCase();
+
+			for (let i = 0; i < matchContent.length; i++) {
+				const content = matchContent[i];
+				if (content[1].has(upCaseMatch)) {
+					result.key = content[0];
+					break;
+				}
+			}
+
+			if (!result.key) {
+				index = tempResult.start + tempResult.text.length + 1;
+				times++;
+			}
+
+			result.content.main = Token.CreateToken(tempResult.text, { start: tempResult.start });
+
+			let tempStr = lineText.substring(0, tempResult.start - 1);
+			result.content.pre = Token.CreateToken(tempStr);
+
+			let length = tempResult.start + tempResult.text.length;
+			result.content.rest = Token.CreateToken(tempStr, { start: length });
+
+			return result;
+		}
+		result.key = "unknow";
+		result.content.main = Token.CreateToken(lineText);
+		return result;
+	}
+	//#endregion 基础分析行
+
+	//#region 分割逗号
+	/**
+	 * 
+	 * @param token 要分割的Token
+	 * @param option.count 分割几次，0是无数次
+	 * @returns 
+	 */
+	static SplitComma(token: Token | undefined, option?: { count?: number }) {
+		if (!token || token.isEmpty)
+			return;
+
+		let result: Token[] = [];
+		let count = option?.count ?? 0;
+		let start = 0;
+		while (true) {
+			let temp = Compiler.SplitWithChar(start, token.text, Compiler.comma);
+			if (temp.text === "")
+				break;
+
+			const newToken = Token.CreateToken(temp.text, { start: start + token.start, line: token.line, fileHash: token.fileHash });
+			result.push(newToken);
+			start += temp.text.length + 1;
+
+			if (--count === 0) {
+				let temp2 = token.Substring(start + 1);
+				if (!temp2.isEmpty)
+					result.push(temp2);
+
+				break;
+			}
+
+		}
+
+		return result;
+	}
+	//#endregion 分割逗号
+
 
 	/***** 编译结果 *****/
 
@@ -449,6 +592,51 @@ export class Compiler {
 	//#endregion 给文件的地址增加偏移
 
 	/***** 辅助方法 *****/
+
+	//#region 分割基础行，不在字符串内分析
+	/**
+	 * 分割基础行，不在字符串内分析
+	 * @param start 起始分析位置
+	 * @param lineText 行内容
+	 * @param chars 所有要分析的字符
+	 * @returns 
+	 */
+	private static SplitWithChar(start: number, lineText: string, chars: Set<string>) {
+		let matchStart = start;
+		let matchText = "";
+		let isString = false;
+
+		for (let index = start; index < lineText.length; index++) {
+			if (isString) {
+				if (lineText[index] !== "\"")
+					continue;
+
+				if (lineText[index - 1] !== "\\")
+					isString = false;
+
+				continue;
+			}
+
+			if (lineText[index] === "\"") {
+				isString = true;
+				continue;
+			} else if (chars.has(lineText[index])) {
+				matchText = lineText.substring(matchStart, index);
+				if (matchText.trim() === "") {
+					matchStart++;
+					continue;
+				}
+
+				break;
+			}
+		}
+
+		if (matchText === "")
+			matchText = lineText.substring(matchStart);
+
+		return { start: matchStart, text: matchText };
+	}
+	//#endregion 分割基础行，不在字符串内分析
 
 	//#region 提取行前的Label单独转换城OnlyLabelLine
 	/**

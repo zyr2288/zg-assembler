@@ -19,6 +19,8 @@ export class Platform {
 	/**当前平台 */
 	static platform: AsmCommon;
 
+	static allInstruction: Set<string> = new Set<string>();
+
 	/**匹配编译器命令，编译指令，等式字符串，匹配结果 command instruction variable */
 	static regexString: string;
 
@@ -34,6 +36,7 @@ export class Platform {
 	 * @param platform 编译平台 目前有 6502 65816 z80-gb
 	 */
 	static ChangePlatform(platform: string) {
+		Platform.allInstruction.clear();
 
 		if (!Platform.platformNames) {
 			Platform.platformNames = [];
@@ -62,7 +65,7 @@ export class Platform {
 
 		Platform.regexString = `((\\s+|^)((?<${MatchNames.command}>`;
 		let temp: string;
-		Commands.allCommandNames.forEach((value) => {
+		Commands.commandNames.forEach((value) => {
 			temp = Utils.TransformRegex(value) + "|";
 			Platform.regexString += temp;
 		});

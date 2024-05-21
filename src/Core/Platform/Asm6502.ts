@@ -4,16 +4,14 @@ import { DecodeOption } from "../Base/Options";
 import { Localization } from "../I18n/Localization";
 import { LineCompileType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
-import { AddressOption, AsmCommon } from "./AsmCommon";
+import { AddressOption, AsmCommon, AsmInstruction } from "./AsmCommon";
 
-export class Asm6502 {
+export class Asm6502 implements AsmInstruction {
 
-	static readonly PlatformName = "6502";
+	name = "6502";
 
 	constructor() {
-		AsmCommon.allInstructions.clear();
 		this.Initialize();
-		AsmCommon.UpdateInstructions();
 	}
 
 	private Initialize() {

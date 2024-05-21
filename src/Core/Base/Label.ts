@@ -64,6 +64,10 @@ export interface INamelessLabel extends ICommonLabel {
 	count: number;
 }
 
+export class LabelNormal {
+	
+}
+
 
 /**标签工具类 */
 export class LabelUtils {

@@ -12,19 +12,13 @@ export class IOImplementation {
 	private static messageOutput = vscode.window.createOutputChannel("ZG Assembler");
 
 	static Initialize() {
-		LSPUtils.assembler.fileUtils.BytesToString = IOImplementation.BytesToString;
 		LSPUtils.assembler.fileUtils.GetFolderFiles = IOImplementation.GetFolderFiles;
 		LSPUtils.assembler.fileUtils.PathType = IOImplementation.PathType;
 		LSPUtils.assembler.fileUtils.ReadFile = IOImplementation.ReadFile;
 		LSPUtils.assembler.fileUtils.SaveFile = IOImplementation.SaveFile;
 		LSPUtils.assembler.fileUtils.ShowMessage = IOImplementation.ShowMessage;
-		LSPUtils.assembler.fileUtils.StringToBytes = IOImplementation.StringToByte;
 	}
 
-	static BytesToString(data: Uint8Array) {
-		const decoder = new TextDecoder();
-		return decoder.decode(data);
-	}
 
 	static async GetFolderFiles(path: string) {
 		path = await LSPUtils.assembler.fileUtils.GetPathFolder(path);
@@ -75,11 +69,6 @@ export class IOImplementation {
 	static ShowMessage(message: string) {
 		IOImplementation.messageOutput.append(message);
 		IOImplementation.messageOutput.show(true);
-	}
-
-	static StringToByte(text: string) {
-		const encoder = new TextEncoder();
-		return encoder.encode(text);
 	}
 
 }

@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
+import { Expression, ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
 import { Token } from "../Base/Token";
 import { HighlightToken, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
@@ -16,7 +16,7 @@ export class CommandLine implements ICommonLine {
 
 	command!: Token;
 	expression?: Token;
-	expParts: ExpressionPart[][] = [];
+	expParts: Expression[] = [];
 	result: number[] = [];
 
 	tag?: any;

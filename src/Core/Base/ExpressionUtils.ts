@@ -45,6 +45,8 @@ export enum PriorityType {
 	Level_14_AndAnd,
 	/**|| */
 	Level_15_OrOr,
+	/**[] */
+	Level_16_Brackets
 };
 //#endregion 算数优先级
 
@@ -66,6 +68,18 @@ export interface ExpAnalyseOption {
 	resultType?: "Number" | "ArrayNumber";
 }
 
+export enum ExpressionType { Number, SingleChar, String }
+
+type ExpressionResult = { success: boolean } & Expression;
+
+/**表达式 */
+export interface Expression {
+	/**所有表达式小节 */
+	parts: ExpressionPart[];
+	/**表达式类型，数字，单字符，包含字符串 */
+	type: ExpressionType;
+}
+
 export interface ExpResultType<T> {
 	success: boolean;
 	value: T;
@@ -79,27 +93,23 @@ export class ExpressionUtils {
 	//#region 初始化
 	/**初始化 */
 	static Initialize() {
-		ExpressionUtils.onlyOnePriority.set("(", PriorityType.Level_4_Brackets);
-		ExpressionUtils.onlyOnePriority.set(")", PriorityType.Level_4_Brackets);
-		ExpressionUtils.onlyOnePriority.set("*", PriorityType.Level_6);
-		ExpressionUtils.onlyOnePriority.set("$", PriorityType.Level_6);
-		ExpressionUtils.onlyOnePriority.set("/", PriorityType.Level_6);
-		ExpressionUtils.onlyOnePriority.set("%", PriorityType.Level_6);
-		ExpressionUtils.onlyOnePriority.set("+", PriorityType.Level_7);
-		ExpressionUtils.onlyOnePriority.set("-", PriorityType.Level_7);
-		ExpressionUtils.onlyOnePriority.set("<<", PriorityType.Level_8_Shift);
-		ExpressionUtils.onlyOnePriority.set(">>", PriorityType.Level_8_Shift);
-		ExpressionUtils.onlyOnePriority.set(">", PriorityType.Level_9_Confident1);
-		ExpressionUtils.onlyOnePriority.set("<", PriorityType.Level_9_Confident1);
-		ExpressionUtils.onlyOnePriority.set(">=", PriorityType.Level_9_Confident1);
-		ExpressionUtils.onlyOnePriority.set("<=", PriorityType.Level_9_Confident1);
-		ExpressionUtils.onlyOnePriority.set("!=", PriorityType.Level_10_Confident2);
-		ExpressionUtils.onlyOnePriority.set("==", PriorityType.Level_10_Confident2);
-		ExpressionUtils.onlyOnePriority.set("&", PriorityType.Level_11_And);
-		ExpressionUtils.onlyOnePriority.set("^", PriorityType.Level_12_Eor);
-		ExpressionUtils.onlyOnePriority.set("|", PriorityType.Level_13_Or);
-		ExpressionUtils.onlyOnePriority.set("&&", PriorityType.Level_14_AndAnd);
-		ExpressionUtils.onlyOnePriority.set("||", PriorityType.Level_15_OrOr);
+		ExpressionUtils.AddPriority(PriorityType.Level_4_Brackets, "(", ")");
+		ExpressionUtils.AddPriority(PriorityType.Level_6, "*", "/", "%");
+		ExpressionUtils.AddPriority(PriorityType.Level_7, "+", "-");
+		ExpressionUtils.AddPriority(PriorityType.Level_8_Shift, "<<", ">>");
+		ExpressionUtils.AddPriority(PriorityType.Level_9_Confident1, ">", "<", ">=", "<=");
+		ExpressionUtils.AddPriority(PriorityType.Level_10_Confident2, "!=", "==");
+		ExpressionUtils.AddPriority(PriorityType.Level_11_And, "&");
+		ExpressionUtils.AddPriority(PriorityType.Level_12_Eor, "^");
+		ExpressionUtils.AddPriority(PriorityType.Level_13_Or, "|");
+		ExpressionUtils.AddPriority(PriorityType.Level_14_AndAnd, "&&");
+		ExpressionUtils.AddPriority(PriorityType.Level_15_OrOr, "||");
+		ExpressionUtils.AddPriority(PriorityType.Level_16_Brackets, "[", "]");
+	}
+
+	private static AddPriority(type: PriorityType, ...op: string[]) {
+		for (let i = 0; i < op.length; i++)
+			ExpressionUtils.onlyOnePriority.set(op[i], type);
 	}
 	//#endregion 初始化
 
@@ -109,19 +119,19 @@ export class ExpressionUtils {
 	 * @param expression 表达式
 	 * @returns 表达式小节，空为有误
 	 */
-	static SplitAndSort(expression: Token): ExpressionPart[] | undefined {
+	static SplitAndSort(expression: Token): Expression | undefined {
 		if (expression.isEmpty)
-			return [];
+			return { parts: [], type: ExpressionType.Number };
 
-		let temp = ExpressionUtils.ExpressionSplit(expression);
+		let temp = ExpressionUtils.SplitExpression(expression);
 		if (!temp.success)
 			return;
 
-		temp = ExpressionUtils.LexerSort(temp.parts);
-		if (!temp.success)
+		let temp2 = ExpressionUtils.LexerSort(temp.parts);
+		if (!temp2.success)
 			return;
 
-		return temp.parts;
+		return { parts: temp.parts, type: ExpressionType.Number };
 	}
 	//#endregion 表达式分解与排序，并初步检查是否正确，不检查标签是否存在
 
@@ -188,7 +198,7 @@ export class ExpressionUtils {
 	 * @param option 选项
 	 * @returns 结果
 	 */
-	static GetExpressionValue<T = number | number[]>(parts: ExpressionPart[], option: DecodeOption, analyseOption?: ExpAnalyseOption): ExpResultType<T> {
+	static GetExpressionValue<T = number | number[]>(parts: Expression, option: DecodeOption, analyseOption?: ExpAnalyseOption): ExpResultType<T> {
 		const strIndex = ExpressionUtils.CheckString(parts);
 		const result: ExpResultType<T> = { success: false, value: [] as T };
 
@@ -248,11 +258,11 @@ export class ExpressionUtils {
 	 * @param parts 表达式小节
 	 * @returns 高亮标识
 	 */
-	static GetHighlightingTokens(parts: ExpressionPart[][]) {
+	static GetHighlightingTokens(parts: Expression[]) {
 		let result: HighlightToken[] = [];
 		for (let i = 0; i < parts.length; ++i) {
-			for (let j = 0; j < parts[i].length; ++j) {
-				const part = parts[i][j];
+			for (let j = 0; j < parts[i].parts.length; ++j) {
+				const part = parts[i].parts[j];
 				switch (part.type) {
 					case PriorityType.Level_1_Label:
 						result.push({ token: part.token, type: part.highlightingType });
@@ -490,14 +500,15 @@ export class ExpressionUtils {
 	}
 	//#endregion 获取表达式的值
 
-	//#region 表达式分解
+	//#region 分割表达式
 	/**
-	 * 表达式分解，是否没有错误，false为有错误
-	 * @param expression 表达式
-	 * @returns 是否有误，以及表达式各个部分
+	 * 分割表达式
+	 * @param expression 整合的表达式Token
+	 * @returns 
 	 */
-	private static ExpressionSplit(expression: Token) {
-		const result = { success: true, parts: [] as ExpressionPart[] };
+	private static SplitExpression(expression: Token): ExpressionResult {
+
+		const result: ExpressionResult = { success: true, parts: [] as ExpressionPart[], type: ExpressionType.Number };
 
 		// 临时标签
 		if (LabelUtils.namelessLabelRegex.test(expression.text)) {
@@ -539,12 +550,17 @@ export class ExpressionUtils {
 							case 1:
 								part.type = PriorityType.Level_0_Sure;
 								part.value = part.token.text.charCodeAt(0);
+								if (result.type < ExpressionType.SingleChar)
+									result.type = ExpressionType.SingleChar;
 								break;
 							default:
 								part.type = PriorityType.Level_3_CharArray;
 								part.chars = [];
 								for (let j = 0; j < part.token.text.length; j++)
 									part.chars[j] = part.token.text.charCodeAt(j);
+
+								if (result.type < ExpressionType.String)
+									result.type = ExpressionType.String;
 
 								break;
 						}
@@ -556,18 +572,28 @@ export class ExpressionUtils {
 					if (!isLabel) {
 						result.success = false;
 						break;
-					};
+					}
 
 					isLabel = true;
 					part.type = ExpressionUtils.onlyOnePriority.get(part.token.text)!;
 					break;
 				case ")":
+				case "]":
 					if (isLabel) {
 						result.success = false;
 						break;
 					};
 
 					isLabel = false;
+					part.type = ExpressionUtils.onlyOnePriority.get(part.token.text)!;
+					break;
+				case "[":
+					if (isLabel) {
+						result.success = false;
+						break;
+					}
+
+					isLabel = true;
 					part.type = ExpressionUtils.onlyOnePriority.get(part.token.text)!;
 					break;
 				case ">":
@@ -656,18 +682,9 @@ export class ExpressionUtils {
 			result.success = false;
 		}
 
-		if (result.success) {
-			const left = Token.EmptyToken();
-			const right = Token.EmptyToken();
-			left.text = "(";
-			right.text = ")";
-			result.parts.unshift({ type: PriorityType.Level_3_Brackets, token: left, value: 0, highlightingType: HighlightType.None });
-			result.parts.push({ type: PriorityType.Level_3_Brackets, token: right, value: 0, highlightingType: HighlightType.None });
-		}
-
 		return result;
 	}
-	//#endregion 表达式分解
+	//#endregion 分割表达式
 
 	//#region 表达式排序，使用二叉树分析
 	/**
@@ -675,10 +692,10 @@ export class ExpressionUtils {
 	 * @param exprParts 所有部分
 	 */
 	private static LexerSort(exprParts: ExpressionPart[]) {
+
 		const result = { success: true, parts: [] as ExpressionPart[] };
 		const stack: ExpressionPart[] = [];
 
-		let matchBarket!: ExpressionPart;
 		for (let i = 0; i < exprParts.length; i++) {
 			const part = exprParts[i];
 			switch (part.type) {
@@ -695,54 +712,60 @@ export class ExpressionUtils {
 					}
 					result.parts.push(part);
 					break;
-				case PriorityType.Level_3_Brackets:
 				case PriorityType.Level_4_Brackets:
 					if (part.token.text === "(") {
 						stack.push(part);
 					} else {
-						while (true) {
-							const lex = stack.pop();
-							if (!lex) {
-								const erroMsg = Localization.GetMessage("Expression error");
-								if (part.type === PriorityType.Level_3_Brackets) {
-									MyDiagnostic.PushException(matchBarket.token, erroMsg);
-								} else {
-									MyDiagnostic.PushException(part.token, erroMsg);
-								}
-								result.success = false;
-								break;
-							} else if (lex.type === PriorityType.Level_4_Brackets) {
-								matchBarket = lex;
-								break;
-							} else if (lex.type === PriorityType.Level_3_Brackets) {
-								if (part.type !== PriorityType.Level_3_Brackets) {
-									matchBarket = part;
-								}
-								break;
-							}
+						while (stack.length > 0 && stack[stack.length - 1].token.text !== "(") {
+							const lex = stack.pop()!;
 							result.parts.push(lex);
 						}
-					}
-					break;
-				default:
-					while (true) {
-						const top = stack.pop();
-						if (!top) {
+
+						if (stack.length === 0 || stack[stack.length - 1].token.text !== "(") {
 							const erroMsg = Localization.GetMessage("Expression error");
 							MyDiagnostic.PushException(part.token, erroMsg);
 							result.success = false;
 							break;
 						}
 
-						if (part.type >= top.type && top.type !== PriorityType.Level_4_Brackets && top.type !== PriorityType.Level_3_Brackets) {
+						stack.pop();
+					}
+					break;
+				case PriorityType.Level_16_Brackets:
+					if (part.token.text === "[") {
+						stack.push(part);
+					} else {
+						while (stack.length > 0 && stack[stack.length - 1].token.text !== "[") {
+							const lex = stack.pop()!;
+							result.parts.push(lex);
+						}
+
+						if (stack.length === 0 || stack[stack.length - 1].token.text !== "[") {
+							const erroMsg = Localization.GetMessage("Expression error");
+							MyDiagnostic.PushException(part.token, erroMsg);
+							result.success = false;
+							break;
+						}
+
+						result.parts.push(stack.pop()!);
+					}
+					break;
+				default:
+					while (stack.length > 0 && part.type >= stack[stack.length - 1].type) {
+						const top = stack.pop();
+						if (!top)
+							break;
+
+						if (part.type >= top.type && top.type !== PriorityType.Level_4_Brackets) {
 							result.parts.push(top);
 							continue;
 						}
 
 						stack.push(top);
-						stack.push(part);
 						break;
 					}
+
+					stack.push(part);
 					break;
 			}
 
@@ -750,10 +773,28 @@ export class ExpressionUtils {
 				break;
 		}
 
-		if (stack.length !== 0) {
-			const erroMsg = Localization.GetMessage("Expression error");
-			MyDiagnostic.PushException(matchBarket.token, erroMsg);
-			result.success = false;
+		while (true) {
+			let p = stack.pop();
+			if (!p)
+				break;
+
+			if (p.type === PriorityType.Level_4_Brackets || p.type === PriorityType.Level_16_Brackets) {
+				const erroMsg = Localization.GetMessage("Expression error");
+				MyDiagnostic.PushException(p.token, erroMsg);
+				result.success = false;
+				break;
+			}
+			result.parts.push(p);
+		}
+
+		// let temp = "";
+		// for (let i = 0; i < result.parts.length; i++) {
+		// 	temp += result.parts[i].token.text + " ";
+		// }
+		// console.log(temp);
+
+		if (!result.success) {
+			console.log("有错误");
 		}
 
 		return result;

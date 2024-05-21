@@ -4,6 +4,7 @@ import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Localization } from "../I18n/Localization";
 import { Completion } from "../LanguageHelper/IntellisenseProvider";
+import { Platform } from "./Platform";
 
 export interface IAddressingMode {
 	/**寻址正则表达式的分割 */
@@ -66,6 +67,7 @@ export class AsmCommon {
 	 * @param option 
 	 */
 	static AddInstruction(operation: string, option: AddressOption) {
+		Platform.allInstruction.add(operation);
 		operation = operation.toUpperCase();
 		let index = AsmCommon.allInstructions.get(operation);
 		if (!index) {
@@ -258,13 +260,17 @@ export class AsmCommon {
 				}
 
 				if (match[0].length !== 0 &&
-					match.index <= restCurrect && 
+					match.index <= restCurrect &&
 					restCurrect <= match.index + match[0].length - 1) {
-						return true;
-					}
+					return true;
+				}
 			}
 		}
 	}
 	//#endregion 判断输入内容是否在忽略内容内
 
+}
+
+export interface AsmInstruction {
+	name: string;
 }

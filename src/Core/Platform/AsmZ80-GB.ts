@@ -5,9 +5,7 @@ export class AsmZ80_GB {
 	static readonly PlatformName = "z80-gb";
 
 	constructor() {
-		AsmCommon.ClearInstructions();
 		this.Initialize();
-		AsmCommon.UpdateInstructions();
 	}
 
 	private Initialize() {

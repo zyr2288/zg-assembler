@@ -15,12 +15,12 @@ export class Token {
 	 * @param text 文本
 	 * @returns Token
 	 */
-	static CreateToken(fileHash: number, line: number, start: number, text: string) {
+	static CreateToken(text: string, option?: { fileHash?: number, line?: number, start?: number} ) {
 		let token = new Token();
 
-		token.fileHash = fileHash;
-		token.line = line;
-		token.start = start;
+		token.fileHash = option?.fileHash ?? 0;
+		token.line = option?.line ?? 0;
+		token.start = option?.start ?? 0;
 		token.text = text;
 
 		token.Trim();

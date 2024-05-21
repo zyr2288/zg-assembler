@@ -3,7 +3,7 @@ import { Utils } from "./Utils";
 
 export class FileUtils {
 
-	/**需要实现的接口 */
+	/***** 需要实现的接口 *****/
 
 	//#region 读取文件
 	/**
@@ -40,22 +40,6 @@ export class FileUtils {
 	static PathType: (filePath: string) => Promise<"path" | "file" | "none">;
 	//#endregion 检查路径属性
 
-	//#region 将字符串转换成Bytes
-	/**
-	 * 将字符串转换成Bytes（需要实现）
-	 * @param text 要转换的字符串
-	 */
-	static StringToBytes: (text: string) => Uint8Array;
-	//#endregion 将字符串转换成Bytes
-
-	//#region 将字节转换成字符串
-	/**
-	 * 将字节转换成字符串（需要实现）
-	 * @param data 需要转换的字节数组
-	 */
-	static BytesToString: (data: Uint8Array) => string;
-	//#endregion 将字节转换成字符串
-
 	//#region 显示消息
 	/**
 	 * 显示消息（需要实现）
@@ -64,7 +48,29 @@ export class FileUtils {
 	static ShowMessage: (message: string) => void;
 	//#endregion 显示消息
 
-	/**已实现的接口 */
+	/***** 已实现的接口 *****/
+
+	//#region 将字符串转换成Bytes
+	/**
+	 * 将字符串转换成Bytes
+	 * @param text 要转换的字符串
+	 */
+	static StringToBytes(text: string) {
+		let coder = new TextEncoder();
+		return coder.encode(text);
+	};
+	//#endregion 将字符串转换成Bytes
+
+	//#region 将字节转换成字符串
+	/**
+	 * 将字节转换成字符串
+	 * @param data 需要转换的字节数组
+	 */
+	static BytesToString(data: Uint8Array) {
+		let coder = new TextDecoder();
+		return coder.decode(data);
+	}
+	//#endregion 将字节转换成字符串
 
 	//#region 获取文件路径Hashcode
 	/**

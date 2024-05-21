@@ -1,5 +1,5 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, ExpAnalyseOption, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
+import { ExpressionPart, ExpAnalyseOption, ExpressionUtils, PriorityType, Expression } from "../Base/ExpressionUtils";
 import { ILabel, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption, IncludeLine } from "../Base/Options";
@@ -36,6 +36,8 @@ export class Macro {
 
 	/**自定义函数所有参数 */
 	params = new Map<string, { label: ILabel, values: number[] }>();
+
+	indParam?:LabelNormal;
 
 	/**函数内所有的标签 */
 	labels = new Map<string, ILabel>();
@@ -79,7 +81,7 @@ export class MacroUtils {
 			return;
 		}
 
-		let temp: ExpressionPart[] | undefined;
+		let temp: Expression | undefined;
 		for (let i = 0; i < parts.length; ++i) {
 			const part = parts[i];
 			if (part.isEmpty) {
@@ -178,7 +180,7 @@ export class MacroUtils {
 		let index = 0;
 
 		for (const key of keys) {
-			const result = ExpressionUtils.GetExpressionValue<number[]>(line.expParts[index], option, analyseOption);
+			const result = ExpressionUtils.GetExpressionValue<number[]>(line.expParts[index].parts, option, analyseOption);
 			const param = macro.params.get(key)!;
 			if (result.value.length > 1) {
 				param.values = [];
@@ -270,10 +272,10 @@ export class MacroUtils {
 
 	}
 
-	private static _ReplaceExpression(exps: ExpressionPart[][], macro: Macro) {
+	private static _ReplaceExpression(exps: Expression[], macro: Macro) {
 		for (let i = 0; i < exps.length; i++) {
-			for (let j = 0; j < exps[i].length; j++) {
-				const exp = exps[i][j];
+			for (let j = 0; j < exps[i].parts.length; j++) {
+				const exp = exps[i].parts[j];
 				switch (exp.type) {
 					case PriorityType.Level_1_Label:
 						const param1 = macro.params.get(exp.token.text);

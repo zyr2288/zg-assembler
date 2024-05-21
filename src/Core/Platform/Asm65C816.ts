@@ -12,9 +12,7 @@ export class Asm65C816 {
 	static readonly PlatformName = "65c816";
 
 	constructor() {
-		AsmCommon.ClearInstructions();
 		this.Initialize();
-		AsmCommon.UpdateInstructions();
 	}
 
 	private Initialize() {
