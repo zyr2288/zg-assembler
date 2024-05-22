@@ -1,6 +1,6 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpAnalyseOption, ExpressionUtils, PriorityType, Expression } from "../Base/ExpressionUtils";
-import { ILabel, LabelType, LabelUtils } from "../Base/Label";
+import { ILabel, LabelNormal, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption, IncludeLine } from "../Base/Options";
 import { Token } from "../Base/Token";
@@ -37,7 +37,7 @@ export class Macro {
 	/**自定义函数所有参数 */
 	params = new Map<string, { label: ILabel, values: number[] }>();
 
-	indParam?:LabelNormal;
+	indParam = new Map<string, LabelNormal>();
 
 	/**函数内所有的标签 */
 	labels = new Map<string, ILabel>();

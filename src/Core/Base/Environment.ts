@@ -2,7 +2,7 @@ import { DataGroup } from "../Commands/DataGroup";
 import { Macro } from "../Commands/Macro";
 import { HighlightRange, ICommonLine } from "../Lines/CommonLine";
 import { FileUtils } from "./FileUtils";
-import { ILabel, ILabelTree, INamelessLabelCollection, LabelType } from "./Label";
+import { ILabelTree, LabelNamelessCollection, LabelNormal, LabelType } from "./Label";
 
 export class Environment {
 
@@ -18,11 +18,11 @@ export class Environment {
 
 	allLabel = {
 		/**key 标签名称 */
-		global: new Map<string, ILabel>(),
+		global: new Map<string, LabelNormal>(),
 		/**key1 文件hash  key2 标签名称 */
-		local: new Map<number, Map<string, ILabel>>(),
+		local: new Map<number, Map<string, LabelNormal>>(),
 		/**key1 文件hash */
-		nameless: new Map<number, INamelessLabelCollection>()
+		nameless: new Map<number, LabelNamelessCollection>()
 	}
 
 	fileLabel = {
@@ -154,7 +154,7 @@ export class Environment {
 		} else {
 			const label = this.allLabel.global.get(labelString);
 			if (label && label.token.fileHash === fileHash) {
-				label.labelType = LabelType.None;
+				label.type = LabelType.None;
 			}
 		}
 
