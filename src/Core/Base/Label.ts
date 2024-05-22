@@ -53,7 +53,7 @@ export interface LabelNamelessCollection {
 /**常规标签 */
 export class LabelNormal {
 	token: Token;
-	type: LabelType = LabelType.None;
+	labelType: LabelType = LabelType.None;
 
 	scope: LabelScope.Global | LabelScope.Local = LabelScope.Global;
 	value?: number;
@@ -66,7 +66,7 @@ export class LabelNormal {
 
 		this.comment = option?.comment;
 		if (option?.labelType)
-			this.type = option.labelType;
+			this.labelType = option.labelType;
 	}
 }
 
@@ -146,7 +146,7 @@ export class LabelUtils {
 		}
 
 		if (tempLabel || Compiler.enviroment.allMacro.has(token.text)) {
-			if (tempLabel?.type === LabelType.Variable || tempLabel?.type === LabelType.None) {
+			if (tempLabel?.labelType === LabelType.Variable || tempLabel?.labelType === LabelType.None) {
 				// 获取原来的的label存储的fileLabel并删除，添加的新的label
 				let labelSet = Compiler.enviroment.fileLabel.global.get(tempLabel.token.fileHash);
 				labelSet?.delete(tempLabel.token.text);
@@ -477,7 +477,7 @@ export class LabelUtils {
 			text += tokens[index].text;
 			result = labelMap.get(text);
 			if (index === lastIndex) {
-				if (result?.type === LabelType.Defined || result?.type === LabelType.Label) {
+				if (result?.labelType === LabelType.Defined || result?.labelType === LabelType.Label) {
 					let errorMsg = Localization.GetMessage("Label {0} is already defined", token.text);
 					MyDiagnostic.PushException(token, errorMsg);
 					return;
