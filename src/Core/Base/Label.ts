@@ -1,12 +1,6 @@
-import { DataGroup } from "../Commands/DataGroup";
-import { Macro } from "../Commands/Macro";
+import { Macro, MacroInstance } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
-import { CommandLine } from "../Lines/CommandLine";
-import { InstructionLine } from "../Lines/InstructionLine";
-import { OnlyLabelLine } from "../Lines/OnlyLabelLine";
-import { VariableLine } from "../Lines/VariableLine";
 import { Compiler } from "./Compiler";
-import { ExpressionUtils } from "./ExpressionUtils";
 import { MyDiagnostic } from "./MyException";
 import { DecodeOption } from "./Options";
 import { Token } from "./Token";
@@ -190,7 +184,7 @@ export class LabelUtils {
 	 * @param macro 函数
 	 * @returns 是否找到标签
 	 */
-	static FindLabel(token?: Token, macro?: Macro): LabelCommon | undefined {
+	static FindLabel(token?: Token, macro?: MacroInstance): LabelCommon | undefined {
 		if (!token || token.isEmpty)
 			return;
 
@@ -280,12 +274,11 @@ export class LabelUtils {
 	//#endregion 查找标签
 
 	//#region 查找下标
-	static FindSubLabel(main: Token, sub: Token, option?: { third?: Token, macro?: Macro }) {
-		if (option?.macro && option.macro.indParam) {
-			const macro = option.macro;
+	static FindSubLabel(main: Token, sub: Token, option?: { third?: Token, macro?: MacroInstance }) {
+		if (option?.macro && option.macro.indefiniteParam && option.macro.indefiniteParam) {
 			if (sub.text === "length") {
 				const label = new LabelNormal(sub);
-				label.value = macro.indParam.size;
+				label.value = option.macro.indefiniteParam.params.length;
 				return label;
 			}
 		}
@@ -561,7 +554,7 @@ export class LabelUtils {
 	//#endregion 获取文件保存的Labelhash
 
 	//#region 查询Macro内的标签
-	private static FindLabelInMacro(token: Token, macro: Macro) {
+	private static FindLabelInMacro(token: Token, macro: MacroInstance) {
 		return macro.params.get(token.text)?.label ?? macro.labels.get(token.text);
 		// 	const parts = token.Split(/\:/g);
 		// if (parts.length != 2)

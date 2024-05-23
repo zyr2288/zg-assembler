@@ -1,17 +1,17 @@
 import { Expression, ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
 import { Token } from "../Base/Token";
-import { Macro } from "../Commands/Macro";
-import {  HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
+import { MacroInstance } from "../Commands/Macro";
+import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
-export class MacroLine implements ICommonLine {
-	type = LineType.Macro;
+export class MacroLine {
+	type: LineType.Macro = LineType.Macro;
 	compileType = LineCompileType.None;
 	orgText!: Token;
 
 	orgAddress: number = -1;
 	baseAddress: number = 0;
 	/**所关联的自定义函数 */
-	macro!: Macro;
+	macro!: MacroInstance;
 	/**自定义函数行的函数名Token */
 	macroToken!: Token;
 	/**自定义函数的所有参数 */

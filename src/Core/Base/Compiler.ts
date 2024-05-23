@@ -12,13 +12,13 @@ import { Platform } from "../Platform/Platform";
 import { Config } from "./Config";
 import { Environment } from "./Environment";
 import { ExpressionUtils } from "./ExpressionUtils";
-import { ILabel, LabelUtils } from "./Label";
+import { LabelNormal } from "./Label";
 import { MyDiagnostic } from "./MyException";
 import { DecodeOption } from "./Options";
 import { ResultUtils } from "./ResultUtils";
 import { Token } from "./Token";
 
-type MatchKey = "instruction" | "command" | "unknow";
+type MatchKey = "instruction" | "command" | "comment" | "variable" | "macro" | "unknow";
 
 interface MatchResult {
 	key?: MatchKey;
@@ -43,6 +43,7 @@ export class Compiler {
 
 	private static comma = new Set<string>(",");
 	private static space = new Set<string>([" ", "\t"]);
+	private static equal = new Set<string>("=");
 
 	//#region 解析文本
 	/**
@@ -130,23 +131,23 @@ export class Compiler {
 
 		let contentToken: Token;
 		let newLine = {} as ICommonLine;
-		let match: MatchResult | null = null;
+		let match!: MatchResult;
 		let orgText: Token;
 
 		//#region 保存行Token
 		const SaveToken = (lineType: LineType) => {
 
-			const labelToken = contentToken.Substring(0, match!.index);
+			// const labelToken = contentToken.Substring(0, match!.con);
 
-			const comOrIntrs = contentToken.Substring(match!.index, match![0].length);
-			const expression = contentToken.Substring(match!.index + match![0].length);
+			// const comOrIntrs = contentToken.Substring(match!.index, match![0].length);
+			// const expression = contentToken.Substring(match!.index + match![0].length);
 
-			comOrIntrs.text = comOrIntrs.text.toUpperCase();
+			// comOrIntrs.text = comOrIntrs.text.toUpperCase();
 
 			switch (lineType) {
 				case LineType.Command:
 					let comLine = new CommandLine();
-					comLine.Initialize({ command: comOrIntrs, expression });
+					comLine.Initialize({ command: match.content.main, expression });
 					this.GetOnlyLabel(labelToken, result);
 					newLine = comLine;
 					break;
@@ -182,7 +183,7 @@ export class Compiler {
 
 			match = Compiler.MatchLineCommon(content.text)
 
-			switch(match.key) {
+			switch (match.key) {
 				case "instruction":
 					SaveToken(LineType.Instruction);
 					break;
@@ -190,18 +191,25 @@ export class Compiler {
 					SaveToken(LineType.Command);
 					break;
 				case "unknow":
-					newLine = new UnknowLine();
+					match = Compiler.MatchLine(content.text, ["variable", Compiler.equal])
+					if (match.key !== "variable") {
+						SaveToken(LineType.Variable);
+					} else {
+						newLine = new UnknowLine();
+					}
 					break;
 			}
-			if (match.key) {
-				SaveToken(LineType.Command);
-			} else if (match?.groups?.["instruction"]) {
-				SaveToken(LineType.Instruction);
-			} else if (match?.groups?.["variable"]) {
-				SaveToken(LineType.Variable);
-			} else {
-				newLine = new UnknowLine();
-			}
+
+
+			// if (match.key) {
+			// 	SaveToken(LineType.Command);
+			// } else if (match?.groups?.["instruction"]) {
+			// 	SaveToken(LineType.Instruction);
+			// } else if (match?.groups?.["variable"]) {
+			// 	SaveToken(LineType.Variable);
+			// } else {
+			// 	newLine = new UnknowLine();
+			// }
 
 			Compiler.CommentClear();
 			if (Compiler.tempComment.lastComment) {
@@ -249,7 +257,6 @@ export class Compiler {
 
 	//#region 第二次分析
 	static async SecondAnalyse(option: DecodeOption) {
-		Compiler.enviroment.UpdateMacroRegexString();
 		for (let i = 0; i < option.allLines.length; i++) {
 			const line = option.allLines[i];
 			if (line.compileType === LineCompileType.Error || line.compileType === LineCompileType.Finished)
@@ -259,19 +266,14 @@ export class Compiler {
 			switch (line.type) {
 				case LineType.Unknow:
 					const unknowLine = option.GetCurrectLine<UnknowLine>();
-					const match = Compiler.enviroment.MatchMacroRegex(unknowLine.orgText.text);
-					const macroName = match?.groups?.["macro"];
-					if (macroName) {
-						const pre = unknowLine.orgText.Substring(0, match!.index);
-						const line = this.GetOnlyLabel(pre, option.allLines, option.lineIndex);
+					const match = Compiler.MatchLine(unknowLine.orgText.text, ["macro", Compiler.enviroment.allMacro]);
+					if (match.key === "macro") {
+						const line = Compiler.GetOnlyLabel(match.content.pre, option.allLines, option.lineIndex);
 						if (line) {
 							line.Analyse(option);
 							option.lineIndex++;
 						}
-
-						const currect = unknowLine.orgText.Substring(match!.index, match![0].length);
-						const after = unknowLine.orgText.Substring(match!.index + match![0].length);
-						MacroUtils.MatchMacroLine(currect, after, option);
+						MacroUtils.MatchMacroLine(match.content.main, match.content.rest, option);
 					} else {
 						const onlyLabelLine = new OnlyLabelLine();
 						onlyLabelLine.comment = unknowLine.comment;
@@ -341,7 +343,7 @@ export class Compiler {
 	 * @param lineText 一行内容
 	 * @returns 基础分析内容，Command 和 Instruction
 	 */
-	static MatchLine(lineText: string, ...matchContent: [key: string, value: Set<string>][]) {
+	static MatchLine(lineText: string, ...matchContent: [key: string, value: Set<string> | Map<string, any>][]) {
 		const result: MatchResult = {
 			key: typeof matchContent[0][0] as MatchKey,
 			content: {
@@ -382,7 +384,7 @@ export class Compiler {
 			for (let i = 0; i < matchContent.length; i++) {
 				const content = matchContent[i];
 				if (content[1].has(upCaseMatch)) {
-					result.key = content[0];
+					result.key = content[0] as MatchKey;
 					break;
 				}
 			}
@@ -444,7 +446,6 @@ export class Compiler {
 		return result;
 	}
 	//#endregion 分割逗号
-
 
 	/***** 编译结果 *****/
 
@@ -652,7 +653,7 @@ export class Compiler {
 
 		const line = new OnlyLabelLine();
 		line.orgText = token;
-		line.saveLabel = { token, label: {} as ILabel, notFinish: true };
+		line.saveLabel = { token, label: {} as LabelNormal, notFinish: true };
 		if (index !== undefined)
 			lines.splice(index, 0, line);
 		else

@@ -1,10 +1,10 @@
-import { ILabel, LabelType, LabelUtils } from "../Base/Label";
+import { LabelNormal, LabelType, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { CommonSaveLabel, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
-export class OnlyLabelLine implements ICommonLine {
-	type = LineType.OnlyLabel;
+export class OnlyLabelLine {
+	type: LineType.OnlyLabel = LineType.OnlyLabel;
 	compileType = LineCompileType.None;
 	orgText!: Token;
 
@@ -17,7 +17,7 @@ export class OnlyLabelLine implements ICommonLine {
 		if (labelToken.isEmpty)
 			return;
 
-		this.saveLabel = { token: labelToken, label: {} as ILabel, notFinish: true };
+		this.saveLabel = { token: labelToken, label: {} as LabelNormal, notFinish: true };
 		this.Analyse(option);
 	}
 

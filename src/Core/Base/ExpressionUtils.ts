@@ -56,6 +56,7 @@ export interface ExpressionPart {
 	type: PriorityType;
 	token: Token;
 	value: number;
+	chars?: number[];
 }
 //#endregion 表达式分割
 
@@ -63,8 +64,6 @@ export interface ExpressionPart {
 export interface ExpAnalyseOption {
 	/**分析类型，尝试获取结果 或 获取不了结果报错 */
 	analyseType?: "Try" | "GetAndShowError";
-	/**结果类型，number 或 number[] */
-	resultType?: "Number" | "ArrayNumber";
 }
 
 /**表达式 */
@@ -187,6 +186,14 @@ export class ExpressionUtils {
 	}
 	//#endregion 分析所有表达式小节并推送错误
 
+	//#region 获取结果值
+	/**
+	 * 获取结果值
+	 * @param parts 
+	 * @param option 
+	 * @param analyseOption 
+	 * @returns 
+	 */
 	static GetValue(parts: ExpressionPart[], option: DecodeOption, analyseOption: ExpAnalyseOption) {
 		const tempPart = Utils.DeepClone(parts);
 		const GetPart = (index: number) => {
@@ -366,68 +373,39 @@ export class ExpressionUtils {
 
 		return result;
 	}
+	//#endregion 获取结果值
 
-	//#region 获取包含字符串的表达式值
+	//#region 获取包含字符串的结果值
 	/**
-	 * 获取包含字符串的表达式值
-	 * @param parts 小节
-	 * @param analyseOption 表达式结果选项
-	 * @param option 选项
-	 * @returns 结果
+	 * 获取包含字符串的结果值
+	 * @param expression 表达式
+	 * @param option 编译选项
+	 * @param analyseOption 分析选项
+	 * @returns 
 	 */
-	static GetExpressionValue<T = number | number[]>(parts: Expression, option: DecodeOption, analyseOption?: ExpAnalyseOption): ExpResultType<T> {
-		const strIndex = ExpressionUtils.CheckString(parts);
-		const result: ExpResultType<T> = { success: false, value: [] as T };
+	static GetStringValue(expression: Expression, option: DecodeOption, analyseOption: ExpAnalyseOption) {
+		const result: number[] = [];
+		result.length = expression.stringLength;
 
-		analyseOption ??= {};
-		analyseOption.resultType ??= "Number";
-		analyseOption.analyseType ??= Compiler.isLastCompile ? "GetAndShowError" : "Try";
-
-		if (strIndex < 0) {
-			const temp = ExpressionUtils._GetExpressionValue(parts, analyseOption, option);
-			result.success = temp.success;
-			result.value = (analyseOption.resultType === "Number" ? temp.value : [temp.value]) as T;
-			return result;
-		}
-
-		const strPart = parts[strIndex];
-		if (analyseOption.resultType === "Number" && strPart.chars!.length > 1) {
-			const error = Localization.GetMessage("Unsupport string");
-			MyDiagnostic.PushException(strPart.token, error);
-			result.success = false;
-			return result;
-		}
-
-
-		(result.value as number[]) = [];
-		(result.value as number[]).length = strPart.chars!.length;
-		result.success = true;
-
-		strPart.type = PriorityType.Level_0_Sure;
-		for (let i = 0; i < strPart.chars!.length; i++) {
-			if (!strPart.chars![i]) {
-				strPart.type = PriorityType.Level_3_CharArray;
-				result.success = false;
-				break;
+		const index = expression.stringIndex;
+		for (let i = 0; i < expression.stringLength; i++) {
+			const part = Utils.DeepClone(expression.parts);
+			part[index] = {
+				token: Token.EmptyToken(),
+				value: expression.parts[index].chars![i],
+				type: PriorityType.Level_2_Number,
+				highlightingType: HighlightType.Number
 			}
 
-			strPart.value = strPart.chars![i];
-			const temp3 = ExpressionUtils._GetExpressionValue(parts, analyseOption, option);
-			if (!temp3.success) {
-				strPart.type = PriorityType.Level_3_CharArray;
-				result.success = false;
+			const temp = ExpressionUtils.GetValue(part, option, analyseOption);
+			if (!temp.success)
 				break;
-			}
 
-			(result.value as number[])[i] = temp3.value;
+			result[i] = temp.value;
 		}
-
-		if (analyseOption.resultType === "Number")
-			result.value = (result.value as number[])[0] as T;
-
 		return result;
 	}
-	//#endregion 获取包含字符串的表达式值
+	//#endregion 获取包含字符串的结果值
 
 	//#region 将所有表达式部分转换成高亮Token
 	/**
@@ -728,10 +706,13 @@ export class ExpressionUtils {
 								part.type = PriorityType.Level_0_Sure;
 								part.value = part.token.text.charCodeAt(0);
 								result.stringLength = 1;
-
 								break;
 							default:
 								part.type = PriorityType.Level_3_CharArray;
+								part.chars = [];
+								for (let i = 0; i < part.token.text.length; i++)
+									part.chars[i] = part.token.text.charCodeAt(i);
+
 								if (result.stringLength < part.token.text.length)
 									result.stringLength = part.token.text.length;
 

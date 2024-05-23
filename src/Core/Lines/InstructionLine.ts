@@ -10,7 +10,7 @@ import { AsmCommon, IAddressingMode } from "../Platform/AsmCommon";
 import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
 /**汇编行 */
-export class InstructionLine implements ICommonLine {
+export class InstructionLine {
 	type: LineType.Instruction = LineType.Instruction;
 	compileType = LineCompileType.None;
 	orgText!: Token;

@@ -38,29 +38,16 @@ export class Environment {
 		local: new Map<number, Map<string, ILabelTree>>()
 	}
 
-	/**所有标签 Key: Label的Hash值 */
-	// allLabels = new Map<number, ILabel>();
 	/**所有自定义函数，Key为函数的名称 */
 	allMacro = new Map<string, Macro>();
 	/**所有数据组 Key: Label的Hash值 */
 	allDataGroup = new Map<string, DataGroup>();
 
 	/**所有编译行 key1:fileHash key2:lineNumber */
-	// allBaseLines = new Map<number, Map<number, ICommonLine>>();
 	allBaseLines = new Map<number, ICommonLine[]>();
 
-	/**临时标签 Key: 文件的fileHash */
-	// namelessLabel = new Map<number, INamelessLabelCollection>();
-
-	/**标签树，key为 Label的Key，用于记忆标签层级关系 */
-	// labelTrees = new Map<number, ILabelTree>();
-
-	/**文件标签，用于记忆文件内的所有标签 */
-	// fileLabels = new Map<number, Set<number>>();
 	/**用于记忆文件内macro */
 	fileMacros = new Map<number, Set<string>>();
-
-	private macroRegexString = "";
 
 	private files = new Map<number, string>();
 	private highlightRanges = new Map<number, HighlightRange[]>();
@@ -154,7 +141,7 @@ export class Environment {
 		} else {
 			const label = this.allLabel.global.get(labelString);
 			if (label && label.token.fileHash === fileHash) {
-				label.type = LabelType.None;
+				label.labelType = LabelType.None;
 			}
 		}
 
@@ -197,42 +184,7 @@ export class Environment {
 		this.fileLabel.global.clear();
 
 		this.fileMacros.clear();
-		this.macroRegexString = "";
 	}
 	//#endregion 清除所有标记
-
-	//#region 更新Macro的正则
-	/**
-	 * 更新Macro的正则
-	 * @returns 
-	 */
-	UpdateMacroRegexString() {
-		if (this.allMacro.size === 0) {
-			this.macroRegexString = "";
-			return;
-		}
-
-		this.macroRegexString = "(^|\\s+)(?<macro>"
-		this.allMacro.forEach((value, key, map) => {
-			this.macroRegexString += key + "|";
-		});
-		this.macroRegexString = this.macroRegexString.substring(0, this.macroRegexString.length - 1);
-		this.macroRegexString += ")(\\s+|$)";
-	}
-	//#endregion 更新Macro的正则
-
-	//#region 匹配自定义函数的正则表达式
-	/**
-	 * 匹配自定义函数的正则表达式
-	 * @param text 要匹配的文本
-	 * @returns 
-	 */
-	MatchMacroRegex(text: string) {
-		if (!this.macroRegexString)
-			return null;
-
-		return new RegExp(this.macroRegexString, "g").exec(text);
-	}
-	//#endregion 匹配自定义函数的正则表达式
 
 }

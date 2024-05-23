@@ -6,8 +6,8 @@ import { Token } from "../Base/Token";
 import { Localization } from "../I18n/Localization";
 import { CommonSaveLabel, HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
-export class VariableLine implements ICommonLine {
-	type = LineType.Variable;
+export class VariableLine {
+	type: LineType.Variable = LineType.Variable;
 	compileType = LineCompileType.None;
 	orgText!: Token;
 
@@ -42,8 +42,8 @@ export class VariableLineUtils {
 		const line = option.GetCurrectLine<VariableLine>();
 		const macro = option.macro;
 		if (!line.saveLabel?.token?.text.startsWith("."))
-			delete(option.macro);
-		
+			delete (option.macro);
+
 		const label = LabelUtils.CreateLabel(line.saveLabel!.token, option, false);
 		if (label) {
 			label.labelType = LabelType.Variable;

@@ -3,9 +3,9 @@ import { Expression, ExpressionPart, ExpressionUtils } from "../Base/ExpressionU
 import { Token } from "../Base/Token";
 import { HighlightToken, ICommonLine, LineCompileType, LineType } from "./CommonLine";
 
-export class CommandLine implements ICommonLine {
+export class CommandLine {
 
-	type: LineType = LineType.Command;
+	type: LineType.Command = LineType.Command;
 	compileType = LineCompileType.None;
 
 	orgText!: Token;
