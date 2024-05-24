@@ -1,8 +1,8 @@
-import { AddressOption, AsmCommon } from "./AsmCommon";
+import { AddressOption, AsmCommon, AsmInstruction } from "./AsmCommon";
 
-export class AsmZ80_GB {
+export class AsmZ80_GB implements AsmInstruction {
 
-	static readonly PlatformName = "z80-gb";
+	static Name = "z80-gb";
 
 	constructor() {
 		this.Initialize();

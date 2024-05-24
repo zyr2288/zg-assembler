@@ -34,7 +34,7 @@ export class Defined {
 
 		const temp = ExpressionUtils.SplitAndSort(expressions[1]);
 		if (temp)
-			line.expParts[0] = temp;
+			line.expression[0] = temp;
 		else
 			line.compileType = LineCompileType.Error;
 
@@ -43,7 +43,7 @@ export class Defined {
 
 	private static ThirdAnalyse_Def(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		const temp = ExpressionUtils.CheckLabelsAndShowError(line.expParts[0], option);
+		const temp = ExpressionUtils.CheckLabelsAndShowError(line.expression[0], option);
 		if (temp) {
 			line.compileType = LineCompileType.Error;
 			return;
@@ -51,14 +51,14 @@ export class Defined {
 
 		const label = line.tag as DefinedTag;
 		const analyseOption: ExpAnalyseOption = { analyseType: "Try" };
-		const temp2 = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option, analyseOption);
+		const temp2 = ExpressionUtils.GetExpressionValue<number>(line.expression[0], option, analyseOption);
 		if (label && temp2.success)
 			label.value = temp2.value;
 	}
 
 	private static Compile_Def(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		const temp = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
+		const temp = ExpressionUtils.GetExpressionValue<number>(line.expression[0], option);
 		const label = line.tag as DefinedTag;
 		if (label && temp.success) {
 			label.value = temp.value;
@@ -68,7 +68,7 @@ export class Defined {
 
 	private static GetTokens(this: CommandLine) {
 		const result: HighlightToken[] = [];
-		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
+		result.push(...ExpressionUtils.GetHighlightingTokens(this.expression));
 		return result;
 	}
 

@@ -1,5 +1,5 @@
 import { Commands } from "../Commands/Commands";
-import { IMacroLine, Macro, MacroUtils } from "../Commands/Macro";
+import { MacroUtils } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
 import { ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
@@ -137,12 +137,11 @@ export class Compiler {
 		//#region 保存行Token
 		const SaveToken = (lineType: LineType) => {
 
-			// const labelToken = contentToken.Substring(0, match!.con);
+			const labelToken = match.content.pre;
+			const comOrIntrs = match.content.main;
+			const expression = match.content.rest;
 
-			// const comOrIntrs = contentToken.Substring(match!.index, match![0].length);
-			// const expression = contentToken.Substring(match!.index + match![0].length);
-
-			// comOrIntrs.text = comOrIntrs.text.toUpperCase();
+			comOrIntrs.text = comOrIntrs.text.toUpperCase();
 
 			switch (lineType) {
 				case LineType.Command:
@@ -483,15 +482,15 @@ export class Compiler {
 					break;
 				case LineType.Variable:
 					const varLine = option.GetCurrectLine<VariableLine>();
-					const result = ExpressionUtils.GetExpressionValue<number>(varLine.expParts[0], option);
-					if (!varLine.saveLabel)
-						break;
+					// const result = ExpressionUtils.GetExpressionValue<number>(varLine.expParts[0], option);
+					// if (!varLine.saveLabel)
+					// 	break;
 
-					if (!varLine.saveLabel.notFinish || (varLine.saveLabel.label && result.success)) {
-						varLine.saveLabel.label.value = result.value;
-						varLine.compileType = LineCompileType.Finished;
-						varLine.saveLabel.notFinish = true;
-					}
+					// if (!varLine.saveLabel.notFinish || (varLine.saveLabel.label && result.success)) {
+					// 	varLine.saveLabel.label.value = result.value;
+					// 	varLine.compileType = LineCompileType.Finished;
+					// 	varLine.saveLabel.notFinish = true;
+					// }
 					break;
 				case LineType.Macro:
 					await MacroUtils.CompileMacroLine(option);
@@ -511,7 +510,7 @@ export class Compiler {
 	 * @param length 设定长度
 	 * @returns 返回设定的值
 	 */
-	static SetResult(line: InstructionLine | CommandLine | IMacroLine, value: number, index: number, length: number): number {
+	static SetResult(line: InstructionLine | CommandLine | MacroLine, value: number, index: number, length: number): number {
 		let temp = length;
 		let tempIndex = 0;
 

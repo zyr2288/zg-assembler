@@ -286,7 +286,7 @@ export class HelperUtils {
 				matchResult.matchType = "Label";
 				matchResult.matchToken = olLine.saveLabel.label.token;
 				return matchResult;
-			} else if (temp = HelperUtils._FindMatchExp(lineNumber, currect, tempLine.expParts)) {
+			} else if (temp = HelperUtils._FindMatchExp(lineNumber, currect, tempLine.expression)) {
 				matchResult.matchToken = temp.token;
 				matchResult.tag = temp.hash;
 				switch (temp.type) {

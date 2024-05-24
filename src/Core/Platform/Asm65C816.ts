@@ -5,11 +5,11 @@ import { Utils } from "../Base/Utils";
 import { Localization } from "../I18n/Localization";
 import { LineCompileType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
-import { AddressOption, AsmCommon } from "./AsmCommon";
+import { AddressOption, AsmCommon, AsmInstruction } from "./AsmCommon";
 
-export class Asm65C816 {
+export class Asm65C816 implements AsmInstruction {
 
-	static readonly PlatformName = "65c816";
+	static Name = "65c816";
 
 	constructor() {
 		this.Initialize();
@@ -205,54 +205,53 @@ export class Asm65C816 {
 	}
 
 	private Condition(option: DecodeOption) {
-		const line = option.GetCurrectLine<InstructionLine>();
-		const tempValue = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
-		if (!tempValue.success) {
-			line.result.length = 2;
-			return;
-		}
+		// const line = option.GetCurrectLine<InstructionLine>();
+		// const tempValue = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
+		// if (!tempValue.success) {
+		// 	line.result.length = 2;
+		// 	return;
+		// }
 
-		const temp = tempValue.value - line.orgAddress - 2;
-		if (temp > 127 || temp < -128) {
-			line.compileType = LineCompileType.Error;
-			let errorMsg = Localization.GetMessage("Argument out of range")
-			MyDiagnostic.PushException(line.instruction, errorMsg);
-			return;
-		}
+		// const temp = tempValue.value - line.orgAddress - 2;
+		// if (temp > 127 || temp < -128) {
+		// 	line.compileType = LineCompileType.Error;
+		// 	let errorMsg = Localization.GetMessage("Argument out of range")
+		// 	MyDiagnostic.PushException(line.instruction, errorMsg);
+		// 	return;
+		// }
 
-		line.SetResult(line.addressingMode.opCode[1]!, 0, 1);
-		line.SetResult(temp & 0xFF, 1, 1);
-		// Compiler.SetResult(line, line.addressingMode.opCode[1]!, 0, 1);
-		// Compiler.SetResult(line, temp & 0xFF, 1, 1);
-		line.compileType = LineCompileType.Finished;
+		// line.SetResult(line.addressingMode.opCode[1]!, 0, 1);
+		// line.SetResult(temp & 0xFF, 1, 1);
+
+		// line.compileType = LineCompileType.Finished;
 	}
 
 	private Move(option: DecodeOption) {
 		const line = option.GetCurrectLine<InstructionLine>();
-		const tempValue1 = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
-		const tempValue2 = ExpressionUtils.GetExpressionValue<number>(line.expParts[1], option);
-		line.result.length = 3;
-		if (!tempValue1.success || !tempValue2.success)
-			return;
+		// const tempValue1 = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
+		// const tempValue2 = ExpressionUtils.GetExpressionValue<number>(line.expParts[1], option);
+		// line.result.length = 3;
+		// if (!tempValue1.success || !tempValue2.success)
+		// 	return;
 
-		line.SetResult(line.addressingMode.opCode[2]!, 0, 1);
+		// line.SetResult(line.addressingMode.opCode[2]!, 0, 1);
 
-		let orgLength = Utils.GetNumberByteLength(tempValue1.value);
-		let setValue = line.SetResult(tempValue1.value, 2, 1);
-		let setValueLength = Utils.GetNumberByteLength(setValue);
-		if (orgLength > setValueLength || setValue < 0) {
-			const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", tempValue1.value, setValue);
-			const token = ExpressionUtils.CombineExpressionPart(line.expParts[0]);
-			MyDiagnostic.PushWarning(token, errorMsg);
-		}
+		// let orgLength = Utils.GetNumberByteLength(tempValue1.value);
+		// let setValue = line.SetResult(tempValue1.value, 2, 1);
+		// let setValueLength = Utils.GetNumberByteLength(setValue);
+		// if (orgLength > setValueLength || setValue < 0) {
+		// 	const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", tempValue1.value, setValue);
+		// 	const token = ExpressionUtils.CombineExpressionPart(line.expParts[0]);
+		// 	MyDiagnostic.PushWarning(token, errorMsg);
+		// }
 
-		orgLength = Utils.GetNumberByteLength(tempValue2.value);
-		setValue = line.SetResult(tempValue2.value, 1, 1);
-		setValueLength = Utils.GetNumberByteLength(setValue);
-		if (orgLength > setValueLength || setValue < 0) {
-			const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", tempValue2.value, setValue);
-			const token = ExpressionUtils.CombineExpressionPart(line.expParts[1]);
-			MyDiagnostic.PushWarning(token, errorMsg);
-		}
+		// orgLength = Utils.GetNumberByteLength(tempValue2.value);
+		// setValue = line.SetResult(tempValue2.value, 1, 1);
+		// setValueLength = Utils.GetNumberByteLength(setValue);
+		// if (orgLength > setValueLength || setValue < 0) {
+		// 	const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", tempValue2.value, setValue);
+		// 	const token = ExpressionUtils.CombineExpressionPart(line.expParts[1]);
+		// 	MyDiagnostic.PushWarning(token, errorMsg);
+		// }
 	}
 }

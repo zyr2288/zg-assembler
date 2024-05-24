@@ -2,7 +2,7 @@ import { Utils } from "../Base/Utils";
 import { Commands } from "../Commands/Commands";
 import { Localization } from "../I18n/Localization";
 import { IntellisenseProvider } from "../LanguageHelper/IntellisenseProvider";
-import { AsmCommon } from "./AsmCommon";
+import { AsmCommon, AsmInstruction } from "./AsmCommon";
 import { Asm6502 } from "./Asm6502";
 import { Asm65C816 } from "./Asm65C816";
 import { AsmZ80_GB } from "./AsmZ80-GB";
@@ -17,12 +17,9 @@ export const MatchNames = {
 export class Platform {
 
 	/**当前平台 */
-	static platform: AsmCommon;
+	static platform: AsmInstruction;
 
 	static allInstruction: Set<string> = new Set<string>();
-
-	/**匹配编译器命令，编译指令，等式字符串，匹配结果 command instruction variable */
-	static regexString: string;
 
 	/**所有平台名称 */
 	private static platformNames: string[];
@@ -38,51 +35,23 @@ export class Platform {
 	static ChangePlatform(platform: string) {
 		Platform.allInstruction.clear();
 
-		if (!Platform.platformNames) {
-			Platform.platformNames = [];
-			for (let i = 0; i < Platform.platforms.length; ++i) {
-				let name = Reflect.get(Platform.platforms[i], "PlatformName");
-				Platform.platformNames.push(name);
-			}
+		switch (platform) {
+			case Asm6502.Name:
+				Platform.platform = new Asm6502();
+				break;
+			case AsmZ80_GB.Name:
+				Platform.platform = new AsmZ80_GB();
+				break;
+			case Asm65C816.Name:
+				Platform.platform = new Asm65C816();
+				break;
+			default:
+				const errorMsg = Localization.GetMessage("Unsupport platform {0}", platform);
+				throw new Error(errorMsg);
 		}
 
-		let index = Platform.platformNames.indexOf(platform);
-		if (index < 0) {
-			const errorMsg = Localization.GetMessage("Unsupport platform {0}", platform);
-			throw new Error(errorMsg);
-		}
-
-		Platform.platform = new Platform.platforms[index]();
-		Platform.UpdateRegex();
 		IntellisenseProvider.UpdateCommandCompletions();
 		IntellisenseProvider.UpdateInstrucionCompletions();
 	}
 	//#endregion 改变编译平台，目前有 6502 65816 z80-gb
-
-	//#region 更新编译平台的正则表达式
-	/**更新编译平台的正则表达式 */
-	private static UpdateRegex() {
-
-		Platform.regexString = `((\\s+|^)((?<${MatchNames.command}>`;
-		let temp: string;
-		Commands.commandNames.forEach((value) => {
-			temp = Utils.TransformRegex(value) + "|";
-			Platform.regexString += temp;
-		});
-
-		Platform.regexString = Platform.regexString.substring(0, Platform.regexString.length - 1);
-		Platform.regexString += ")|";
-
-		Platform.regexString += `(?<${MatchNames.instruction}>`;
-		let instructions = AsmCommon.instructions;
-		for (let i = 0; i < instructions.length; ++i) {
-			temp = Utils.TransformRegex(instructions[i]) + "|";
-			Platform.regexString += temp;
-		}
-
-		Platform.regexString = Platform.regexString.substring(0, Platform.regexString.length - 1);
-		Platform.regexString += `))(\\s+|$))|(?<${MatchNames.variable}>\\=)`;
-	}
-	//#endregion 更新编译平台的正则表达式
-
 }

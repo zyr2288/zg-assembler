@@ -36,8 +36,6 @@ export class AsmCommon {
 	/***** static *****/
 
 	static PlatformName: string;
-	/**所有汇编指令 */
-	static instructions: string[];
 	/**Key为 Instruction，例如：LDA */
 	static allInstructions: Map<string, IAddressingMode[]> = new Map();
 
@@ -47,18 +45,6 @@ export class AsmCommon {
 		AsmCommon.allInstructions.clear();
 	}
 	//#endregion 清除所有汇编指令
-
-	//#region 更新汇编指令
-	/**
-	 * 更新汇编指令
-	 */
-	static UpdateInstructions() {
-		AsmCommon.instructions = [];
-		AsmCommon.allInstructions.forEach((addressingMode, instruction, map) => {
-			AsmCommon.instructions.push(instruction);
-		});
-	}
-	//#endregion 更新汇编指令
 
 	//#region 添加基础指令
 	/**
@@ -272,5 +258,5 @@ export class AsmCommon {
 }
 
 export interface AsmInstruction {
-	name: string;
+
 }

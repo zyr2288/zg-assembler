@@ -1,7 +1,7 @@
 import { Compiler } from "../Base/Compiler";
 import { Expression, ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
 import { Token } from "../Base/Token";
-import { HighlightToken, ICommonLine, LineCompileType, LineType } from "./CommonLine";
+import { HighlightToken, LineCompileType, LineType } from "./CommonLine";
 
 export class CommandLine {
 
@@ -15,8 +15,8 @@ export class CommandLine {
 	baseAddress = 0;
 
 	command!: Token;
-	expression?: Token;
-	expParts: Expression[] = [];
+	expToken?: Token;
+	expression: Expression[] = [];
 	result: number[] = [];
 
 	tag?: any;
@@ -30,7 +30,7 @@ export class CommandLine {
 	Initialize(option: { command: Token, expression: Token }) {
 		this.command = option.command;
 		this.command.text = this.command.text.toUpperCase();
-		this.expression = option.expression;
+		this.expToken = option.expression;
 	}
 
 	SetResult(value: number, index: number, length: number): number {
@@ -47,7 +47,7 @@ export class CommandLine {
 
 	GetTokens() {
 		const result: HighlightToken[] = [];
-		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
+		result.push(...ExpressionUtils.GetHighlightingTokens(this.expression));
 		return result;
 	}
 }

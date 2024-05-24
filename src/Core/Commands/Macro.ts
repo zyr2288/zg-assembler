@@ -248,7 +248,7 @@ export class MacroUtils {
 				case LineType.Instruction:
 				case LineType.Command:
 					const insLine = line as InstructionLine | CommandLine;
-					MacroUtils._ReplaceExpression(insLine.expParts, macro);
+					MacroUtils._ReplaceExpression(insLine.expression, macro);
 					break;
 				case LineType.Variable:
 					const varLine = line as VariableLine;

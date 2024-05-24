@@ -151,7 +151,7 @@ export class RenameProvider {
 										}
 										break;
 									default:
-										tokens.push(...RenameProvider.RenameMatchLabel(comLine.expParts, tempLabel!.labelType, tempMacro));
+										tokens.push(...RenameProvider.RenameMatchLabel(comLine.expression, tempLabel!.labelType, tempMacro));
 										break;
 								}
 								break;

@@ -1,4 +1,4 @@
-import { ILabel } from "../Base/Label";
+import { LabelCommon } from "../Base/Label";
 import { Token } from "../Base/Token";
 
 export enum LineType {
@@ -44,8 +44,8 @@ export interface HighlightToken {
 	token: Token;
 }
 
-export interface IOnlyLabel extends ICommonLine {
-	label: ILabel;
+export interface IOnlyLabel {
+	label: LabelCommon;
 }
 
 export interface HighlightRange {
@@ -60,7 +60,7 @@ export interface CommonSaveLabel {
 	/**作为 label 的 token 缓存 */
 	token?: Token;
 	/**所关联的label */
-	label: ILabel;
+	label: LabelCommon;
 	/**是否已经赋值完毕 */
 	notFinish: boolean;
 }

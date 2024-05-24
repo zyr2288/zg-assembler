@@ -231,7 +231,7 @@ export class Commands {
 		for (let i = 0; i < expressions.length; ++i) {
 			let temp = ExpressionUtils.SplitAndSort(expressions[i]);
 			if (temp)
-				line.expParts[i] = temp;
+				line.expression[i] = temp;
 			else
 				line.compileType = LineCompileType.Error;
 		}
@@ -242,8 +242,8 @@ export class Commands {
 	//#region 第三次的通用分析，仅对编译命令行的表达式小节分析
 	static async ThirdAnalyse_Common(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		for (let i = 0; i < line.expParts.length; ++i)
-			ExpressionUtils.CheckLabelsAndShowError(line.expParts[i], option);
+		for (let i = 0; i < line.expression.length; ++i)
+			ExpressionUtils.CheckLabelsAndShowError(line.expression[i], option);
 	}
 	//#endregion 第三次的通用分析，仅对编译命令行的表达式小节分析
 
@@ -291,10 +291,10 @@ export class Commands {
 		let params = Commands.commandsParamsCount.get(line.command.text)!;
 		let args: Token[] = [];
 
-		if (!line.expression!.isEmpty)
-			args = Utils.SplitWithComma(line.expression!);
+		if (!line.expToken!.isEmpty)
+			args = Utils.SplitWithComma(line.expToken!);
 
-		delete (line.expression);
+		delete (line.expToken);
 		if (args.length < params.min || (params.max !== -1 && args.length > params.max)) {
 			let errorMsg = Localization.GetMessage("Command arguments error");
 			MyDiagnostic.PushException(line.command, errorMsg);

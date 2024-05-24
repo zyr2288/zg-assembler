@@ -54,9 +54,8 @@ export class Data {
 		line.compileType = LineCompileType.Finished;
 		let index = 0;
 
-		const analyseOption: ExpAnalyseOption = { resultType: "ArrayNumber" };
-		for (let i = 0; i < line.expParts.length; i++) {
-			const part = line.expParts[i];
+		for (let i = 0; i < line.expression.length; i++) {
+			const part = line.expression[i];
 			const temp = ExpressionUtils.GetExpressionValue<number[]>(part, option, analyseOption);
 			if (!temp.success) {
 				line.compileType = LineCompileType.None;

@@ -126,10 +126,10 @@ export class Include {
 
 		let temp2;
 		if (expressions[1] && (temp2 = ExpressionUtils.SplitAndSort(expressions[1])))
-			line.expParts[0] = temp2;
+			line.expression[0] = temp2;
 
 		if (expressions[2] && (temp2 = ExpressionUtils.SplitAndSort(expressions[2])))
-			line.expParts[1] = temp2;
+			line.expression[1] = temp2;
 
 	}
 	//#endregion 第一次分析Incbin
@@ -146,15 +146,15 @@ export class Include {
 		let start = 0;
 
 		const analyseOption: ExpAnalyseOption = { analyseType: "GetAndShowError" };
-		if (line.expParts[0]) {
-			let result = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option, analyseOption);
+		if (line.expression[0]) {
+			let result = ExpressionUtils.GetExpressionValue<number>(line.expression[0], option, analyseOption);
 			if (result.success)
 				start = result.value;
 		}
 
 		let length = temp.length;
-		if (line.expParts[1]) {
-			let result = ExpressionUtils.GetExpressionValue<number>(line.expParts[1], option, analyseOption);
+		if (line.expression[1]) {
+			let result = ExpressionUtils.GetExpressionValue<number>(line.expression[1], option, analyseOption);
 			if (result.success)
 				length = result.value;
 		}

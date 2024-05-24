@@ -8,7 +8,7 @@ import { AddressOption, AsmCommon, AsmInstruction } from "./AsmCommon";
 
 export class Asm6502 implements AsmInstruction {
 
-	name = "6502";
+	static Name = "6502";
 
 	constructor() {
 		this.Initialize();
@@ -112,26 +112,25 @@ export class Asm6502 implements AsmInstruction {
 	}
 
 	private ConditionBranch(option: DecodeOption) {
-		const line = option.GetCurrectLine<InstructionLine>();
-		const tempValue = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
-		if (!tempValue.success) {
-			line.result.length = 2;
-			return;
-		}
+		// const line = option.GetCurrectLine<InstructionLine>();
+		// const tempValue = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
+		// if (!tempValue.success) {
+		// 	line.result.length = 2;
+		// 	return;
+		// }
 
-		const temp = tempValue.value - line.orgAddress - 2;
-		if (temp > 127 || temp < -128) {
-			line.compileType = LineCompileType.Error;
-			let errorMsg = Localization.GetMessage("Argument out of range")
-			MyDiagnostic.PushException(line.instruction, errorMsg);
-			return;
-		}
+		// const temp = tempValue.value - line.orgAddress - 2;
+		// if (temp > 127 || temp < -128) {
+		// 	line.compileType = LineCompileType.Error;
+		// 	let errorMsg = Localization.GetMessage("Argument out of range")
+		// 	MyDiagnostic.PushException(line.instruction, errorMsg);
+		// 	return;
+		// }
 
-		line.SetResult(line.addressingMode.opCode[1]!, 0, 1);
-		line.SetResult(temp & 0xFF, 1, 1);
-		// Compiler.SetResult(line, line.addressingMode.opCode[1]!, 0, 1);
-		// Compiler.SetResult(line, temp & 0xFF, 1, 1);
-		line.compileType = LineCompileType.Finished;
+		// line.SetResult(line.addressingMode.opCode[1]!, 0, 1);
+		// line.SetResult(temp & 0xFF, 1, 1);
+
+		// line.compileType = LineCompileType.Finished;
 	}
 
 	private AddInstruction(instruction: string, addressingMode: AddressOption) {

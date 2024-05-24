@@ -1,7 +1,7 @@
 import { Compiler } from "../Base/Compiler";
 import { Config } from "../Base/Config";
 import { FileUtils } from "../Base/FileUtils";
-import { ILabel, ILabelTree, LabelScope, LabelType, LabelUtils } from "../Base/Label";
+import { ILabelTree, LabelCommon, LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Commands } from "../Commands/Commands";
@@ -126,73 +126,73 @@ export class IntellisenseProvider {
 		if (!Config.ProjectSetting.intellisense)
 			return [];
 
-		const fileHash = FileUtils.GetFilePathHashcode(filePath);
-		const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
-		const prefix = line.Substring(0, currect);
+		// const fileHash = FileUtils.GetFilePathHashcode(filePath);
+		// const line = Token.CreateToken(fileHash, lineNumber, 0, lineText);
+		// const prefix = line.Substring(0, currect);
 
-		if (new RegExp(ignoreWordStr, "ig").test(prefix.text))
-			return [];
+		// if (new RegExp(ignoreWordStr, "ig").test(prefix.text))
+		// 	return [];
 
-		const rangeType = HelperUtils.GetRange(fileHash, lineNumber);
-		let macro: Macro | undefined;
-		switch (rangeType?.type) {
-			case "DataGroup":
-				if (trigger === " ")
-					return [];
+		// const rangeType = HelperUtils.GetRange(fileHash, lineNumber);
+		// let macro: Macro | undefined;
+		// switch (rangeType?.type) {
+		// 	case "DataGroup":
+		// 		if (trigger === " ")
+		// 			return [];
 
-				const prefix1 = HelperUtils.GetWord(lineText, currect);
-				return IntellisenseProvider.GetLabel(fileHash, prefix1.leftText);
-			case "Macro":
-				macro = Compiler.enviroment.allMacro.get(rangeType.key);
-				break;
-			case "Enum":
-				if (lineNumber === rangeType.startLine)
-					break;
+		// 		const prefix1 = HelperUtils.GetWord(lineText, currect);
+		// 		return IntellisenseProvider.GetLabel(fileHash, prefix1.leftText);
+		// 	case "Macro":
+		// 		macro = Compiler.enviroment.allMacro.get(rangeType.key);
+		// 		break;
+		// 	case "Enum":
+		// 		if (lineNumber === rangeType.startLine)
+		// 			break;
 
-				const comma = lineText.indexOf(",");
-				if (comma < 0 || currect < comma)
-					return [];
+		// 		const comma = lineText.indexOf(",");
+		// 		if (comma < 0 || currect < comma)
+		// 			return [];
 
-				const prefix2 = HelperUtils.GetWord(lineText, currect);
-				return IntellisenseProvider.GetLabel(fileHash, prefix2.leftText, macro);
-		}
+		// 		const prefix2 = HelperUtils.GetWord(lineText, currect);
+		// 		return IntellisenseProvider.GetLabel(fileHash, prefix2.leftText, macro);
+		// }
 
-		const tempMatch = HelperUtils.BaseSplit(lineText);
-		if (tempMatch.type === "None" || currect < tempMatch.start)
-			return IntellisenseProvider.GetEmptyLineHelper({ fileHash, range: rangeType, trigger: trigger });
+		// const tempMatch = HelperUtils.BaseSplit(lineText);
+		// if (tempMatch.type === "None" || currect < tempMatch.start)
+		// 	return IntellisenseProvider.GetEmptyLineHelper({ fileHash, range: rangeType, trigger: trigger });
 
-		const matchIndex = tempMatch.start + tempMatch.text.length + 1;
-		switch (tempMatch.type) {
-			case "Instruction":
-				if (trigger === " " && currect === matchIndex) {
-					return IntellisenseProvider.GetInstructionAddressingModes(tempMatch.text);
-				} else if (trigger === ":" && currect > matchIndex) {
-					const prefix = HelperUtils.GetWord(lineText, currect);
-					return IntellisenseProvider.GetDataGroup(prefix.leftText);
-				} else if (trigger !== " " && currect > matchIndex) {
-					const restText = lineText.substring(matchIndex);
-					const tempCurrect = currect - matchIndex - 1;
-					const ignoreContent = AsmCommon.MatchLinePosition(tempMatch.text, restText, tempCurrect);
-					if (ignoreContent)
-						return [];
+		// const matchIndex = tempMatch.start + tempMatch.text.length + 1;
+		// switch (tempMatch.type) {
+		// 	case "Instruction":
+		// 		if (trigger === " " && currect === matchIndex) {
+		// 			return IntellisenseProvider.GetInstructionAddressingModes(tempMatch.text);
+		// 		} else if (trigger === ":" && currect > matchIndex) {
+		// 			const prefix = HelperUtils.GetWord(lineText, currect);
+		// 			return IntellisenseProvider.GetDataGroup(prefix.leftText);
+		// 		} else if (trigger !== " " && currect > matchIndex) {
+		// 			const restText = lineText.substring(matchIndex);
+		// 			const tempCurrect = currect - matchIndex - 1;
+		// 			const ignoreContent = AsmCommon.MatchLinePosition(tempMatch.text, restText, tempCurrect);
+		// 			if (ignoreContent)
+		// 				return [];
 
-					const prefix = HelperUtils.GetWord(lineText, currect);
-					return IntellisenseProvider.GetLabel(fileHash, prefix.leftText, macro);
-				}
-				break;
-			case "Command":
-			case "Variable":
-			case "Macro":
-				if (currect < matchIndex || trigger === " ") {
-					return [];
-				} else if (trigger === ":" && currect > matchIndex) {
-					const prefix = HelperUtils.GetWord(lineText, currect);
-					return IntellisenseProvider.GetDataGroup(prefix.leftText);
-				}
+		// 			const prefix = HelperUtils.GetWord(lineText, currect);
+		// 			return IntellisenseProvider.GetLabel(fileHash, prefix.leftText, macro);
+		// 		}
+		// 		break;
+		// 	case "Command":
+		// 	case "Variable":
+		// 	case "Macro":
+		// 		if (currect < matchIndex || trigger === " ") {
+		// 			return [];
+		// 		} else if (trigger === ":" && currect > matchIndex) {
+		// 			const prefix = HelperUtils.GetWord(lineText, currect);
+		// 			return IntellisenseProvider.GetDataGroup(prefix.leftText);
+		// 		}
 
-				const prefix = HelperUtils.GetWord(lineText, currect);
-				return IntellisenseProvider.GetLabel(fileHash, prefix.leftText, macro);
-		}
+		// 		const prefix = HelperUtils.GetWord(lineText, currect);
+		// 		return IntellisenseProvider.GetLabel(fileHash, prefix.leftText, macro);
+		// }
 		return [];
 	}
 	//#endregion 智能提示
@@ -325,7 +325,7 @@ export class IntellisenseProvider {
 		const labelScope = prefix.startsWith(".") ? LabelScope.Local : LabelScope.Global;
 		let index = prefix.lastIndexOf(".");
 		let labelTree: Map<string, ILabelTree> | undefined;
-		let labels: Map<string, ILabel> | undefined;
+		let labels: Map<string, LabelCommon> | undefined;
 
 		if (index > 0) {
 			prefix = prefix.substring(0, index);
@@ -448,18 +448,19 @@ export class IntellisenseProvider {
 	/**更新所有汇编指令 */
 	static UpdateInstrucionCompletions() {
 		IntellisenseProvider.instructionCompletions = [];
-		for (let i = 0; i < AsmCommon.instructions.length; ++i) {
-			const instruction = AsmCommon.instructions[i];
-			const insType = AsmCommon.allInstructions.get(instruction)!;
-
+		
+		AsmCommon.allInstructions.forEach((addMode, instruction) => {
 			let insertText = instruction;
-			if (insType.length === 1 && !insType[0].addressingMode) {
+			if (addMode.length === 1 && !addMode[0].addressingMode) 
 				insertText += "\n";
-			}
 
-			const completion = new Completion({ showText: instruction, index: CompletionIndex.Instruction, insertText, type: CompletionType.Instruction });
+			const completion = new Completion({
+				showText: instruction,
+				index: CompletionIndex.Instruction,
+				type: CompletionType.Instruction
+			});
 			IntellisenseProvider.instructionCompletions.push(completion);
-		}
+		});
 	}
 	//#endregion 更新所有汇编指令
 

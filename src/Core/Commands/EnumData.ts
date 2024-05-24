@@ -1,6 +1,6 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
-import { ILabel, LabelType, LabelUtils } from "../Base/Label";
+import { ExpAnalyseOption, ExpressionUtils, Expression } from "../Base/ExpressionUtils";
+import { LabelNormal, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption, IncludeLine } from "../Base/Options";
 import { Token } from "../Base/Token";
@@ -12,7 +12,7 @@ import { Commands } from "./Commands";
 
 export interface EnumDataTag {
 	startValue?: number;
-	lines: { label: ILabel, exps: ExpressionPart[], length?: number }[];
+	lines: { label: LabelNormal, exps: Expression, length?: number }[];
 }
 
 export class EnumData {
@@ -38,7 +38,7 @@ export class EnumData {
 		const expressions: Token[] = line.tag;
 		const temp = ExpressionUtils.SplitAndSort(expressions[0]);
 		if (temp) {
-			line.expParts[0] = temp;
+			line.expression[0] = temp;
 			line.GetTokens = EnumData.GetTokens.bind(line);
 		} else {
 			line.compileType = LineCompileType.Error;
@@ -56,7 +56,7 @@ export class EnumData {
 				continue;
 			}
 
-			const label = LabelUtils.CreateLabel(parts[0], option, false);
+			const label = LabelUtils.CreateLabel(parts[0], option, false) as LabelNormal | undefined;
 			if (!label)
 				continue;
 
@@ -84,11 +84,11 @@ export class EnumData {
 		const commandLinie = option.GetCurrectLine<CommandLine>();
 		const tag: EnumDataTag = commandLinie.tag;
 
-		if (ExpressionUtils.CheckLabelsAndShowError(commandLinie.expParts[0], option))
+		if (ExpressionUtils.CheckLabelsAndShowError(commandLinie.expression[0].parts, option))
 			return;
 
 		const analyseOption: ExpAnalyseOption = { analyseType: "Try" };
-		const temp = ExpressionUtils.GetExpressionValue<number>(commandLinie.expParts[0], option, analyseOption);
+		const temp = ExpressionUtils.GetValue(commandLinie.expression[0].parts, option, analyseOption);
 		if (!temp.success)
 			return;
 
@@ -96,7 +96,7 @@ export class EnumData {
 		let unknowValue = false;
 		for (let i = 0; i < tag.lines.length; i++) {
 			const line = tag.lines[i];
-			if (ExpressionUtils.CheckLabelsAndShowError(line.exps, option)) {
+			if (ExpressionUtils.CheckLabelsAndShowError(line.exps.parts, option)) {
 				unknowValue = true;
 				continue;
 			}
@@ -106,7 +106,7 @@ export class EnumData {
 				continue;
 			}
 
-			const temp2 = ExpressionUtils.GetExpressionValue<number>(line.exps, option, analyseOption);
+			const temp2 = ExpressionUtils.GetValue(line.exps.parts, option, analyseOption);
 			if (unknowValue || !temp2.success) {
 				unknowValue = true;
 				continue;
@@ -122,7 +122,7 @@ export class EnumData {
 		const tag: EnumDataTag = line.tag;
 
 		if (tag.startValue === undefined) {
-			const temp = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
+			const temp = ExpressionUtils.GetValue(line.expression[0].parts, option);
 			if (!temp.success)
 				return;
 
@@ -142,7 +142,7 @@ export class EnumData {
 			if (!label)
 				return;
 
-			const temp = ExpressionUtils.GetExpressionValue<number>(l.exps, option);
+			const temp = ExpressionUtils.GetValue(l.exps.parts, option);
 			if (!temp.success)
 				return;
 
@@ -157,7 +157,7 @@ export class EnumData {
 		const tag: EnumDataTag = this.tag;
 
 		const result: HighlightToken[] = [];
-		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
+		result.push(...ExpressionUtils.GetHighlightingTokens(this.expression));
 
 		for (let i = 0; i < tag.lines.length; i++) {
 			const line = tag.lines[i];

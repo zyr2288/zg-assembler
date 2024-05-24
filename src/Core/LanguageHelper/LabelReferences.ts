@@ -59,7 +59,7 @@ export class LabelReferences {
 							case LineType.Macro:
 							case LineType.Variable:
 								const insLine = line as InstructionLine | CommandLine | MacroLine | VariableLine;
-								const tokens = LabelReferences.GetExpressionPartTokens(insLine.expParts, tempLabel, temp.macro);
+								const tokens = LabelReferences.GetExpressionPartTokens(insLine.expression, tempLabel, temp.macro);
 								LabelReferences.AddResultTokens(res, ...tokens);
 								break;
 							case LineType.OnlyLabel:

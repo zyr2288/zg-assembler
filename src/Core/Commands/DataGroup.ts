@@ -111,10 +111,10 @@ export class DataGroupCommand {
 				const p = temp[j];
 				const temp2 = ExpressionUtils.SplitAndSort(p);
 				if (temp2) {
-					line.expParts.push(temp2);
+					line.expression.push(temp2);
 					DataGroupCommand.AddExpressionPart(datagroup, temp2, i);
 				} else {
-					line.expParts.push([]);
+					line.expression.push([]);
 					line.compileType = LineCompileType.Error;
 				}
 
@@ -125,8 +125,8 @@ export class DataGroupCommand {
 
 	private static ThirdAnalyse_DataGroup(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		for (let i = 0; i < line.expParts.length; ++i) {
-			const exps = line.expParts[i];
+		for (let i = 0; i < line.expression.length; ++i) {
+			const exps = line.expression[i];
 			const temp = ExpressionUtils.CheckLabelsAndShowError(exps);
 			if (temp)
 				line.compileType = LineCompileType.Error;
@@ -151,13 +151,13 @@ export class DataGroupCommand {
 		if (Commands.SetOrgAddressAndLabel(option))
 			return;
 
-		line.result.length = line.expParts.length * dataLength;
+		line.result.length = line.expression.length * dataLength;
 		line.compileType = LineCompileType.Finished;
 
 		let index = 0;
 
-		for (let i = 0; i < line.expParts.length; i++) {
-			const lex = line.expParts[i];
+		for (let i = 0; i < line.expression.length; i++) {
+			const lex = line.expression[i];
 			const temp = ExpressionUtils.GetExpressionValue<number>(lex, option);
 			if (!temp.success) {
 				line.compileType = LineCompileType.None;

@@ -23,9 +23,9 @@ export class Message {
 	private static FirstAnalyse_Msg(option: DecodeOption) {
 		Commands.FirstAnalyse_Common(option);
 		const line = option.GetCurrectLine<CommandLine>();
-		if (line.expParts[0]?.length !== 1 || line.expParts[0][0].type !== PriorityType.Level_3_CharArray) {
+		if (line.expression[0]?.parts.length !== 1 || line.expression[0].parts[0].type !== PriorityType.Level_3_CharArray) {
 			let errorMsg = Localization.GetMessage("Command arguments error");
-			let token = ExpressionUtils.CombineExpressionPart(line.expParts[0]);
+			let token = ExpressionUtils.CombineExpressionPart(line.expression[0].parts);
 			MyDiagnostic.PushException(token, errorMsg);
 			line.compileType = LineCompileType.Error;
 		}
@@ -33,8 +33,8 @@ export class Message {
 
 	private static ThirdAnalyse_Msg(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		for (let i = 1; i < line.expParts.length; ++i)
-			if (ExpressionUtils.CheckLabelsAndShowError(line.expParts[i], option))
+		for (let i = 1; i < line.expression.length; ++i)
+			if (ExpressionUtils.CheckLabelsAndShowError(line.expression[i].parts, option))
 				line.compileType = LineCompileType.Error;
 
 	}
@@ -45,8 +45,8 @@ export class Message {
 		line.compileType = LineCompileType.Finished;
 		const analyseOption: ExpAnalyseOption = { analyseType: "GetAndShowError" };
 
-		for (let i = 1; i < line.expParts.length; ++i) {
-			const temp = ExpressionUtils.GetExpressionValue<number>(line.expParts[i], option, analyseOption);
+		for (let i = 1; i < line.expression.length; ++i) {
+			const temp = ExpressionUtils.GetValue(line.expression[i].parts, option, analyseOption);
 			if (temp.success) {
 				line.tag[i - 1] ??= temp.value;
 			} else {
@@ -65,12 +65,12 @@ export class Message {
 		let match: RegExpMatchArray | null;
 		let result = "";
 		let start = 0;
-		let text = line.expParts[0][0].token.text;
+		let text = line.expression[0].parts[0].token.text;
 		while (match = regex.exec(text)) {
 			let index = parseInt(match.groups!["index"]);
 			if (!values[index]) {
 				let errorMsg = Localization.GetMessage("Command arguments error");
-				let token = line.expParts[0][0].token.Substring(match.index!, match[0].length);
+				let token = line.expression[0].parts[0].token.Substring(match.index!, match[0].length);
 				MyDiagnostic.PushException(token, errorMsg);
 				line.compileType = LineCompileType.Error;
 				continue;

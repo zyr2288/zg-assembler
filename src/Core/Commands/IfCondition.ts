@@ -78,7 +78,7 @@ export class IfCondition {
 		const currectLineIndex = option.allLines.indexOf(line);
 		for (let i = 0; i < tag.length - 1; ++i) {
 			const tempLine = option.GetLine<CommandLine>(currectLineIndex + tag[i].offsetFirstLine);
-			if (tempLine.expParts[0] && ExpressionUtils.CheckLabelsAndShowError(tempLine.expParts[0], option))
+			if (tempLine.expression[0] && ExpressionUtils.CheckLabelsAndShowError(tempLine.expression[0].parts, option))
 				tempLine.compileType = LineCompileType.Error;
 		}
 	}
@@ -96,7 +96,7 @@ export class IfCondition {
 			}
 
 			const analyseOption: ExpAnalyseOption = { analyseType: "GetAndShowError" };
-			const value = ExpressionUtils.GetExpressionValue<number>(tempLine.expParts[0], option, analyseOption);
+			const value = ExpressionUtils.GetValue(tempLine.expression[0].parts, option, analyseOption);
 			if (value.success && value.value) {
 				tag[i].confident = true;
 				break;
@@ -155,7 +155,7 @@ export class IfCondition {
 				tag[i].confident = true;
 				break;
 			}
-			const label = LabelUtils.FindLabel(tempLine.expParts[0][0].token, option.macro);
+			const label = LabelUtils.FindLabel(tempLine.expression[0].parts[0].token, option.macro);
 			if (!!label === labelExist) {
 				tag[i].confident = true;
 				break;
@@ -199,7 +199,7 @@ export class IfCondition {
 		const expression: Token[] = line.tag;
 		const temp = ExpressionUtils.SplitAndSort(expression[0]);
 		if (temp)
-			line.expParts[0] = temp;
+			line.expression[0] = temp;
 		else
 			line.compileType = LineCompileType.Error;
 

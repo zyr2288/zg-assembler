@@ -24,7 +24,7 @@ export class Repeat {
 
 		const temp = ExpressionUtils.SplitAndSort(expressions[0]);
 		if (temp)
-			line.expParts[0] = temp;
+			line.expression[0] = temp;
 		else
 			line.compileType = LineCompileType.Error;
 
@@ -35,7 +35,7 @@ export class Repeat {
 		const line = option.GetCurrectLine<CommandLine>();
 		const analyseOption: ExpAnalyseOption = { analyseType: "GetAndShowError" };
 
-		const result = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option, analyseOption);
+		const result = ExpressionUtils.GetValue(line.expression[0].parts, option, analyseOption);
 		if (!result.success)
 			return;
 
