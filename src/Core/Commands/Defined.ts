@@ -1,12 +1,12 @@
 import { ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
-import { ILabel, LabelType, LabelUtils } from "../Base/Label";
+import { LabelNormal, LabelType, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { CommandLine } from "../Lines/CommandLine";
 import { HighlightToken, LineCompileType } from "../Lines/CommonLine";
 import { Commands } from "./Commands";
 
-export type DefinedTag = ILabel;
+export type DefinedTag = LabelNormal;
 
 export class Defined {
 
@@ -43,7 +43,7 @@ export class Defined {
 
 	private static ThirdAnalyse_Def(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		const temp = ExpressionUtils.CheckLabelsAndShowError(line.expression[0], option);
+		const temp = ExpressionUtils.CheckLabelsAndShowError(line.expression[0].parts, option);
 		if (temp) {
 			line.compileType = LineCompileType.Error;
 			return;
@@ -51,14 +51,14 @@ export class Defined {
 
 		const label = line.tag as DefinedTag;
 		const analyseOption: ExpAnalyseOption = { analyseType: "Try" };
-		const temp2 = ExpressionUtils.GetExpressionValue<number>(line.expression[0], option, analyseOption);
+		const temp2 = ExpressionUtils.GetValue(line.expression[0].parts, option, analyseOption);
 		if (label && temp2.success)
 			label.value = temp2.value;
 	}
 
 	private static Compile_Def(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
-		const temp = ExpressionUtils.GetExpressionValue<number>(line.expression[0], option);
+		const temp = ExpressionUtils.GetValue(line.expression[0].parts, option);
 		const label = line.tag as DefinedTag;
 		if (label && temp.success) {
 			label.value = temp.value;

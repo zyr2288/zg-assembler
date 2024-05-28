@@ -103,7 +103,7 @@ export class MacroUtils {
 			}
 
 			if (temp = ExpressionUtils.SplitAndSort(part))
-				macroLine.expParts[i] = temp;
+				macroLine.expression[i] = temp;
 		}
 
 	}
@@ -120,7 +120,8 @@ export class MacroUtils {
 		if (!LabelUtils.CheckIllegal(name.text, false))
 			return;
 
-		if (new RegExp(Platform.regexString, "ig").test(name.text)) {
+		const tempMatch = Compiler.MatchLineCommon(name.text);
+		if (tempMatch.key !== "unknow") {
 			const errorMsg = Localization.GetMessage("Label {0} illegal", name.text);
 			MyDiagnostic.PushException(name, errorMsg);
 			return;

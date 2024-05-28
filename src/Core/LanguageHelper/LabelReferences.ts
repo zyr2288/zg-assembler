@@ -1,9 +1,9 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, PriorityType } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
-import { ILabel, LabelUtils } from "../Base/Label";
+import { LabelCommon, LabelNormal, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
-import { Macro } from "../Commands/Macro";
+import { Macro, MacroInstance } from "../Commands/Macro";
 import { CommandLine } from "../Lines/CommandLine";
 import { ICommonLine, LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
@@ -33,10 +33,11 @@ export class LabelReferences {
 			const fileName = Compiler.enviroment.GetFile(fileHash);
 			const res = result.get(fileName) ?? [];
 
-			let tempLabel: ILabel | undefined;
+			let tempLabel: LabelCommon | undefined;
 			switch (temp.matchType) {
 				case "Label":
-					tempLabel = LabelUtils.FindLabel(temp.matchToken, temp.macro);
+					const tempMacro = temp.macro?.CreateInstance();
+					tempLabel = LabelUtils.FindLabel(temp.matchToken, tempMacro);
 					break;
 			}
 
@@ -59,8 +60,8 @@ export class LabelReferences {
 							case LineType.Macro:
 							case LineType.Variable:
 								const insLine = line as InstructionLine | CommandLine | MacroLine | VariableLine;
-								const tokens = LabelReferences.GetExpressionPartTokens(insLine.expression, tempLabel, temp.macro);
-								LabelReferences.AddResultTokens(res, ...tokens);
+								// const tokens = LabelReferences.GetExpressionPartTokens(insLine.expression, tempLabel, temp.macro);
+								// LabelReferences.AddResultTokens(res, ...tokens);
 								break;
 							case LineType.OnlyLabel:
 								const onlyLabelLine = line as OnlyLabelLine;
@@ -86,7 +87,7 @@ export class LabelReferences {
 		return result;
 	}
 
-	private static GetExpressionPartTokens(exps: ExpressionPart[][], label?: ILabel, macro?: Macro) {
+	private static GetExpressionPartTokens(exps: ExpressionPart[][], label?: LabelNormal, macro?: MacroInstance) {
 		const tokens: Token[] = [];
 		if (!label)
 			return tokens;

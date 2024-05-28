@@ -1,3 +1,4 @@
+import { Compiler } from "../Base/Compiler";
 import { Platform } from "../Platform/Platform";
 
 export class DocumentChangeProvider {
@@ -8,10 +9,15 @@ export class DocumentChangeProvider {
 	 * @returns 
 	 */
 	static AutoUpperCase(lineText: string) {
-		let match = new RegExp(Platform.regexString, "ig").exec(lineText);
-		if (!match?.groups?.["command"] && !match?.groups?.["instruction"])
-			return;
+		const match = Compiler.MatchLineCommon(lineText);
 
-		return { index: match.index, length: match[0].length, text: match[0].toUpperCase() };
+		switch (match.key) {
+			case "command":
+			case "instruction":
+				const matchText = match.content.main;
+				return { index: matchText.start, length: matchText.length, text: matchText.text.toUpperCase() };
+			default:
+				return;
+		}
 	}
 }

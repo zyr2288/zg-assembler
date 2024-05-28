@@ -1,10 +1,10 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, PriorityType } from "../Base/ExpressionUtils";
+import { Expression, ExpressionPart, PriorityType } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
-import { ILabel, LabelScope, LabelType, LabelUtils } from "../Base/Label";
+import { LabelCommon, LabelNormal, LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { EnumData, EnumDataTag } from "../Commands/EnumData";
-import { Macro } from "../Commands/Macro";
+import { Macro, MacroInstance } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
 import { ICommonLine, LineType } from "../Lines/CommonLine";
@@ -91,7 +91,9 @@ export class RenameProvider {
 			return Localization.GetMessage("rename error");
 
 		// 检查新名称是否合法
-		let match = !!(new RegExp(Platform.regexString, "ig").exec(newLabelStr));
+
+		const tempMatch = Compiler.MatchLineCommon(newLabelStr);
+		let match = tempMatch.key === "unknow";
 		const allPart = newLabelStr.split(".");
 		for (let i = 1; i < allPart.length; i++) {
 			if (!allPart[i]) {
@@ -110,9 +112,9 @@ export class RenameProvider {
 		const result = new Map<string, Token[]>();
 
 		let tempMacro: Macro | undefined;
-		let tempLabel: ILabel | undefined;
+		let tempLabel: LabelCommon | undefined;
 		if (RenameProvider.SaveRename.type === "Label" || RenameProvider.SaveRename.type === "MacroLabel") {
-			tempLabel = LabelUtils.FindLabel(RenameProvider.SaveRename.token, RenameProvider.SaveRename.macro);
+			tempLabel = LabelUtils.FindLabel(RenameProvider.SaveRename.token, RenameProvider.SaveRename.macro?.CreateInstance());
 		}
 
 		const SaveLineToken = (lines: ICommonLine[], tokens: Token[]) => {
@@ -138,7 +140,7 @@ export class RenameProvider {
 							case LineType.Macro:
 							case LineType.Variable:
 								const insLine = line as InstructionLine | MacroLine | VariableLine;
-								tokens.push(...RenameProvider.RenameMatchLabel(insLine.expParts, tempLabel!.labelType, tempMacro));
+								tokens.push(...RenameProvider.RenameMatchLabel(insLine.expression, tempLabel!.labelType, tempMacro));
 								break;
 							case LineType.Command:
 								const comLine = line as CommandLine;
@@ -166,7 +168,7 @@ export class RenameProvider {
 		// 原始位置重命名
 		switch (RenameProvider.SaveRename.type) {
 			case "Label":
-				const label = LabelUtils.FindLabel(RenameProvider.SaveRename.token, RenameProvider.SaveRename.macro);
+				const label = LabelUtils.FindLabel(RenameProvider.SaveRename.token, RenameProvider.SaveRename.macro?.CreateInstance());
 				if (label) {
 					const fileName = Compiler.enviroment.GetFile(label.token.fileHash);
 					const tokens = result.get(fileName) ?? [];
@@ -175,7 +177,7 @@ export class RenameProvider {
 				}
 				break;
 			case "MacroLabel":
-				const macroLabel = LabelUtils.FindLabel(RenameProvider.SaveRename.token, RenameProvider.SaveRename.macro);
+				const macroLabel = LabelUtils.FindLabel(RenameProvider.SaveRename.token, RenameProvider.SaveRename.macro?.CreateInstance());
 				if (macroLabel) {
 					const fileName = Compiler.enviroment.GetFile(macroLabel.token.fileHash);
 					const tokens = result.get(fileName) ?? [];
@@ -211,7 +213,7 @@ export class RenameProvider {
 
 	/***** private *****/
 
-	private static RenameMatchLabel(exps: ExpressionPart[][], labelType: LabelType, macro?: Macro) {
+	private static RenameMatchLabel(exps: Expression[], labelType: LabelType, macro?: Macro) {
 		const result: Token[] = [];
 		if (!exps)
 			return result;
@@ -219,14 +221,14 @@ export class RenameProvider {
 		const labelToken = RenameProvider.SaveRename.token!;
 		const fileHash = RenameProvider.SaveRename.fileHash;
 		for (let i = 0; i < exps.length; i++) {
-			for (let j = 0; j < exps[i].length; j++) {
-				const exp = exps[i][j];
+			for (let j = 0; j < exps[i].parts.length; j++) {
+				const exp = exps[i].parts[j];
 				if (exp.type !== PriorityType.Level_1_Label || exp.token.text !== labelToken.text)
 					continue;
 
 				if (exp.token.text.startsWith(".") && exp.token.fileHash === fileHash ||
 					!exp.token.text.startsWith(".")) {
-					const label = LabelUtils.FindLabel(exp.token, macro);
+					const label = LabelUtils.FindLabel(exp.token, macro?.CreateInstance());
 					if (label && label.labelType === labelType) {
 						result.push(exp.token);
 						continue;

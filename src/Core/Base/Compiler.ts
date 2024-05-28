@@ -21,7 +21,7 @@ import { Token } from "./Token";
 type MatchKey = "instruction" | "command" | "comment" | "variable" | "macro" | "unknow";
 
 interface MatchResult {
-	key?: MatchKey;
+	key: MatchKey;
 	content: {
 		pre: Token,
 		main: Token,
@@ -129,7 +129,6 @@ export class Compiler {
 	static SplitTexts(fileHash: number, text: string): ICommonLine[] {
 		const result: ICommonLine[] = [];
 
-		let contentToken: Token;
 		let newLine = {} as ICommonLine;
 		let match!: MatchResult;
 		let orgText: Token;
@@ -139,26 +138,26 @@ export class Compiler {
 
 			const labelToken = match.content.pre;
 			const comOrIntrs = match.content.main;
-			const expression = match.content.rest;
+			const expToken = match.content.rest;
 
 			comOrIntrs.text = comOrIntrs.text.toUpperCase();
 
 			switch (lineType) {
 				case LineType.Command:
-					let comLine = new CommandLine();
-					comLine.Initialize({ command: match.content.main, expression });
-					this.GetOnlyLabel(labelToken, result);
+					const comLine = new CommandLine();
+					comLine.Initialize({ command: match.content.main, expression: expToken });
+					Compiler.GetOnlyLabel(labelToken, result);
 					newLine = comLine;
 					break;
 				case LineType.Instruction:
-					let tempInsLine = new InstructionLine();
-					tempInsLine.Initialize({ instruction: comOrIntrs, expression });
-					this.GetOnlyLabel(labelToken, result);
+					const tempInsLine = new InstructionLine();
+					tempInsLine.Initialize({ instruction: comOrIntrs, expression: expToken });
+					Compiler.GetOnlyLabel(labelToken, result);
 					newLine = tempInsLine;
 					break;
 				case LineType.Variable:
-					let varLine = new VariableLine();
-					varLine.Initialize({ expression, labelToken });
+					const varLine = new VariableLine();
+					varLine.Initialize({ expression: expToken, labelToken });
 					newLine = varLine;
 					break;
 			}
@@ -169,18 +168,20 @@ export class Compiler {
 		//#endregion 保存行Token
 
 		const allLines = text.split(/\r\n|\r|\n/);
-		for (let index = 0; index < allLines.length; ++index) {
-			orgText = Token.CreateToken(allLines[index], { fileHash, line: index });
+		for (let lineIndex = 0; lineIndex < allLines.length; ++lineIndex) {
+			orgText = Token.CreateToken(allLines[lineIndex], { fileHash, line: lineIndex });
 
 			const { content, comment } = Compiler.GetContent(orgText);
-			contentToken = content;
-
 			Compiler.CommentAdd(content.isEmpty, comment?.text);
-
 			if (content.isEmpty)
 				continue;
 
-			match = Compiler.MatchLineCommon(content.text)
+			match = Compiler.MatchLineCommon(content.text);
+			match.content.pre.fileHash = match.content.main.fileHash = match.content.rest.fileHash = fileHash;
+			match.content.pre.line = match.content.main.line = match.content.rest.line = lineIndex;
+			match.content.pre.start += content.start;
+			match.content.main.start += content.start;
+			match.content.rest.start += content.start;
 
 			switch (match.key) {
 				case "instruction":
@@ -189,13 +190,11 @@ export class Compiler {
 				case "command":
 					SaveToken(LineType.Command);
 					break;
+				case "variable":
+					SaveToken(LineType.Variable);
+					break;
 				case "unknow":
-					match = Compiler.MatchLine(content.text, ["variable", Compiler.equal])
-					if (match.key !== "variable") {
-						SaveToken(LineType.Variable);
-					} else {
-						newLine = new UnknowLine();
-					}
+					newLine = new UnknowLine();
 					break;
 			}
 
@@ -332,7 +331,12 @@ export class Compiler {
 
 	//#region 匹配通用行
 	static MatchLineCommon(lineText: string) {
-		return Compiler.MatchLine(lineText, ["instruction", Platform.allInstruction], ["command", Commands.commandNames]);
+		const tempMatch = Compiler.MatchLine(lineText, ["instruction", Platform.allInstruction], ["command", Commands.commandNames]);
+		if (tempMatch.key === "unknow") {
+			return Compiler.MatchLine(lineText, ["variable", Compiler.equal]);
+		}
+
+		return tempMatch;
 	}
 	//#endregion 匹配通用行
 
@@ -344,7 +348,7 @@ export class Compiler {
 	 */
 	static MatchLine(lineText: string, ...matchContent: [key: string, value: Set<string> | Map<string, any>][]) {
 		const result: MatchResult = {
-			key: typeof matchContent[0][0] as MatchKey,
+			key: "unknow" as MatchKey,
 			content: {
 				pre: {} as Token,
 				main: {} as Token,
@@ -374,11 +378,11 @@ export class Compiler {
 		let times = 0;
 		index = 0;
 		while (true) {
-			let tempResult = Compiler.SplitWithChar(index, lineText, Compiler.space);
+			const tempResult = Compiler.SplitWithChar(index, lineText, Compiler.space);
 			if (times > 1 || tempResult.text === "")
 				break;
 
-			let upCaseMatch = tempResult.text.toUpperCase();
+			const upCaseMatch = tempResult.text.toUpperCase();
 
 			for (let i = 0; i < matchContent.length; i++) {
 				const content = matchContent[i];
@@ -388,18 +392,19 @@ export class Compiler {
 				}
 			}
 
-			if (!result.key) {
+			if (result.key === "unknow") {
 				index = tempResult.start + tempResult.text.length + 1;
 				times++;
+				continue;
 			}
 
 			result.content.main = Token.CreateToken(tempResult.text, { start: tempResult.start });
 
-			let tempStr = lineText.substring(0, tempResult.start - 1);
+			const tempStr = lineText.substring(0, tempResult.start - 1);
 			result.content.pre = Token.CreateToken(tempStr);
 
-			let length = tempResult.start + tempResult.text.length;
-			result.content.rest = Token.CreateToken(tempStr, { start: length });
+			const length = tempResult.start + tempResult.text.length;
+			result.content.rest = Token.CreateToken(lineText.substring(length), { start: length });
 
 			return result;
 		}

@@ -26,7 +26,7 @@ export class BaseAndOrg {
 	private static Compile_Base(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
 		const analyseOption: ExpAnalyseOption = { analyseType: "GetAndShowError" };
-		const temp = ExpressionUtils.GetExpressionValue<number>(line.expression[0], option, analyseOption);
+		const temp = ExpressionUtils.GetValue(line.expression[0].parts, option, analyseOption);
 		if (!temp.success || temp.value < 0) {
 			line.compileType = LineCompileType.Error;
 			return;
@@ -40,7 +40,7 @@ export class BaseAndOrg {
 	private static Compile_Org(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
 		const analyseOption: ExpAnalyseOption = { analyseType: "GetAndShowError" };
-		const temp = ExpressionUtils.GetExpressionValue<number>(line.expression[0], option, analyseOption);
+		const temp = ExpressionUtils.GetValue(line.expression[0].parts, option, analyseOption);
 		if (!temp.success || temp.value < 0) {
 			line.compileType = LineCompileType.Error;
 			return;

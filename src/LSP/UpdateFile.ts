@@ -7,7 +7,7 @@ const FreshTime = 1000;
 /**更新文件的自动大写以及监视文件改动更新 Label以及错误等 */
 export class UpdateFile {
 
-	private static fileUpdateThreadId: NodeJS.Timer;
+	private static fileUpdateThreadId: number;
 	private static updateFiles = new Map<string, string>();
 	private static errorCollection: vscode.DiagnosticCollection;
 
@@ -179,6 +179,8 @@ export class UpdateFile {
 
 		LSPUtils.fileUpdateFinished = false;
 		clearTimeout(UpdateFile.fileUpdateThreadId);
+
+		// @ts-ignore
 		UpdateFile.fileUpdateThreadId = setTimeout(async () => {
 			let files: { text: string, filePath: string }[] = [];
 			UpdateFile.updateFiles.forEach((text, filePath) => {

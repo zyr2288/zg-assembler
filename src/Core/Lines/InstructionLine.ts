@@ -19,8 +19,8 @@ export class InstructionLine {
 	baseAddress = 0;
 
 	instruction!: Token;
-	expression?: Token;
-	expParts: Expression[] = [];
+	expToken?: Token;
+	expression: Expression[] = [];
 	addressingMode!: IAddressingMode;
 	result: number[] = [];
 
@@ -29,7 +29,7 @@ export class InstructionLine {
 	Initialize(option: { instruction: Token, expression: Token }) {
 		this.instruction = option.instruction;
 		this.instruction.text = this.instruction.text.toUpperCase();
-		this.expression = option.expression;
+		this.expToken = option.expression;
 	}
 
 	/**
@@ -54,7 +54,7 @@ export class InstructionLine {
 	GetTokens() {
 		const result: HighlightToken[] = [];
 		result.push({ type: HighlightType.Keyword, token: this.instruction });
-		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
+		result.push(...ExpressionUtils.GetHighlightingTokens(this.expression));
 		return result;
 	}
 }
@@ -69,21 +69,21 @@ export class InstructionLineUtils {
 	static FirstAnalyse(option: DecodeOption) {
 		const line = option.GetCurrectLine<InstructionLine>();
 		let temp;
-		if (temp = AsmCommon.MatchAddressingMode(line.instruction, line.expression!)) {
+		if (temp = AsmCommon.MatchAddressingMode(line.instruction, line.expToken!)) {
 			line.addressingMode = temp.addressingMode;
 			for (let i = 0; i < temp.exprs.length; i++) {
 				let temp2 = ExpressionUtils.SplitAndSort(temp.exprs[i]);
 				if (temp2) {
-					line.expParts[i] = temp2;
+					line.expression[i] = temp2;
 				} else {
 					line.compileType = LineCompileType.Error;
-					line.expParts[i].parts = [];
+					line.expression[i].parts = [];
 				}
 			}
 		} else {
 			line.compileType = LineCompileType.Error;
 		}
-		delete (line.expression);
+		delete (line.expToken);
 	}
 	//#endregion 第一次分析
 
@@ -94,8 +94,8 @@ export class InstructionLineUtils {
 	 */
 	static ThirdAnalyse(option: DecodeOption): void {
 		const line = option.GetCurrectLine<InstructionLine>();
-		for (let i = 0; i < line.expParts.length; ++i)
-			ExpressionUtils.CheckLabelsAndShowError(line.expParts[i].parts, option);
+		for (let i = 0; i < line.expression.length; ++i)
+			ExpressionUtils.CheckLabelsAndShowError(line.expression[i].parts, option);
 	}
 	//#endregion 第三次分析，并检查表达式是否有误
 
@@ -118,13 +118,13 @@ export class InstructionLineUtils {
 		}
 
 		line.compileType = LineCompileType.Finished;
-		if (!line.expParts[0]) {
+		if (!line.expression[0]) {
 			line.SetResult(line.addressingMode.opCode[0]!, 0, line.addressingMode.opCodeLength[0]!);
 			line.AddAddress();
 			return;
 		}
 
-		const temp = ExpressionUtils.GetExpressionValue<number>(line.expParts[0].parts, option);
+		const temp = ExpressionUtils.GetValue(line.expression[0].parts, option);
 		if (!temp.success) {
 			const index = line.addressingMode.opCode.length - 1;
 			line.result.length = line.addressingMode.opCodeLength[index]! + index;
@@ -152,7 +152,7 @@ export class InstructionLineUtils {
 
 			if (orgLength > length || temp.value < 0) {
 				const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.value, tempValue);
-				const token = ExpressionUtils.CombineExpressionPart(line.expParts[0].parts);
+				const token = ExpressionUtils.CombineExpressionPart(line.expression[0].parts);
 				MyDiagnostic.PushWarning(token, errorMsg);
 			}
 		}

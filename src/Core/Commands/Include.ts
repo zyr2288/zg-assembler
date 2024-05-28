@@ -147,14 +147,14 @@ export class Include {
 
 		const analyseOption: ExpAnalyseOption = { analyseType: "GetAndShowError" };
 		if (line.expression[0]) {
-			let result = ExpressionUtils.GetExpressionValue<number>(line.expression[0], option, analyseOption);
+			let result = ExpressionUtils.GetValue(line.expression[0].parts, option, analyseOption);
 			if (result.success)
 				start = result.value;
 		}
 
 		let length = temp.length;
 		if (line.expression[1]) {
-			let result = ExpressionUtils.GetExpressionValue<number>(line.expression[1], option, analyseOption);
+			let result = ExpressionUtils.GetValue(line.expression[1].parts, option, analyseOption);
 			if (result.success)
 				length = result.value;
 		}

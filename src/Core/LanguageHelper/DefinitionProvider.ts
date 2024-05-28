@@ -35,7 +35,7 @@ export class DefinitionProvider {
 				break;
 
 			case "Label":
-				const label = LabelUtils.FindLabel(match.matchToken, match.macro);
+				const label = LabelUtils.FindLabel(match.matchToken, match.macro?.CreateInstance());
 				if (!label)
 					break;
 

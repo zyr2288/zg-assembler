@@ -127,7 +127,7 @@ export class ExpressionUtils {
 		if (!temp2.success)
 			return;
 
-		return { parts: temp.parts, stringLength: temp.stringLength, stringIndex: temp2.stringIndex };
+		return { parts: temp2.parts, stringLength: temp.stringLength, stringIndex: temp2.stringIndex };
 	}
 	//#endregion 表达式分解与排序，并初步检查是否正确，不检查标签是否存在
 
@@ -194,7 +194,7 @@ export class ExpressionUtils {
 	 * @param analyseOption 
 	 * @returns 
 	 */
-	static GetValue(parts: ExpressionPart[], option: DecodeOption, analyseOption: ExpAnalyseOption) {
+	static GetValue(parts: ExpressionPart[], option: DecodeOption, analyseOption?: ExpAnalyseOption) {
 		const tempPart = Utils.DeepClone(parts);
 		const GetPart = (index: number) => {
 			if (index < 0 || index >= tempPart.length)
@@ -202,6 +202,8 @@ export class ExpressionUtils {
 
 			return tempPart[index];
 		}
+
+		const getValue = analyseOption?.analyseType === "GetAndShowError";
 
 		let labelUnknow = false;
 		const result = { success: true, value: 0 };
@@ -240,7 +242,7 @@ export class ExpressionUtils {
 				} else {				// 如果是标签
 					const label = LabelUtils.FindLabel(element.token, option?.macro);
 					if (label?.value === undefined) {
-						if (analyseOption.analyseType === "GetAndShowError") {
+						if (getValue) {
 							const errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
 							MyDiagnostic.PushException(element.token, errorMsg);
 							result.success = false;
@@ -383,9 +385,9 @@ export class ExpressionUtils {
 	 * @param analyseOption 分析选项
 	 * @returns 
 	 */
-	static GetStringValue(expression: Expression, option: DecodeOption, analyseOption: ExpAnalyseOption) {
-		const result: number[] = [];
-		result.length = expression.stringLength;
+	static GetStringValue(expression: Expression, option: DecodeOption) {
+		const result = { success: true, values: [] as number[] };
+		result.values.length = expression.stringLength;
 
 		const index = expression.stringIndex;
 		for (let i = 0; i < expression.stringLength; i++) {
@@ -393,15 +395,17 @@ export class ExpressionUtils {
 			part[index] = {
 				token: Token.EmptyToken(),
 				value: expression.parts[index].chars![i],
-				type: PriorityType.Level_2_Number,
+				type: PriorityType.Level_0_Sure,
 				highlightingType: HighlightType.Number
 			}
 
-			const temp = ExpressionUtils.GetValue(part, option, analyseOption);
-			if (!temp.success)
+			const temp = ExpressionUtils.GetValue(part, option);
+			if (!temp.success) {
+				result.success = temp.success;
 				break;
+			}
 
-			result[i] = temp.value;
+			result.values[i] = temp.value;
 		}
 		return result;
 	}

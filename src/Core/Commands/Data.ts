@@ -1,5 +1,4 @@
-import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, ExpAnalyseOption, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpressionUtils } from "../Base/ExpressionUtils";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption } from "../Base/Options";
 import { Utils } from "../Base/Utils";
@@ -55,20 +54,20 @@ export class Data {
 		let index = 0;
 
 		for (let i = 0; i < line.expression.length; i++) {
-			const part = line.expression[i];
-			const temp = ExpressionUtils.GetExpressionValue<number[]>(part, option, analyseOption);
+			const exp = line.expression[i];
+			const temp = ExpressionUtils.GetStringValue(exp, option);
 			if (!temp.success) {
 				line.compileType = LineCompileType.None;
-				line.result.length += temp.value.length * dataLength;
+				line.result.length += temp.values.length * dataLength;
 				index += line.result.length;
 			} else {
-				for (let j = 0; j < temp.value.length; j++) {
-					const tempLength = Utils.GetNumberByteLength(temp.value[j]);
-					const tempValue = line.SetResult(temp.value[j], index, dataLength);
+				for (let j = 0; j < temp.values.length; j++) {
+					const tempLength = Utils.GetNumberByteLength(temp.values[j]);
+					const tempValue = line.SetResult(temp.values[j], index, dataLength);
 					index += dataLength;
-					if (tempLength > dataLength || temp.value[j] < 0) {
-						const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.value[j], tempValue);
-						const token = ExpressionUtils.CombineExpressionPart(part);
+					if (tempLength > dataLength || temp.values[j] < 0) {
+						const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.values[j], tempValue);
+						const token = ExpressionUtils.CombineExpressionPart(exp.parts);
 						MyDiagnostic.PushWarning(token, errorMsg);
 					}
 				}

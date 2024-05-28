@@ -1,12 +1,12 @@
 import { Compiler } from "../Base/Compiler";
-import { ExpressionPart, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
+import { Expression, ExpressionPart, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
 import { LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { DataGroup } from "../Commands/DataGroup";
 import { DefinedTag } from "../Commands/Defined";
 import { IncbinTag } from "../Commands/Include";
-import { Macro } from "../Commands/Macro";
+import { Macro, MacroInstance } from "../Commands/Macro";
 import { CommandLine } from "../Lines/CommandLine";
 import { ICommonLine, LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
@@ -46,21 +46,50 @@ export class HelperUtils {
 	 */
 	static BaseSplit(lineText: string, start = 0): MatchRange {
 		const result: MatchRange = { type: "None", start: 0, text: "" };
-		let match = new RegExp(Platform.regexString, "ig").exec(lineText);
-		if (match?.groups?.[MatchNames.command]) {
-			result.type = "Command";
-			result.text = match.groups[MatchNames.command];
-		} else if (match?.groups?.[MatchNames.instruction]) {
-			result.type = "Instruction";
-			result.text = match.groups[MatchNames.instruction];
-		} else if ((match?.groups?.[MatchNames.variable])) {
-			result.type = "Variable";
-		} else if (match = Compiler.enviroment.MatchMacroRegex(lineText)) {
-			result.type = "Macro";
+
+		const match = Compiler.MatchLineCommon(lineText);
+		switch (match.key) {
+			case "command":
+				result.type = "Command";
+				result.text = match.content.main.text;
+				result.start = match.content.main.start;
+				break;
+			case "instruction":
+				result.type = "Instruction";
+				result.text = match.content.main.text;
+				result.start = match.content.main.start;
+				break;
+			case "variable":
+				result.type = "Variable";
+				break;
 		}
 
-		if (match)
-			result.start = match[0].indexOf(result.text) + match.index + start;
+		if (result.type === "None") {
+			const match = Compiler.MatchLine(lineText, ["macro", Compiler.enviroment.allMacro]);
+			if (match.key === "macro") {
+				result.type = "Macro";
+				result.text = match.content.main.text;
+				result.start = match.content.main.start;
+			}
+		}
+
+
+
+		// let match = new RegExp(Platform.regexString, "ig").exec(lineText);
+		// if (match?.groups?.[MatchNames.command]) {
+		// 	result.type = "Command";
+		// 	result.text = match.groups[MatchNames.command];
+		// } else if (match?.groups?.[MatchNames.instruction]) {
+		// 	result.type = "Instruction";
+		// 	result.text = match.groups[MatchNames.instruction];
+		// } else if ((match?.groups?.[MatchNames.variable])) {
+		// 	result.type = "Variable";
+		// } else if (match = Compiler.enviroment.MatchMacroRegex(lineText)) {
+		// 	result.type = "Macro";
+		// }
+
+		// if (match)
+		// 	result.start = match[0].indexOf(result.text) + match.index + start;
 
 		return result;
 	}
@@ -170,7 +199,7 @@ export class HelperUtils {
 		};
 
 		const tempMatch = HelperUtils.BaseSplit(lineText);
-		matchResult.matchToken = Token.CreateToken(fileHash, lineNumber, tempMatch.start, tempMatch.text);
+		matchResult.matchToken = Token.CreateToken(tempMatch.text, { fileHash, line: lineNumber, start: tempMatch.start });
 		if (HelperUtils._MatchToken(lineNumber, currect, matchResult.matchToken)) {
 			switch (tempMatch.type) {
 				case "Command":
@@ -227,14 +256,14 @@ export class HelperUtils {
 				break;
 			case "Enum":
 				const range = HelperUtils.GetWord(lineText, currect);
-				matchResult.matchToken = Token.CreateToken(fileHash, lineNumber, range.start, range.leftText + range.rightText);
+				matchResult.matchToken = Token.CreateToken(range.leftText + range.rightText, { fileHash, line: lineNumber, start: range.start });
 				const temp = ExpressionUtils.GetNumber(matchResult.matchToken.text);
 				if (temp.success) {
 					matchResult.matchType = "Number";
 					return matchResult;
 				}
 
-				const label = LabelUtils.FindLabel(matchResult.matchToken, matchResult.macro);
+				const label = LabelUtils.FindLabel(matchResult.matchToken, matchResult.macro?.CreateInstance());
 				if (label) {
 					matchResult.matchType = "Label";
 					return matchResult;
@@ -291,7 +320,7 @@ export class HelperUtils {
 				matchResult.tag = temp.hash;
 				switch (temp.type) {
 					case PriorityType.Level_1_Label:
-						const label = LabelUtils.FindLabel(matchResult.matchToken, matchResult.macro);
+						const label = LabelUtils.FindLabel(matchResult.matchToken, matchResult.macro?.CreateInstance());
 						if (label && label.labelType === LabelType.DataGroup) {
 							matchResult.matchType = "DataGroup";
 							const tempResult = HelperUtils._MatchDatagroup(matchResult.matchToken, currect);
@@ -312,13 +341,13 @@ export class HelperUtils {
 		return matchResult;
 	}
 
-	private static _FindMatchExp(lineNumber: number, currect: number, expParts?: ExpressionPart[][]) {
+	private static _FindMatchExp(lineNumber: number, currect: number, expParts?: Expression[]) {
 		if (!expParts)
 			return;
 
 		for (let i = 0; i < expParts.length; i++) {
-			for (let j = 0; j < expParts[i].length; j++) {
-				const part = expParts[i][j];
+			for (let j = 0; j < expParts[i].parts.length; j++) {
+				const part = expParts[i].parts[j];
 				if (part.type !== PriorityType.Level_1_Label && part.type !== PriorityType.Level_2_Number)
 					continue;
 

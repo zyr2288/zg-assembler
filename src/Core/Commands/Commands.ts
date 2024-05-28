@@ -243,7 +243,7 @@ export class Commands {
 	static async ThirdAnalyse_Common(option: DecodeOption) {
 		const line = option.GetCurrectLine<CommandLine>();
 		for (let i = 0; i < line.expression.length; ++i)
-			ExpressionUtils.CheckLabelsAndShowError(line.expression[i], option);
+			ExpressionUtils.CheckLabelsAndShowError(line.expression[i].parts, option);
 	}
 	//#endregion 第三次的通用分析，仅对编译命令行的表达式小节分析
 

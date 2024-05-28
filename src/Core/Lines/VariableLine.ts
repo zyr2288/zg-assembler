@@ -14,15 +14,15 @@ export class VariableLine {
 	/**标签 */
 	saveLabel?: CommonSaveLabel;
 
-	expression?: Token;
-	expParts!: Expression;
+	expToken?: Token;
+	expression!: Expression[];
 
 	comment?: string;
 
 	Initialize(option: { labelToken: Token, expression: Token }) {
 		this.orgText = option.labelToken;
 		this.saveLabel = { token: option.labelToken, label: {} as LabelNormal, notFinish: true };
-		this.expression = option.expression;
+		this.expToken = option.expression;
 	}
 
 	GetTokens() {
@@ -30,7 +30,7 @@ export class VariableLine {
 		if (this.saveLabel)
 			result.push({ type: HighlightType.Variable, token: this.saveLabel.label.token });
 
-		result.push(...ExpressionUtils.GetHighlightingTokens([this.expParts]));
+		result.push(...ExpressionUtils.GetHighlightingTokens(this.expression));
 		return result;
 	}
 }
@@ -55,29 +55,29 @@ export class VariableLineUtils {
 		}
 
 		option.macro = macro;
-		if (line.expression!.isEmpty) {
+		if (line.expToken!.isEmpty) {
 			const errorMsg = Localization.GetMessage("Expression error");
-			MyDiagnostic.PushException(line.expression!, errorMsg);
+			MyDiagnostic.PushException(line.expToken!, errorMsg);
 			line.compileType = LineCompileType.Error;
 		} else {
-			const parts = ExpressionUtils.SplitAndSort(line.expression!);
+			const parts = ExpressionUtils.SplitAndSort(line.expToken!);
 			if (parts)
-				line.expParts = parts;
+				line.expression = [parts];
 			else
 				line.compileType = LineCompileType.Error;
 		}
-		delete (line.expression);
+		delete (line.expToken);
 	}
 
 	static ThirdAnalyse(option: DecodeOption) {
 		const line = option.GetCurrectLine<VariableLine>();
-		if (ExpressionUtils.CheckLabelsAndShowError(line.expParts.parts, option)) {
+		if (ExpressionUtils.CheckLabelsAndShowError(line.expression[0].parts, option)) {
 			line.compileType = LineCompileType.Error;
 			return;
 		}
 
 		const analyseOption: ExpAnalyseOption = { analyseType: "Try" };
-		const temp = ExpressionUtils.GetValue(line.expParts.parts, option, analyseOption);
+		const temp = ExpressionUtils.GetValue(line.expression[0].parts, option, analyseOption);
 		const label = line.saveLabel!.label;
 		if (label && temp.success) {
 			label.value = temp.value;

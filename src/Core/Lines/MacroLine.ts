@@ -15,12 +15,12 @@ export class MacroLine {
 	/**自定义函数行的函数名Token */
 	macroToken!: Token;
 	/**自定义函数的所有参数 */
-	expParts: Expression[] = [];
+	expression: Expression[] = [];
 	result: number[] = [];
 
 	GetTokens() {
 		const result: HighlightToken[] = [];
-		result.push(...ExpressionUtils.GetHighlightingTokens(this.expParts));
+		result.push(...ExpressionUtils.GetHighlightingTokens(this.expression));
 		result.push({ type: HighlightType.Macro, token: this.macroToken });
 		return result;
 	}

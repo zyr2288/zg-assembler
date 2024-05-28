@@ -1,6 +1,6 @@
 import { Compiler } from "../Base/Compiler";
 import { ExpressionPart, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
-import { ILabel, LabelType, LabelUtils } from "../Base/Label";
+import { LabelNormal, LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyException";
 import { DecodeOption, IncludeLine } from "../Base/Options";
 import { Token } from "../Base/Token";
@@ -17,7 +17,7 @@ import { Commands } from "./Commands";
 export class DataGroup {
 
 	/**数据组的标签 */
-	label!: ILabel;
+	label!: LabelNormal;
 	/**key是标签是文本 */
 	labelAndIndex: Map<string, { token: Token, index: number }[]> = new Map();
 
@@ -44,7 +44,7 @@ export class DataGroup {
 //#endregion 数据组
 
 interface DataGroupTag {
-	label: ILabel;
+	label: LabelNormal;
 	notFinished: boolean;
 };
 
@@ -79,7 +79,7 @@ export class DataGroupCommand {
 		const expressions: Token[] = line.tag;
 		const lines = Commands.CollectBaseLines(option, include!);
 
-		const label = LabelUtils.CreateLabel(expressions[0], option, false);
+		const label = LabelUtils.CreateLabel(expressions[0], option, false) as LabelNormal;
 		if (!label) {
 			line.compileType = LineCompileType.Error;
 			return;
@@ -112,9 +112,9 @@ export class DataGroupCommand {
 				const temp2 = ExpressionUtils.SplitAndSort(p);
 				if (temp2) {
 					line.expression.push(temp2);
-					DataGroupCommand.AddExpressionPart(datagroup, temp2, i);
+					DataGroupCommand.AddExpressionPart(datagroup, temp2.parts, i);
 				} else {
-					line.expression.push([]);
+					// line.expression.push(...[]);
 					line.compileType = LineCompileType.Error;
 				}
 
@@ -127,7 +127,7 @@ export class DataGroupCommand {
 		const line = option.GetCurrectLine<CommandLine>();
 		for (let i = 0; i < line.expression.length; ++i) {
 			const exps = line.expression[i];
-			const temp = ExpressionUtils.CheckLabelsAndShowError(exps);
+			const temp = ExpressionUtils.CheckLabelsAndShowError(exps.parts);
 			if (temp)
 				line.compileType = LineCompileType.Error;
 
@@ -158,7 +158,7 @@ export class DataGroupCommand {
 
 		for (let i = 0; i < line.expression.length; i++) {
 			const lex = line.expression[i];
-			const temp = ExpressionUtils.GetExpressionValue<number>(lex, option);
+			const temp = ExpressionUtils.GetValue(lex.parts, option);
 			if (!temp.success) {
 				line.compileType = LineCompileType.None;
 				break;
@@ -166,7 +166,7 @@ export class DataGroupCommand {
 				const byteLength = Utils.GetNumberByteLength(temp.value);
 				const tempValue = line.SetResult(temp.value, index, dataLength);
 				if (temp.value < 0 || byteLength > dataLength) {
-					const token = ExpressionUtils.CombineExpressionPart(lex);
+					const token = ExpressionUtils.CombineExpressionPart(lex.parts);
 					const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.value, tempValue);
 					MyDiagnostic.PushWarning(token, errorMsg);
 				}
