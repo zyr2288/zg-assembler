@@ -6,7 +6,6 @@ import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType }
 export class MacroLine {
 	type: LineType.Macro = LineType.Macro;
 	compileType = LineCompileType.None;
-	orgText!: Token;
 
 	orgAddress: number = -1;
 	baseAddress: number = 0;
@@ -17,6 +16,9 @@ export class MacroLine {
 	/**自定义函数的所有参数 */
 	expression: Expression[] = [];
 	result: number[] = [];
+
+	orgText!: Token;
+	comment?: string;
 
 	GetTokens() {
 		const result: HighlightToken[] = [];

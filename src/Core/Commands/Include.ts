@@ -6,7 +6,7 @@ import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
-import { ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
+import { CommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
 import { Commands } from "./Commands";
 
 export interface IncbinTag {
@@ -15,7 +15,7 @@ export interface IncbinTag {
 }
 
 interface IncludeTag {
-	lines: ICommonLine[];
+	lines: CommonLine[];
 	fileHash: number;
 };
 

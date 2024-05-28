@@ -7,7 +7,7 @@ import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
-import { HighlightToken, ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
+import { CommonLine, HighlightToken, ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
 import { MacroLine } from "../Lines/MacroLine";
 import { OnlyLabelLine } from "../Lines/OnlyLabelLine";
@@ -33,7 +33,7 @@ export class Macro {
 	indefiniteParam?: Token;
 
 	/**自定义函数所有行 */
-	lines: ICommonLine[] = [];
+	lines: CommonLine[] = [];
 
 	/**函数注释 */
 	comment?: string;
@@ -59,7 +59,7 @@ export class MacroInstance {
 
 	indefiniteParam?: { name: string, params: LabelNormal[] };
 
-	lines: ICommonLine[] = [];
+	lines: CommonLine[] = [];
 }
 
 export class MacroUtils {
@@ -389,6 +389,7 @@ export class MacroCommand {
 		const result: HighlightToken[] = [];
 
 		for (let i = 0; i < macro.lines.length; ++i) {
+			// @ts-ignore
 			const tokens = macro.lines[i].GetTokens?.();
 			if (tokens)
 				result.push(...tokens);

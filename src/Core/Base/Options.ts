@@ -1,13 +1,13 @@
 import { MacroInstance } from "../Commands/Macro";
-import { ICommonLine } from "../Lines/CommonLine";
+import { CommonLine, ICommonLine } from "../Lines/CommonLine";
 import { Compiler } from "./Compiler";
 
 export class DecodeOption {
 	macro?: MacroInstance;
-	allLines: ICommonLine[];
+	allLines: CommonLine[];
 	lineIndex = 0;
 
-	constructor(allLines: ICommonLine[]) {
+	constructor(allLines: CommonLine[]) {
 		this.allLines = allLines;
 	}
 
@@ -17,7 +17,7 @@ export class DecodeOption {
 	 * @param fileHash 文件Hash
 	 * @returns 
 	 */
-	ReplaceLine(newLine: ICommonLine, fileHash: number) {
+	ReplaceLine(newLine: CommonLine, fileHash: number) {
 		const findLine = this.allLines[this.lineIndex];
 		this.allLines[this.lineIndex] = newLine;
 		const temp = Compiler.enviroment.allBaseLines.get(fileHash);
@@ -31,7 +31,7 @@ export class DecodeOption {
 		temp[index] = newLine;
 	}
 
-	InsertLines(fileHash: number, index: number, newLines: ICommonLine[]) {
+	InsertLines(fileHash: number, index: number, newLines: CommonLine[]) {
 		this.allLines.splice(index, 0, ...newLines);
 
 		const temp = Compiler.enviroment.allBaseLines.get(fileHash) ?? [];
@@ -41,11 +41,11 @@ export class DecodeOption {
 		Compiler.enviroment.allBaseLines.set(fileHash, temp);
 	}
 
-	GetLine<T extends ICommonLine>(index: number) {
+	GetLine<T extends CommonLine>(index: number) {
 		return this.allLines[index] as T;
 	}
 
-	GetCurrectLine<T extends ICommonLine>() {
+	GetCurrectLine<T extends CommonLine>() {
 		return this.allLines[this.lineIndex] as T;
 	}
 }

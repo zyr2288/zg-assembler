@@ -2,7 +2,7 @@ import { Commands } from "../Commands/Commands";
 import { MacroUtils } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
-import { ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
+import { CommonLine, ICommonLine, LineCompileType, LineType } from "../Lines/CommonLine";
 import { InstructionLine, InstructionLineUtils } from "../Lines/InstructionLine";
 import { MacroLine } from "../Lines/MacroLine";
 import { OnlyLabelLine } from "../Lines/OnlyLabelLine";
@@ -126,10 +126,10 @@ export class Compiler {
 
 	//#region 分解文本
 	/**分解文本 */
-	static SplitTexts(fileHash: number, text: string): ICommonLine[] {
-		const result: ICommonLine[] = [];
+	static SplitTexts(fileHash: number, text: string): CommonLine[] {
+		const result: CommonLine[] = [];
 
-		let newLine = {} as ICommonLine;
+		let newLine = {} as CommonLine;
 		let match!: MatchResult;
 		let orgText: Token;
 

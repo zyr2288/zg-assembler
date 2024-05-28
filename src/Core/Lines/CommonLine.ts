@@ -1,5 +1,11 @@
 import { LabelCommon } from "../Base/Label";
 import { Token } from "../Base/Token";
+import { CommandLine } from "./CommandLine";
+import { InstructionLine } from "./InstructionLine";
+import { MacroLine } from "./MacroLine";
+import { OnlyLabelLine } from "./OnlyLabelLine";
+import { UnknowLine } from "./UnknowLine";
+import { VariableLine } from "./VariableLine";
 
 export enum LineType {
 	Unknow, Instruction, Command, Variable, Macro, OnlyLabel, Delegate
@@ -28,6 +34,8 @@ export enum HighlightType {
 	Number,
 }
 //#endregion 高亮类型
+
+export type CommonLine = InstructionLine | VariableLine | CommandLine | OnlyLabelLine | UnknowLine | MacroLine;
 
 /**通用行接口，不要使用构造函数，否则无法深拷贝 */
 export interface ICommonLine {

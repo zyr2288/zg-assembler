@@ -13,7 +13,6 @@ import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType }
 export class InstructionLine {
 	type: LineType.Instruction = LineType.Instruction;
 	compileType = LineCompileType.None;
-	orgText!: Token;
 
 	orgAddress = -1;
 	baseAddress = 0;
@@ -24,6 +23,7 @@ export class InstructionLine {
 	addressingMode!: IAddressingMode;
 	result: number[] = [];
 
+	orgText!: Token;
 	comment?: string;
 
 	Initialize(option: { instruction: Token, expression: Token }) {

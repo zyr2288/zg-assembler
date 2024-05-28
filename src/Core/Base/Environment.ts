@@ -49,6 +49,8 @@ export class Environment {
 	/**用于记忆文件内macro */
 	fileMacros = new Map<number, Set<string>>();
 
+	checkFiles = new Set<number>();
+
 	private files = new Map<number, string>();
 	private highlightRanges = new Map<number, HighlightRange[]>();
 
