@@ -77,7 +77,6 @@ export class InstructionLineUtils {
 					line.expression[i] = temp2;
 				} else {
 					line.compileType = LineCompileType.Error;
-					line.expression[i].parts = [];
 				}
 			}
 		} else {

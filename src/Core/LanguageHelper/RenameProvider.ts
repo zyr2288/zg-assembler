@@ -4,7 +4,7 @@ import { FileUtils } from "../Base/FileUtils";
 import { LabelCommon, LabelNormal, LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { EnumData, EnumDataTag } from "../Commands/EnumData";
-import { Macro, MacroInstance } from "../Commands/Macro";
+import { Macro } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
 import { ICommonLine, LineType } from "../Lines/CommonLine";
@@ -114,7 +114,7 @@ export class RenameProvider {
 		let tempMacro: Macro | undefined;
 		let tempLabel: LabelCommon | undefined;
 		if (RenameProvider.SaveRename.type === "Label" || RenameProvider.SaveRename.type === "MacroLabel") {
-			tempLabel = LabelUtils.FindLabel(RenameProvider.SaveRename.token, RenameProvider.SaveRename.macro?.CreateInstance());
+			tempLabel = LabelUtils.FindLabel(RenameProvider.SaveRename.token, RenameProvider.SaveRename.macro);
 		}
 
 		const SaveLineToken = (lines: ICommonLine[], tokens: Token[]) => {
@@ -168,7 +168,7 @@ export class RenameProvider {
 		// 原始位置重命名
 		switch (RenameProvider.SaveRename.type) {
 			case "Label":
-				const label = LabelUtils.FindLabel(RenameProvider.SaveRename.token, RenameProvider.SaveRename.macro?.CreateInstance());
+				const label = LabelUtils.FindLabel(RenameProvider.SaveRename.token, RenameProvider.SaveRename.macro);
 				if (label) {
 					const fileName = Compiler.enviroment.GetFile(label.token.fileHash);
 					const tokens = result.get(fileName) ?? [];
@@ -177,7 +177,7 @@ export class RenameProvider {
 				}
 				break;
 			case "MacroLabel":
-				const macroLabel = LabelUtils.FindLabel(RenameProvider.SaveRename.token, RenameProvider.SaveRename.macro?.CreateInstance());
+				const macroLabel = LabelUtils.FindLabel(RenameProvider.SaveRename.token, RenameProvider.SaveRename.macro);
 				if (macroLabel) {
 					const fileName = Compiler.enviroment.GetFile(macroLabel.token.fileHash);
 					const tokens = result.get(fileName) ?? [];
@@ -228,7 +228,7 @@ export class RenameProvider {
 
 				if (exp.token.text.startsWith(".") && exp.token.fileHash === fileHash ||
 					!exp.token.text.startsWith(".")) {
-					const label = LabelUtils.FindLabel(exp.token, macro?.CreateInstance());
+					const label = LabelUtils.FindLabel(exp.token, macro);
 					if (label && label.labelType === labelType) {
 						result.push(exp.token);
 						continue;

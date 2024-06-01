@@ -1,7 +1,7 @@
 import { LabelNormal, LabelType, LabelUtils } from "../Base/Label";
 import { DecodeOption } from "../Base/Options";
 import { Token } from "../Base/Token";
-import { CommonSaveLabel, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
+import { CommonSaveLabel, HighlightType, LineCompileType, LineType } from "./CommonLine";
 
 export class OnlyLabelLine {
 	type: LineType.OnlyLabel = LineType.OnlyLabel;

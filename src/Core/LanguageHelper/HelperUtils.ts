@@ -6,7 +6,7 @@ import { Utils } from "../Base/Utils";
 import { DataGroup } from "../Commands/DataGroup";
 import { DefinedTag } from "../Commands/Defined";
 import { IncbinTag } from "../Commands/Include";
-import { Macro, MacroInstance } from "../Commands/Macro";
+import { Macro } from "../Commands/Macro";
 import { CommandLine } from "../Lines/CommandLine";
 import { ICommonLine, LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
@@ -263,7 +263,7 @@ export class HelperUtils {
 					return matchResult;
 				}
 
-				const label = LabelUtils.FindLabel(matchResult.matchToken, matchResult.macro?.CreateInstance());
+				const label = LabelUtils.FindLabel(matchResult.matchToken, matchResult.macro);
 				if (label) {
 					matchResult.matchType = "Label";
 					return matchResult;
@@ -320,7 +320,7 @@ export class HelperUtils {
 				matchResult.tag = temp.hash;
 				switch (temp.type) {
 					case PriorityType.Level_1_Label:
-						const label = LabelUtils.FindLabel(matchResult.matchToken, matchResult.macro?.CreateInstance());
+						const label = LabelUtils.FindLabel(matchResult.matchToken, matchResult.macro);
 						if (label && label.labelType === LabelType.DataGroup) {
 							matchResult.matchType = "DataGroup";
 							const tempResult = HelperUtils._MatchDatagroup(matchResult.matchToken, currect);

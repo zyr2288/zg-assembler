@@ -1,4 +1,4 @@
-import { Macro, MacroInstance } from "../Commands/Macro";
+import { Macro } from "../Commands/Macro";
 import { Localization } from "../I18n/Localization";
 import { Compiler } from "./Compiler";
 import { MyDiagnostic } from "./MyException";
@@ -46,21 +46,26 @@ export interface LabelNamelessCollection {
 
 /**常规标签 */
 export class LabelNormal {
-	token: Token;
+	token!: Token;
 	labelType: LabelType = LabelType.None;
 
 	scope: LabelScope.Global | LabelScope.Local = LabelScope.Global;
 	value?: number;
 	comment?: string;
 
-	constructor(token: Token, option?: { comment?: string, labelType?: LabelType }) {
-		this.token = token;
-		if (token.text.startsWith("."))
-			this.scope = LabelScope.Local;
+	private constructor() { }
 
-		this.comment = option?.comment;
+	static Create(token: Token, option?: { comment?: string, labelType?: LabelType }) {
+		const label = new LabelNormal();
+		label.token = token;
+		if (token.text.startsWith("."))
+			label.scope = LabelScope.Local;
+
+		label.comment = option?.comment;
 		if (option?.labelType)
-			this.labelType = option.labelType;
+			label.labelType = option.labelType;
+
+		return label;
 	}
 }
 
@@ -126,7 +131,7 @@ export class LabelUtils {
 				MyDiagnostic.PushException(token, errorMsg);
 				return;
 			}
-			const label = new LabelNormal(token);
+			const label = LabelNormal.Create(token);
 			option.macro.labels.set(token.text, label);
 			return label;
 		}
@@ -184,7 +189,7 @@ export class LabelUtils {
 	 * @param macro 函数
 	 * @returns 是否找到标签
 	 */
-	static FindLabel(token?: Token, macro?: MacroInstance): LabelCommon | undefined {
+	static FindLabel(token?: Token, macro?: Macro): LabelCommon | undefined {
 		if (!token || token.isEmpty)
 			return;
 
@@ -274,14 +279,14 @@ export class LabelUtils {
 	//#endregion 查找标签
 
 	//#region 查找下标
-	static FindSubLabel(main: Token, sub: Token, option?: { third?: Token, macro?: MacroInstance }) {
-		if (option?.macro && option.macro.indefiniteParam && option.macro.indefiniteParam) {
-			if (sub.text === "length") {
-				const label = new LabelNormal(sub);
-				label.value = option.macro.indefiniteParam.params.length;
-				return label;
-			}
-		}
+	static FindSubLabel(main: Token, sub: Token, option?: { third?: Token, macro?: Macro }) {
+		// if (option?.macro && option.macro.indefiniteParam && option.macro.indefiniteParam) {
+		// 	if (sub.text === "length") {
+		// 		const label = new LabelNormal(sub);
+		// 		label.value = option.macro.indefiniteParam.params.length;
+		// 		return label;
+		// 	}
+		// }
 	}
 	//#endregion 查找下标
 
@@ -476,11 +481,11 @@ export class LabelUtils {
 					return;
 				}
 
-				result = new LabelNormal(token.Copy(), { labelType: LabelType.Defined });
+				result = LabelNormal.Create(token.Copy(), { labelType: LabelType.Defined });
 				result.token.text = text;
 				labelMap.set(text, result);
 			} else if (!labelMap.has(text)) {
-				result = new LabelNormal(token.Copy());
+				result = LabelNormal.Create(token.Copy());
 				result.token.text = text;
 				labelMap.set(text, result);
 			}
@@ -554,7 +559,7 @@ export class LabelUtils {
 	//#endregion 获取文件保存的Labelhash
 
 	//#region 查询Macro内的标签
-	private static FindLabelInMacro(token: Token, macro: MacroInstance) {
+	private static FindLabelInMacro(token: Token, macro: Macro) {
 		return macro.params.get(token.text)?.label ?? macro.labels.get(token.text);
 		// 	const parts = token.Split(/\:/g);
 		// if (parts.length != 2)

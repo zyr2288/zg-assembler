@@ -24,7 +24,7 @@ export class Macro {
 	name!: Token;
 
 	/**自定义函数所有参数 */
-	params = new Map<string, { label: LabelNormal, values: [] }>();
+	params = new Map<string, { label: LabelNormal, values: number[], stringLength: number }>();
 
 	/**函数内所有的标签 */
 	labels = new Map<string, LabelNormal>();
@@ -32,34 +32,14 @@ export class Macro {
 	/**函数的不定参数 */
 	indefiniteParam?: Token;
 
+	indefiniParamValues?: Map<string, number>;
+
 	/**自定义函数所有行 */
 	lines: CommonLine[] = [];
 
 	/**函数注释 */
 	comment?: string;
 
-	CreateInstance() {
-		const instance = new MacroInstance();
-		instance.name = this.name.Copy();
-		instance.params = Utils.DeepClone(this.params);
-		instance.labels = Utils.DeepClone(this.labels);
-		instance.lines = Utils.DeepClone(this.lines);
-		return instance;
-	}
-}
-
-/**用于关联自定义函数的行的函数 */
-export class MacroInstance {
-	/**自定义函数名称 */
-	name!: Token;
-
-	params = new Map<string, { label: LabelNormal, values: [] }>();
-	/**函数内所有的标签 */
-	labels = new Map<string, LabelNormal>();
-
-	indefiniteParam?: { name: string, params: LabelNormal[] };
-
-	lines: CommonLine[] = [];
 }
 
 export class MacroUtils {
@@ -78,7 +58,7 @@ export class MacroUtils {
 		const macroLine = new MacroLine();
 
 		macroLine.orgText = option.GetCurrectLine().orgText;
-		macroLine.macro = macro.CreateInstance();
+		macroLine.macro = macro;
 		macroLine.macroToken = macroToken;
 
 		option.ReplaceLine(macroLine, macroToken.fileHash);
@@ -135,10 +115,12 @@ export class MacroUtils {
 
 		const macro = new Macro();
 		macro.name = name;
+
+		// Macro 参数不为零
 		if (params.length !== 0) {
 			for (let i = 0; i < params.length; ++i) {
 				const part = params[i];
-				const label = new LabelNormal(part, { labelType: LabelType.Parameter });
+				const label = LabelNormal.Create(part, { labelType: LabelType.Parameter });
 
 				if (i === params.length - 1 && part.text.startsWith("...")) {
 					macro.indefiniteParam = part.Substring(3);
@@ -154,7 +136,8 @@ export class MacroUtils {
 						MyDiagnostic.PushException(part, errorMsg);
 						continue;
 					}
-					macro.params.set(label.token.text, { label, values: [] });
+				} else {
+					macro.params.set(label.token.text, { label, values: [], stringLength: 0 });
 				}
 
 			}
@@ -166,9 +149,9 @@ export class MacroUtils {
 				Compiler.enviroment.fileMacros.set(name.fileHash, allSet);
 			}
 			allSet.add(name.text);
-
-			return macro;
 		}
+
+		return macro;
 	}
 	//#endregion 创建一个自定义函数
 
@@ -184,37 +167,27 @@ export class MacroUtils {
 
 		const macro = line.macro;
 
-		// const analyseOption: ExpAnalyseOption = { resultType: "ArrayNumber" };
 		const keys = macro.params.keys();
 		let index = 0;
 
+		for (const key of keys) {
+			const result = ExpressionUtils.GetStringValue(line.expression[index], option);
+			const param = macro.params.get(key)!;
 
+			param.stringLength = result.values.length;
+			if (result.success)
+				param.values = result.values;
 
-		// for (const key of keys) {
-		// 	const result = ExpressionUtils.GetExpressionValue<number[]>(line.expParts[index].parts, option, analyseOption);
-		// 	const param = macro.params.get(key)!;
-		// 	if (result.value.length > 1) {
-		// 		param.values = [];
-		// 		param.values.length = result.value.length;
-		// 	}
+			index++;
+		}
 
-		// 	if (result.success) {
-		// 		if (result.value.length === 1) {
-		// 			param.label.value = result.value[0];
-		// 		} else {
-		// 			param.values = result.value;
-		// 		}
-		// 	}
-		// 	index++;
-		// }
+		const tempOption = new DecodeOption(macro.lines);
+		tempOption.macro = macro;
+		MacroUtils.ReplaceContent(tempOption.allLines, macro);
+		await Compiler.CompileResult(tempOption);
+		option.InsertLines(line.macroToken.fileHash, option.lineIndex + 1, macro.lines);
 
-		// const tempOption = new DecodeOption(macro.lines);
-		// tempOption.macro = macro;
-		// MacroUtils.ReplaceContent(tempOption.allLines, macro);
-		// await Compiler.CompileResult(tempOption);
-		// option.InsertLines(line.macroToken.fileHash, option.lineIndex + 1, macro.lines);
-
-		// line.compileType = LineCompileType.Finished;
+		line.compileType = LineCompileType.Finished;
 	}
 	//#endregion 编译自定义函数
 
@@ -239,7 +212,7 @@ export class MacroUtils {
 
 	/***** private *****/
 
-	private static ReplaceContent(lines: ICommonLine[], macro: Macro) {
+	private static ReplaceContent(lines: CommonLine[], macro: Macro) {
 		if (!macro)
 			return;
 
@@ -293,17 +266,18 @@ export class MacroUtils {
 						if (!param1)
 							continue;
 
-						if (param1.values.length > 1) {
+						if (param1.stringLength > 1) {
 							exp.type = PriorityType.Level_3_CharArray;
 							exp.chars = param1.values;
+							exp.chars.length = param1.stringLength;
 						}
 						break;
-					case PriorityType.Level_3_CharArray:
-						const param2 = macro.params.get(exp.token.text);
-						if (!param2 || param2.values === undefined)
-							continue;
+					// case PriorityType.Level_3_CharArray:
+					// 	const param2 = macro.params.get(exp.token.text);
+					// 	if (!param2 || param2.values === undefined)
+					// 		continue;
 
-						exp.chars = param2.values;
+					// 	exp.chars = param2.values;
 				}
 			}
 		}
@@ -358,7 +332,7 @@ export class MacroCommand {
 		line.tag = macro;
 
 		const tempOption = new DecodeOption(macro.lines);
-		tempOption.macro = macro.CreateInstance();
+		tempOption.macro = macro;
 		await Compiler.FirstAnalyse(tempOption);
 	}
 	//#endregion 第一次分析Macro
@@ -368,7 +342,7 @@ export class MacroCommand {
 		const line = option.GetCurrectLine<CommandLine>();
 		const macro = line.tag as LineTag;
 		const tempOption = new DecodeOption(macro.lines);
-		tempOption.macro = macro.CreateInstance();
+		tempOption.macro = macro;
 		await Compiler.SecondAnalyse(tempOption);
 	}
 	//#endregion 第二次分析
@@ -378,7 +352,7 @@ export class MacroCommand {
 		const line = option.GetCurrectLine<CommandLine>();
 		const macro = line.tag as LineTag;
 		const tempOption = new DecodeOption(macro.lines);
-		tempOption.macro = macro.CreateInstance();
+		tempOption.macro = macro;
 		await Compiler.ThirdAnalyse(tempOption);
 	}
 	//#endregion 第三次分析

@@ -684,7 +684,7 @@ export class ExpressionUtils {
 		CreateNewPart();
 
 		let stringStart = -1;
-
+		outBreak:
 		for (let i = 0; i < tokens.length; ++i) {
 			part.token = tokens[i];
 			if (part.token.isEmpty)
@@ -699,13 +699,14 @@ export class ExpressionUtils {
 						stringStart = part.token.start;
 						continue;
 					} else {
-						part.token = expression.Substring(stringStart - expression.start + 1, part.token.start - stringStart - 1);
+						part.token.text = expression.text.substring(stringStart - expression.start + 1, part.token.start - stringStart);
 						const length = part.token.text.length;
 						switch (length) {
 							case 0:
 								const error = Localization.GetMessage("Expression error");
 								MyDiagnostic.PushException(part.token, error);
-								break;
+								result.success = false;
+								break outBreak;
 							case 1:
 								part.type = PriorityType.Level_0_Sure;
 								part.value = part.token.text.charCodeAt(0);

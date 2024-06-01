@@ -3,7 +3,7 @@ import { ExpressionPart, PriorityType } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
 import { LabelCommon, LabelNormal, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
-import { Macro, MacroInstance } from "../Commands/Macro";
+import { Macro } from "../Commands/Macro";
 import { CommandLine } from "../Lines/CommandLine";
 import { ICommonLine, LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
@@ -36,7 +36,7 @@ export class LabelReferences {
 			let tempLabel: LabelCommon | undefined;
 			switch (temp.matchType) {
 				case "Label":
-					const tempMacro = temp.macro?.CreateInstance();
+					const tempMacro = temp.macro;
 					tempLabel = LabelUtils.FindLabel(temp.matchToken, tempMacro);
 					break;
 			}
@@ -87,7 +87,7 @@ export class LabelReferences {
 		return result;
 	}
 
-	private static GetExpressionPartTokens(exps: ExpressionPart[][], label?: LabelNormal, macro?: MacroInstance) {
+	private static GetExpressionPartTokens(exps: ExpressionPart[][], label?: LabelNormal, macro?: Macro) {
 		const tokens: Token[] = [];
 		if (!label)
 			return tokens;

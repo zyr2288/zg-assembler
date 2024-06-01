@@ -1,9 +1,9 @@
-import { MacroInstance } from "../Commands/Macro";
+import { Macro } from "../Commands/Macro";
 import { CommonLine, ICommonLine } from "../Lines/CommonLine";
 import { Compiler } from "./Compiler";
 
 export class DecodeOption {
-	macro?: MacroInstance;
+	macro?: Macro;
 	allLines: CommonLine[];
 	lineIndex = 0;
 
