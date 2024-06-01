@@ -6,33 +6,33 @@ export class Utils {
 	//#region 深拷贝
 	/**深拷贝 */
 	static DeepClone<T>(source: T): T {
-		// // @ts-ignore
-		// const out = new source.constructor;
+		// @ts-ignore
+		const out = new source.constructor;
 
-		// for (const key in source) {
-		// 	// @ts-ignore
-		// 	if (source.hasOwnProperty(key)) {
-		// 		const type = Utils.GetType(source[key]);
-		// 		switch (type) {
-		// 			case "Object":
-		// 			case "Array":
-		// 				out[key] = Utils.DeepClone(source[key]);
-		// 				break;
-		// 			case "Map":
-		// 				const sourceMap = source[key] as Map<any, any>;
-		// 				const outMap = out[key] as Map<any, any>;
-		// 				for (const mapKey of sourceMap.keys())
-		// 					outMap.set(mapKey, Utils.DeepClone(sourceMap.get(mapKey)))
+		for (const key in source) {
+			// @ts-ignore
+			if (source.hasOwnProperty(key)) {
+				const type = Utils.GetType(source[key]);
+				switch (type) {
+					case "Object":
+					case "Array":
+						out[key] = Utils.DeepClone(source[key]);
+						break;
+					case "Map":
+						const sourceMap = source[key] as Map<any, any>;
+						const outMap = out[key] as Map<any, any>;
+						for (const mapKey of sourceMap.keys())
+							outMap.set(mapKey, Utils.DeepClone(sourceMap.get(mapKey)))
 
-		// 				break;
-		// 			default:
-		// 				out[key] = source[key];
-		// 				break;
-		// 		}
-		// 	}
-		// }
+						break;
+					default:
+						out[key] = source[key];
+						break;
+				}
+			}
+		}
 
-		const out = structuredClone(source);
+		// const out = structuredClone(source);
 		return out;
 	}
 

@@ -267,6 +267,8 @@ export class MacroUtils {
 							continue;
 
 						if (param1.stringLength > 1) {
+							exps[i].stringIndex = j;
+							exps[i].stringLength = param1.stringLength;
 							exp.type = PriorityType.Level_3_CharArray;
 							exp.chars = param1.values;
 							exp.chars.length = param1.stringLength;

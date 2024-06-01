@@ -390,22 +390,30 @@ export class ExpressionUtils {
 		result.values.length = expression.stringLength;
 
 		const index = expression.stringIndex;
-		for (let i = 0; i < expression.stringLength; i++) {
-			const part = Utils.DeepClone(expression.parts);
-			part[index] = {
-				token: Token.EmptyToken(),
-				value: expression.parts[index].chars![i],
-				type: PriorityType.Level_0_Sure,
-				highlightingType: HighlightType.Number
-			}
+		if (index < 0) {
+			result.values.length = 1;
+			const temp = ExpressionUtils.GetValue(expression.parts, option);
+			result.success = temp.success;
+			if (temp.success)
+				result.values[0] = temp.value;
+		} else {
+			for (let i = 0; i < expression.stringLength; i++) {
+				const part = Utils.DeepClone(expression.parts);
+				part[index] = {
+					token: Token.EmptyToken(),
+					value: expression.parts[index].chars![i],
+					type: PriorityType.Level_0_Sure,
+					highlightingType: HighlightType.Number
+				}
 
-			const temp = ExpressionUtils.GetValue(part, option);
-			if (!temp.success) {
-				result.success = temp.success;
-				break;
-			}
+				const temp = ExpressionUtils.GetValue(part, option);
+				if (!temp.success) {
+					result.success = temp.success;
+					break;
+				}
 
-			result.values[i] = temp.value;
+				result.values[i] = temp.value;
+			}
 		}
 		return result;
 	}

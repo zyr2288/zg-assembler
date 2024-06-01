@@ -71,18 +71,23 @@ export class LabelNormal {
 
 /**临时标签 */
 export class LabelNameless {
-	token: Token;
+	token!: Token;
 	labelType = LabelType.Label;
 
 	scope: LabelScope.Nameless = LabelScope.Nameless;
 	value?: number;
 	comment?: string;
 
-	count: number;
+	count!: number;
 
-	constructor(token: Token, isDown: boolean, comment?: string) {
-		this.token = token;
-		this.count = isDown ? this.token.length : -this.token.length;
+	private constructor() { }
+
+	static Create(token: Token, isDown: boolean, comment?: string) {
+		const label = new LabelNameless();
+		label.token = token;
+		label.count = isDown ? token.length: -token.length;
+		label.comment = comment;
+		return label;
 	}
 }
 
@@ -373,9 +378,7 @@ export class LabelUtils {
 		const line = option.GetCurrectLine();
 		const isDown = token.text[0] === "+";
 
-		const newItem = new LabelNameless(token, isDown, line.comment);
-		newItem.count = isDown ? token.length : -token.length;
-		newItem.token = token;
+		const newItem = LabelNameless.Create(token, isDown, line.comment);
 
 		let temp;
 		let index = 0;
