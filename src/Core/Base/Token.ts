@@ -1,63 +1,28 @@
-import { Utils } from "./Utils";
-
-export enum TokenType {
-	Defined, Label, Variable
-}
-
+/**一个词元 */
 export class Token {
 
-	//#region 建立一个Token
-	/**
-	 * 建立一个Token
-	 * @param fileHash 文件名hash
-	 * @param line 行号，0开始
-	 * @param start 起始位置
-	 * @param text 文本
-	 * @returns Token
-	 */
-	static CreateToken(text: string, option?: { fileHash?: number, line?: number, start?: number} ) {
-		let token = new Token();
+	/**文本一行起始位置 */
+	start: number;
+	/**行号，从0开始 */
+	line: number;
+	/**文本内容 */
+	text: string;
 
-		token.fileHash = option?.fileHash ?? 0;
-		token.line = option?.line ?? 0;
-		token.start = option?.start ?? 0;
-		token.text = text;
-
-		token.Trim();
-
-		return token;
+	constructor(text: string, option?: { start?: number, line?: number }) {
+		this.text = text;
+		this.start = option?.start ?? 0;
+		this.line = option?.line ?? 0;
 	}
 
-	//#endregion 建立一个Token
-
-	//#region 建立一个空白Token
-	/**建立一个空白Token */
-	static EmptyToken() { return new Token(); }
-	//#endregion 建立一个空白Token
-
-	private constructor() {
-
-	}
-
-	/**文件路径Hash */
-	fileHash: number = 0;
-	/**所在文件行号，0开始 */
-	line: number = 0;
-	/**所在行的起始位置 */
-	start: number = 0;
-	/**文本 */
-	text: string = "";
-
+	/**字符串长度 */
 	get length() { return this.text.length; }
-	get isEmpty() { return this.text.length === 0; }
+
+	/**是否为空白字符串 */
+	get isEmpty() { return this.text.trim() === ""; }
 
 	//#region 拷贝
 	Copy() {
-		let token = new Token();
-		token.fileHash = this.fileHash;
-		token.line = this.line;
-		token.start = this.start;
-		token.text = this.text;
+		let token = new Token(this.text, { start: this.start, line: this.line });
 		return token;
 	}
 	//#endregion 拷贝
@@ -109,7 +74,7 @@ export class Token {
 
 	//#region 截取
 	Substring(index: number, length?: number) {
-		var end: number | undefined = undefined;
+		let end: number | undefined = undefined;
 		if (length == undefined)
 			end = undefined;
 		else
@@ -118,17 +83,20 @@ export class Token {
 		let word = this.Copy();
 		word.text = word.text.substring(index, end);
 		word.start = this.start + index;
-		word.Trim();
 
 		return word;
 	}
 	//#endregion 截取
 
 	//#region 去除两端空白
-	private Trim() {
-		let match = Utils.StringTrim(this.start, this.text);
-		this.start = match.index;
-		this.text = match.text;
+	Trim() {
+		const match = /^\s+/.exec(this.text);
+		const copy = this.Copy();
+		if (match)
+			copy.start += match[0].length;
+
+		copy.text = this.text.trim();
+		return copy;
 	}
 	//#endregion 去除两端空白
 

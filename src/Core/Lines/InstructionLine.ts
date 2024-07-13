@@ -1,142 +1,96 @@
-import { Compiler } from "../Base/Compiler";
-import { Expression, ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
-import { LabelUtils } from "../Base/Label";
-import { MyDiagnostic } from "../Base/MyException";
-import { DecodeOption } from "../Base/Options";
+import { CompileOption } from "../Base/CompileOption";
+import { Config } from "../Base/Config";
+import { Expression, ExpressionUtils } from "../Base/ExpressionUtils";
+import { LabelType, LabelUtils } from "../Base/Label";
+import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
+import { Compiler } from "../Compiler/Compiler";
 import { Localization } from "../I18n/Localization";
-import { AsmCommon, IAddressingMode } from "../Platform/AsmCommon";
-import { HighlightToken, HighlightType, ICommonLine, LineCompileType, LineType } from "./CommonLine";
+import { IAddressingMode, Platform } from "../Platform/Platform";
+import { LineResult, LineType } from "./CommonLine";
+import { LabelLine } from "./LabelLine";
 
-/**汇编行 */
 export class InstructionLine {
-	type: LineType.Instruction = LineType.Instruction;
-	compileType = LineCompileType.None;
 
-	orgAddress = -1;
-	baseAddress = 0;
+	/**创建一个编译行 */
+	static Create(org: Token, content: { pre: Token, main: Token, rest: Token }, comment?: string) {
+
+		const line = new InstructionLine();
+		line.org = org;
+		line.instruction = content.main;
+
+		line.label = LabelLine.Create(content.pre, comment);
+
+		const temp = Platform.MatchAddressingMode(line.instruction, content.rest);
+		if (temp) {
+			line.addressMode = temp.addressingMode;
+			for (let i = 0; i < temp.exprs.length; i++) {
+				const token = temp.exprs[i];
+				const temp2 = ExpressionUtils.SplitAndSort(token);
+				if (temp2)
+					line.expressions[i] = temp2;
+			}
+			return line;
+		}
+	}
+
+	/***** class *****/
+
+	key: "instruction" = "instruction";
+	org!: Token;
+	comment?:string;
+	lineType: LineType = LineType.None;
+
+	label?: LabelLine;
 
 	instruction!: Token;
-	expToken?: Token;
-	expression: Expression[] = [];
-	addressingMode!: IAddressingMode;
-	result: number[] = [];
+	expressions: Expression[] = [];
+	addressMode!: IAddressingMode;
 
-	orgText!: Token;
-	comment?: string;
+	lineResult = new LineResult();
 
-	Initialize(option: { instruction: Token, expression: Token }) {
-		this.instruction = option.instruction;
-		this.instruction.text = this.instruction.text.toUpperCase();
-		this.expToken = option.expression;
+	AnalyseFirst(option: CompileOption) {
+		this.label?.Analyse();
 	}
 
-	/**
-	 * 行设定结果值
-	 * @param value 设定值
-	 * @param index 设定的起始位置
-	 * @param length 设定长度
-	 * @returns 返回设定的值
-	 */
-	SetResult(value: number, index: number, length: number): number {
-		return Compiler.SetResult(this, value, index, length);
+	/**第三次分析 */
+	AnalyseThird(option: CompileOption) {
+		ExpressionUtils.CheckLabels(option, ...this.expressions);
 	}
 
-	SetAddress() {
-		Compiler.SetAddress(this);
-	}
+	/**编译结果 */
+	Compile(option: CompileOption) {
+		this.lineResult.SetAddress();
+		this.label?.Compile(option);
 
-	AddAddress() {
-		Compiler.AddAddress(this);
-	}
-
-	GetTokens() {
-		const result: HighlightToken[] = [];
-		result.push({ type: HighlightType.Keyword, token: this.instruction });
-		result.push(...ExpressionUtils.GetHighlightingTokens(this.expression));
-		return result;
-	}
-}
-
-export class InstructionLineUtils {
-
-	//#region 第一次分析
-	/**
-	 * 第一次编译，分析操作指令的地址模式，并分割表达式内容
-	 * @param option 解析选项
-	 */
-	static FirstAnalyse(option: DecodeOption) {
-		const line = option.GetCurrectLine<InstructionLine>();
-		let temp;
-		if (temp = AsmCommon.MatchAddressingMode(line.instruction, line.expToken!)) {
-			line.addressingMode = temp.addressingMode;
-			for (let i = 0; i < temp.exprs.length; i++) {
-				let temp2 = ExpressionUtils.SplitAndSort(temp.exprs[i]);
-				if (temp2) {
-					line.expression[i] = temp2;
-				} else {
-					line.compileType = LineCompileType.Error;
-				}
-			}
-		} else {
-			line.compileType = LineCompileType.Error;
-		}
-		delete (line.expToken);
-	}
-	//#endregion 第一次分析
-
-	//#region 第三次分析，并检查表达式是否有误
-	/**
-	 * 第三次分析，并检查表达式是否有误
-	 * @param option 编译选项
-	 */
-	static ThirdAnalyse(option: DecodeOption): void {
-		const line = option.GetCurrectLine<InstructionLine>();
-		for (let i = 0; i < line.expression.length; ++i)
-			ExpressionUtils.CheckLabelsAndShowError(line.expression[i].parts, option);
-	}
-	//#endregion 第三次分析，并检查表达式是否有误
-
-	//#region 编译汇编指令
-	/**
-	 * 编译汇编指令
-	 * @param option 编译选项
-	 * @returns 
-	 */
-	static CompileInstruction(option: DecodeOption): void {
-		const line = option.GetCurrectLine<InstructionLine>();
-		line.SetAddress();
-		if (line.compileType === LineCompileType.Error)
-			return;
-
-		if (line.addressingMode.spProcess) {
-			line.addressingMode.spProcess(option);
-			line.AddAddress();
+		if (this.addressMode?.spProcess) {
+			this.addressMode.spProcess(option);
+			this.lineResult.AddAddress();
 			return;
 		}
 
-		line.compileType = LineCompileType.Finished;
-		if (!line.expression[0]) {
-			line.SetResult(line.addressingMode.opCode[0]!, 0, line.addressingMode.opCodeLength[0]!);
-			line.AddAddress();
+		this.lineType = LineType.Finished;
+		if (this.expressions.length === 0) {
+			this.lineResult.SetResult(this.addressMode.opCode[0]!, 0, this.addressMode.opCodeLength[0]!);
+			this.lineResult.AddAddress();
 			return;
 		}
 
-		const temp = ExpressionUtils.GetValue(line.expression[0].parts, option);
+		// 多个表达式结果请用特殊处理，spProcess
+		const temp = ExpressionUtils.GetValue(this.expressions[0].parts, option);
 		if (!temp.success) {
-			const index = line.addressingMode.opCode.length - 1;
-			line.result.length = line.addressingMode.opCodeLength[index]! + index;
-			line.compileType = LineCompileType.None;
+			const index = this.addressMode.opCode.length - 1;
+			this.lineResult.result.length = this.addressMode.opCodeLength[index]! + index;
+			this.lineType = LineType.None;
 		} else {
-			let orgLength: number, length: number;
-			orgLength = length = Utils.GetNumberByteLength(temp.value);
-			if (line.result.length !== 0) {
-				length = line.result.length - 1;
+			let length = Utils.GetNumberByteLength(temp.value);
+			if (this.lineResult.resultLength !== 0) {
+				length = this.lineResult.resultLength - 1;
 			} else {
-				if (!line.addressingMode.opCode[length]) {
-					for (let i = 0; i < line.addressingMode.opCode.length; ++i) {
-						if (!line.addressingMode.opCode[i])
+				if (!this.addressMode.opCode[length]) {
+					for (let i = 0; i < this.addressMode.opCode.length; ++i) {
+						if (!this.addressMode.opCode[i])
 							continue;
 
 						length = i;
@@ -145,19 +99,18 @@ export class InstructionLineUtils {
 				}
 			}
 
-			const opCodeLength = line.addressingMode.opCodeLength[length]!;
-			line.SetResult(line.addressingMode.opCode[length]!, 0, opCodeLength);
-			const tempValue = line.SetResult(temp.value, opCodeLength, length);
+			const opCodeLength = this.addressMode.opCodeLength[length]!;
+			this.lineResult.SetResult(this.addressMode.opCode[length]!, 0, opCodeLength);
 
-			if (orgLength > length || temp.value < 0) {
-				const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.value, tempValue);
-				const token = ExpressionUtils.CombineExpressionPart(line.expression[0].parts);
+			const org = this.lineResult.SetResult(temp.value, opCodeLength, length);
+
+			if (org.overflow) {
+				const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", temp.value, org.result);
+				const token = ExpressionUtils.CombineExpressionPart(this.expressions[0].parts);
 				MyDiagnostic.PushWarning(token, errorMsg);
 			}
 		}
 
-		line.AddAddress();
+		this.lineResult.AddAddress();
 	}
-	//#endregion 编译汇编指令
-
 }

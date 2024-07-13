@@ -1,9 +1,25 @@
+import { Compiler } from "../Compiler/Compiler";
 import { Config } from "./Config";
-import { Utils } from "./Utils";
 
 export class FileUtils {
 
-	/***** 需要实现的接口 *****/
+	//#region 实现接口的方法
+	static Implement(option: {
+		ReadFile?: typeof FileUtils.ReadFile,
+		SaveFile?: typeof FileUtils.SaveFile,
+		GetFolderFiles?: typeof FileUtils.GetFolderFiles,
+		PathType?: typeof FileUtils.PathType,
+		ShowMessage?: typeof FileUtils.ShowMessage
+	}) {
+		if (option.ReadFile) FileUtils.ReadFile = option.ReadFile;
+		if (option.SaveFile) FileUtils.SaveFile = option.SaveFile;
+		if (option.GetFolderFiles) FileUtils.GetFolderFiles = option.GetFolderFiles;
+		if (option.PathType) FileUtils.PathType = option.PathType;
+		if (option.ShowMessage) FileUtils.ShowMessage = option.ShowMessage;
+	}
+	//#endregion 实现接口的方法
+
+	/***** 未实现接口 *****/
 
 	//#region 读取文件
 	/**
@@ -48,7 +64,7 @@ export class FileUtils {
 	static ShowMessage: (message: string) => void;
 	//#endregion 显示消息
 
-	/***** 已实现的接口 *****/
+	/***** 已实现接口 *****/
 
 	//#region 将字符串转换成Bytes
 	/**
@@ -71,18 +87,6 @@ export class FileUtils {
 		return coder.decode(data);
 	}
 	//#endregion 将字节转换成字符串
-
-	//#region 获取文件路径Hashcode
-	/**
-	 * 获取文件路径Hashcode
-	 * @param filePath 文件路径
-	 * @returns fileHash
-	 */
-	static GetFilePathHashcode(filePath: string) {
-		filePath = FileUtils.ArrangePath(filePath);
-		return Utils.GetHashcode(filePath);
-	}
-	//#endregion 获取文件路径Hashcode
 
 	//#region 拼合路径
 	/**

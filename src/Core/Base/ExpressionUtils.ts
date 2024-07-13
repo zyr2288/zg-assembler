@@ -1,14 +1,15 @@
 import { Localization } from "../I18n/Localization";
-import { HighlightToken, HighlightType } from "../Lines/CommonLine";
-import { Compiler } from "./Compiler";
+import { CompileOption } from "./CompileOption";
+import { Compiler } from "../Compiler/Compiler";
+import { HighlightType } from "../LanguageHelper/HighlightingProvider";
 import { LabelType, LabelUtils } from "./Label";
-import { MyDiagnostic } from "./MyException";
-import { DecodeOption } from "./Options";
+import { MyDiagnostic } from "./MyDiagnostic";
 import { Token } from "./Token";
 import { Utils } from "./Utils";
+import { Macro } from "./Macro";
 
 /**运算符的正则表达式 */
-const OperationRegex = /((?<!\\)")|\(|\)|\~|\!=|==|\!|\>\>|\>=|\<=|\<\<|\>|\<|=|\+|\-|\*|\/|%|&&|&|\|\||\||\^|\$(?![0-9a-fA-F])/g;
+const OperationRegex = /((?<!\\)")|\(|\)|\[|\]|\~|\!=|==|\!|\>\>|\>=|\<=|\<\<|\>|\<|=|\+|\-|\*|\/|%|&&|&|\|\||\||\^|\$(?![0-9a-fA-F])/g;
 
 //#region 算数优先级
 export enum PriorityType {
@@ -19,8 +20,6 @@ export enum PriorityType {
 	Level_2_Number,
 	/**字符串 */
 	Level_3_CharArray,
-	/**虚拟括号，不存在的，用作表达式初始时候加入的括号，方便二叉树分析 */
-	Level_3_Brackets,
 	/**括号 */
 	Level_4_Brackets,
 	/**非 负 取高位 取低位 */
@@ -45,42 +44,39 @@ export enum PriorityType {
 	Level_14_AndAnd,
 	/**|| */
 	Level_15_OrOr,
-	/**[] */
-	Level_16_Brackets
+	/**中括号 */
+	Level_16_Brackets,
 };
 //#endregion 算数优先级
 
 //#region 表达式分割
 export interface ExpressionPart {
-	highlightingType: HighlightType;
+	/**高亮类型 */
+	highlightType: HighlightType;
+	/**运算符类型 */
 	type: PriorityType;
+	/**小节 */
 	token: Token;
+	/**结果值 */
 	value: number;
+	/**如果是字符串，则会有每个char值 */
 	chars?: number[];
 }
 //#endregion 表达式分割
 
-/**表达式分析选项，默认 Number，分析类型默认 无 */
-export interface ExpAnalyseOption {
-	/**分析类型，尝试获取结果 或 获取不了结果报错 */
-	analyseType?: "Try" | "GetAndShowError";
-}
-
-/**表达式 */
+//#region 一个表达式结果
+/**一个表达式结果 */
 export interface Expression {
-	/**所有表达式小节 */
+	/**表达式小节 */
 	parts: ExpressionPart[];
-	/**所包含的字符串长度 */
-	stringLength: number;
-	/**所在字符串的位置 */
+	/**字符串Index，-1则是没有字符串 */
 	stringIndex: number;
+	/**字符串长度，默认0 */
+	stringLength: number;
 }
+//#endregion 一个表达式结果
 
-export interface ExpResultType<T> {
-	success: boolean;
-	value: T;
-}
-
+/**表达式工具 */
 export class ExpressionUtils {
 
 	/**符号优先级 */
@@ -106,95 +102,77 @@ export class ExpressionUtils {
 	private static AddPriority(type: PriorityType, ...op: string[]) {
 		for (let i = 0; i < op.length; i++)
 			ExpressionUtils.onlyOnePriority.set(op[i], type);
+
 	}
 	//#endregion 初始化
 
-	//#region 表达式分解与排序，并初步检查是否正确，不检查标签是否存在
+	//#region 分割并排序表达式
 	/**
-	 * 表达式分解与排序，并初步检查是否正确，不检查标签是否存在
+	 * 分割并排序表达式
 	 * @param expression 表达式
-	 * @returns 表达式小节，空为有误
+	 * @param info 文件信息
+	 * @returns 
 	 */
 	static SplitAndSort(expression: Token): Expression | undefined {
-		if (expression.isEmpty)
-			return { parts: [], stringLength: 0, stringIndex: -1 };
-
 		let temp = ExpressionUtils.SplitExpression(expression);
 		if (!temp.success)
 			return;
 
 		let temp2 = ExpressionUtils.LexerSort(temp.parts);
-		if (!temp2.success)
+		if (!temp.success)
 			return;
 
-		return { parts: temp2.parts, stringLength: temp.stringLength, stringIndex: temp2.stringIndex };
+		return { parts: temp2.parts, stringIndex: temp2.stringIndex, stringLength: temp.stringLength };
 	}
-	//#endregion 表达式分解与排序，并初步检查是否正确，不检查标签是否存在
+	//#endregion 分割并排序表达式
 
-	//#region 获取数字
-	/**获取数字 */
-	static GetNumber(number: string) {
-		const match = /(^(?<hex>\$[0-9a-fA-F]+)$)|(^(?<decimal>\-?[0-9]+(\.[0-9]+)?)$)|(^(?<bin>\@[01]+)$)/.exec(number);
-		const result = { success: !!match, value: 0 };
-		if (match?.groups?.hex) {
-			number = number.substring(1);
-			result.value = parseInt(number, 16);
-		} else if (match?.groups?.decimal) {
-			result.value = Number(number);
-		} else if (match?.groups?.bin) {
-			number = number.substring(1);
-			result.value = parseInt(number, 2);
-		}
-		return result;
-	}
-	//#endregion 获取数字
-
-	//#region 分析所有表达式小节并推送错误
+	//#region 搜索所有标签
 	/**
-	 * 分析所有表达式小节并推送错误
-	 * @param parts 表达式所有小节
+	 * 检查所以标签
 	 * @param option 编译选项
-	 * @returns 返回true为有错误
+	 * @param expParts 表达式
+	 * @returns true为有误
 	 */
-	static CheckLabelsAndShowError(parts: ExpressionPart[], option?: DecodeOption) {
+	static CheckLabels(option: CompileOption, ...expParts: Expression[]) {
 		let error = false;
-		for (let i = 0; i < parts.length; i++) {
-			const part = parts[i];
-			if (part.type !== PriorityType.Level_1_Label)
-				continue;
-
-			const label = LabelUtils.FindLabel(part.token, option?.macro);
-			if (!label || label.labelType === LabelType.None) {
-				const errorMsg = Localization.GetMessage("Label {0} not found", parts[i].token.text);
-				MyDiagnostic.PushException(parts[i].token, errorMsg);
-				error = true;
-			} else {
-				switch (label.labelType) {
-					case LabelType.Defined:
-						part.highlightingType = HighlightType.Defined;
-						break;
-					case LabelType.Label:
-						part.highlightingType = HighlightType.Label;
-						break;
-					case LabelType.Variable:
-						part.highlightingType = HighlightType.Variable;
+		for (let i = 0; i < expParts.length; i++) {
+			const parts = expParts[i].parts;
+			for (let j = 0; j < parts.length; j++) {
+				const part = parts[j];
+				switch (part.type) {
+					case PriorityType.Level_1_Label:
+						const label = LabelUtils.FindLabel(part.token, option);
+						if (!label) {
+							const errMsg = Localization.GetMessage("Label {0} not found", part.token.text);
+							MyDiagnostic.PushException(part.token, errMsg);
+							error = true;
+						} else {
+							switch (label.type) {
+								case LabelType.Label:
+									part.highlightType = HighlightType.Label;
+									break;
+								case LabelType.Defined:
+									part.highlightType = HighlightType.Defined;
+									break;
+							}
+						}
 						break;
 				}
+
 			}
 		}
 		return error;
 	}
-	//#endregion 分析所有表达式小节并推送错误
+	//#endregion 搜索所有标签
 
 	//#region 获取结果值
 	/**
 	 * 获取结果值
 	 * @param parts 
-	 * @param option 
-	 * @param analyseOption 
+	 * @param other.tryValue 默认不写按照最后一次编译是false，其它是true
 	 * @returns 
 	 */
-	static GetValue(parts: ExpressionPart[], option: DecodeOption, analyseOption?: ExpAnalyseOption) {
+	static GetValue(parts: ExpressionPart[], option?: { macro?: Macro, tryValue?: boolean }) {
 		const tempPart = Utils.DeepClone(parts);
 		const GetPart = (index: number) => {
 			if (index < 0 || index >= tempPart.length)
@@ -203,7 +181,9 @@ export class ExpressionUtils {
 			return tempPart[index];
 		}
 
-		const getValue = analyseOption?.analyseType === "GetAndShowError";
+		let tryValue = Compiler.NotLastCompile();
+		if (option?.tryValue !== undefined)
+			tryValue = option.tryValue;
 
 		let labelUnknow = false;
 		const result = { success: true, value: 0 };
@@ -215,6 +195,7 @@ export class ExpressionUtils {
 			if (element.type === PriorityType.Level_3_CharArray) {
 				const error = Localization.GetMessage("Expression error");
 				MyDiagnostic.PushException(element.token, error);
+				Compiler.StopCompile();
 				continue;
 			}
 
@@ -223,14 +204,14 @@ export class ExpressionUtils {
 				if (labelUnknow)
 					continue;
 
-				if (element.token.text === "*" && Compiler.enviroment.orgAddress >= 0) {
-					element.value = Compiler.enviroment.orgAddress;
+				if (element.token.text === "*" && Compiler.enviroment.address.org >= 0) {
+					element.value = Compiler.enviroment.address.org;
 					element.type = PriorityType.Level_0_Sure;
 					continue;
 				}
 
-				if (element.token.text === "$" && Compiler.enviroment.baseAddress >= 0) {
-					element.value = Compiler.enviroment.baseAddress;
+				if (element.token.text === "$" && Compiler.enviroment.address.base >= 0) {
+					element.value = Compiler.enviroment.address.base;
 					element.type = PriorityType.Level_0_Sure;
 					continue;
 				}
@@ -240,9 +221,9 @@ export class ExpressionUtils {
 					element.value = temp.value;
 					element.type = PriorityType.Level_0_Sure;
 				} else {				// 如果是标签
-					const label = LabelUtils.FindLabel(element.token, option?.macro);
+					const label = LabelUtils.FindLabel(element.token, { macro: option?.macro });
 					if (label?.value === undefined) {
-						if (getValue) {
+						if (!tryValue) {
 							const errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
 							MyDiagnostic.PushException(element.token, errorMsg);
 							result.success = false;
@@ -385,9 +366,12 @@ export class ExpressionUtils {
 	 * @param analyseOption 分析选项
 	 * @returns 
 	 */
-	static GetStringValue(expression: Expression, option: DecodeOption) {
+	static GetStringValue(expression: Expression, option?: { macro?: Macro, tryValue?: boolean }) {
 		const result = { success: true, values: [] as number[] };
 		result.values.length = expression.stringLength;
+
+		if (option?.macro)
+			ExpressionUtils.CheckExpressionMacro(expression, option.macro)
 
 		const index = expression.stringIndex;
 		if (index < 0) {
@@ -400,10 +384,10 @@ export class ExpressionUtils {
 			for (let i = 0; i < expression.stringLength; i++) {
 				const part = Utils.DeepClone(expression.parts);
 				part[index] = {
-					token: Token.EmptyToken(),
+					token: expression.parts[index].token.Copy(),
 					value: expression.parts[index].chars![i],
 					type: PriorityType.Level_0_Sure,
-					highlightingType: HighlightType.Number
+					highlightType: HighlightType.Number
 				}
 
 				const temp = ExpressionUtils.GetValue(part, option);
@@ -418,33 +402,6 @@ export class ExpressionUtils {
 		return result;
 	}
 	//#endregion 获取包含字符串的结果值
-
-	//#region 将所有表达式部分转换成高亮Token
-	/**
-	 * 将所有表达式部分转换成高亮Token
-	 * @param parts 表达式小节
-	 * @returns 高亮标识
-	 */
-	static GetHighlightingTokens(parts: Expression[]) {
-		let result: HighlightToken[] = [];
-		for (let i = 0; i < parts.length; ++i) {
-			for (let j = 0; j < parts[i].parts.length; ++j) {
-				const part = parts[i].parts[j];
-				switch (part.type) {
-					case PriorityType.Level_1_Label:
-						result.push({ token: part.token, type: part.highlightingType });
-						break;
-					case PriorityType.Level_2_Number:
-						if (part.token.text === "$" || part.token.text === "*")
-							result.push({ token: part.token, type: HighlightType.Number });
-
-						break;
-				}
-			}
-		}
-		return result;
-	}
-	//#endregion 将所有表达式部分转换成高亮Token
 
 	//#region 拼合ExpressionPart成Token
 	/**
@@ -476,196 +433,7 @@ export class ExpressionUtils {
 	}
 	//#endregion 拼合ExpressionPart成Token
 
-	/** Private */
-
-	//#region 获取表达式的值
-	/**
-	 * 获取表达式的值
-	 * @param allParts 所有已排列好的运算小节
-	 * @param analyseOption 分析选项
-	 * @param option 编译选项
-	 * @returns 计算结果
-	 */
-	private static _GetExpressionValue(allParts: ExpressionPart[], analyseOption: ExpAnalyseOption, option?: DecodeOption) {
-		const tempPart = Utils.DeepClone(allParts);
-		const GetPart = (index: number) => {
-			if (index < 0 || index >= tempPart.length)
-				return;
-
-			return tempPart[index];
-		}
-
-		let labelUnknow = false;
-		const result = { success: true, value: 0 };
-		for (let index = 0; index < tempPart.length; index++) {
-			const element = tempPart[index];
-			if (element.type === PriorityType.Level_0_Sure)
-				continue;
-
-			if (element.type === PriorityType.Level_3_CharArray) {
-				const error = Localization.GetMessage("Expression error");
-				MyDiagnostic.PushException(element.token, error);
-				continue;
-			}
-
-			// 用于判断标签等
-			if (element.type < PriorityType.Level_4_Brackets && element.type >= 0) {
-				if (labelUnknow)
-					continue;
-
-				if (element.token.text === "*" && Compiler.enviroment.orgAddress >= 0) {
-					element.value = Compiler.enviroment.orgAddress;
-					element.type = PriorityType.Level_0_Sure;
-					continue;
-				}
-
-				if (element.token.text === "$" && Compiler.enviroment.baseAddress >= 0) {
-					element.value = Compiler.enviroment.baseAddress;
-					element.type = PriorityType.Level_0_Sure;
-					continue;
-				}
-
-				const temp = ExpressionUtils.GetNumber(element.token.text);
-				if (temp.success) {		// 如果是数字
-					element.value = temp.value;
-					element.type = PriorityType.Level_0_Sure;
-				} else {				// 如果是标签
-					const label = LabelUtils.FindLabel(element.token, option?.macro);
-					if (label?.value === undefined) {
-						if (analyseOption.analyseType === "GetAndShowError") {
-							const errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
-							MyDiagnostic.PushException(element.token, errorMsg);
-							result.success = false;
-							break;
-						}
-						labelUnknow = true;
-					} else {
-						element.value = label.value;
-						element.type = PriorityType.Level_0_Sure;
-					}
-				}
-				continue;
-			}
-
-			const pre1 = GetPart(index - 2);
-			const pre2 = GetPart(index - 1);
-			const operation = element;
-			if (element.type === PriorityType.Level_5) {
-				if (!pre2) {
-					result.success = false;
-					let errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
-					MyDiagnostic.PushException(element.token, errorMsg);
-					break;
-				}
-
-				const value2 = pre2.value;
-
-				switch (operation.token.text) {
-					case "!":
-						operation.value = value2 !== 0 ? 1 : 0;
-						break;
-					case "-":
-						operation.value = -value2;
-						break;
-					case ">":
-						operation.value = (value2 & 0xFF00) >> 8;
-						break;
-					case "<":
-						operation.value = value2 & 0xFF;
-						break;
-					case "~":
-						operation.value = ~value2;
-						break;
-				}
-				operation.type = PriorityType.Level_0_Sure;
-				tempPart.splice(index - 1, 1);
-				index -= 1;
-			} else {
-				if (!pre1 || !pre2) {
-					result.success = false;
-					let errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
-					MyDiagnostic.PushException(element.token, errorMsg);
-					break;
-				}
-
-				const value1 = pre1.value;
-				const value2 = pre2.value;
-
-				switch (operation.token.text) {
-					case "*":
-						operation.value = value1 * value2;
-						break;
-					case "/":
-						operation.value = value1 / value2;
-						break;
-					case "%":
-						operation.value = value1 % value2;
-						break;
-					case "+":
-						operation.value = value1 + value2;
-						break;
-					case "-":
-						operation.value = value1 - value2;
-						break;
-					case "<<":
-						operation.value = value1 << value2;
-						break;
-					case ">>":
-						operation.value = value1 >>> value2;
-						break;
-					case "==":
-						operation.value = value1 === value2 ? 1 : 0;
-						break;
-					case "!=":
-						operation.value = value1 !== value2 ? 1 : 0;
-						break;
-					case "&":
-						operation.value = value1 & value2;
-						break;
-					case "^":
-						operation.value = value1 ^ value2;
-						break;
-					case "|":
-						operation.value = value1 | value2;
-						break;
-					case "&&":
-						operation.value = value1 && value2;
-						break;
-					case "||":
-						operation.value = value1 || value2;
-						break;
-					case ">":
-						operation.value = value1 > value2 ? 1 : 0;
-						break;
-					case ">=":
-						operation.value = value1 >= value2 ? 1 : 0;
-						break;
-					case "<":
-						operation.value = value1 < value2 ? 1 : 0;
-						break;
-					case "<=":
-						operation.value = value1 <= value2 ? 1 : 0;
-						break;
-				}
-
-				operation.type = PriorityType.Level_0_Sure;
-				tempPart.splice(index - 2, 2);
-				index -= 2;
-			}
-
-			if (!result.success)
-				break;
-		}
-
-		if (labelUnknow)
-			result.success = false;
-
-		if (result.success)
-			result.value = tempPart[0].value as number;
-
-		return result;
-	}
-	//#endregion 获取表达式的值
+	/***** private *****/
 
 	//#region 分割表达式
 	/**
@@ -675,11 +443,11 @@ export class ExpressionUtils {
 	 */
 	private static SplitExpression(expression: Token) {
 
-		const result = { success: true, parts: [] as ExpressionPart[], stringLength: 0 };
+		const result = { success: true, parts: [] as ExpressionPart[], stringIndex: -1, stringLength: 0 };
 
 		// 临时标签
 		if (LabelUtils.namelessLabelRegex.test(expression.text)) {
-			result.parts.push({ token: expression, type: PriorityType.Level_1_Label, value: 0, highlightingType: HighlightType.Label });
+			result.parts.push({ token: expression, type: PriorityType.Level_1_Label, value: 0, highlightType: HighlightType.Label });
 			return result;
 		}
 
@@ -687,12 +455,12 @@ export class ExpressionUtils {
 		let isLabel = true;
 
 		let part!: ExpressionPart;
-		const CreateNewPart = () => part = { type: PriorityType.Level_1_Label, token: {} as Token, value: 0, highlightingType: HighlightType.None };
+		const CreateNewPart = () => part = { type: PriorityType.Level_1_Label, token: {} as Token, value: 0, highlightType: HighlightType.None };
 
 		CreateNewPart();
 
 		let stringStart = -1;
-		outBreak:
+		forLoop:
 		for (let i = 0; i < tokens.length; ++i) {
 			part.token = tokens[i];
 			if (part.token.isEmpty)
@@ -707,18 +475,20 @@ export class ExpressionUtils {
 						stringStart = part.token.start;
 						continue;
 					} else {
-						part.token.text = expression.text.substring(stringStart - expression.start + 1, part.token.start - stringStart);
+						part.token = expression.Substring(stringStart - expression.start + 1, part.token.start - stringStart - 1);
 						const length = part.token.text.length;
 						switch (length) {
 							case 0:
 								const error = Localization.GetMessage("Expression error");
 								MyDiagnostic.PushException(part.token, error);
 								result.success = false;
-								break outBreak;
+								break forLoop;
 							case 1:
 								part.type = PriorityType.Level_0_Sure;
 								part.value = part.token.text.charCodeAt(0);
-								result.stringLength = 1;
+								if (result.stringLength === 0)
+									result.stringLength = 1;
+
 								break;
 							default:
 								part.type = PriorityType.Level_3_CharArray;
@@ -839,6 +609,9 @@ export class ExpressionUtils {
 				break;
 			}
 
+			if (part.type !== PriorityType.Level_3_CharArray)
+				part.token = part.token.Trim();
+
 			result.parts.push(part);
 			CreateNewPart();
 		}
@@ -870,7 +643,14 @@ export class ExpressionUtils {
 					result.parts.push(part);
 					break;
 				case PriorityType.Level_3_CharArray:
-					result.stringIndex = i;
+					if (result.stringIndex >= 0) {
+						const error = Localization.GetMessage("Expression error");
+						MyDiagnostic.PushException(part.token, error);
+						result.success = false;
+						return result;
+					}
+
+					result.stringIndex = result.parts.length;
 					result.parts.push(part);
 					break;
 				case PriorityType.Level_1_Label:
@@ -957,15 +737,70 @@ export class ExpressionUtils {
 			result.parts.push(p);
 		}
 
-		// let temp = "";
-		// for (let i = 0; i < result.parts.length; i++) {
-		// 	temp += result.parts[i].token.text + " ";
-		// }
-		// console.log(temp);
-
 		return result;
 	}
 	//#endregion 表达式优先级排序
 
-}
+	//#region 检查表达式小节是否包含长度大于1的字符串
+	/**
+	 * 检查表达式小节是否包含长度大于1的字符串
+	 * @param parts 所有表达式小节
+	 * @returns 
+	 */
+	private static CheckString(parts: ExpressionPart[]) {
+		let index = -1;
+		for (let i = 0; i < parts.length; i++) {
+			const part = parts[i];
+			if (part.type === PriorityType.Level_3_CharArray) {
+				index = i;
+				break;
+			}
 
+		}
+		return index;
+	}
+	//#endregion 检查表达式小节是否包含长度大于1的字符串
+
+	//#region 获取数字
+	/**获取数字 */
+	static GetNumber(number: string) {
+		const match = /(^(?<hex>\$[0-9a-fA-F]+)$)|(^(?<decimal>\-?[0-9]+(\.[0-9]+)?)$)|(^(?<bin>\@[01]+)$)/.exec(number);
+		const result = { success: !!match, value: 0 };
+		if (match?.groups?.hex) {
+			number = number.substring(1);
+			result.value = parseInt(number, 16);
+		} else if (match?.groups?.decimal) {
+			result.value = Number(number);
+		} else if (match?.groups?.bin) {
+			number = number.substring(1);
+			result.value = parseInt(number, 2);
+		}
+		return result;
+	}
+	//#endregion 获取数字
+
+	//#region 检查在 Macro 里的参数
+	private static CheckExpressionMacro(expression: Expression, macro: Macro) {
+		for (let i = 0; i < expression.parts.length; i++) {
+			const part = expression.parts[i];
+			if (part.type !== PriorityType.Level_1_Label)
+				continue;
+
+			const param = macro.params.get(part.token.text);
+			if (!param)
+				continue;
+
+			if (param.values.length > 1) {
+				part.chars = param.values;
+				expression.stringIndex = i;
+				expression.stringLength = param.values.length;
+			} else {
+				part.value = param.values[0];
+				part.type = PriorityType.Level_0_Sure;
+			}
+
+		}
+	}
+	//#endregion 检查在 Macro 里的参数
+
+}

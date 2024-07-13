@@ -40,12 +40,12 @@ export class AssCommands {
 		LSPUtils.StatueBarShowText(` $(sync~spin) ${LSPUtils.assembler.localization.GetMessage("compiling")}...`, 0);
 		await LSPUtils.WaitingCompileFinished();
 
-		let text = vscode.window.activeTextEditor.document.getText();
-		let filePath = vscode.window.activeTextEditor.document.uri.fsPath;
+		const text = vscode.window.activeTextEditor.document.getText();
+		const filePath = vscode.window.activeTextEditor.document.uri.fsPath;
 
 		await ConfigUtils.ReadConfig();
 
-		let result = await LSPUtils.assembler.compiler.CompileText(filePath, text);
+		const result = await LSPUtils.assembler.CompileText(text, filePath);
 		UpdateFile.UpdateDiagnostic();
 		if (result) {
 			await LSPUtils.OutputResult(result, {
@@ -54,7 +54,7 @@ export class AssCommands {
 			});
 		}
 
-		let showText = LSPUtils.assembler.diagnostic.hasError ?
+		const showText = LSPUtils.assembler.diagnostic.hasError ?
 			` $(alert) ${LSPUtils.assembler.localization.GetMessage("compile error")}` :
 			` $(check) ${LSPUtils.assembler.localization.GetMessage("compile finished")}`;
 		LSPUtils.StatueBarShowText(showText, 3000);
@@ -87,7 +87,7 @@ export class AssCommands {
 		let data = await LSPUtils.assembler.fileUtils.ReadFile(filePath);
 		let text = LSPUtils.assembler.fileUtils.BytesToString(data);
 
-		let result = await LSPUtils.assembler.compiler.CompileText(filePath, text);
+		const result = await LSPUtils.assembler.CompileText(text, filePath);
 		UpdateFile.UpdateDiagnostic();
 
 		if (result) {

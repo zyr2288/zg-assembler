@@ -1,72 +1,71 @@
-import { Compiler } from "../Base/Compiler";
-import { PriorityType } from "../Base/ExpressionUtils";
-import { FileUtils } from "../Base/FileUtils";
 import { LabelUtils } from "../Base/Label";
+import { Macro } from "../Base/Macro";
 import { Token } from "../Base/Token";
-import { Macro } from "../Commands/Macro";
-import { CommandLine } from "../Lines/CommandLine";
-import { LineType } from "../Lines/CommonLine";
-import { InstructionLine } from "../Lines/InstructionLine";
-import { MacroLine } from "../Lines/MacroLine";
-import { HelperUtils, TokenResultTag } from "./HelperUtils";
-
-interface DefinitionResult {
-	filePath: string;
-	line: number;
-	start: number;
-	length: number;
-}
+import { Compiler } from "../Compiler/Compiler";
+import { HelperUtils } from "./HelperUtils";
 
 export class DefinitionProvider {
 
-	/**获取标签的定义的位置 */
-	static async GetLabelPosition(filePath: string, lineNumber: number, lineText: string, currect: number) {
+	/***** public *****/
 
-		const result: DefinitionResult = { filePath: "", line: 0, start: 0, length: 0 };
-		const fileHash = FileUtils.GetFilePathHashcode(filePath);
+	//#region 查询定义所在位置
+	/**
+	 * 查询定义所在位置
+	 * @param filePath 文件路径
+	 * @param text 该行文本
+	 * @param line 行号
+	 * @param current 光标所在行位置
+	 * @returns 
+	 */
+	static GetDefinitionPosition(filePath: string, text: string, line: number, current: number) {
+		const result = { filePath: "", line: 0, start: 0, length: 0 };
+		const fileIndex = Compiler.enviroment.GetFileIndex(filePath, false);
 
-		const match = HelperUtils.FindMatchToken(fileHash, lineNumber, lineText, currect);
-		switch (match.matchType) {
-			case "None":
-				break;
-
-			case "Include":
-				result.filePath = match.tag;
-				break;
-
-			case "Label":
-				const label = LabelUtils.FindLabel(match.matchToken, match.macro);
-				if (!label)
+		let macro: Macro | undefined;
+		const range = Compiler.enviroment.GetRange(fileIndex, line);
+		if (range) {
+			switch (range.type) {
+				case "macro":
+					macro = Compiler.enviroment.allMacro.get(range.key)!;
 					break;
-
-				DefinitionProvider.SetResultToken(result, label.token);
-				break;
-			case "Macro":
-				if (!match.matchToken)
-					break;
-
-				const macro = Compiler.enviroment.allMacro.get(match.matchToken.text);
-				DefinitionProvider.SetResultToken(result, macro?.name);
-				break;
-			case "DataGroup":
-				if (!match.matchToken)
-					break;
-
-				const data = LabelUtils.FindLabel(match.matchToken);
-				DefinitionProvider.SetResultToken(result, data?.token);
-				break;
+			}
 		}
-		return result;
-	}
 
-	private static SetResultToken(result: DefinitionResult, token?: Token) {
-		if (!token)
+		const match = HelperUtils.FindMatchToken(fileIndex, text, line, current);
+		if (match.type === "none")
 			return;
 
-		result.filePath = Compiler.enviroment.GetFile(token.fileHash);
-		result.line = token.line;
+		switch (match.type) {
+			case "label":
+				if (match.token) {
+					const label = LabelUtils.FindLabel(match.token, { macro });
+					if (label) {
+						DefinitionProvider.SetTokenToResult(label.token, result);
+						result.filePath = Compiler.enviroment.GetFilePath(label.fileIndex);
+					}
+
+				}
+			case "macro":
+				const tempMacro = Compiler.enviroment.allMacro.get(match.token!.text);
+				if (tempMacro) {
+					DefinitionProvider.SetTokenToResult(tempMacro.name, result);
+					result.filePath = Compiler.enviroment.GetFilePath(tempMacro.fileIndex);
+				}
+				break;
+			case "filePath":
+				result.filePath = match.token!.text;
+				break;
+		}
+
+		return result;
+	}
+	//#endregion 查询定义所在位置
+
+	/***** private *****/
+
+	private static SetTokenToResult(token: Token, result: { filePath: string, line: number, start: number, length: number }) {
 		result.start = token.start;
+		result.line = token.line;
 		result.length = token.length;
 	}
 }
-

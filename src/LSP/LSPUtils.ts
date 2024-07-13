@@ -1,16 +1,9 @@
 import * as vscode from "vscode";
-import { Assembler } from "../Core/Assembler";
-
-export interface WordType {
-	startColumn: number;
-	text: string;
-	type: "path" | "var" | "value" | "none";
-	value?: number
-}
+import { ZGAssembler } from "../Core/ZGAssembler";
 
 export class LSPUtils {
 
-	static assembler: Assembler;
+	static assembler: ZGAssembler;
 	static fileUpdateFinished = true;
 
 	private static statusBarItem?: vscode.StatusBarItem;
@@ -166,17 +159,4 @@ export class LSPUtils {
 		});
 	}
 	//#endregion 等待编译完成
-
-	//#region 将数值结果写入 Markdown
-	static ConvertNumberToMarkdown(markdown: vscode.MarkdownString, value: number) {
-		if (markdown.value)
-			markdown.appendMarkdown("\n\n---\n\n");
-
-		const temp = LSPUtils.ConvertValue(value);
-		markdown.appendMarkdown(`BIN: @${temp.bin}\n\n---\n\n`);
-		markdown.appendMarkdown(`DEC: ${temp.dec}\n\n---\n\n`);
-		markdown.appendMarkdown(`HEX: $${temp.hex}`);
-	}
-	//#endregion 将数值结果写入 Markdown
-
 }

@@ -10,14 +10,14 @@ const packageJson = require("./package.json");
 
 /** @type WebpackConfig */
 const coreBuilderCS = {
-	target: "node",
+	target: ["web", "es2020"],
 	mode: "production",
-	entry: ["./src/Core/Assembler.ts"],
+	entry: ["./src/Core/ZGAssembler.ts"],
 	output: {
 		// the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
 		path: path.resolve(__dirname, "dist"),
-		filename: `core-c#-${packageJson.version}.js`,
-		library: { name: "zgassembler", type: "var", export: "Assembler" }
+		filename: `core-cs-${packageJson.version}.js`,
+		library: { name: "zgassembler", type: "var", export: "ZGAssembler" },
 	},
 	externals: {
 		vscode: 'commonjs vscode' // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
@@ -32,7 +32,12 @@ const coreBuilderCS = {
 			{
 				test: /\.ts$/,
 				exclude: /node_modules/,
-				use: [{ loader: 'ts-loader' }]
+				use: [{
+					loader: 'ts-loader',
+					options: {
+						configFile: "tsconfig.prod.json"
+					}
+				}]
 			}
 		]
 	},
@@ -46,12 +51,12 @@ const coreBuilderCS = {
 const coreBuilderNode = {
 	target: "node",
 	mode: "production",
-	entry: ["./src/Core/Assembler.ts"],
+	entry: ["./src/Core/ZGAssembler.ts"],
 	output: {
 		// the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
 		path: path.resolve(__dirname, "dist"),
 		filename: `core-nodejs-${packageJson.version}.js`,
-		library: { name: "zgassembler", type: "commonjs", export: "Assembler" }
+		library: { name: "zgassembler", type: "commonjs", export: "ZGAssembler" },
 	},
 	externals: {
 		vscode: 'commonjs vscode' // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
@@ -66,7 +71,12 @@ const coreBuilderNode = {
 			{
 				test: /\.ts$/,
 				exclude: /node_modules/,
-				use: [{ loader: 'ts-loader' }]
+				use: [{
+					loader: 'ts-loader',
+					options: {
+						configFile: "tsconfig.prod.json"
+					}
+				}]
 			}
 		]
 	},

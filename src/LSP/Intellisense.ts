@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { CommandName } from "./AssCommands";
 import { LSPUtils } from "./LSPUtils";
+import { IntellisenseProvider } from "../Core/LanguageHelper/IntellisenseProvider";
 
 enum TriggerSuggestType {
 	None, AllAsm, AllFile
@@ -15,6 +16,8 @@ interface FileHelperData {
 	path: string;
 	exclude: string;
 }
+
+type InstructionCom = string;
 
 enum CompletionType {
 	Instruction, AddressingType, Command, Macro, Defined, Label, Variable, UnknowLabel, MacroParamter, Folder, File
@@ -44,7 +47,7 @@ export class Intellisense {
 		context.subscriptions.push(
 			vscode.languages.registerCompletionItemProvider(LSPUtils.assembler.config.FileExtension, {
 				provideCompletionItems: Intellisense.ShowCompletion
-			}, " ", ".", ":")
+			}, " ", ".", ":", "/")
 		);
 	}
 
@@ -61,7 +64,7 @@ export class Intellisense {
 		position: vscode.Position,
 		token: vscode.CancellationToken,
 		context: vscode.CompletionContext
-	): Promise<vscode.CompletionItem[]> {
+	) {
 
 		if (Intellisense.suggestData) {
 			let result = await Intellisense.ProcessSuggest();
@@ -69,13 +72,13 @@ export class Intellisense {
 			return result;
 		}
 
-		const completions = LSPUtils.assembler.languageHelper.intellisense.Intellisense(
-			document.uri.fsPath,
-			position.line,
-			document.lineAt(position.line).text,
-			position.character,
-			context.triggerCharacter
-		);
+		const completions = await LSPUtils.assembler.languageHelper.intellisense.Intellisense({
+			filePath: document.uri.fsPath,
+			lineNumber: position.line,
+			lineText: document.lineAt(position.line).text,
+			current: position.character,
+			trigger: context.triggerCharacter
+		});
 
 		const result: vscode.CompletionItem[] = [];
 
@@ -92,7 +95,7 @@ export class Intellisense {
 			switch (com.triggerType) {
 				case TriggerSuggestType.AllAsm:
 				case TriggerSuggestType.AllFile:
-					const path = await LSPUtils.assembler.fileUtils.ArrangePath(document.uri.fsPath);
+					const path = LSPUtils.assembler.fileUtils.ArrangePath(document.uri.fsPath);
 					newCom.command = {
 						title: "Get Folder Files",
 						command: CommandName,
@@ -119,6 +122,7 @@ export class Intellisense {
 	private static async ProcessSuggest() {
 		const result: vscode.CompletionItem[] = [];
 
+		let data;
 		switch (Intellisense.suggestData?.type) {
 			case TriggerSuggestType.AllAsm:
 			case TriggerSuggestType.AllFile:
@@ -127,7 +131,7 @@ export class Intellisense {
 
 				const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
-				const data = Intellisense.suggestData.data as FileHelperData;
+				data = Intellisense.suggestData.data as FileHelperData;
 				const files = await LSPUtils.assembler.languageHelper.intellisense.GetFileHelper(
 					rootPath, data.path, Intellisense.suggestData.type, data.exclude);
 

@@ -1,8 +1,9 @@
-import { AddressOption, AsmCommon, AsmInstruction } from "./AsmCommon";
+import { IAsmPlatform } from "./IAsmPlatform";
+import { AddInstructionOption, Platform } from "./Platform";
 
-export class AsmZ80_GB implements AsmInstruction {
+export class AsmZ80_GB implements IAsmPlatform {
 
-	static Name = "z80-gb";
+	platformName = "z80-gb";
 
 	constructor() {
 		this.Initialize();
@@ -188,8 +189,8 @@ export class AsmZ80_GB implements AsmInstruction {
 		}
 	}
 
-	private AddInstruction(instruction: string, addressingMode: AddressOption) {
-		AsmCommon.AddInstructionWithLength(instruction, addressingMode);
+	private AddInstruction(instruction: string, addressingMode: AddInstructionOption) {
+		Platform.AddInstructionWithLength(instruction, addressingMode);
 	}
 
 }

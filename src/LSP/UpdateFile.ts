@@ -1,10 +1,9 @@
 import * as vscode from "vscode";
-import { ConfigUtils } from "./ConfigUtils";
 import { LSPUtils } from "./LSPUtils";
+import { ConfigUtils } from "./ConfigUtils";
 
 const FreshTime = 1000;
 
-/**更新文件的自动大写以及监视文件改动更新 Label以及错误等 */
 export class UpdateFile {
 
 	private static fileUpdateThreadId: number;
@@ -25,16 +24,16 @@ export class UpdateFile {
 		if (!vscode.workspace.workspaceFolders)
 			return;
 
-		let files = await LSPUtils.GetWorkspaceFilterFile();
+		const files = await LSPUtils.GetWorkspaceFilterFile();
 
-		let tempFiles: { text: string, filePath: string }[] = [];
+		const tempFiles: { text: string, filePath: string }[] = [];
 		for (let i = 0; i < files.length; ++i) {
-			let buffer = await LSPUtils.assembler.fileUtils.ReadFile(files[i]);
-			let text = LSPUtils.assembler.fileUtils.BytesToString(buffer);
+			const buffer = await LSPUtils.assembler.fileUtils.ReadFile(files[i]);
+			const text = LSPUtils.assembler.fileUtils.BytesToString(buffer);
 			tempFiles.push({ text, filePath: files[i] });
 		}
 
-		await LSPUtils.assembler.compiler.DecodeText(tempFiles);
+		await LSPUtils.assembler.ParseText(tempFiles);
 		UpdateFile.UpdateDiagnostic();
 	}
 	//#endregion 载入所有工程文件
@@ -128,7 +127,7 @@ export class UpdateFile {
 		if (platform === LSPUtils.assembler.config.ProjectSetting.platform)
 			return;
 
-		LSPUtils.assembler.platform.ChangePlatform(LSPUtils.assembler.config.ProjectSetting.platform);
+		LSPUtils.assembler.SwitchPlatform(LSPUtils.assembler.config.ProjectSetting.platform);
 	}
 
 	/**文件创建 */
@@ -138,19 +137,11 @@ export class UpdateFile {
 			LSPUtils.fileUpdateFinished = false;
 			let buffer = await LSPUtils.assembler.fileUtils.ReadFile(e.fsPath);
 			let text = LSPUtils.assembler.fileUtils.BytesToString(buffer);
-			await LSPUtils.assembler.compiler.DecodeText([{ text, filePath: e.fsPath }]);
+			await LSPUtils.assembler.ParseText([{ text, filePath: e.fsPath }]);
 			LSPUtils.fileUpdateFinished = true;
 		}
 	}
 	//#endregion 监视文件
-
-	/**查询文件是否在工程内 */
-	// private static async FindFileInProject(file: string) {
-	// 	let files = await this.GetWorkspaceFilterFile();
-	// 	let searchFiles = files.map(value => value.fsPath);
-	// 	return searchFiles.includes(file);
-	// }
-	//#endregion 获取工作目录下所筛选出的文件
 
 	//#region 文档变更
 	/**文档变更 */
@@ -186,7 +177,7 @@ export class UpdateFile {
 			UpdateFile.updateFiles.forEach((text, filePath) => {
 				files.push({ text, filePath });
 			});
-			await LSPUtils.assembler.compiler.DecodeText(files);
+			await LSPUtils.assembler.ParseText(files);
 			UpdateFile.UpdateDiagnostic();
 			UpdateFile.updateFiles.clear();
 			LSPUtils.fileUpdateFinished = true;

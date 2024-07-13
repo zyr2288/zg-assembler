@@ -16,7 +16,7 @@ export class HoverProvider {
 		await LSPUtils.WaitingCompileFinished();
 
 		const lineText = document.lineAt(position.line).text;
-		const temp = LSPUtils.assembler.languageHelper.hoverProvider.Hover(
+		const temp = LSPUtils.assembler.languageHelper.hover.Hover(
 			document.uri.fsPath, position.line, lineText, position.character);
 
 		return new vscode.Hover(new vscode.MarkdownString(temp));

@@ -1,21 +1,20 @@
+import { CompileOption } from "../Base/CompileOption";
 import { ExpressionUtils } from "../Base/ExpressionUtils";
-import { MyDiagnostic } from "../Base/MyException";
-import { DecodeOption } from "../Base/Options";
+import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { Localization } from "../I18n/Localization";
-import { LineCompileType } from "../Lines/CommonLine";
+import { LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
-import { AddressOption, AsmCommon, AsmInstruction } from "./AsmCommon";
+import { IAsmPlatform as IAsmPlatform } from "./IAsmPlatform";
+import { AddInstructionOption, Platform } from "./Platform";
 
-export class Asm6502 implements AsmInstruction {
-
-	static Name = "6502";
+export class Asm6502 implements IAsmPlatform {
+	platformName: string = "6502";
 
 	constructor() {
 		this.Initialize();
 	}
 
 	private Initialize() {
-
 		let instructions = [
 			"TAY", "TAX", "TSX", "TYA", "TXA", "TXS",
 			"PHA", "PHP", "PLA", "PLP",
@@ -111,29 +110,29 @@ export class Asm6502 implements AsmInstruction {
 
 	}
 
-	private ConditionBranch(option: DecodeOption) {
-		// const line = option.GetCurrectLine<InstructionLine>();
-		// const tempValue = ExpressionUtils.GetExpressionValue<number>(line.expParts[0], option);
-		// if (!tempValue.success) {
-		// 	line.result.length = 2;
-		// 	return;
-		// }
+	private ConditionBranch(option: CompileOption) {
+		const line = option.GetCurrent<InstructionLine>();
+		const tempValue = ExpressionUtils.GetValue(line.expressions[0].parts, option);
+		if (!tempValue.success) {
+			line.lineResult.result.length = 2;
+			return;
+		}
 
-		// const temp = tempValue.value - line.orgAddress - 2;
-		// if (temp > 127 || temp < -128) {
-		// 	line.compileType = LineCompileType.Error;
-		// 	let errorMsg = Localization.GetMessage("Argument out of range")
-		// 	MyDiagnostic.PushException(line.instruction, errorMsg);
-		// 	return;
-		// }
+		const temp = tempValue.value - line.lineResult.address.org - 2;
+		if (temp > 127 || temp < -128) {
+			line.lineType = LineType.Error;
+			const errorMsg = Localization.GetMessage("Argument out of range")
+			MyDiagnostic.PushException(line.instruction, errorMsg);
+			return;
+		}
 
-		// line.SetResult(line.addressingMode.opCode[1]!, 0, 1);
-		// line.SetResult(temp & 0xFF, 1, 1);
-
-		// line.compileType = LineCompileType.Finished;
+		line.lineResult.SetResult(line.addressMode.opCode[1]!, 0, 1);
+		line.lineResult.SetResult(temp & 0xFF, 1, 1);
+		line.lineType = LineType.Finished;
 	}
 
-	private AddInstruction(instruction: string, addressingMode: AddressOption) {
-		AsmCommon.AddInstructionWithLength(instruction, addressingMode);
+	private AddInstruction(instruction: string, addressingMode: AddInstructionOption) {
+		Platform.AddInstructionWithLength(instruction, addressingMode);
 	}
+
 }

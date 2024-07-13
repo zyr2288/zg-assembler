@@ -1,5 +1,5 @@
-import { Compiler } from "../Base/Compiler";
-import { Platform } from "../Platform/Platform";
+import { Token } from "../Base/Token";
+import { Analyser } from "../Compiler/Analyser";
 
 export class DocumentChangeProvider {
 
@@ -9,12 +9,13 @@ export class DocumentChangeProvider {
 	 * @returns 
 	 */
 	static AutoUpperCase(lineText: string) {
-		const match = Compiler.MatchLineCommon(lineText);
+		const token = new Token(lineText);
+		const match = Analyser.MatchLineCommon(token);
 
 		switch (match.key) {
 			case "command":
 			case "instruction":
-				const matchText = match.content.main;
+				const matchText = match.content!.main;
 				return { index: matchText.start, length: matchText.length, text: matchText.text.toUpperCase() };
 			default:
 				return;

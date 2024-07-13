@@ -1,53 +1,45 @@
-import { Compiler } from "../Base/Compiler";
-import { Expression, ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
 import { Token } from "../Base/Token";
-import { HighlightToken, LineCompileType, LineType } from "./CommonLine";
+import { Command } from "../Command/Command";
+import { LineResult, LineType } from "./CommonLine";
+import { LabelLine } from "./LabelLine";
 
 export class CommandLine {
-
-	type: LineType.Command = LineType.Command;
-	compileType = LineCompileType.None;
-
-	orgText!: Token;
-	comment?: string;
-
-	orgAddress = -1;
-	baseAddress = 0;
-
+	key: "command" = "command";
 	command!: Token;
-	expToken?: Token;
-	expression: Expression[] = [];
-	result: number[] = [];
+	arguments: Token[] = [];
 
-	tag?: any;
+	label?: LabelLine;
 
+	org!: Token;
+	comment?:string;
+	lineType: LineType = LineType.None;
+
+	lineResult = new LineResult();
+
+	tag: any;
+	
 	/**
-	 * 行初始化
-	 * @param option.command 命令
-	 * @param option.expression 表达式
-	 * @param option.labelToken Label的Token
+	 * 创建一个命令行
+	 * @param org 原始行内容
+	 * @param content 分割好的内容
+	 * @param comment 注释
+	 * @returns 
 	 */
-	Initialize(option: { command: Token, expression: Token }) {
-		this.command = option.command;
-		this.command.text = this.command.text.toUpperCase();
-		this.expToken = option.expression;
-	}
+	static Create(org: Token, content: { pre: Token, main: Token, rest: Token }, comment?: string) {
+		const line = new CommandLine();
+		line.org = org;
+		line.comment = comment;
+		line.command = content.main;
 
-	SetResult(value: number, index: number, length: number): number {
-		return Compiler.SetResult(this, value, index, length);
-	}
+		line.label = LabelLine.Create(content.pre, comment);
 
-	SetAddress() {
-		Compiler.SetAddress(this);
-	}
+		const args = Command.SplitArgument(content.main, content.rest);
+		if (!args) {
+			line.lineType = LineType.Error;
+			return;
+		}
 
-	AddAddress() {
-		Compiler.AddAddress(this);
-	}
-
-	GetTokens() {
-		const result: HighlightToken[] = [];
-		result.push(...ExpressionUtils.GetHighlightingTokens(this.expression));
-		return result;
+		line.arguments = args;
+		return line;
 	}
 }

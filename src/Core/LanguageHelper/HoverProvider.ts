@@ -1,43 +1,36 @@
-import { Compiler } from "../Base/Compiler";
 import { ExpressionUtils } from "../Base/ExpressionUtils";
-import { FileUtils } from "../Base/FileUtils";
 import { LabelUtils } from "../Base/Label";
-import { Localization } from "../I18n/Localization";
-import { CommentHelper } from "./CommentHelper";
-import { HelperUtils, TokenResultTag } from "./HelperUtils";
+import { Compiler } from "../Compiler/Compiler";
+import { HelperUtils } from "./HelperUtils";
 
 export class HoverProvider {
 
 	static Hover(filePath: string, lineNumber: number, lineText: string, currect: number) {
 
-		const fileHash = FileUtils.GetFilePathHashcode(filePath);
+		const fileIndex = Compiler.enviroment.GetFileIndex(filePath, false);
 		let result = "";
-		let changeTip = true;
 
-		const temp = HelperUtils.FindMatchToken(fileHash, lineNumber, lineText, currect);
-		switch (temp.matchType) {
-			case "Label":
-				const label = LabelUtils.FindLabel(temp.matchToken, temp.macro);
+		const temp = HelperUtils.FindMatchToken(fileIndex, lineText, lineNumber, currect);
+		let tempResult;
+		switch (temp.type) {
+			case "label":
+				const label = LabelUtils.FindLabel(temp.token!);
 				if (label) {
-					result = CommentHelper.FormatComment(label);
+					result = HelperUtils.FormatComment(label);
 				}
 				break;
-			case "Macro":
-				if (temp.matchToken) {
-					const macro = Compiler.enviroment.allMacro.get(temp.matchToken.text);
-					result = CommentHelper.FormatComment({ macro, comment: macro?.comment });
+			case "number":
+				tempResult = ExpressionUtils.GetNumber(temp.token!.text)
+				result = HelperUtils.FormatComment(tempResult);
+				break;
+			case "command":
+				result = HelperUtils.FormatComment({ commadTip: temp.token!.text });
+				break;
+			case "macro":
+				const macro = Compiler.enviroment.allMacro.get(temp.token!.text);
+				if (macro) {
+					result = HelperUtils.FormatComment({ macro, comment: macro.comment });
 				}
-				break;
-			case "Number":
-				const tempValue = ExpressionUtils.GetNumber(temp.matchToken!.text);
-				result = CommentHelper.FormatComment({ value: tempValue.value });
-				break;
-			case "DataGroup":
-				const tag = temp.tag as TokenResultTag;
-				result = CommentHelper.FormatComment({ value: tag.value });
-				break;
-			case "Command":
-				result = CommentHelper.FormatComment({ commadTip: temp.matchToken!.text });
 				break;
 		}
 

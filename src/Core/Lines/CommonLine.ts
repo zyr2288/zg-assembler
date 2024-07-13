@@ -1,74 +1,121 @@
-import { LabelCommon } from "../Base/Label";
+import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { Token } from "../Base/Token";
+import { Compiler } from "../Compiler/Compiler";
+import { Localization } from "../I18n/Localization";
 import { CommandLine } from "./CommandLine";
 import { InstructionLine } from "./InstructionLine";
+import { LabelLine } from "./LabelLine";
 import { MacroLine } from "./MacroLine";
-import { OnlyLabelLine } from "./OnlyLabelLine";
-import { UnknowLine } from "./UnknowLine";
 import { VariableLine } from "./VariableLine";
 
-export enum LineType {
-	Unknow, Instruction, Command, Variable, Macro, OnlyLabel, Delegate
-}
-
-export enum LineCompileType {
-	None, Error, Finished, Ignore
-}
-
-//#region 高亮类型
-/**高亮类型 */
-export enum HighlightType {
-	/**无 */
-	None,
-	/**标签 */
-	Label,
-	/**关键字 */
-	Keyword,
-	/**自定义函数 */
-	Macro,
-	/**定义的常量 */
-	Defined,
-	/**定义的变量 */
-	Variable,
-	/**数字 */
-	Number,
-}
-//#endregion 高亮类型
-
-export type CommonLine = InstructionLine | VariableLine | CommandLine | OnlyLabelLine | UnknowLine | MacroLine;
-
-/**通用行接口，不要使用构造函数，否则无法深拷贝 */
-export interface ICommonLine {
-	orgText: Token;
-	type: LineType;
-	compileType: LineCompileType;
-	comment?: string;
-	/**高亮Token */
-	GetTokens?: () => HighlightToken[];
-}
-
-export interface HighlightToken {
-	type: HighlightType;
-	token: Token;
-}
-
-export interface IOnlyLabel {
-	label: LabelCommon;
-}
-
 export interface HighlightRange {
-	type: "DataGroup" | "Macro" | "Enum";
+	type: "dataGroup" | "macro" | "enum";
 	key: string;
 	startLine: number;
 	endLine: number;
 }
 
-/**通用前置标签 */
-export interface CommonSaveLabel {
-	/**作为 label 的 token 缓存 */
-	token?: Token;
-	/**所关联的label */
-	label: LabelCommon;
-	/**是否已经赋值完毕 */
-	notFinish: boolean;
+export type CommonLine = CommandLine | InstructionLine | VariableLine | LabelLine | MacroLine | UnknowLine;
+
+export enum LineType { None, Finished, Error }
+
+export class LineResult {
+
+	address = { base: 0, org: -1 };
+
+	result: number[] = [];
+
+	get resultLength() { return this.result.length; }
+
+	/**
+	 * 设定结果值
+	 * @param value 设定值
+	 * @param index 设定的索引
+	 * @param length 设定Byte长度
+	 * @returns 设定值和是否越界
+	 */
+	SetResult(value: number, index: number, length: number) {
+		let temp = length;
+		let tempIndex = 0;
+
+		while (temp--) {
+			this.result[index + tempIndex] = 0;
+			tempIndex++;
+		}
+
+		let setResult = 0;
+		let offset = 0;
+		while (length--) {
+			this.result[index] = value & 0xFF;
+			setResult |= this.result[index] << offset;
+			value >>>= 8;
+			offset += 8;
+			index++;
+		}
+
+		return { result: setResult, overflow: value !== 0 };
+	}
+
+	//#region 设定起始地址
+	/**
+	 * 设定起始地址
+	 * @param line 当前行
+	 * @returns true为正确
+	 */
+	SetAddress() {
+		if (Compiler.enviroment.address.org < 0) {
+			const errorMsg = Localization.GetMessage("Unknow original address");
+			const token = new Token("");
+			MyDiagnostic.PushException(token, errorMsg);
+		}
+
+		if (this.address.org < 0) {
+			this.address.org = Compiler.enviroment.address.org;
+			this.address.base = Compiler.enviroment.address.base;
+		}
+
+		// if (Compiler.enviroment.fileRange.start < 0) {
+		// 	Compiler.enviroment.fileRange.start = Compiler.enviroment.fileRange.end = Compiler.enviroment.baseAddress;
+		// 	return;
+		// }
+
+		// if (Compiler.enviroment.fileRange.start > Compiler.enviroment.baseAddress)
+		// 	Compiler.enviroment.fileRange.start = Compiler.enviroment.baseAddress;
+	}
+	//#endregion 设定起始地址
+
+	//#region 给文件的地址增加偏移
+	AddAddress() {
+		if (this.address.org >= 0) {
+			Compiler.enviroment.address.org = this.address.org;
+			Compiler.enviroment.address.base = this.address.base;
+		}
+
+		Compiler.enviroment.address.org += this.resultLength;
+		Compiler.enviroment.address.base += this.resultLength;
+
+		// if (Compiler.enviroment.fileRange.end < Compiler.enviroment.baseAddress) {
+		// 	Compiler.enviroment.fileRange.end = Compiler.enviroment.baseAddress;
+		// 	// console.log(Compiler.enviroment.fileRange.end);
+		// }
+	}
+	//#endregion 给文件的地址增加偏移
+
+}
+
+/**
+ * 未知行，通常是 Label 或 MacroLine
+ */
+export class UnknowLine {
+	key: "unknow" = "unknow";
+	org!: Token;
+	comment?: string;
+	lineType: LineType = LineType.None;
+
+	static Create(org: Token, comment?: string) {
+		const line = new UnknowLine();
+		line.org = org;
+		line.comment = comment;
+		return line;
+	}
 }

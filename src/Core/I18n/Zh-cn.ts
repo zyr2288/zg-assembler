@@ -42,6 +42,7 @@ export const Chinese: LocalizationMsg = {
 	"baseOrgResult": "文件基址:{0}  编译地址:{1}  结果值:{2}",
 
 	"Please compile the file before Debug": "请在Debug之前编译文件",
+	"Debugger can not connect to the emulator": "调试器未能连接模拟器",
 	"Cannot find launch.json": "找不到 launch.json",
 	"Cannot find rom file {0}": "找不到 rom {0}",
 	"Cannot find program path {0}": "找不到启动程序  {0}",

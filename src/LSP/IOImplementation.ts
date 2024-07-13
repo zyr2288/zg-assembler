@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import { TextDecoder, TextEncoder } from "util";
 import { LSPUtils } from "./LSPUtils";
 
 /**
@@ -12,11 +11,13 @@ export class IOImplementation {
 	private static messageOutput = vscode.window.createOutputChannel("ZG Assembler");
 
 	static Initialize() {
-		LSPUtils.assembler.fileUtils.GetFolderFiles = IOImplementation.GetFolderFiles;
-		LSPUtils.assembler.fileUtils.PathType = IOImplementation.PathType;
-		LSPUtils.assembler.fileUtils.ReadFile = IOImplementation.ReadFile;
-		LSPUtils.assembler.fileUtils.SaveFile = IOImplementation.SaveFile;
-		LSPUtils.assembler.fileUtils.ShowMessage = IOImplementation.ShowMessage;
+		LSPUtils.assembler.fileUtils.Implement({
+			ReadFile: IOImplementation.ReadFile,
+			SaveFile: IOImplementation.SaveFile,
+			GetFolderFiles: IOImplementation.GetFolderFiles,
+			PathType: IOImplementation.PathType,
+			ShowMessage: IOImplementation.ShowMessage
+		});
 	}
 
 
@@ -40,7 +41,7 @@ export class IOImplementation {
 	}
 
 	static async PathType(path: string) {
-		let uri = vscode.Uri.file(path);
+		const uri = vscode.Uri.file(path);
 		try {
 			let stat = await vscode.workspace.fs.stat(uri);
 			switch (stat.type) {

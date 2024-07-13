@@ -40,6 +40,7 @@ export const English = {
 	"baseOrgResult": "BASE:{0}  ORG:{1}  Result:{2}",
 
 	"Please compile the file before Debug": "Please compile the file before Debug",
+	"Debugger can not connect to the emulator": "Debugger can not connect to the emulator",
 	"Cannot find launch.json": "Cannot find launch.json",
 	"Cannot find rom file {0}": "Cannot find rom file {0}",
 	"Cannot find program path {0}": "Cannot find program path {0}",
