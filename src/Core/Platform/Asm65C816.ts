@@ -1,7 +1,6 @@
 import { CompileOption } from "../Base/CompileOption";
 import { ExpressionUtils } from "../Base/ExpressionUtils";
 import { MyDiagnostic } from "../Base/MyDiagnostic";
-import { Utils } from "../Base/Utils";
 import { Localization } from "../I18n/Localization";
 import { LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";

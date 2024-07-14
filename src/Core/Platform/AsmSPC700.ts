@@ -1,7 +1,6 @@
 import { ExpressionUtils } from "../Base/ExpressionUtils";
 import { Localization } from "../I18n/Localization";
 import { InstructionLine } from "../Lines/InstructionLine";
-import { Utils } from "../Base/Utils";
 import { IAsmPlatform } from "./IAsmPlatform";
 import { CompileOption } from "../Base/CompileOption";
 import { MyDiagnostic } from "../Base/MyDiagnostic";

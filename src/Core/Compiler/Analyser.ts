@@ -9,6 +9,7 @@ import { LabelLine } from "../Lines/LabelLine";
 import { VariableLine } from "../Lines/VariableLine";
 import { CompileOption } from "../Base/CompileOption";
 import { MacroLine } from "../Lines/MacroLine";
+import { Config } from "../Base/Config";
 
 type MatchKey = "unknow" | "instruction" | "command" | "variable" | "macro";
 
@@ -326,8 +327,10 @@ export class Analyser {
 
 			i = option.index;
 
-			if (Compiler.enviroment.stopCompiling)
+			if (Compiler.enviroment.stopCompiling) {
+				Compiler.enviroment.compileTime = Config.ProjectSetting.compileTimes;
 				break;
+			}
 		}
 	}
 	//#endregion 编译所有行

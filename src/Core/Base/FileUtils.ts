@@ -1,4 +1,3 @@
-import { Compiler } from "../Compiler/Compiler";
 import { Config } from "./Config";
 
 export class FileUtils {

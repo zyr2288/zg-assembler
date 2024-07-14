@@ -1,6 +1,5 @@
 import { CompileOption } from "../Base/CompileOption";
 import { Compiler } from "../Compiler/Compiler";
-import { Config } from "../Base/Config";
 import { Expression, ExpressionUtils } from "../Base/ExpressionUtils";
 import { ILabelCommon, LabelType, LabelUtils } from "../Base/Label";
 import { CommandLine } from "../Lines/CommandLine";

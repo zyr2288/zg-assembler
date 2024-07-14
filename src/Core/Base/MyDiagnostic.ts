@@ -1,7 +1,5 @@
 import { Compiler } from "../Compiler/Compiler";
-import { FileLineInfo } from "./Enviroment";
 import { Token } from "./Token";
-import { Utils } from "./Utils";
 
 export interface OutDiagnosticMsg {
 	filePath: string;

@@ -1,10 +1,9 @@
 import { CompileOption } from "../Base/CompileOption";
 import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { Token } from "../Base/Token";
-import { Utils } from "../Base/Utils";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
-import { CommonLine, LineType } from "../Lines/CommonLine";
+import { LineType } from "../Lines/CommonLine";
 import { Analyser } from "../Compiler/Analyser";
 import { DBCommand, DLCommand, DWCommand } from "./DataCommand";
 import { DefinedCommand } from "./DefinedCommand";

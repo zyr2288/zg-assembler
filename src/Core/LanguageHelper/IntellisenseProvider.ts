@@ -11,8 +11,6 @@ import { Platform } from "../Platform/Platform";
 import { Command } from "../Command/Command";
 import { Analyser } from "../Compiler/Analyser";
 import { Localization } from "../I18n/Localization";
-import { CommandLine } from "../Lines/CommandLine";
-import { IncbinTag, IncludeTag } from "../Command/Include";
 
 type IntellisenseTrigger = " " | "." | ":" | "/";
 

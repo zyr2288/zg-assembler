@@ -8,7 +8,7 @@ import { Compiler } from "../Compiler/Compiler";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
-import { ICommand, ICommandName } from "./Command";
+import { ICommand } from "./Command";
 
 export class MsgCommand implements ICommand {
 	start = { name: ".MSG", min: 1 };
@@ -29,11 +29,13 @@ export class ErrorCommand implements ICommand {
 	AnalyseThird = Message.AnalyseThird;
 
 	Compile(option: CompileOption) {
-		if (!Compiler.NotLastCompile())
-			return;
-
+		const line = option.GetCurrent<CommandLine>();
 		Message.Compile(option);
 		Compiler.StopCompile();
+
+		const error = Localization.GetMessage("compile error");
+		MyDiagnostic.PushException(line.command, error);
+		return;
 	}
 }
 

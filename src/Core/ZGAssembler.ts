@@ -108,6 +108,8 @@ export class ZGAssembler {
 		}
 
 		Compiler.isCompiling = false;
+		if (Compiler.enviroment.stopCompiling)
+			return;
 
 		const tempResult: number[] = [];
 		Compiler.GetLinesResult(option, tempResult);

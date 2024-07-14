@@ -1,12 +1,10 @@
 import { Expression, ExpressionUtils } from "../Base/ExpressionUtils";
-import { Token } from "../Base/Token";
 import { ICommand } from "./Command";
 import { CompileOption } from "../Base/CompileOption";
 import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
 import { Localization } from "../I18n/Localization";
 import { MyDiagnostic } from "../Base/MyDiagnostic";
-import { HighlightOption, HighlightingProvider } from "../LanguageHelper/HighlightingProvider";
 
 export type DataCommandTag = Expression[];
 

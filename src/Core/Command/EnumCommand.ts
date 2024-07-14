@@ -6,7 +6,7 @@ import { Token } from "../Base/Token";
 import { Analyser } from "../Compiler/Analyser";
 import { Compiler } from "../Compiler/Compiler";
 import { Localization } from "../I18n/Localization";
-import { HighlightOption, HighlightToken, HighlightType, HighlightingProvider } from "../LanguageHelper/HighlightingProvider";
+import { HighlightOption, HighlightType, HighlightingProvider } from "../LanguageHelper/HighlightingProvider";
 import { CommandLine } from "../Lines/CommandLine";
 import { Command, ICommand } from "./Command";
 

@@ -10,7 +10,7 @@ export type LocalizationTip = Record<LocalizationTipKey, { comment: string, form
 
 export class Localization {
 
-	private static message: LocalizationMsg = English;
+	private static message: LocalizationMsg = Chinese;
 	private static commandTip: LocalizationTip = CommandTip_English;
 
 	/**修改显示语言 */

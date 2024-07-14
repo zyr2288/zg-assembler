@@ -1,15 +1,14 @@
 import { CompileOption } from "../Base/CompileOption";
-import { ILabelCommon, ILabelNormal, LabelScope, LabelType, LabelUtils } from "../Base/Label";
+import { ILabelNormal, LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { Macro } from "../Base/Macro";
 import { MyDiagnostic } from "../Base/MyDiagnostic";
-import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Analyser } from "../Compiler/Analyser";
 import { Compiler } from "../Compiler/Compiler";
 import { Localization } from "../I18n/Localization";
 import { HighlightOption, HighlightingProvider } from "../LanguageHelper/HighlightingProvider";
 import { CommandLine } from "../Lines/CommandLine";
-import { CommonLine, LineType } from "../Lines/CommonLine";
+import { LineType } from "../Lines/CommonLine";
 import { Command, ICommand } from "./Command";
 
 type MacroLineTag = Macro;

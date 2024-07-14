@@ -16,3 +16,4 @@ dist/core*.js
 dist/core*.map
 test/**
 **.vsix
+tsconfig.prod.json

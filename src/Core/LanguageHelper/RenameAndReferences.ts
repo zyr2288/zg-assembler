@@ -5,7 +5,6 @@ import { Token } from "../Base/Token";
 import { DataCommandTag } from "../Command/DataCommand";
 import { EnumTag } from "../Command/EnumCommand";
 import { AddressTag } from "../Command/OrgAndBase";
-import { Analyser } from "../Compiler/Analyser";
 import { Compiler } from "../Compiler/Compiler";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";

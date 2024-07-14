@@ -1,11 +1,8 @@
 import { DataGroup } from "../Command/DataGroup";
 import { CommonLine, HighlightRange, LineResult } from "../Lines/CommonLine";
-import { Compiler } from "../Compiler/Compiler";
 import { FileUtils } from "./FileUtils";
 import { ILabelNamelessCollection, ILabelNormal, ILabelTree, LabelType, } from "./Label";
 import { Macro } from "./Macro";
-import { Localization } from "../I18n/Localization";
-import { InstructionLine } from "../Lines/InstructionLine";
 import { CompileResult } from "../Compiler/CompileResult";
 
 export interface FileLineInfo {

@@ -14,6 +14,7 @@ interface ReceiveDatas {
 	"breakpoint-set": { baseAddress: number };
 	"breakpoint-remove": { baseAddress: number };
 	"breakpoint-hit": { baseAddress: number };
+	"registers-get": Record<string, number>;
 	"pause": undefined;
 	"resume": undefined;
 	"reset": undefined;
@@ -31,7 +32,6 @@ export class DebugClient {
 		this.client.OnMessage = (command, data) => {
 			switch (command) {
 				case "breakpoint-hit":
-					let temp = data;
 					this.BreakPointHit?.(data as ReceiveDatas["breakpoint-hit"]);
 					break;
 			}
@@ -62,6 +62,10 @@ export class DebugClient {
 		}
 
 		return line;
+	}
+
+	async RegistersGet() {
+		return await this.client.SendMessageAndWaitBack("registers-get");
 	}
 }
 
@@ -120,7 +124,7 @@ class TcpClient {
 			return;
 		}
 
-		const temp = "0;" + this.SendDataProcess(command, data);
+		const temp = "00000000;" + this.SendDataProcess(command, data);
 		this.clientSocket.write(temp);
 	}
 

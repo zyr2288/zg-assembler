@@ -14,7 +14,7 @@ export class HoverProvider {
 		let tempResult;
 		switch (temp.type) {
 			case "label":
-				const label = LabelUtils.FindLabel(temp.token!);
+				const label = LabelUtils.FindLabel(temp.token!, { fileIndex });
 				if (label) {
 					result = HelperUtils.FormatComment(label);
 				}

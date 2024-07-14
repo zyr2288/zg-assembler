@@ -75,11 +75,11 @@ ppu.Write	;+写入PPU
 	INY
 -	LDA ($0),Y
 	CMP #$FF
-	BEQ +
+	BEQ +++
 	INY
 	STA $2007
 	JMP -
-+	RTS
++++	RTS
 	;-写入PPU
 
 	.INCLUDE "data.asm"

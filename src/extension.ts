@@ -1,9 +1,6 @@
 // The module "vscode" contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-import { Analyser } from "./Core/Compiler/Analyser";
-import { Platform } from "./Core/Platform/Platform";
-import { ZGAssembler } from "./Core/ZGAssembler";
 import { LanguageServer } from "./LSP/LanguageServer";
 
 // This method is called when your extension is activated

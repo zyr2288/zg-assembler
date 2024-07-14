@@ -5,7 +5,7 @@
 	"entry": "main.asm",
 	"compileTimes": 2,
 	"outputEntryFile": "test.nes",
-	"outputSingleFile": "test.bin",
+	"outputSingleFile": "test.nes",
 	"copyToClipboard": true,
 	"includes": ["**/*.asm"],
 	"excludes": []

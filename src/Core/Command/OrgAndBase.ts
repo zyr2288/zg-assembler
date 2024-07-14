@@ -30,7 +30,7 @@ export class Original implements ICommand {
 		if (temp2 >= 0) {
 			Compiler.enviroment.address.base = Compiler.enviroment.address.org + Compiler.enviroment.address.offset;
 		} else {
-			Compiler.enviroment.address.offset = Compiler.enviroment.address.base - Compiler.enviroment.address.offset;
+			Compiler.enviroment.address.offset = Compiler.enviroment.address.base - Compiler.enviroment.address.org;
 		}
 	}
 }
@@ -51,7 +51,7 @@ export class Base implements ICommand {
 
 		line.lineType = LineType.Finished;
 		Compiler.enviroment.address.base = temp.value;
-		Compiler.enviroment.address.offset = Compiler.enviroment.address.base - Compiler.enviroment.address.offset;
+		Compiler.enviroment.address.offset = Compiler.enviroment.address.base - Compiler.enviroment.address.org;
 	}
 }
 

@@ -78,6 +78,10 @@ export const CommandTip_English = {
 		format: ".MSG message[, arg0, arg1...]",
 		exp: ".ORG $8000\n.MSG \"Now ORG address: {0}, @{0}, ${0}\", *\n\n;Now ORG address: 32768, @1000 0000 0000 0000, $8000"
 	},
+	error: {
+		comment: "Out put a message and stop compile, you can format output message.", format: ".ERROR \"Your message\"[, arg0, arg1...]",
+		exp: ".ERROR \"Compile error\"\n;Compile error",
+	},
 	enum: {
 		comment: "Reassign PC and suppress assembly output.\n\nUseful for defining variables in RAM.", 
 		format: ".ENUM startAddress\nlabelName, byteLength\n...\n.ENDE",

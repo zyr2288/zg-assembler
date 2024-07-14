@@ -2,10 +2,14 @@
 	"name": "zg-assembler",
 	"displayName": "zg-assembler",
 	"description": "",
-	"version": "0.3.0-alpha1",
+	"version": "0.3.0-alpha2",
 	"engines": {
 		"vscode": "^1.85.0"
 	},
+	"author": {
+		"name": "ZENG GE"
+	},
+	"publisher": "ZENG-GE",
 	"repository": {
 		"url": "https://github.com/zyr2288/zg-assembler/"
 	},
@@ -16,8 +20,8 @@
 	],
 	"keywords": [
 		"6502",
-		"nes",
-		"nintendo",
+		"65c816",
+		"z80-gb",
 		"assembly"
 	],
 	"activationEvents": [

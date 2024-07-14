@@ -1,11 +1,8 @@
 import { CompileOption } from "../Base/CompileOption";
-import { Config } from "../Base/Config";
 import { Expression, ExpressionUtils } from "../Base/ExpressionUtils";
-import { LabelType, LabelUtils } from "../Base/Label";
 import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
-import { Compiler } from "../Compiler/Compiler";
 import { Localization } from "../I18n/Localization";
 import { IAddressingMode, Platform } from "../Platform/Platform";
 import { LineResult, LineType } from "./CommonLine";

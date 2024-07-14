@@ -1,6 +1,5 @@
 import { Compiler } from "../Compiler/Compiler";
 import { Expression, ExpressionUtils } from "../Base/ExpressionUtils";
-import { LabelUtils } from "../Base/Label";
 import { Macro } from "../Base/Macro";
 import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { Token } from "../Base/Token";
@@ -90,39 +89,40 @@ export class MacroLine {
 
 	async Compile(option: CompileOption) {
 		this.label?.Compile(option);
-		if (Compiler.enviroment.compileTime === 0) {
-			let index = 0;
+		if (Compiler.enviroment.compileTime === 0)
 			this.macro = Utils.DeepClone(this.macro);
 
-			const keys = this.macro.params.keys();
-			for (const key of keys) {
+		let index = 0;
+
+		const keys = this.macro.params.keys();
+		for (const key of keys) {
+			const exp = this.expressions[index];
+			const temp = ExpressionUtils.GetStringValue(exp, { macro: option.macro });
+			index++;
+
+			if (!temp.success)
+				continue;
+
+			const param = this.macro.params.get(key)!;
+			param.values = temp.values;
+
+			if (temp.values.length === 1)
+				param.label.value = temp.values[0];
+		}
+
+		if (this.macro.indParams) {
+			let tempIndex = 0;
+			for (let i = index; i < this.expressions.length; i++) {
 				const exp = this.expressions[index];
-				const temp = ExpressionUtils.GetStringValue(exp, { macro: option.macro, tryValue: false });
-				index++;
-
-				if (!temp.success)
-					continue;
-
-				const param = this.macro.params.get(key)!;
-				param.values = temp.values;
-
-				if (temp.values.length === 1)
-					param.label.value = temp.values[0];
-			}
-
-			if (this.macro.indParams) {
-				let tempIndex = 0;
-				for (let i = index; i < this.expressions.length; i++) {
-					const exp = this.expressions[index];
-					const temp = ExpressionUtils.GetStringValue(exp, { macro: option.macro, tryValue: false });
-					if (temp.success) {
-						this.macro.indParams.values[tempIndex] = temp.values;
-					}
-
-					tempIndex++;
+				const temp = ExpressionUtils.GetStringValue(exp, { macro: option.macro });
+				if (temp.success) {
+					this.macro.indParams.values[tempIndex] = temp.values;
 				}
+
+				tempIndex++;
 			}
 		}
+
 
 		const macroOp = new CompileOption();
 		macroOp.allLines = this.macro.lines;

@@ -10,9 +10,9 @@ import { Compiler } from "../Compiler/Compiler";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
-import { Command, ICommand, ICommandName } from "./Command";
+import { Command, ICommand } from "./Command";
 
-interface DataGroupTag {
+export interface DataGroupTag {
 	name: Token;
 	dataGroup: DataGroup;
 	expressions: Expression[];

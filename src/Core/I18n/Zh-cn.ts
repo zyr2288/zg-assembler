@@ -79,8 +79,12 @@ export const CommandTip_Chinese: LocalizationTip = {
 		exp: ".HEX 456789ABCDEF\t;类似 .DB $45,$67,$89,$AB,$CD,$EF\n.HEX 0 1 23 4567\t;类似 .DB $00,$01,$23,$45,$67"
 	},
 	msg: {
-		comment: "输出信息，你可以格式化输出数据，具体参考例子。", format: ".MSG \"你要输出的信息\"",
+		comment: "输出信息，你可以格式化输出数据，具体参考例子。", format: ".MSG \"你要输出的信息\"[, 参数0, 参数1...]",
 		exp: ".ORG $8000\n.MSG \"当前编译地址: {0} @{0}, ${0}\", *\n;当前编译地址: 32768, @1000 0000 0000 0000, $8000"
+	},
+	error: {
+		comment: "输出信息，同时停止编译，可以格式化输出数据。", format: ".ERROR \"你要输出的信息\"[, 参数0, 参数1...]",
+		exp: ".ERROR \"编译有误\"\n;编译有误",
 	},
 	enum: {
 		comment: "用于定义一连串的常量，一般用于定义连续的内存地址作为标记", format: ".ENUM 起始地址\n常量名称, 占用字节长度\n...\n.ENDE",

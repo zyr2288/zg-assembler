@@ -76,16 +76,9 @@ export class LabelUtils {
 	static CreateCommonLabel(token: Token, option?: { ableNameless?: boolean, comment?: string, macro?: Macro }) {
 
 		let namelessCount = 0;
-		switch (token.text[0]) {
-			case "+":
-				namelessCount = 1;
-				break;
-			case "-":
-				namelessCount = -1;
-				break;
-		}
-
-		if (namelessCount !== 0) {
+		// 临时标签
+		const match = LabelUtils.namelessLabelRegex.exec(token.text);
+		if (match) {
 			const able = option?.ableNameless === undefined ? true : option?.ableNameless
 			if (!able) {
 				const msg = Localization.GetMessage("Label {0} illegal");
@@ -93,18 +86,7 @@ export class LabelUtils {
 				return;
 			}
 
-			for (let i = 1; i < token.text.length; i++) {
-				if (namelessCount === 1 && token.text[i] === "+")
-					namelessCount++;
-				else if (namelessCount === -1 && token.text[i] === "-")
-					namelessCount--;
-				else {
-					const error = Localization.GetMessage("Label {0} illegal");
-					MyDiagnostic.PushException(token, error);
-					return;
-				}
-			}
-			const item = LabelUtils.InsertNamelessLabel(token, Compiler.enviroment.fileIndex);
+			const item = LabelUtils.InsertNamelessLabel(token, option?.comment);
 			if (option?.comment)
 				item.comment = option.comment;
 
@@ -139,13 +121,16 @@ export class LabelUtils {
 	//#endregion 创建通用标签
 
 	//#region 查询标签
-	static FindLabel(token: Token, option?: { macro?: Macro }) {
+	static FindLabel(token: Token, option?: { fileIndex?: number, macro?: Macro }) {
 		if (!token || token.isEmpty)
 			return;
 
 		// 临时标签
 		const match = LabelUtils.namelessLabelRegex.exec(token.text);
-		const fileIndex = Compiler.enviroment.fileIndex;
+		let fileIndex = Compiler.enviroment.fileIndex;
+		if (option?.fileIndex !== undefined)
+			fileIndex = option.fileIndex;
+
 		if (match) {
 			let count = match[0].length;
 			const collection = Compiler.enviroment.allLabel.nameless.get(fileIndex);
@@ -166,9 +151,6 @@ export class LabelUtils {
 						return labels[i];
 				}
 			}
-
-			let errorMsg = Localization.GetMessage("Label {0} not found", token.text);
-			MyDiagnostic.PushException(token, errorMsg);
 			return;
 		}
 
@@ -276,8 +258,9 @@ export class LabelUtils {
 	 * @param option 编译选项
 	 * @returns 
 	 */
-	private static InsertNamelessLabel(token: Token, fileIndex: number, comment?: string) {
+	private static InsertNamelessLabel(token: Token, comment?: string) {
 
+		const fileIndex = Compiler.enviroment.fileIndex;
 		const collection = Compiler.enviroment.allLabel.nameless.get(fileIndex) ?? { upLabels: [], downLabels: [] };
 		const isDown = token.text[0] === "+";
 

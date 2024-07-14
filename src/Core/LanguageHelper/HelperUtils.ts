@@ -1,7 +1,7 @@
 import { Expression, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
 import { Macro } from "../Base/Macro";
 import { Token } from "../Base/Token";
-import { DataCommandTag } from "../Command/DataCommand";
+import { DataGroupTag } from "../Command/DataGroup";
 import { EnumTag } from "../Command/EnumCommand";
 import { IncbinTag, IncludeTag } from "../Command/Include";
 import { Analyser } from "../Compiler/Analyser";
@@ -79,6 +79,11 @@ export class HelperUtils {
 					return result;
 
 				break;
+			case "dataGroup":
+				if (HelperUtils.MatchDataGroup(range, result, fileIndex, lineText, lineNumber, current))
+					return result;
+
+				break;
 		}
 
 		let match = Analyser.MatchLineCommon(lineContent.content);
@@ -88,6 +93,22 @@ export class HelperUtils {
 
 		switch (match.key) {
 			case "instruction":
+				if (HelperUtils.CurrentInToken(current, match.content!.main) >= 0) {
+					result.type = match.key;
+					result.token = match.content!.main;
+					return result;
+				} else {
+					const line = Compiler.enviroment.allLine.get(fileIndex)?.[lineNumber] as InstructionLine;
+					if (!line)
+						return result;
+
+					if (temp = HelperUtils.CurrentInExpression(current, ...line.expressions)) {
+						result.type = temp.type;
+						result.token = temp.token;
+						return result;
+					}
+				}
+				break;
 			case "command":
 			case "macro":
 				if (HelperUtils.CurrentInToken(current, match.content!.main) >= 0) {
@@ -365,6 +386,28 @@ export class HelperUtils {
 		}
 		return false;
 	}
+	//#endregion 特殊命令处理
+
+	//#region 匹配 DataGroup
+	private static MatchDataGroup(range: HighlightRange, matchResult: MatchResult, fileIndex: number, lineText: string, lineNumber: number, current: number) {
+		const tempLine = Compiler.enviroment.allLine.get(fileIndex)?.[range.startLine] as CommandLine;
+		if (!tempLine || lineNumber === range.startLine || lineNumber === range.endLine)
+			return false;
+
+		const tag: DataGroupTag = tempLine.tag;
+		for (let i = 0; i < tag.expressions.length; i++) {
+			const exp = tag.expressions[i];
+			const match = HelperUtils.CurrentInExpression(current, exp);
+			if (!match)
+				continue;
+
+			matchResult.type = match.type;
+			matchResult.token = match.token;
+			return true;
+		}
+		return false;
+	}
+	//#endregion 匹配DataGroup
 
 	//#region 匹配 Enum 命令内的表达式
 	/**
