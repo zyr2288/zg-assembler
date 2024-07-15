@@ -1,8 +1,8 @@
 {
 	"name": "zg-assembler",
-	"displayName": "zg-assembler",
+	"displayName": "ZG Assembler",
 	"description": "",
-	"version": "0.3.0",
+	"version": "0.3.1",
 	"engines": {
 		"vscode": "^1.85.0"
 	},
@@ -10,6 +10,7 @@
 		"name": "ZENG GE"
 	},
 	"publisher": "ZENG-GE",
+	"preview": true,
 	"repository": {
 		"url": "https://github.com/zyr2288/zg-assembler/"
 	},
