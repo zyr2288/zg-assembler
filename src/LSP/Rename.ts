@@ -19,7 +19,7 @@ export class Rename {
 
 		await LSPUtils.WaitingCompileFinished();
 
-		const renameClass = LSPUtils.assembler.languageHelper.rename;
+		const renameClass = LSPUtils.assembler.languageHelper.renameAndReferences;
 		const lineText = document.lineAt(position.line).text;
 		const charRange = renameClass.PreRename(document.fileName, lineText, position.line, position.character);
 		if (typeof (charRange) === "string") {
@@ -33,7 +33,7 @@ export class Rename {
 	private static async Rename(document: vscode.TextDocument, position: vscode.Position, newName: string, token: vscode.CancellationToken) {
 		await LSPUtils.WaitingCompileFinished();
 
-		const renameClass = LSPUtils.assembler.languageHelper.rename;
+		const renameClass = LSPUtils.assembler.languageHelper.renameAndReferences;
 		const edit = new vscode.WorkspaceEdit();
 		const charRange = renameClass.RenameLabel(newName);
 		if (typeof (charRange) === "string") {

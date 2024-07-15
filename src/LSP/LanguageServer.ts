@@ -11,6 +11,7 @@ import { Intellisense } from "./Intellisense";
 import { HoverProvider } from "./HoverProvider";
 import { Rename } from "./Rename";
 import { ZGAssemblerDebugAdapter } from "./DebugAdapter/ZGAssemblerDebugAdapter";
+import { ReferencesProvider } from "./ReferencesProvider";
 
 export class LanguageServer {
 
@@ -31,7 +32,7 @@ export class LanguageServer {
 		UpdateFile.Initialize(context);
 		Definition.Initialize(context);
 		Rename.Initialize(context);
-		// ReferencesProvider.Initialize(context);
+		ReferencesProvider.Initialize(context);
 		Intellisense.Initialize(context);
 		// TextDecoration.Initialize(context);
 		// // LabelTreeViewer.Initialize(context);

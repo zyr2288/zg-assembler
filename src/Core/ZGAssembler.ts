@@ -28,7 +28,7 @@ export class ZGAssembler {
 		documentChange: DocumentChangeProvider,
 		intellisense: IntellisenseProvider,
 		definition: DefinitionProvider,
-		rename: RenameAndReferences,
+		renameAndReferences: RenameAndReferences,
 		hover: HoverProvider,
 		debug: DebugProvider,
 	};

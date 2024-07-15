@@ -191,6 +191,15 @@ export class RenameAndReferences {
 
 	/***** 查找引用和定义 *****/
 
+	//#region 查找引用和定义
+	/**
+	 * 查找引用和定义
+	 * @param filePath 文件路径
+	 * @param lineText 行文本
+	 * @param lineNumber 行号
+	 * @param currect 当前光标位置
+	 * @returns 
+	 */
 	static GetReferences(filePath: string, lineText: string, lineNumber: number, currect: number) {
 		const fileIndex = Compiler.enviroment.GetFileIndex(filePath, false);
 		const temp = HelperUtils.FindMatchToken(fileIndex, lineText, lineNumber, currect);
@@ -216,13 +225,12 @@ export class RenameAndReferences {
 			const lines = Compiler.enviroment.allLine.get(key)!;
 			const fileName = Compiler.enviroment.GetFilePath(key);
 			const tokens = result.get(fileName) ?? [];
-			RenameAndReferences.SaveLineToken(RenameAndReferences.SaveRename.type, RenameAndReferences.SaveRename.token!.text, lines, tokens);
+			RenameAndReferences.SaveLineToken(temp.type, temp.token!.text, lines, tokens);
 			result.set(fileName, tokens);
 		}
 		return result;
-
-		return result;
 	}
+	//#endregion 查找引用和定义
 
 	/***** 其它 *****/
 
@@ -256,7 +264,7 @@ export class RenameAndReferences {
 					break;
 				case "command":
 					if (matchType === "label")
-						RenameAndReferences.GetCommandExpression(line, resultToken);
+						RenameAndReferences.GetCommandExpression(line, matchText, resultToken);
 
 					break;
 			}
@@ -265,10 +273,8 @@ export class RenameAndReferences {
 	//#endregion 查找所有匹配的词元
 
 	//#region 获取命令表达式
-	private static GetCommandExpression(line: CommandLine, resultToken: Token[]) {
+	private static GetCommandExpression(line: CommandLine, matchText: string, resultToken: Token[]) {
 		const com = line.command.text.toUpperCase();
-
-		const matchText = RenameAndReferences.SaveRename.token!.text;
 
 		let tag;
 		switch (com) {
@@ -308,7 +314,7 @@ export class RenameAndReferences {
 		for (let i = 0; i < expressions.length; i++) {
 			for (let j = 0; j < expressions[i].parts.length; j++) {
 				const part = expressions[i].parts[j];
-				if (part.type !== PriorityType.Level_1_Label && part.token.text !== matchText)
+				if (part.type !== PriorityType.Level_1_Label || part.token.text !== matchText)
 					continue;
 
 				result.push(part.token);

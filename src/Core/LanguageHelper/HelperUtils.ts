@@ -123,10 +123,7 @@ export class HelperUtils {
 				}
 				break;
 		}
-
 		// const match = HelperUtils.GetWord(lineText, current);
-
-
 		return result;
 	}
 	//#endregion 查找匹配的词元
