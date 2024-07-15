@@ -35,7 +35,7 @@ const coreBuilderCS = {
 				use: [{
 					loader: 'ts-loader',
 					options: {
-						configFile: "tsconfig.prod.json"
+						configFile: "tsconfig.cs.json"
 					}
 				}]
 			}
@@ -74,7 +74,7 @@ const coreBuilderNode = {
 				use: [{
 					loader: 'ts-loader',
 					options: {
-						configFile: "tsconfig.prod.json"
+						configFile: "tsconfig.node.json"
 					}
 				}]
 			}
