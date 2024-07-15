@@ -7,7 +7,7 @@ src/**
 .yarnrc
 webpack.**.js
 vsc-extension-quickstart.md
-**/tsconfig.json
+**/tsconfig*.json
 **/.eslintrc.json
 **/*.map
 **/*.ts
@@ -16,4 +16,3 @@ dist/core*.js
 dist/core*.map
 test/**
 **.vsix
-tsconfig.prod.json
