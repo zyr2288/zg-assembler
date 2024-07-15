@@ -10,6 +10,7 @@ import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
 import { HighlightRange } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
+import { LabelLine } from "../Lines/LabelLine";
 import { MacroLine } from "../Lines/MacroLine";
 import { VariableLine } from "../Lines/VariableLine";
 
@@ -120,6 +121,16 @@ export class HelperUtils {
 				} else if (current < match.content!.main.start && !match.content!.pre.isEmpty) {
 					result.type = "label";
 					result.token = match.content!.pre;
+				}
+				break;
+			case "unknow":
+				const line = Compiler.enviroment.allLine.get(fileIndex)?.[lineNumber] as LabelLine;
+				if (!line)
+					break;
+
+				if (HelperUtils.CurrentInToken(current, line.labelToken) >= 0) {
+					result.type = "label";
+					result.token = line.labelToken;
 				}
 				break;
 		}

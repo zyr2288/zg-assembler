@@ -38,7 +38,7 @@ export class DefinitionProvider {
 		switch (match.type) {
 			case "label":
 				if (match.token) {
-					const label = LabelUtils.FindLabel(match.token, { macro });
+					const label = LabelUtils.FindLabel(match.token, { fileIndex, macro });
 					if (label) {
 						DefinitionProvider.SetTokenToResult(label.token, result);
 						result.filePath = Compiler.enviroment.GetFilePath(label.fileIndex);
