@@ -514,8 +514,12 @@ export class IntellisenseProvider {
 			return IntellisenseProvider.GetInstructionAddressingModes(content.main.text);
 		}
 
-		const prefix = HelperUtils.GetWord(content.rest.text, current);
-		return IntellisenseProvider.GetLabel(fileIndex, prefix.leftText, macro);
+		if (!trigger) {
+			const prefix = HelperUtils.GetWord(content.rest.text, current);
+			return IntellisenseProvider.GetLabel(fileIndex, prefix.leftText, macro);
+		}
+
+		return [];
 	}
 	//#endregion 处理汇编指令
 
