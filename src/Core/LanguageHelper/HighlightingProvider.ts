@@ -7,6 +7,7 @@ import { EnumCommand } from "../Command/EnumCommand";
 import { DataCommand, DataCommandTag } from "../Command/DataCommand";
 import { CommandLine } from "../Lines/CommandLine";
 import { MacroCommand } from "../Command/MacroCommand";
+import { AddressTag } from "../Command/OrgAndBase";
 
 export class HighlightOption {
 	lines: CommonLine[] = [];
@@ -141,6 +142,11 @@ export class HighlightingProvider {
 				break;
 			case ".MACRO":
 				MacroCommand.GetHighlight(option);
+				break;
+			case ".ORG":
+			case ".BASE":
+				tag = line.tag as AddressTag;
+				HighlightingProvider.GetExpression(tag, option.result);
 				break;
 		}
 	}

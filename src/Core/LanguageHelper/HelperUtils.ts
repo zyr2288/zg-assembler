@@ -111,6 +111,13 @@ export class HelperUtils {
 				}
 				break;
 			case "command":
+				if (HelperUtils.CurrentInToken(current, match.content!.main) >= 0) {
+					result.type = match.key;
+					result.token = match.content!.main;
+					return result;
+				}
+				HelperUtils.CommandSp(fileIndex, lineText, lineNumber, current, result);
+				break;
 			case "macro":
 				if (HelperUtils.CurrentInToken(current, match.content!.main) >= 0) {
 					result.type = match.key;

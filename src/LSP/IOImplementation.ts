@@ -63,8 +63,13 @@ export class IOImplementation {
 	}
 
 	static async SaveFile(filePath: string, data: Uint8Array) {
-		let uri = vscode.Uri.file(filePath);
-		await vscode.workspace.fs.writeFile(uri, data);
+		try {
+			let uri = vscode.Uri.file(filePath);
+			await vscode.workspace.fs.writeFile(uri, data);
+		} catch (exception: any) {
+			LSPUtils.ShowMessageBox(exception, "error");
+		}
+
 	}
 
 	static ShowMessage(message: string) {

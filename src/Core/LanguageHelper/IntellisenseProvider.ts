@@ -534,6 +534,13 @@ export class IntellisenseProvider {
 				temp = await IntellisenseProvider.ProcessInclude(com === ".INCBIN", trigger === "/", content.rest, current, fileIndex);
 				if (temp)
 					result = temp;
+
+				break;
+			default:
+				if (!trigger) {
+					const prefix = HelperUtils.GetWord(content.rest.text, current);
+					result = IntellisenseProvider.GetLabel(fileIndex, prefix.leftText, macro);
+				}
 				break;
 		}
 

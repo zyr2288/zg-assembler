@@ -140,8 +140,12 @@ class IfConfidentUtils {
 
 			const start = startIndex + line.offsetFirstLine;
 			const end = startIndex + confidenLine[i + 1].offsetFirstLine;
-			for (let j = start; j < end; j++)
+			for (let j = start; j < end; j++) {
+				if (!option.allLines[j])
+					continue;
+
 				option.allLines[j].lineType = LineType.Finished;
+			}
 		}
 	}
 	//#endregion 标记该行已处理完毕
