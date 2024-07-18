@@ -74,6 +74,7 @@ export class RepeatCommand implements ICommand {
 
 			tag.compileLines = lines;
 		}
+		line.tag = tag;
 
 		const repeatOp = new CompileOption();
 		repeatOp.allLines = tag.compileLines;

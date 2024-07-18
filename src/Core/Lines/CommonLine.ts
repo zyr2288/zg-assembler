@@ -17,7 +17,7 @@ export interface HighlightRange {
 
 export type CommonLine = CommandLine | InstructionLine | VariableLine | LabelLine | MacroLine | UnknowLine;
 
-export enum LineType { None, Finished, Error }
+export enum LineType { None, Finished, Error, Ignore }
 
 export class LineResult {
 

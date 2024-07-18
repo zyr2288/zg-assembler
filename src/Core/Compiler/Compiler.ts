@@ -3,6 +3,7 @@ import { Config } from "../Base/Config";
 import { Enviroment } from "../Base/Enviroment";
 import { Include } from "../Command/Include";
 import { RepeatCommand } from "../Command/RepeatCommand";
+import { LineType } from "../Lines/CommonLine";
 import { MacroLine } from "../Lines/MacroLine";
 import { Analyser } from "./Analyser";
 
@@ -30,7 +31,7 @@ export class Compiler {
 
 			option.index = i;
 			const line = option.allLines[i];
-			if (!line)
+			if (!line || line.lineType === LineType.Ignore)
 				continue;
 
 			switchLoop:

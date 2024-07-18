@@ -225,7 +225,7 @@ export class Command {
 			if (!option.allLines[j])
 				continue;
 			
-			option.allLines[j].lineType = LineType.Finished;
+			option.allLines[j].lineType = LineType.Ignore;
 		}
 	}
 	//#endregion 标记行分析

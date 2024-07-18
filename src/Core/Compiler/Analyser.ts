@@ -190,7 +190,7 @@ export class Analyser {
 			start += temp.text.length + 1;
 
 			if (--count === 0) {
-				let temp2 = token.Substring(start + 1);
+				let temp2 = token.Substring(start);
 				if (!temp2.isEmpty)
 					result.push(temp2);
 
