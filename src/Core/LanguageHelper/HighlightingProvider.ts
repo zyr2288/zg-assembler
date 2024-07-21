@@ -8,6 +8,7 @@ import { DataCommand, DataCommandTag } from "../Command/DataCommand";
 import { CommandLine } from "../Lines/CommandLine";
 import { MacroCommand } from "../Command/MacroCommand";
 import { AddressTag } from "../Command/OrgAndBase";
+import { IfConfidentTag } from "../Command/IfConfident";
 
 export class HighlightOption {
 	lines: CommonLine[] = [];
@@ -136,9 +137,9 @@ export class HighlightingProvider {
 			case ".DW":
 			case ".DL":
 				tag = line.tag as DataCommandTag;
-				for (let i = 0; i < tag.length; i++) 
+				for (let i = 0; i < tag.length; i++)
 					HighlightingProvider.GetExpression(tag[i], option.result);
-				
+
 				break;
 			case ".MACRO":
 				MacroCommand.GetHighlight(option);
@@ -147,6 +148,14 @@ export class HighlightingProvider {
 			case ".BASE":
 				tag = line.tag as AddressTag;
 				HighlightingProvider.GetExpression(tag, option.result);
+				break;
+			case ".IF":
+				tag = line.tag as IfConfidentTag;
+				for (let i = 0; i < tag.length; i++) {
+					const t = tag[i];
+					if (t.exp)
+						HighlightingProvider.GetExpression(t.exp, option.result);
+				}
 				break;
 		}
 	}

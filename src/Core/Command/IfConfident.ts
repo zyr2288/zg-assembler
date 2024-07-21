@@ -14,7 +14,7 @@ import { ICommand, ICommandName } from "./Command";
 // 	child: any[];
 // }
 
-type IfConfidentTag = { offsetFirstLine: number, confident: boolean, exp?: Expression }[];
+export type IfConfidentTag = { offsetFirstLine: number, confident: boolean, exp?: Expression }[];
 
 const IfCommandRest = [".ELSEIF", ".ELSE", ".ENDIF"];
 const IfDefCommandRest = [".ELSE", ".ENDIF"];
@@ -28,12 +28,21 @@ export class IfConfident implements ICommand {
 	];
 	end = ".ENDIF";
 	sameEnd = [".IFDEF", ".IFNDEF"];
-	paramCount = { min: 1, max: 1 };
 	allowLabel = false;
 
 	AnalyseFirst = IfConfidentUtils.AnalyseFirst;
 	AnalyseThird = IfConfidentUtils.AnalyseThird;
 	Compile = IfConfidentUtils.Compile;
+}
+
+export class IfDefConfident implements ICommand {
+	start = { name: ".IFDEF", min: 1, max: 1 };
+	rest = [
+		{ name: ".ELSE", min: 0, max: 0 }
+	];
+	end = ".ENDIF";
+	sameEnd = [".IF", ".IFNDEF"];
+	allowLabel = false;
 }
 
 class IfConfidentUtils {

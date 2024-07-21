@@ -3,7 +3,9 @@ import { Macro } from "../Base/Macro";
 import { Token } from "../Base/Token";
 import { DataGroupTag } from "../Command/DataGroup";
 import { EnumTag } from "../Command/EnumCommand";
+import { IfConfidentTag } from "../Command/IfConfident";
 import { IncbinTag, IncludeTag } from "../Command/Include";
+import { AddressTag } from "../Command/OrgAndBase";
 import { Analyser } from "../Compiler/Analyser";
 import { Compiler } from "../Compiler/Compiler";
 import { Localization } from "../I18n/Localization";
@@ -394,8 +396,24 @@ export class HelperUtils {
 				}
 
 				temp = (tag as IncbinTag).exps;
-				if (temp) {
-					HelperUtils.CurrentInExpression(current, ...temp)
+				if (temp && (temp = HelperUtils.CurrentInExpression(current, ...temp))) {
+					matchResult.type = temp.type;
+					matchResult.token = temp.token;
+				}
+				break;
+			case ".BASE":
+			case ".ORG":
+				temp = line.tag as AddressTag;
+				if (temp = HelperUtils.CurrentInExpression(current, temp)) {
+					matchResult.type = temp.type;
+					matchResult.token = temp.token;
+				}
+				break;
+			case ".IF":
+				temp = line.tag as IfConfidentTag;
+				if (temp[0].exp && (temp = HelperUtils.CurrentInExpression(current, temp[0].exp))) {
+					matchResult.type = temp.type;
+					matchResult.token = temp.token;
 				}
 				break;
 		}
