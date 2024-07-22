@@ -1,12 +1,9 @@
 import { CompileOption } from "../Base/CompileOption";
 import { Expression, ExpressionUtils } from "../Base/ExpressionUtils";
-import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { Token } from "../Base/Token";
-import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
-import { Analyser } from "../Compiler/Analyser";
-import { ICommand, ICommandName, CommandTagBase } from "./Command";
+import { ICommand, CommandTagBase } from "./Command";
 
 // export interface IfConfidentLine {
 // 	key: Token;
@@ -17,6 +14,12 @@ import { ICommand, ICommandName, CommandTagBase } from "./Command";
 export interface IfConfidentTag extends CommandTagBase {
 	lines: { offsetFirstLine: number, confident: boolean, exp?: Expression }[];
 }
+
+interface IfDefTag {
+	name: Token;
+	lines: { offsetFirstLine: number, confident: boolean }[];
+}
+
 
 const IfCommandRest = [".ELSEIF", ".ELSE", ".ENDIF"];
 const IfDefCommandRest = [".ELSE", ".ENDIF"];
@@ -45,8 +48,29 @@ export class IfDefConfident implements ICommand {
 	end = ".ENDIF";
 	sameEnd = [".IF", ".IFNDEF"];
 	allowLabel = false;
+
+	Compile(option: CompileOption) {
+		const line = option.GetCurrent<CommandLine>();
+
+	}
 }
 
+export class IfNDefConfident implements ICommand {
+	start = { name: ".IFNDEF", min: 1, max: 1 };
+	rest = [
+		{ name: ".ELSE", min: 0, max: 0 }
+	];
+	end = ".ENDIF";
+	sameEnd = [".IF", ".IFDEF"];
+	allowLabel = false;
+
+	Compile(option: CompileOption) {
+		const line = option.GetCurrent<CommandLine>();
+
+	}
+}
+
+//#region IF条件工具
 class IfConfidentUtils {
 
 	//#region 第一次分析，判断层级关系是否正确
@@ -163,3 +187,64 @@ class IfConfidentUtils {
 	//#endregion 标记该行已处理完毕
 
 }
+//#endregion IF条件工具
+
+//#region IFDEF IFNDEF条件工具
+class IfDefConfidentUtils {
+
+	//#region 第一次分析，判断层级关系是否正确
+	/**
+	 * 第一次分析，判断层级关系是否正确
+	 * @param option 编译选项
+	 */
+	static AnalyseFirst(option: CompileOption) {
+		const line = option.GetCurrent<CommandLine>();
+
+		const result = option.matchIndex!;
+		let index = 0;
+		const commands = [".ELSE", ".ENDIF"];
+
+		let exp = ExpressionUtils.SplitAndSort(line.arguments[0]);
+
+		const tag: IfDefTag = { name: line.arguments[0], lines: [{ offsetFirstLine: 0, confident: false }] };
+
+		const startLindeIndex = option.index;
+		for (let i = 0; i < result.length; i++) {
+			const lineIndex = result[i];
+			const tempLine = option.GetLine<CommandLine>(lineIndex);
+			const searchIndex = commands.indexOf(tempLine.command.text.toUpperCase());
+			if (searchIndex < index) {
+				continue;
+			}
+
+			switch (searchIndex) {
+				case 0:
+					index = 1;
+					break;
+				case 1:
+					index = 2;
+					break;
+			}
+
+
+			if (tempLine.arguments[0]) {
+				exp = ExpressionUtils.SplitAndSort(tempLine.arguments[0]);
+				if (!exp)
+					tempLine.lineType = LineType.Error;
+			} else {
+				exp = undefined;
+			}
+
+			tag.lines.push({ offsetFirstLine: lineIndex - startLindeIndex, confident: false });
+			option.GetLine(lineIndex).lineType = LineType.Finished;
+		}
+
+		line.tag = tag;
+	}
+
+	static Compile(option: CompileOption) {
+		const line = option.GetCurrent<CommandLine>();
+		const tag = line.tag as IfConfidentTag;
+	}
+}
+//#endregion IFDEF IFNDEF条件工具
