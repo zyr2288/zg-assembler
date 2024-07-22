@@ -3,12 +3,11 @@ import { Expression } from "../Base/ExpressionUtils";
 import { Token } from "../Base/Token";
 import { CommonLine } from "../Lines/CommonLine";
 import { LabelLine } from "../Lines/LabelLine";
-import { EnumCommand } from "../Command/EnumCommand";
-import { DataCommand, DataCommandTag } from "../Command/DataCommand";
+import { EnumCommand, EnumTag } from "../Command/EnumCommand";
+import { DataCommandTag } from "../Command/DataCommand";
 import { CommandLine } from "../Lines/CommandLine";
 import { MacroCommand } from "../Command/MacroCommand";
-import { AddressTag } from "../Command/OrgAndBase";
-import { IfConfidentTag } from "../Command/IfConfident";
+import { CommandTagBase } from "../Command/Command";
 
 export class HighlightOption {
 	lines: CommonLine[] = [];
@@ -131,7 +130,19 @@ export class HighlightingProvider {
 		HighlightingProvider.GetLabel(line.label, option.result);
 		switch (line.command.text) {
 			case ".ENUM":
-				EnumCommand.GetHighlighting(option);
+				tag = option.GetCurrent<CommandLine>()!.tag as EnumTag;
+				if (tag.exp)
+					HighlightingProvider.GetExpression(tag.exp, option.result);
+
+				for (let i = 0; i < tag.lines.length; i++) {
+					const line = tag.lines[i];
+					if (!line)
+						continue;
+
+					HighlightingProvider.GetToken(line.labelToken, HighlightType.Defined, option.result);
+					HighlightingProvider.GetExpression(line.expression, option.result);
+				}
+				option.index += tag.lines.length;
 				break;
 			case ".DB":
 			case ".DW":
@@ -146,16 +157,11 @@ export class HighlightingProvider {
 				break;
 			case ".ORG":
 			case ".BASE":
-				tag = line.tag as AddressTag;
-				HighlightingProvider.GetExpression(tag, option.result);
-				break;
 			case ".IF":
-				tag = line.tag as IfConfidentTag;
-				for (let i = 0; i < tag.length; i++) {
-					const t = tag[i];
-					if (t.exp)
-						HighlightingProvider.GetExpression(t.exp, option.result);
-				}
+			case ".ELSEIF":
+				tag = line.tag as CommandTagBase;
+				if (tag.exp)
+					HighlightingProvider.GetExpression(tag.exp, option.result);
 				break;
 		}
 	}

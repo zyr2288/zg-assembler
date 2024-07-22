@@ -1,14 +1,13 @@
 import { CompileOption } from "../Base/CompileOption";
-import { Expression, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpressionUtils } from "../Base/ExpressionUtils";
 import { Utils } from "../Base/Utils";
 import { Analyser } from "../Compiler/Analyser";
 import { Compiler } from "../Compiler/Compiler";
 import { CommandLine } from "../Lines/CommandLine";
 import { CommonLine, LineType } from "../Lines/CommonLine";
-import { ICommand } from "./Command";
+import { CommandTagBase, ICommand } from "./Command";
 
-interface RepeatTag {
-	expression: Expression;
+interface RepeatTag extends CommandTagBase{
 	orgLines: CommonLine[];
 	compileLines: CommonLine[];
 }
@@ -36,7 +35,7 @@ export class RepeatCommand implements ICommand {
 			return;
 		}
 
-		const tag: RepeatTag = { expression: temp, orgLines: [], compileLines: [] };
+		const tag: RepeatTag = { exp: temp, orgLines: [], compileLines: [] };
 		const matchIndex = option.matchIndex![0];
 
 		tag.orgLines = option.allLines.slice(option.index + 1, matchIndex);
@@ -50,7 +49,7 @@ export class RepeatCommand implements ICommand {
 		const line = option.GetCurrent<CommandLine>();
 		const tag: RepeatTag = line.tag;
 
-		ExpressionUtils.CheckLabels(option, tag.expression);
+		ExpressionUtils.CheckLabels(option, tag.exp!);
 	}
 
 	async Compile(option: CompileOption) {
@@ -58,7 +57,7 @@ export class RepeatCommand implements ICommand {
 		const tag: RepeatTag = line.tag;
 
 		if (Compiler.enviroment.compileTime === 0) {
-			const times = ExpressionUtils.GetValue(tag.expression.parts, { macro: option.macro, tryValue: false });
+			const times = ExpressionUtils.GetValue(tag.exp!.parts, { macro: option.macro, tryValue: false });
 			if (!times.success)
 				return;
 

@@ -17,7 +17,7 @@
 10. [.INCLUDE](#include)
 11. [.MACRO .ENDM](#macro-endm)
 12. [.REPEAT .ENDR](#repeat-endr)
-13. [.MSG](#msg)
+13. [.MSG .ERROR](#msg)
 
 * [ZG Assembler in Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZENG-GE.zg-assembler)
 * An extensible compiler for [VSCode](https://code.visualstudio.com/), supporting `6502` `65c816` (Special thanks Thirteen) `z80-gb`.
@@ -428,21 +428,26 @@ For example:
 
 ```
     .MSG message[, arg1, arg2...]
+    .ERROR message[, arg1, arg2...]
 ```
 
 * Out put a message.
+* Out put a message and stop
 
 ```
     .ORG $8000
     .DEF test1, 10
     .DEF test2, 11
     .MSG "test {0}, ${1}, @{0}", test1, test2
+
+	.IF test1 == 10
+    .ERROR "This is test1: {0}", test1
+    .ENDIF
 ```
 
 * The message is：
 
-```
-    test 10, $B, @0000 1010
-```
+> test 10, $B, @0000 1010
+> This is test1: 10
 
 </details>

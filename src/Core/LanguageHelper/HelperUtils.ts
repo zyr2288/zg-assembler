@@ -1,16 +1,17 @@
 import { Expression, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
 import { Macro } from "../Base/Macro";
 import { Token } from "../Base/Token";
+import { CommandTagBase } from "../Command/Command";
 import { DataGroupTag } from "../Command/DataGroup";
+import { DefTag } from "../Command/DefinedCommand";
 import { EnumTag } from "../Command/EnumCommand";
-import { IfConfidentTag } from "../Command/IfConfident";
 import { IncbinTag, IncludeTag } from "../Command/Include";
-import { AddressTag } from "../Command/OrgAndBase";
+import { MacroLineTag } from "../Command/MacroCommand";
 import { Analyser } from "../Compiler/Analyser";
 import { Compiler } from "../Compiler/Compiler";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
-import { HighlightRange } from "../Lines/CommonLine";
+import { CommonLine, HighlightRange } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
 import { LabelLine } from "../Lines/LabelLine";
 import { MacroLine } from "../Lines/MacroLine";
@@ -43,8 +44,13 @@ export interface MatchMacro {
 export type MatchType = MatchInstruction | MatchCommand | MatchVariable | MatchMacro;
 
 export interface MatchResult {
-	type: "none" | "comment" | "instruction" | "command" | "macro" | "number" | "label" | "filePath";
+	type: "none" | "comment" | "instruction" | "command" | "macro" | "macroLabel" | "number" | "label" | "filePath";
 	token: Token | undefined;
+	/**
+	 * 附加属性
+	 * macroLabel时，此为macro
+	 */
+	tag: any;
 }
 
 export class HelperUtils {
@@ -61,7 +67,7 @@ export class HelperUtils {
 	 * @returns 
 	 */
 	static FindMatchToken(fileIndex: number, lineText: string, lineNumber: number, current: number) {
-		const result: MatchResult = { type: "none", token: undefined };
+		const result: MatchResult = { type: "none", token: undefined, tag: undefined };
 		const orgToken = new Token(lineText, { line: lineNumber });
 		const lineContent = Analyser.GetContent(orgToken);
 		if (current > lineContent.content.start + lineContent.content.length) {
@@ -96,7 +102,7 @@ export class HelperUtils {
 
 		switch (match.key) {
 			case "instruction":
-				if (HelperUtils.CurrentInToken(current, match.content!.main) >= 0) {
+				if (HelperUtils.CurrentInToken(current, match.content!.main)) {
 					result.type = match.key;
 					result.token = match.content!.main;
 					return result;
@@ -113,15 +119,15 @@ export class HelperUtils {
 				}
 				break;
 			case "command":
-				if (HelperUtils.CurrentInToken(current, match.content!.main) >= 0) {
+				if (HelperUtils.CurrentInToken(current, match.content!.main)) {
 					result.type = match.key;
 					result.token = match.content!.main;
 					return result;
 				}
-				HelperUtils.CommandSp(fileIndex, lineText, lineNumber, current, result);
+				HelperUtils.CommandSp(fileIndex, lineText, lineNumber, current, result, { macro });
 				break;
 			case "macro":
-				if (HelperUtils.CurrentInToken(current, match.content!.main) >= 0) {
+				if (HelperUtils.CurrentInToken(current, match.content!.main)) {
 					result.type = match.key;
 					result.token = match.content!.main;
 					return result;
@@ -137,7 +143,7 @@ export class HelperUtils {
 				if (!line)
 					break;
 
-				if (HelperUtils.CurrentInToken(current, line.labelToken) >= 0) {
+				if (HelperUtils.CurrentInToken(current, line.labelToken)) {
 					result.type = "label";
 					result.token = line.labelToken;
 				}
@@ -355,24 +361,30 @@ export class HelperUtils {
 		for (let i = 0; i < tokens.length; i++) {
 			const token = tokens[i];
 			if (token.start <= current && current <= token.start + token.length)
-				return i;
+				return { token, index: i };
 		}
-
-		return -1;
 	}
 	//#endregion 查询当前光标所在的Token
 
 	/***** 特殊命令处理 *****/
 
 	//#region 特殊命令处理
-	private static CommandSp(fileIndex: number, lineText: string, lineNumber: number, current: number, matchResult: MatchResult) {
-		const lines = Compiler.enviroment.allLine.get(fileIndex);
-		if (!lines)
-			return false;
+	private static CommandSp(fileIndex: number, lineText: string, lineNumber: number, current: number, matchResult: MatchResult, option?: { macro?: Macro }) {
+		let lines: CommonLine[] | undefined;
+		let lineOffset = 0;
+		if (option?.macro) {
+			lines = option.macro.lines;
+			lineOffset = option.macro.lineOffset;
+		} else {
+			lines = Compiler.enviroment.allLine.get(fileIndex);
+		}
 
-		const line = lines[lineNumber] as CommandLine;
+		if (!lines)
+			return;
+
+		const line = lines[lineNumber - lineOffset] as CommandLine;
 		if (!line)
-			return false;
+			return;
 
 		let tag;
 		let temp;
@@ -383,41 +395,72 @@ export class HelperUtils {
 			case ".DL":
 				if (current > line.command.start + line.command.length) {
 					HelperUtils.MatchLabelOrNumber(lineText, current, matchResult);
-					return true;
+					return;
+				}
+				break;
+			case ".DEF":
+				tag = line.tag as DefTag;
+				if (tag.label && HelperUtils.CurrentInToken(current, tag.label.token)) {
+					matchResult.type = "label";
+					matchResult.token = tag.label.token;
+					return;
+				}
+
+				if (tag.expression && (temp = HelperUtils.CurrentInExpression(current, tag.expression))) {
+					matchResult.type = temp.type;
+					matchResult.token = temp.token;
+					return;
 				}
 				break;
 			case ".INCLUDE":
 			case ".INCBIN":
 				tag = line.tag as IncludeTag | IncbinTag;
-				if (HelperUtils.CurrentInToken(current, tag.orgPath) >= 0) {
+				if (HelperUtils.CurrentInToken(current, tag.orgPath)) {
 					matchResult.type = "filePath";
 					matchResult.token = new Token(tag.path);
-					return true;
+					return;
 				}
 
 				temp = (tag as IncbinTag).exps;
 				if (temp && (temp = HelperUtils.CurrentInExpression(current, ...temp))) {
 					matchResult.type = temp.type;
 					matchResult.token = temp.token;
+					return;
 				}
 				break;
 			case ".BASE":
 			case ".ORG":
-				temp = line.tag as AddressTag;
-				if (temp = HelperUtils.CurrentInExpression(current, temp)) {
+			case ".IF":
+			case ".ELSEIF":
+			case ".REPEAT":
+				temp = line.tag as CommandTagBase;
+				if (temp?.exp && (temp = HelperUtils.CurrentInExpression(current, temp.exp))) {
 					matchResult.type = temp.type;
 					matchResult.token = temp.token;
+					return;
 				}
 				break;
-			case ".IF":
-				temp = line.tag as IfConfidentTag;
-				if (temp[0].exp && (temp = HelperUtils.CurrentInExpression(current, temp[0].exp))) {
-					matchResult.type = temp.type;
+			case ".MACRO":
+				temp = line.tag as MacroLineTag;
+				if (HelperUtils.CurrentInToken(current, temp.name)) {
+					matchResult.type = "macro";
+					matchResult.token = temp.name;
+					return;
+				}
+
+				const tempTokens: Token[] = [];
+				temp.params.forEach((label, name, map) => {
+					tempTokens.push(label.label.token);
+				});
+
+				if (temp = HelperUtils.CurrentInToken(current, ...tempTokens)) {
+					matchResult.type = "macroLabel";
 					matchResult.token = temp.token;
+					matchResult.tag = line.tag as MacroLineTag;
+					return;
 				}
 				break;
 		}
-		return false;
 	}
 	//#endregion 特殊命令处理
 
@@ -463,7 +506,7 @@ export class HelperUtils {
 			if (!line || line.labelToken.line !== lineNumber)
 				continue;
 
-			if (HelperUtils.CurrentInToken(current, line.labelToken) >= 0) {
+			if (HelperUtils.CurrentInToken(current, line.labelToken)) {
 				matchResult.token = line.labelToken;
 				matchResult.type = "label";
 				return true;

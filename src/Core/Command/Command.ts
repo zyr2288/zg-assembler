@@ -15,6 +15,7 @@ import { ErrorCommand, MsgCommand } from "./MsgErrCommand";
 import { Base, Original } from "./OrgAndBase";
 import { RepeatCommand } from "./RepeatCommand";
 import { EnumCommand } from "./EnumCommand";
+import { Expression } from "../Base/ExpressionUtils";
 
 interface FindMatchOption {
 	start: string;
@@ -26,6 +27,11 @@ interface FindMatchOption {
 interface ArgCount {
 	min: number;
 	max?: number;
+}
+
+/**通用命令Tag，就一个表达式 */
+export interface CommandTagBase {
+	exp?: Expression;
 }
 
 export class Command {
@@ -224,7 +230,7 @@ export class Command {
 		for (let j = start; j <= end; j++) {
 			if (!option.allLines[j])
 				continue;
-			
+
 			option.allLines[j].lineType = LineType.Ignore;
 		}
 	}

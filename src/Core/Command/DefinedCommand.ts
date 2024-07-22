@@ -6,7 +6,7 @@ import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
 import { ICommand } from "./Command";
 
-interface DefTag {
+export interface DefTag {
 	label?: ILabelCommon;
 	expression?: Expression;
 }

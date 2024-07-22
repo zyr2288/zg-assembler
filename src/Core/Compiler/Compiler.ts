@@ -5,7 +5,6 @@ import { Include } from "../Command/Include";
 import { RepeatCommand } from "../Command/RepeatCommand";
 import { LineType } from "../Lines/CommonLine";
 import { MacroLine } from "../Lines/MacroLine";
-import { Analyser } from "./Analyser";
 
 export class Compiler {
 	static enviroment: Enviroment = new Enviroment();

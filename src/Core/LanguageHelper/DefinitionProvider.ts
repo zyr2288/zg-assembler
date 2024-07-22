@@ -21,16 +21,6 @@ export class DefinitionProvider {
 		const result = { filePath: "", line: 0, start: 0, length: 0 };
 		const fileIndex = Compiler.enviroment.GetFileIndex(filePath, false);
 
-		let macro: Macro | undefined;
-		const range = Compiler.enviroment.GetRange(fileIndex, line);
-		if (range) {
-			switch (range.type) {
-				case "macro":
-					macro = Compiler.enviroment.allMacro.get(range.key)!;
-					break;
-			}
-		}
-
 		const match = HelperUtils.FindMatchToken(fileIndex, text, line, current);
 		if (match.type === "none")
 			return;
@@ -38,7 +28,7 @@ export class DefinitionProvider {
 		switch (match.type) {
 			case "label":
 				if (match.token) {
-					const label = LabelUtils.FindLabel(match.token, { fileIndex, macro });
+					const label = LabelUtils.FindLabel(match.token, { fileIndex });
 					if (label) {
 						DefinitionProvider.SetTokenToResult(label.token, result);
 						result.filePath = Compiler.enviroment.GetFilePath(label.fileIndex);

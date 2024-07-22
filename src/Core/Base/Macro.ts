@@ -9,5 +9,6 @@ export class Macro {
 	params: Map<string, { label: ILabelNormal, values: number[] }> = new Map();
 	indParams?: { name: Token, values: number[][] };
 	lines: CommonLine[] = [];
+	lineOffset: number = 0;
 	comment?: string;
 }

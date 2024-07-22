@@ -2,9 +2,10 @@ import { Expression, PriorityType } from "../Base/ExpressionUtils";
 import { ILabelNormal, LabelUtils } from "../Base/Label";
 import { Macro } from "../Base/Macro";
 import { Token } from "../Base/Token";
+import { CommandTagBase } from "../Command/Command";
 import { DataCommandTag } from "../Command/DataCommand";
 import { EnumTag } from "../Command/EnumCommand";
-import { AddressTag } from "../Command/OrgAndBase";
+import { MacroLineTag } from "../Command/MacroCommand";
 import { Compiler } from "../Compiler/Compiler";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
@@ -96,6 +97,12 @@ export class RenameAndReferences {
 
 		if (!RenameAndReferences.CheckLabelIllegal(newLabelStr, RenameAndReferences.SaveRename.type !== "macro"))
 			return Localization.GetMessage("rename error");
+
+		const newLabelToken = new Token(newLabelStr);
+		const orgLabel = LabelUtils.FindLabel(newLabelToken, {fileIndex:RenameAndReferences.SaveRename.fileIndex});
+		if (orgLabel) {
+			return Localization.GetMessage("Label {0} is already defined", newLabelStr);
+		}
 
 		const result = new Map<string, Token[]>();
 
@@ -217,6 +224,14 @@ export class RenameAndReferences {
 				break;
 			case "macro":
 				break;
+			case "macroLabel":
+				const tag = temp.tag as MacroLineTag;
+				const fileName = Compiler.enviroment.GetFilePath(fileIndex);
+				const tokens = result.get(fileName) ?? [];
+				temp.type = "label";
+				RenameAndReferences.SaveLineToken(temp.type, temp.token!.text, tag.lines, tokens);
+				result.set(fileName, tokens);
+				return result;
 		}
 
 		// 所有引用重命名
@@ -248,7 +263,7 @@ export class RenameAndReferences {
 
 			switch (line.key) {
 				case "macro":
-					if (matchType === "macro")
+					if (matchType === "macro" && line.name.text === matchText)
 						resultToken.push(line.name);
 
 					break;
@@ -283,13 +298,15 @@ export class RenameAndReferences {
 				RenameAndReferences.FindMatchInExpression(matchText, resultToken, ...tag);
 				break;
 			case ".ORG": case ".BASE":
-				tag = line.tag as AddressTag;
-				RenameAndReferences.FindMatchInExpression(matchText, resultToken, tag);
+			case ".IF": case ".ELSEIF":
+				tag = line.tag as CommandTagBase;
+				if (tag.exp)
+					RenameAndReferences.FindMatchInExpression(matchText, resultToken, tag.exp);
 				break;
 			case ".ENUM":
 				tag = line.tag as EnumTag;
-				if (tag.start.exp)
-					RenameAndReferences.FindMatchInExpression(matchText, resultToken, tag.start.exp);
+				if (tag.exp)
+					RenameAndReferences.FindMatchInExpression(matchText, resultToken, tag.exp);
 
 				for (let i = 0; i < tag.lines.length; i++) {
 					const line = tag.lines[i];

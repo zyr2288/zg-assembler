@@ -6,40 +6,15 @@ import { Token } from "../Base/Token";
 import { Analyser } from "../Compiler/Analyser";
 import { Compiler } from "../Compiler/Compiler";
 import { Localization } from "../I18n/Localization";
-import { HighlightOption, HighlightType, HighlightingProvider } from "../LanguageHelper/HighlightingProvider";
 import { CommandLine } from "../Lines/CommandLine";
-import { Command, ICommand } from "./Command";
+import { Command, CommandTagBase, ICommand } from "./Command";
 
-export interface EnumTag {
-	start: { value?: number, exp?: Expression };
+export interface EnumTag extends CommandTagBase {
+	startValue?: number;
 	lines: ({ labelToken: Token, expression: Expression, value?: number } | undefined)[];
 }
 
 export class EnumCommand implements ICommand {
-
-	//#region 获取Enum内容高亮
-	/**
-	 * 获取Enum内容高亮
-	 * @param option 高亮选项
-	 */
-	static GetHighlighting(option: HighlightOption) {
-		const tag: EnumTag = option.GetCurrent<CommandLine>()!.tag;
-
-		if (tag.start?.exp)
-			HighlightingProvider.GetExpression(tag.start.exp, option.result);
-
-		for (let i = 0; i < tag.lines.length; i++) {
-			const line = tag.lines[i];
-			if (!line)
-				continue;
-
-			HighlightingProvider.GetToken(line.labelToken, HighlightType.Defined, option.result);
-			HighlightingProvider.GetExpression(line.expression, option.result);
-		}
-
-		option.index += tag.lines.length;
-	}
-	//#endregion 获取Enum内容高亮
 
 	/***** class *****/
 
@@ -54,10 +29,10 @@ export class EnumCommand implements ICommand {
 		const start = option.index + 1;
 		const lines = option.allLines.slice(start, matchEnd);
 
-		const tag: EnumTag = { start: { value: undefined, exp: undefined }, lines: [] };
+		const tag: EnumTag = { startValue: undefined, exp: undefined, lines: [] };
 		const startExp = ExpressionUtils.SplitAndSort(currentLine.arguments[0]);
 		if (startExp)
-			tag.start.exp = startExp;
+			tag.exp = startExp;
 
 		// 标记为已分析行
 		Command.MarkLineFinished(option, option.index + 1, matchEnd);
@@ -109,11 +84,11 @@ export class EnumCommand implements ICommand {
 		const tag: EnumTag = line.tag;
 
 		let start: number | undefined = undefined;
-		if (tag.start.exp) {
-			if (ExpressionUtils.CheckLabels(option, tag.start.exp))
+		if (tag.exp) {
+			if (ExpressionUtils.CheckLabels(option, tag.exp))
 				return;
 
-			const temp = ExpressionUtils.GetValue(tag.start.exp.parts);
+			const temp = ExpressionUtils.GetValue(tag.exp.parts);
 			if (temp.success)
 				start = temp.value;
 		}
@@ -148,12 +123,12 @@ export class EnumCommand implements ICommand {
 		const tag: EnumTag = line.tag;
 
 		let start: number | undefined = undefined;
-		if (tag.start.value !== undefined) {
-			start = tag.start.value;
+		if (tag.startValue !== undefined) {
+			start = tag.startValue;
 		} else {
-			const temp = ExpressionUtils.GetValue(tag.start.exp!.parts, option);
+			const temp = ExpressionUtils.GetValue(tag.exp!.parts, option);
 			if (temp.success) {
-				tag.start.value = temp.value;
+				tag.startValue = temp.value;
 				start = temp.value;
 			}
 		}

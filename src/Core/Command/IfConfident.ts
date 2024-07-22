@@ -6,7 +6,7 @@ import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
 import { Analyser } from "../Compiler/Analyser";
-import { ICommand, ICommandName } from "./Command";
+import { ICommand, ICommandName, CommandTagBase } from "./Command";
 
 // export interface IfConfidentLine {
 // 	key: Token;
@@ -14,7 +14,9 @@ import { ICommand, ICommandName } from "./Command";
 // 	child: any[];
 // }
 
-export type IfConfidentTag = { offsetFirstLine: number, confident: boolean, exp?: Expression }[];
+export interface IfConfidentTag extends CommandTagBase {
+	lines: { offsetFirstLine: number, confident: boolean, exp?: Expression }[];
+}
 
 const IfCommandRest = [".ELSEIF", ".ELSE", ".ENDIF"];
 const IfDefCommandRest = [".ELSE", ".ENDIF"];
@@ -61,7 +63,7 @@ class IfConfidentUtils {
 
 		let exp = ExpressionUtils.SplitAndSort(line.arguments[0]);
 
-		const tag: IfConfidentTag = [{ offsetFirstLine: 0, confident: false, exp }];
+		const tag: IfConfidentTag = { exp, lines: [{ offsetFirstLine: 0, confident: false, exp }] };
 
 		const startLindeIndex = option.index;
 		for (let i = 0; i < result.length; i++) {
@@ -74,6 +76,7 @@ class IfConfidentUtils {
 
 			switch (searchIndex) {
 				case 0:
+					tempLine.tag = { exp: ExpressionUtils.SplitAndSort(line.arguments[0]) };
 					break;
 				case 1:
 					index = 2;
@@ -89,7 +92,7 @@ class IfConfidentUtils {
 				exp = undefined;
 			}
 
-			tag.push({ offsetFirstLine: lineIndex - startLindeIndex, confident: false, exp });
+			tag.lines.push({ offsetFirstLine: lineIndex - startLindeIndex, confident: false, exp });
 			option.GetLine(lineIndex).lineType = LineType.Finished;
 		}
 
@@ -101,8 +104,8 @@ class IfConfidentUtils {
 		const line = option.GetCurrent<CommandLine>();
 		const tag = line.tag as IfConfidentTag;
 
-		for (let i = 0; i < tag.length - 1; ++i) {
-			const exp = tag[i].exp;
+		for (let i = 0; i < tag.lines.length - 1; ++i) {
+			const exp = tag.lines[i].exp;
 			if (exp && ExpressionUtils.CheckLabels(option, exp)) {
 				line.lineType = LineType.Error;
 			}
@@ -114,8 +117,8 @@ class IfConfidentUtils {
 		const tag = line.tag as IfConfidentTag;
 
 		const startIndex = option.index;
-		for (let i = 0; i < tag.length - 1; i++) {
-			const confident = tag[i];
+		for (let i = 0; i < tag.lines.length - 1; i++) {
+			const confident = tag.lines[i];
 			const line = option.allLines[startIndex + confident.offsetFirstLine] as CommandLine;
 
 			if (line.command.text.toUpperCase() === ".ELSE") {
@@ -125,13 +128,13 @@ class IfConfidentUtils {
 
 			const value = ExpressionUtils.GetValue(confident.exp!.parts, { macro: option.macro, tryValue: false });
 			if (value.success && value.value) {
-				tag[i].confident = true;
+				tag.lines[i].confident = true;
 				break;
 			}
 		}
 
 		line.lineType = LineType.Finished;
-		IfConfidentUtils.MarkLineFinished(option, startIndex, tag);
+		IfConfidentUtils.MarkLineFinished(option, startIndex, tag.lines);
 	}
 
 	//#region 标记该行已处理完毕
@@ -141,7 +144,7 @@ class IfConfidentUtils {
 	 * @param startIndex 起始行的Index
 	 * @param offsetFirstLine 第一行的偏转
 	 */
-	private static MarkLineFinished(option: CompileOption, startIndex: number, confidenLine: IfConfidentTag) {
+	private static MarkLineFinished(option: CompileOption, startIndex: number, confidenLine: IfConfidentTag["lines"]) {
 		for (let i = confidenLine.length - 2; i >= 0; --i) {
 			const line = confidenLine[i];
 			if (line.confident)

@@ -1,11 +1,11 @@
 import { CompileOption } from "../Base/CompileOption";
-import { Expression, ExpressionUtils } from "../Base/ExpressionUtils";
+import { ExpressionUtils } from "../Base/ExpressionUtils";
 import { Compiler } from "../Compiler/Compiler";
 import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
-import { ICommand } from "./Command";
+import { CommandTagBase, ICommand } from "./Command";
 
-export type AddressTag = Expression;
+
 
 export class Original implements ICommand {
 	start = { name: ".ORG", min: 1, max: 1 };
@@ -14,8 +14,8 @@ export class Original implements ICommand {
 
 	Compile(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
-		const tag: AddressTag = line.tag;
-		const temp = ExpressionUtils.GetValue(tag.parts, { macro: option.macro, tryValue: false });
+		const tag: CommandTagBase = line.tag;
+		const temp = ExpressionUtils.GetValue(tag.exp!.parts, { macro: option.macro, tryValue: false });
 		if (!temp.success || temp.value < 0) {
 			line.lineType = LineType.Error;
 			return;
@@ -42,8 +42,8 @@ export class Base implements ICommand {
 
 	Compile(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
-		const tag: AddressTag = line.tag;
-		const temp = ExpressionUtils.GetValue(tag.parts, { macro: option.macro, tryValue: false });
+		const tag: CommandTagBase = line.tag;
+		const temp = ExpressionUtils.GetValue(tag.exp!.parts, { macro: option.macro, tryValue: false });
 		if (!temp.success || temp.value < 0) {
 			line.lineType = LineType.Error;
 			return;
@@ -59,8 +59,8 @@ class AddressUtils {
 
 	static AnalyseFirst(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
-		const tag = ExpressionUtils.SplitAndSort(line.arguments[0]);
-		if (!tag) {
+		const tag: CommandTagBase = { exp: ExpressionUtils.SplitAndSort(line.arguments[0]) };
+		if (!tag.exp) {
 			line.lineType = LineType.Error;
 			return;
 		}
@@ -70,7 +70,7 @@ class AddressUtils {
 
 	static AnalyseThird(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
-		const tag: AddressTag = line.tag;
-		ExpressionUtils.CheckLabels(option, tag);
+		const tag: CommandTagBase = line.tag;
+		ExpressionUtils.CheckLabels(option, tag.exp!);
 	}
 }

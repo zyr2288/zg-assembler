@@ -19,8 +19,7 @@
 11. [.INCLUDE](#include)
 12. [.MACRO .ENDM](#macro-endm)
 13. [.REPEAT .ENDR](#repeat-endr)
-14. [.MSG](#msg)
-
+14. [.MSG .ERROR](#msg)
 ---
 
 ## 配置文件
@@ -436,23 +435,30 @@
 <details>
 <summary>.MSG</summary>
 
-### `.MSG`
+### `.MSG` `.ERROR`
 
 ```
     .MSG 输出信息[, 参数1, 参数2...]
+    .ERROR 输出信息[, 参数1, 参数2...]
 ```
 
-* 可输出一条信息
+* MSG为可输出一条信息
+* ERROR为输出一条信息并停止编译
 
 ```
     .ORG $8000
     .DEF test1, 10
     .DEF test2, 11
     .MSG "测试案例 {0}, ${1}, @{0}", test1, test2
+
+    .IF test1 == 10
+    .ERROR "这里的 test1: {0}", test1
+    .ENDIF
 ```
 
 * 这里输出的信息是：
 
 > 测试案例 10, $B, @0000 1010
+> 这里的 test1: 10
 
 </details>

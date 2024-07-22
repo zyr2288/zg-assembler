@@ -566,7 +566,7 @@ export class IntellisenseProvider {
 
 		temp[0] = temp[0].Substring(1, temp[0].length - 2);
 		const index = HelperUtils.CurrentInToken(current, ...temp);
-		switch (index) {
+		switch (index?.index) {
 			case 0:
 				if (isTrigger) {
 					const type = isIncbin ? TriggerSuggestType.AllFile : TriggerSuggestType.AllAsm;

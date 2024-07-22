@@ -11,7 +11,7 @@ import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
 import { Command, ICommand } from "./Command";
 
-type MacroLineTag = Macro;
+export type MacroLineTag = Macro;
 
 export class MacroCommand implements ICommand {
 
@@ -70,11 +70,19 @@ export class MacroCommand implements ICommand {
 		}
 
 		macro.lines = Utils.DeepClone(option.allLines.slice(option.index + 1, matchEnd));
+		macro.lineOffset = option.index + 1;
+
+		Compiler.enviroment.SetRange({
+			type: "macro",
+			key: macro.name.text,
+			startLine: macro.lineOffset,
+			endLine: matchEnd
+		});
 
 		// 标记为已分析行
 		Command.MarkLineFinished(option, option.index + 1, matchEnd);
 
-		line.tag = macro;
+		line.tag = macro as MacroLineTag;
 		Compiler.enviroment.allMacro.set(macro.name.text, macro);
 
 		const macroOp = new CompileOption();
