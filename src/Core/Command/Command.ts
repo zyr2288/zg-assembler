@@ -8,7 +8,7 @@ import { Analyser } from "../Compiler/Analyser";
 import { DBCommand, DLCommand, DWCommand } from "./DataCommand";
 import { DefinedCommand } from "./DefinedCommand";
 import { HexCommand } from "./HexCommand";
-import { IfConfident } from "./IfConfident";
+import { IfConfident, IfDefConfident, IfNDefConfident } from "./IfConfident";
 import { Incbin, Include } from "./Include";
 import { MacroCommand } from "./MacroCommand";
 import { ErrorCommand, MsgCommand } from "./MsgErrCommand";
@@ -16,6 +16,7 @@ import { Base, Original } from "./OrgAndBase";
 import { RepeatCommand } from "./RepeatCommand";
 import { EnumCommand } from "./EnumCommand";
 import { Expression } from "../Base/ExpressionUtils";
+import { FileUtils } from "../Base/FileUtils";
 
 interface FindMatchOption {
 	start: string;
@@ -46,9 +47,15 @@ export class Command {
 		Command.AddCommand(
 			DefinedCommand, Original, Base, EnumCommand,
 			DBCommand, DWCommand, DLCommand, HexCommand,
-			IfConfident, MacroCommand, MsgCommand, ErrorCommand,
-			Include, Incbin, RepeatCommand
+			IfConfident, IfDefConfident, IfNDefConfident,
+			MacroCommand, MsgCommand, ErrorCommand,
+			RepeatCommand
 		);
+
+		// @ts-ignore
+		if (FileUtils.ReadFile) {
+			Command.AddCommand(Include, Incbin);
+		}
 	}
 	//#endregion 命令的初始化
 

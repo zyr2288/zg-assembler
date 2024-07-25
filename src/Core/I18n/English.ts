@@ -68,6 +68,9 @@ export const CommandTip_English = {
 	db: { comment: "Emit bytes", format: ".DB arg0[, arg1, arg2...]" },
 	dw: { comment: "Emit words", format: ".DB arg0[, arg1, arg2...]" },
 	dl: { comment: "Emit four-bytes", format: ".DB arg0[, arg1, arg2...]" },
+	if: { comment: "Confident branch", format: ".IF expression\n...\n.ELSEIF\n...\n.ELSE\n...\n.ENDIF" },
+	ifdef: { comment: "If a label has been defined", format: ".IFDEF label\n...\n.ELSE\n...\n.ENDIF" },
+	ifndef: { comment: "If a label has been not defined", format: ".IFNDEF label\n...\n.ELSE\n...\n.ENDIF" },
 	hex: {
 		comment: "Compact way of laying out a table of hex values.\n\nOnly raw hex values are allowed, no expressions.\n\nSpaces can be used to separate numbers.",
 		format: ".HEX hex string",

@@ -1,5 +1,6 @@
 import { CompileOption } from "../Base/CompileOption";
 import { Expression, ExpressionUtils } from "../Base/ExpressionUtils";
+import { LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
@@ -12,17 +13,13 @@ import { ICommand, CommandTagBase } from "./Command";
 // }
 
 export interface IfConfidentTag extends CommandTagBase {
-	lines: { offsetFirstLine: number, confident: boolean, exp?: Expression }[];
+	lines: (IfCommonLineTag & { exp?: Expression })[];
 }
 
-interface IfDefTag {
-	name: Token;
-	lines: { offsetFirstLine: number, confident: boolean }[];
-}
+type IfDefTag = (IfCommonLineTag & { token?: Token })[];
 
+type IfCommonLineTag = { offsetFirstLine: number, confident: boolean };
 
-const IfCommandRest = [".ELSEIF", ".ELSE", ".ENDIF"];
-const IfDefCommandRest = [".ELSE", ".ENDIF"];
 
 export class IfConfident implements ICommand {
 
@@ -49,9 +46,10 @@ export class IfDefConfident implements ICommand {
 	sameEnd = [".IF", ".IFNDEF"];
 	allowLabel = false;
 
-	Compile(option: CompileOption) {
-		const line = option.GetCurrent<CommandLine>();
+	AnalyseFirst = IfDefConfidentUtils.AnalyseFirst;
 
+	Compile(option: CompileOption) {
+		IfDefConfidentUtils.Compile(option, true);
 	}
 }
 
@@ -64,9 +62,10 @@ export class IfNDefConfident implements ICommand {
 	sameEnd = [".IF", ".IFDEF"];
 	allowLabel = false;
 
-	Compile(option: CompileOption) {
-		const line = option.GetCurrent<CommandLine>();
+	AnalyseFirst = IfDefConfidentUtils.AnalyseFirst;
 
+	Compile(option: CompileOption) {
+		IfDefConfidentUtils.Compile(option, false);
 	}
 }
 
@@ -158,33 +157,8 @@ class IfConfidentUtils {
 		}
 
 		line.lineType = LineType.Finished;
-		IfConfidentUtils.MarkLineFinished(option, startIndex, tag.lines);
+		IfCommonUtils.MarkLineFinished(option, startIndex, tag.lines);
 	}
-
-	//#region 标记该行已处理完毕
-	/**
-	 * 标记该行已处理完毕
-	 * @param option 编译选项
-	 * @param startIndex 起始行的Index
-	 * @param offsetFirstLine 第一行的偏转
-	 */
-	private static MarkLineFinished(option: CompileOption, startIndex: number, confidenLine: IfConfidentTag["lines"]) {
-		for (let i = confidenLine.length - 2; i >= 0; --i) {
-			const line = confidenLine[i];
-			if (line.confident)
-				continue;
-
-			const start = startIndex + line.offsetFirstLine;
-			const end = startIndex + confidenLine[i + 1].offsetFirstLine;
-			for (let j = start; j < end; j++) {
-				if (!option.allLines[j])
-					continue;
-
-				option.allLines[j].lineType = LineType.Finished;
-			}
-		}
-	}
-	//#endregion 标记该行已处理完毕
 
 }
 //#endregion IF条件工具
@@ -204,9 +178,7 @@ class IfDefConfidentUtils {
 		let index = 0;
 		const commands = [".ELSE", ".ENDIF"];
 
-		let exp = ExpressionUtils.SplitAndSort(line.arguments[0]);
-
-		const tag: IfDefTag = { name: line.arguments[0], lines: [{ offsetFirstLine: 0, confident: false }] };
+		const tag: IfDefTag = [{ offsetFirstLine: 0, confident: false, token: line.arguments[0] }];
 
 		const startLindeIndex = option.index;
 		for (let i = 0; i < result.length; i++) {
@@ -226,25 +198,71 @@ class IfDefConfidentUtils {
 					break;
 			}
 
-
-			if (tempLine.arguments[0]) {
-				exp = ExpressionUtils.SplitAndSort(tempLine.arguments[0]);
-				if (!exp)
-					tempLine.lineType = LineType.Error;
-			} else {
-				exp = undefined;
-			}
-
-			tag.lines.push({ offsetFirstLine: lineIndex - startLindeIndex, confident: false });
+			tag.push({ offsetFirstLine: lineIndex - startLindeIndex, confident: false });
 			option.GetLine(lineIndex).lineType = LineType.Finished;
 		}
 
 		line.tag = tag;
 	}
+	//#endregion 第一次分析，判断层级关系是否正确
 
-	static Compile(option: CompileOption) {
+	static Compile(option: CompileOption, isDef: boolean) {
 		const line = option.GetCurrent<CommandLine>();
-		const tag = line.tag as IfConfidentTag;
+		const tag = line.tag as IfDefTag;
+
+		const startIndex = option.index;
+		for (let i = 0; i < tag.length - 1; i++) {
+			const lineTag = tag[i];
+			const line = option.GetLine<CommandLine>(startIndex + lineTag.offsetFirstLine);
+
+			if (line.command.text.toUpperCase() === ".ELSE") {
+				lineTag.confident = true;
+				break;
+			}
+
+			if (!lineTag.token) {
+				lineTag.confident = false;
+				continue;
+			}
+
+			const label = LabelUtils.FindLabel(lineTag.token);
+			if ((label && isDef) || (!label && !isDef)) {
+				lineTag.confident = true;
+				break;
+			}
+		}
+
+		line.lineType = LineType.Finished;
+		IfCommonUtils.MarkLineFinished(option, startIndex, tag);
 	}
 }
 //#endregion IFDEF IFNDEF条件工具
+
+class IfCommonUtils {
+
+	//#region 标记该行已处理完毕
+	/**
+	 * 标记该行已处理完毕
+	 * @param option 编译选项
+	 * @param startIndex 起始行的Index
+	 * @param offsetFirstLine 第一行的偏转
+	 */
+	static MarkLineFinished(option: CompileOption, startIndex: number, confidenLine: IfCommonLineTag[]) {
+		for (let i = confidenLine.length - 2; i >= 0; --i) {
+			const line = confidenLine[i];
+			if (line.confident)
+				continue;
+
+			const start = startIndex + line.offsetFirstLine;
+			const end = startIndex + confidenLine[i + 1].offsetFirstLine;
+			for (let j = start; j < end; j++) {
+				if (!option.allLines[j])
+					continue;
+
+				option.allLines[j].lineType = LineType.Finished;
+			}
+		}
+	}
+	//#endregion 标记该行已处理完毕
+
+}
