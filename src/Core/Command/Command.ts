@@ -47,15 +47,11 @@ export class Command {
 		Command.AddCommand(
 			DefinedCommand, Original, Base, EnumCommand,
 			DBCommand, DWCommand, DLCommand, HexCommand,
+			Include, Incbin,
 			IfConfident, IfDefConfident, IfNDefConfident,
 			MacroCommand, MsgCommand, ErrorCommand,
 			RepeatCommand
 		);
-
-		// @ts-ignore
-		if (FileUtils.ReadFile) {
-			Command.AddCommand(Include, Incbin);
-		}
 	}
 	//#endregion 命令的初始化
 

@@ -1,7 +1,8 @@
 # Change Log
 
-### 2024-07-22 v0.3.7
+### 2024-07-22 v0.3.8
 * 遗漏了 `.IFDEF` `.IFNDEF` 命令，现补上
+* 修复 `.INCBIN` `.INCLUDE` 错误
 
 <details>
 <summary>之前版本更新记录</summary>
