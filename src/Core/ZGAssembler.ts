@@ -37,8 +37,6 @@ export class ZGAssembler {
 		ExpressionUtils.Initialize();
 		Platform.SwitchPlatform("6502");
 		Command.Initialize();
-
-		IntellisenseProvider.UpdateCommandCompletions();
 	}
 
 	async ParseText(files: { text: string, filePath: string }[]) {

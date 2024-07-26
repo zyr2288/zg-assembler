@@ -75,7 +75,6 @@ export class LabelUtils {
 	 */
 	static CreateCommonLabel(token: Token, option?: { ableNameless?: boolean, comment?: string, macro?: Macro }) {
 
-		let namelessCount = 0;
 		// 临时标签
 		const match = LabelUtils.namelessLabelRegex.exec(token.text);
 		if (match) {

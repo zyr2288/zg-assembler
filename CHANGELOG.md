@@ -1,8 +1,9 @@
 # Change Log
 
-### 2024-07-22 v0.3.8
+### 2024-07-22 v0.3.9
 * 遗漏了 `.IFDEF` `.IFNDEF` 命令，现补上
 * 修复 `.INCBIN` `.INCLUDE` 错误
+* 修复即使有错误继续编译导致的编译卡死问题
 
 <details>
 <summary>之前版本更新记录</summary>

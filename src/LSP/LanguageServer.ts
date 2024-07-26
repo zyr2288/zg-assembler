@@ -20,6 +20,7 @@ export class LanguageServer {
 	async Initialize(context: vscode.ExtensionContext) {
 
 		LSPUtils.assembler = this.assembler = new ZGAssembler();
+		LSPUtils.assembler.languageHelper.intellisense.UpdateCommandCompletions();
 
 		LSPUtils.StatueBarShowText(` $(sync~spin) ${LSPUtils.assembler.localization.GetMessage("plugin loading")}...`);
 

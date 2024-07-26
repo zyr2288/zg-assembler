@@ -227,6 +227,11 @@ export class Analyser {
 					break;
 			}
 
+			// @ts-ignore
+			if (line.lineType === LineType.Error) {
+				Compiler.enviroment.stopCompiling = true;
+			}
+
 			i = option.index;
 		}
 	}
@@ -261,6 +266,9 @@ export class Analyser {
 
 			if (temp) {
 				option.allLines[option.index] = temp;
+				if (temp.lineType === LineType.Error)
+					Compiler.enviroment.stopCompiling = true;
+
 			}
 
 			i = option.index;
@@ -326,6 +334,10 @@ export class Analyser {
 			}
 
 			i = option.index;
+
+			// @ts-ignore
+			if (line.lineType === LineType.Error)
+				Compiler.enviroment.stopCompiling = true;
 
 			if (Compiler.enviroment.stopCompiling) {
 				Compiler.enviroment.compileTime = Config.ProjectSetting.compileTimes;
