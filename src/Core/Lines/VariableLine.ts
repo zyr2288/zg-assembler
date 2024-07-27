@@ -52,20 +52,20 @@ export class VariableLine {
 	labelToken!: Token;
 	expression!: Expression;
 
+	/**第一次分析 */
 	AnalyseFirst(option: CompileOption) {
 		const line = option.GetCurrent<VariableLine>();
-		if (Compiler.enviroment.compileTime < 0) {
-			const label = LabelUtils.CreateCommonLabel(line.labelToken, { ableNameless: false, comment: line.comment });
-			if (!label) {
-				line.lineType = LineType.Error;
-				return;
-			}
-
-			label.type = LabelType.Variable;
-			label.comment = line.comment;
+		const label = LabelUtils.CreateCommonLabel(line.labelToken, { ableNameless: false, comment: line.comment });
+		if (!label) {
+			line.lineType = LineType.Error;
+			return;
 		}
+
+		label.type = LabelType.Variable;
+		label.comment = line.comment;
 	}
 
+	/**第三次分析 */
 	AnalyseThird(option: CompileOption) {
 		if (ExpressionUtils.CheckLabels(option, this.expression))
 			return;
@@ -79,7 +79,7 @@ export class VariableLine {
 			label.value = temp.value;
 	}
 
-
+	/**编译结果 */
 	Compile(option: CompileOption) {
 		let label: ILabelNormal | undefined;
 		if (Compiler.enviroment.compileTime === 0) {

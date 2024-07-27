@@ -97,8 +97,8 @@ export class ZGAssembler {
 		const option = new CompileOption();
 		option.allLines = Analyser.AnalyseText(text, filePath);
 
-		await Analyser.AnalyseFirst(option);
-		await Analyser.AnalyseSecond(option);
+		// await Analyser.AnalyseFirst(option);
+		// await Analyser.AnalyseSecond(option);
 
 		for (let i = 0; i < Config.ProjectSetting.compileTimes; i++) {
 			Compiler.enviroment.compileTime = i;

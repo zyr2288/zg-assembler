@@ -77,12 +77,6 @@
 				"url": "./syntaxes/config.json"
 			}
 		],
-		"configurationDefaults": {
-			"[zg-assembly]": {
-				"editor.wordBasedSuggestions": "off",
-				"editor.tabSize": 8
-			}
-		},
 		"breakpoints": [
 			{
 				"language": "zg-assembly"

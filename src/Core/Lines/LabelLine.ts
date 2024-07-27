@@ -22,10 +22,8 @@ export class LabelLine {
 	labelToken!: Token;
 	comment?: string;
 
+	/**分析，不会走编译 */
 	Analyse() {
-		if (Compiler.enviroment.compileTime >= 0)
-			return;
-
 		const label = LabelUtils.CreateCommonLabel(this.labelToken, { comment: this.comment });
 		if (!label) {
 			this.lineType = LineType.Error;
@@ -37,9 +35,6 @@ export class LabelLine {
 	}
 
 	Compile(option: CompileOption) {
-		if (this.lineType !== LineType.None)
-			return;
-
 		let label;
 		if (Compiler.enviroment.compileTime === 0) {
 			label = LabelUtils.CreateCommonLabel(this.labelToken, { macro:option.macro, comment: this.comment });

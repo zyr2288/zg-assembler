@@ -2,6 +2,7 @@ import { CompileOption } from "../Base/CompileOption";
 import { Expression, ExpressionUtils } from "../Base/ExpressionUtils";
 import { LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
+import { Compiler } from "../Compiler/Compiler";
 import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
 import { ICommand, CommandTagBase } from "./Command";
@@ -225,7 +226,11 @@ class IfDefConfidentUtils {
 				continue;
 			}
 
-			const label = LabelUtils.FindLabel(lineTag.token);
+			let label;
+			label = LabelUtils.FindLabel(lineTag.token);
+			if (!label)
+				label = Compiler.enviroment.allMacro.get(lineTag.token.text);
+
 			if ((label && isDef) || (!label && !isDef)) {
 				lineTag.confident = true;
 				break;

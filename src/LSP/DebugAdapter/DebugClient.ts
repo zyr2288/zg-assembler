@@ -2,7 +2,7 @@
  * 发送以及接收消息统一格式
  * message;command;data
  * 其中：
- * message是一个长度为8的字符串
+ * message是一个长度为8的数字字符串
  * command是命令，可以看以下type查看命令格式
  * data是以 data1=value,data2=value 的形式进行传输
  */
@@ -10,13 +10,21 @@
 import { Socket } from "net";
 import { LSPUtils } from "../LSPUtils";
 
+/**接受的消息 */
 interface ReceiveDatas {
+	/**设定断点 */
 	"breakpoint-set": { baseAddress: number };
+	/**移除断点 */
 	"breakpoint-remove": { baseAddress: number };
+	/**命中断点 */
 	"breakpoint-hit": { baseAddress: number };
+	/**获取寄存器信息 */
 	"registers-get": Record<string, number>;
+	/**暂停 */
 	"pause": undefined;
+	/**继续 */
 	"resume": undefined;
+	/**重启 */
 	"reset": undefined;
 }
 
@@ -38,11 +46,11 @@ export class DebugClient {
 		}
 	}
 
-	Connect() {
+	async Connect() {
 		let index = 10;
 		while(index-- > 0) {
 			this.client.Connect();
-			this.client.Wait(1);
+			await this.client.Wait(1);
 		}
 	}
 

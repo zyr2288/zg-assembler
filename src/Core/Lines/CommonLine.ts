@@ -19,10 +19,11 @@ export type CommonLine = CommandLine | InstructionLine | VariableLine | LabelLin
 
 export enum LineType { None, Finished, Error, Ignore }
 
+/**行结果 */
 export class LineResult {
-
+	/**结果地址 */
 	address = { base: 0, org: -1 };
-
+	/**结果值 */
 	result: number[] = [];
 
 	get resultLength() { return this.result.length; }

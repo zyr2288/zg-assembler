@@ -66,6 +66,13 @@ export class Command {
 		const line = option.GetCurrent<CommandLine>();
 		const comText = line.command.text.toUpperCase();
 		const com = Command.commandMap.get(comText);
+		if (!com) {
+			const error = Localization.GetMessage("Command {0} Error", line.command.text);
+			MyDiagnostic.PushException(line.command, error);
+			line.lineType = LineType.Error;
+			return;
+		}
+
 		if (com?.end) {
 			const comMatch = Command.commandMatchOption.get(comText)!;
 			option.matchIndex = Command.FindNextMatch(option, comMatch!);
@@ -136,9 +143,8 @@ export class Command {
 	//#region 查询下一个匹配项目
 	/**
 	 * 查询下一个匹配项目
-	 * @param start 起始行
-	 * @param lines 所有行
-	 * @param match 要匹配的字符
+	 * @param option 编译选项
+	 * @param matchOption.start 起始匹配命令
 	 * @returns 
 	 */
 	static FindNextMatch(option: CompileOption, matchOption: { start: string, rest?: string[], end: string, sameEnd?: string[] }) {

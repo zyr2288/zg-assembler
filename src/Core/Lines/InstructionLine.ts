@@ -47,6 +47,7 @@ export class InstructionLine {
 
 	lineResult = new LineResult();
 
+	/**第一次分析 */
 	AnalyseFirst(option: CompileOption) {
 		this.label?.Analyse();
 	}

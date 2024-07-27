@@ -34,11 +34,23 @@ export class MacroCommand implements ICommand {
 	end = ".ENDM";
 
 	async AnalyseFirst(option: CompileOption) {
+		if (Compiler.enviroment.compileTime >= 0)
+			return;
+
 		const line = option.GetCurrent<CommandLine>();
 
 		if (!LabelUtils.CheckIllegal(line.arguments[0].text, false)) {
 			const error = Localization.GetMessage("Label {0} illegal", line.arguments[0].text);
 			MyDiagnostic.PushException(line.arguments[0], error);
+			line.lineType = LineType.Error;
+			return;
+		}
+
+		const macroName = line.arguments[0];
+		if (LabelUtils.FindLabel(macroName) || Compiler.enviroment.allMacro.has(macroName.text)) {
+			const error = Localization.GetMessage("Label {0} is already defined", macroName.text);
+			MyDiagnostic.PushException(line.arguments[0], error);
+			line.lineType = LineType.Error;
 			return;
 		}
 

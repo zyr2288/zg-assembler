@@ -75,8 +75,8 @@ export const CommandTip_Chinese: LocalizationTip = {
 	dw: { comment: "双字节数据", format: ".DW 参数0[, 参数1, 参数2...]" },
 	dl: { comment: "四字节数据", format: ".DL 参数0[, 参数1, 参数2...]" },
 	if: { comment: "宏判断条件", format: ".IF 表达式\n...\n.ELSEIF\n...\n.ELSE\n...\n.ENDIF" },
-	ifdef: { comment: "判断标签已定义", format: ".IFDEF 标签名称\n...\n.ELSE\n...\n.ENDIF" },
-	ifndef: { comment: "判断标签未定义", format: ".IFNDEF 标签名称\n...\n.ELSE\n...\n.ENDIF" },
+	ifdef: { comment: "判断标签或自定义函数已定义", format: ".IFDEF 标签名称或自定义函数\n...\n.ELSE\n...\n.ENDIF" },
+	ifndef: { comment: "判断标签或自定义函数未定义", format: ".IFNDEF 标签名称或自定义函数\n...\n.ELSE\n...\n.ENDIF" },
 	hex: {
 		comment: "一段16进制数据，可以用空格隔开。",
 		format: ".HEX 16进制字符",
