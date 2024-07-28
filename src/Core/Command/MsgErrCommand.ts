@@ -31,7 +31,7 @@ export class ErrorCommand implements ICommand {
 	Compile(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
 		Message.Compile(option);
-		Compiler.StopCompile();
+		line.lineType = LineType.Error;
 
 		const error = Localization.GetMessage("compile error");
 		MyDiagnostic.PushException(line.command, error);

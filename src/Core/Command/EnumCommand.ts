@@ -22,7 +22,115 @@ export class EnumCommand implements ICommand {
 	end = ".ENDE";
 	allowLabel = false;
 
+	//#region 第一次分析
 	AnalyseFirst(option: CompileOption) {
+		this.AnalyseAllLines(option);
+	}
+	//#endregion 第一次分析
+
+	//#region 第三次分析
+	AnalyseThird(option: CompileOption) {
+		const line = option.GetCurrent<CommandLine>();
+		const tag: EnumTag = line.tag;
+
+		let start: number | undefined = undefined;
+		if (tag.exp) {
+			if (ExpressionUtils.CheckLabels(option, tag.exp))
+				return;
+
+			const temp = ExpressionUtils.GetValue(tag.exp.parts);
+			if (temp.success)
+				start = temp.value;
+		}
+
+		if (start === undefined)
+			return;
+
+		for (let i = 0; i < tag.lines.length; i++) {
+			const line = tag.lines[i];
+			if (!line)
+				continue;
+
+			if (ExpressionUtils.CheckLabels(option, line.expression))
+				break;
+
+			const label = LabelUtils.FindLabel(line.labelToken);
+			if (!label)
+				break;
+
+			label.value = start;
+			const temp = ExpressionUtils.GetValue(line.expression.parts, option);
+			if (temp.success) {
+				start += temp.value;
+			} else {
+				break;
+			}
+		}
+	}
+	//#endregion 第三次分析
+
+	//#region 编译
+	Compile(option: CompileOption) {
+		let line;
+		if (Compiler.enviroment.compileTime === 0) {
+			line = this.AnalyseAllLines(option);
+		} else {
+			line = option.GetCurrent<CommandLine>();
+		}
+
+		const tag: EnumTag = line.tag;
+
+		let start: number | undefined = undefined;
+		if (tag.startValue !== undefined) {
+			start = tag.startValue;
+		} else {
+			const temp = ExpressionUtils.GetValue(tag.exp!.parts, option);
+			if (temp.success) {
+				tag.startValue = temp.value;
+				start = temp.value;
+			}
+		}
+
+		if (start === undefined)
+			return;
+
+		let error = false;
+
+		for (let i = 0; i < tag.lines.length; i++) {
+			const line = tag.lines[i];
+			if (!line)
+				continue;
+
+			let label: ILabelNormal | undefined;
+			if (Compiler.enviroment.compileTime === 0) {
+				label = LabelUtils.CreateCommonLabel(line.labelToken, { ableNameless: false }) as ILabelNormal | undefined;
+			} else {
+				label = LabelUtils.FindLabel(line.labelToken) as ILabelNormal | undefined;
+			}
+
+			if (error || !label)
+				continue;
+
+			label.value = start;
+
+			const temp = ExpressionUtils.GetValue(line.expression.parts, option);
+			if (!temp.success) {
+				error = true;
+				continue;
+			}
+
+			start += temp.value;
+		}
+	}
+	//#endregion 编译
+
+	/***** private *****/
+
+	/**
+	 * 分析所有行
+	 * @param option 编译选项
+	 */
+	private AnalyseAllLines(option:CompileOption) {
 		const currentLine = option.GetCurrent<CommandLine>();
 		const matchEnd = option.matchIndex![0];
 
@@ -77,92 +185,6 @@ export class EnumCommand implements ICommand {
 
 		Compiler.enviroment.SetRange({ type: "enum", key: "", startLine: option.index, endLine: matchEnd });
 		currentLine.tag = tag;
-	}
-
-	AnalyseThird(option: CompileOption) {
-		const line = option.GetCurrent<CommandLine>();
-		const tag: EnumTag = line.tag;
-
-		let start: number | undefined = undefined;
-		if (tag.exp) {
-			if (ExpressionUtils.CheckLabels(option, tag.exp))
-				return;
-
-			const temp = ExpressionUtils.GetValue(tag.exp.parts);
-			if (temp.success)
-				start = temp.value;
-		}
-
-		if (start === undefined)
-			return;
-
-		for (let i = 0; i < tag.lines.length; i++) {
-			const line = tag.lines[i];
-			if (!line)
-				continue;
-
-			if (ExpressionUtils.CheckLabels(option, line.expression))
-				break;
-
-			const label = LabelUtils.FindLabel(line.labelToken);
-			if (!label)
-				break;
-
-			label.value = start;
-			const temp = ExpressionUtils.GetValue(line.expression.parts, option);
-			if (temp.success) {
-				start += temp.value;
-			} else {
-				break;
-			}
-		}
-	}
-
-	Compile(option: CompileOption) {
-		const line = option.GetCurrent<CommandLine>();
-		const tag: EnumTag = line.tag;
-
-		let start: number | undefined = undefined;
-		if (tag.startValue !== undefined) {
-			start = tag.startValue;
-		} else {
-			const temp = ExpressionUtils.GetValue(tag.exp!.parts, option);
-			if (temp.success) {
-				tag.startValue = temp.value;
-				start = temp.value;
-			}
-		}
-
-		if (start === undefined)
-			return;
-
-		const notLastCompile = Compiler.NotLastCompile();
-		let error = false;
-
-		for (let i = 0; i < tag.lines.length; i++) {
-			const line = tag.lines[i];
-			if (!line)
-				continue;
-
-			let label: ILabelNormal | undefined;
-			if (notLastCompile) {
-				label = LabelUtils.CreateCommonLabel(line.labelToken, { ableNameless: false }) as ILabelNormal | undefined;
-			} else {
-				label = LabelUtils.FindLabel(line.labelToken) as ILabelNormal | undefined;
-			}
-
-			if (error || !label)
-				continue;
-
-			label.value = start;
-
-			const temp = ExpressionUtils.GetValue(line.expression.parts, option);
-			if (!temp.success) {
-				error = true;
-				continue;
-			}
-
-			start += temp.value;
-		}
+		return currentLine;
 	}
 }

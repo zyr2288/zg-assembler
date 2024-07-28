@@ -22,7 +22,10 @@ export class Compiler {
 				Compiler.enviroment = Compiler.compileEnv;
 				break;
 		}
-		Compiler.enviroment.stopCompiling = false;
+	}
+
+	static AnalyseText(option:CompileOption) {
+		
 	}
 
 	static GetLinesResult(option: CompileOption, result: number[]) {
@@ -74,9 +77,5 @@ export class Compiler {
 
 	static NotLastCompile() {
 		return Compiler.enviroment.compileTime < Config.ProjectSetting.compileTimes - 1;
-	}
-
-	static StopCompile() {
-		Compiler.enviroment.stopCompiling = true;
 	}
 }

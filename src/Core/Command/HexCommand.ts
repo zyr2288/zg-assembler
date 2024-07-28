@@ -13,26 +13,17 @@ export class HexCommand implements ICommand {
 	start = { name: ".HEX", min: 1, max: 1 };
 
 	AnalyseFirst(option: CompileOption) {
-		const line = option.GetCurrent<CommandLine>();
-		const token = line.arguments[0];
-
-		if (!/^[ 0-9a-fA-F]+$/g.test(token.text)) {
-			const error = Localization.GetMessage("Command arguments error");
-			MyDiagnostic.PushException(token, error);
-			line.lineType = LineType.Error;
-			
-			Compiler.StopCompile();
-			return;
-		}
-
-		line.tag = token.Split(/\s+/g);
+		this.Analyse(option);
 	}
 
 
 	Compile(option: CompileOption) {
-		const line = option.GetCurrent<CommandLine>();
-		line.lineResult.SetAddress();
+		const line = this.Analyse(option);
+		if (!line)
+			return;
 
+		line.lineResult.SetAddress();
+		
 		const tag = line.tag as HexTag;
 		for (let i = 0; i < tag.length; i++) {
 			line.lineResult.result.push(...this.GetHex(tag[i].text));
@@ -40,6 +31,25 @@ export class HexCommand implements ICommand {
 
 		line.lineResult.AddAddress();
 		line.lineType = LineType.Finished;
+	}
+
+	/**
+	 * 分析当前行
+	 * @param line 当前行
+	 * @returns true为有错误
+	 */
+	private Analyse(option: CompileOption) {
+		const line = option.GetCurrent<CommandLine>();
+		const token = line.arguments[0];
+		if (!/^[ 0-9a-fA-F]+$/g.test(token.text)) {
+			const error = Localization.GetMessage("Command arguments error");
+			MyDiagnostic.PushException(token, error);
+			line.lineType = LineType.Error;
+			return;
+		}
+
+		line.tag = token.Split(/\s+/g);
+		return line;
 	}
 
 	private GetHex(text: string) {

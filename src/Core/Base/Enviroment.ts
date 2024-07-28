@@ -16,7 +16,6 @@ export class Enviroment {
 	fileIndex = -1;
 	/**第几次编译，-1是编辑模式 */
 	compileTime = -1;
-	stopCompiling = false;
 
 	allLabel = {
 		/**key为标签名称 */
@@ -190,7 +189,6 @@ export class Enviroment {
 		this.address.org = -1;
 		this.address.base = 0;
 		this.address.offset = 0;
-		this.stopCompiling = false;
 
 		this.allLabel.global.clear();
 		this.allLabel.local.clear();

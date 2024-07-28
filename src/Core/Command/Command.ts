@@ -55,7 +55,7 @@ export class Command {
 	}
 	//#endregion 命令的初始化
 
-	/***** 多次分析 *****/
+	/***** 分析 *****/
 
 	//#region 第一次分析
 	/**
@@ -63,35 +63,9 @@ export class Command {
 	 * @param option 编译选项
 	 */
 	static async AnalyseFirst(option: CompileOption) {
-		const line = option.GetCurrent<CommandLine>();
-		const comText = line.command.text.toUpperCase();
-		const com = Command.commandMap.get(comText);
-		if (!com) {
-			const error = Localization.GetMessage("Command {0} Error", line.command.text);
-			MyDiagnostic.PushException(line.command, error);
-			line.lineType = LineType.Error;
-			return;
-		}
-
-		if (com?.end) {
-			const comMatch = Command.commandMatchOption.get(comText)!;
-			option.matchIndex = Command.FindNextMatch(option, comMatch!);
-			if (!option.matchIndex)
-				return;
-		}
-
-		if (line.label) {
-			if (com!.allowLabel) {
-				line.label.Analyse();
-			} else {
-				const error = Localization.GetMessage("Command {0} can not use label", line.command.text);
-				MyDiagnostic.PushException(line.label.labelToken, error);
-				line.lineType = LineType.Error;
-			}
-		}
-
-		if (com?.AnalyseFirst)
-			await com.AnalyseFirst(option);
+		const analyseResult = await Command.AnalyseCommand(option);
+		if (analyseResult?.com.AnalyseFirst)
+			await analyseResult.com.AnalyseFirst(option);
 	}
 	//#endregion 第一次分析
 
@@ -125,20 +99,52 @@ export class Command {
 	}
 	//#endregion 第三次分析
 
+	/***** 编译 *****/
+
 	//#region 编译
 	static async Compile(option: CompileOption) {
-		const line = option.GetCurrent<CommandLine>();
-		const comText = line.command.text.toUpperCase();
-		const com = Command.commandMap.get(comText);
+		const analyseResult = await Command.AnalyseCommand(option);
 
-		line.label?.Compile(option);
+		analyseResult?.line.label?.Compile(option);
 
-		if (com?.Compile)
-			await com.Compile(option);
+		if (analyseResult?.com.Compile)
+			await analyseResult.com.Compile(option);
 	}
 	//#endregion 编译
 
 	/***** 辅助公开方法 *****/
+
+	//#region 分析该行
+	private static async AnalyseCommand(option: CompileOption) {
+		const line = option.GetCurrent<CommandLine>();
+		const comText = line.command.text.toUpperCase();
+		const com = Command.commandMap.get(comText);
+		if (!com) {
+			const error = Localization.GetMessage("Command {0} Error", line.command.text);
+			MyDiagnostic.PushException(line.command, error);
+			line.lineType = LineType.Error;
+			return;
+		}
+
+		if (com?.end) {
+			const comMatch = Command.commandMatchOption.get(comText)!;
+			option.matchIndex = Command.FindNextMatch(option, comMatch!);
+			if (!option.matchIndex)
+				return;
+		}
+
+		if (line.label) {
+			if (com!.allowLabel) {
+				line.label.Analyse();
+			} else {
+				const error = Localization.GetMessage("Command {0} can not use label", line.command.text);
+				MyDiagnostic.PushException(line.label.labelToken, error);
+				line.lineType = LineType.Error;
+			}
+		}
+		return { line, com };
+	}
+	//#endregion 分析该行
 
 	//#region 查询下一个匹配项目
 	/**

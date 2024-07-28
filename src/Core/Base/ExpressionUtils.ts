@@ -195,7 +195,6 @@ export class ExpressionUtils {
 			if (element.type === PriorityType.Level_3_CharArray) {
 				const error = Localization.GetMessage("Expression error");
 				MyDiagnostic.PushException(element.token, error);
-				Compiler.StopCompile();
 				continue;
 			}
 
