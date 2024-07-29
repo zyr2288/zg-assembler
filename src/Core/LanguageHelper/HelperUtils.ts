@@ -406,7 +406,7 @@ export class HelperUtils {
 					return;
 				}
 
-				if (tag.expression && (temp = HelperUtils.CurrentInExpression(current, tag.expression))) {
+				if (tag.exp && (temp = HelperUtils.CurrentInExpression(current, tag.exp))) {
 					matchResult.type = temp.type;
 					matchResult.token = temp.token;
 					return;

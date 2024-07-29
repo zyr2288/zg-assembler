@@ -1,14 +1,19 @@
 import { CompileOption } from "../Base/CompileOption";
 import { Config } from "../Base/Config";
 import { Enviroment } from "../Base/Enviroment";
+import { Command } from "../Command/Command";
 import { Include } from "../Command/Include";
 import { RepeatCommand } from "../Command/RepeatCommand";
-import { LineType } from "../Lines/CommonLine";
+import { CommonLine, LineType } from "../Lines/CommonLine";
+import { LabelLine } from "../Lines/LabelLine";
 import { MacroLine } from "../Lines/MacroLine";
+import { Analyser } from "./Analyser";
 
 export class Compiler {
+
 	static enviroment: Enviroment = new Enviroment();
 	static isCompiling = false;
+	static stopCompiling = false;
 
 	private static editEnv = new Enviroment();
 	private static compileEnv = new Enviroment();
@@ -24,9 +29,64 @@ export class Compiler {
 		}
 	}
 
-	static AnalyseText(option:CompileOption) {
-		
+	//#region 编译所有行
+	/**
+	 * 编译所有行
+	 * @param option 编译选项
+	 */
+	static async Compile(option: CompileOption) {
+		for (let i = 0; i < option.allLines.length; i++) {
+			option.index = i;
+
+			let line: CommonLine | undefined = option.allLines[i];
+			if (!line || line.lineType !== LineType.None)
+				continue;
+
+			switch (line.key) {
+				case "instruction":
+					line.Compile(option);
+					break;
+				case "label":
+					line.Compile(option);
+					break;
+				case "variable":
+					line.Compile(option);
+					break;
+				case "command":
+					await Command.Compile(option);
+					break;
+				case "unknow":
+					const result = Analyser.MatchLine(line.org, false, ["macro", Compiler.enviroment.allMacro]);
+					if (result.key === "macro") {
+						line = MacroLine.Create(result.content!, line.comment);
+						await line?.Compile(option);
+					} else {
+						line = LabelLine.Create(line.org, line.comment);
+						line?.Compile(option);
+					}
+
+					if (line)
+						option.allLines[i] = line;
+
+					break;
+				case "macro":
+					await line.Compile(option);
+					break;
+			}
+
+			i = option.index;
+
+			// @ts-ignore
+			if (line.lineType === LineType.Error)
+				Compiler.stopCompiling = true;
+
+			if (Compiler.stopCompiling) {
+				Compiler.enviroment.compileTime = Config.ProjectSetting.compileTimes;
+				break;
+			}
+		}
 	}
+	//#endregion 编译所有行
 
 	static GetLinesResult(option: CompileOption, result: number[]) {
 		for (let i = 0; i < option.allLines.length; i++) {
@@ -75,7 +135,7 @@ export class Compiler {
 		}
 	}
 
-	static NotLastCompile() {
-		return Compiler.enviroment.compileTime < Config.ProjectSetting.compileTimes - 1;
+	static FirstCompile() {
+		return Compiler.enviroment.compileTime === 0;
 	}
 }

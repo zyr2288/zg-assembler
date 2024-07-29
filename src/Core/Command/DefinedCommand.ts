@@ -1,14 +1,13 @@
 import { CompileOption } from "../Base/CompileOption";
+import { ExpressionUtils } from "../Base/ExpressionUtils";
+import { ILabelCommon, LabelUtils } from "../Base/Label";
 import { Compiler } from "../Compiler/Compiler";
-import { Expression, ExpressionUtils } from "../Base/ExpressionUtils";
-import { ILabelCommon, LabelType, LabelUtils } from "../Base/Label";
 import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
-import { ICommand } from "./Command";
+import { CommandTagBase, ICommand } from "./Command";
 
-export interface DefTag {
+export interface DefTag extends CommandTagBase {
 	label?: ILabelCommon;
-	expression?: Expression;
 }
 
 export class DefinedCommand implements ICommand {
@@ -20,14 +19,12 @@ export class DefinedCommand implements ICommand {
 		const line = option.GetCurrent<CommandLine>();
 		const tag: DefTag = {};
 
-		if (Compiler.enviroment.compileTime < 0) {
-			const label = LabelUtils.CreateCommonLabel(line.arguments[0], { ableNameless: false, comment: line.comment });
-			tag.label = label;
-		}
+		const label = LabelUtils.CreateCommonLabel(line.arguments[0], { ableNameless: false, comment: line.comment });
+		tag.label = label;
 
 		const exp = ExpressionUtils.SplitAndSort(line.arguments[1]);
 		if (exp)
-			tag.expression = exp;
+			tag.exp = exp;
 
 		line.tag = tag;
 	}
@@ -35,33 +32,31 @@ export class DefinedCommand implements ICommand {
 	AnalyseThird(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
 		const tag: DefTag = line.tag;
-		if (tag.expression) {
-			if (ExpressionUtils.CheckLabels(option, tag.expression) || !tag.label)
+		if (tag.exp) {
+			if (ExpressionUtils.CheckLabels(option, tag.exp) || !tag.label)
 				return;
 
-			const value = ExpressionUtils.GetValue(tag.expression.parts, option);
+			const value = ExpressionUtils.GetValue(tag.exp.parts, option);
 			if (value.success)
 				tag.label.value = value.value;
 		}
 	}
 
 	Compile(option: CompileOption) {
+		if (Compiler.FirstCompile())
+			this.AnalyseFirst(option);
+
 		const line = option.GetCurrent<CommandLine>();
 		const tag: DefTag = line.tag;
 
-		if (Compiler.enviroment.compileTime === 0) {
-			line.arguments[0] = line.arguments[0].Trim();
-			tag.label = LabelUtils.CreateCommonLabel(line.arguments[0], { ableNameless: false, comment: line.comment });
-			if (!tag.label) {
-				line.lineType = LineType.Error;
-				return;
-			}
-			tag.label.type = LabelType.Defined;
+		if (!tag.label || !tag.exp) {
+			line.lineType = LineType.Error;
+			return;
 		}
 
-		const temp = ExpressionUtils.GetValue(tag.expression!.parts, option);
+		const temp = ExpressionUtils.GetValue(tag.exp.parts, option);
 		if (temp.success) {
-			tag.label!.value = temp.value;
+			tag.label.value = temp.value;
 			line.lineType = LineType.Finished;
 		}
 	}

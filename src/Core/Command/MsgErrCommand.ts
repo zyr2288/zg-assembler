@@ -1,4 +1,5 @@
 import { CompileOption } from "../Base/CompileOption";
+import { Config } from "../Base/Config";
 import { Expression, ExpressionUtils } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
 import { MyDiagnostic } from "../Base/MyDiagnostic";
@@ -16,7 +17,10 @@ export class MsgCommand implements ICommand {
 	AnalyseThird = Message.AnalyseThird;
 
 	Compile(option: CompileOption) {
-		if (!Compiler.NotLastCompile())
+		if (Compiler.FirstCompile())
+			this.AnalyseFirst(option);
+
+		if (Compiler.enviroment.compileTime < Config.ProjectSetting.compileTimes - 1)
 			return;
 
 		Message.Compile(option);

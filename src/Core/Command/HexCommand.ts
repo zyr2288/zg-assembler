@@ -1,5 +1,4 @@
 import { CompileOption } from "../Base/CompileOption";
-import { Compiler } from "../Compiler/Compiler";
 import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { Token } from "../Base/Token";
 import { Localization } from "../I18n/Localization";
@@ -15,7 +14,6 @@ export class HexCommand implements ICommand {
 	AnalyseFirst(option: CompileOption) {
 		this.Analyse(option);
 	}
-
 
 	Compile(option: CompileOption) {
 		const line = this.Analyse(option);
@@ -33,12 +31,7 @@ export class HexCommand implements ICommand {
 		line.lineType = LineType.Finished;
 	}
 
-	/**
-	 * 分析当前行
-	 * @param line 当前行
-	 * @returns true为有错误
-	 */
-	private Analyse(option: CompileOption) {
+	private Analyse(option:CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
 		const token = line.arguments[0];
 		if (!/^[ 0-9a-fA-F]+$/g.test(token.text)) {

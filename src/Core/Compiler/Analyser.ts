@@ -203,7 +203,7 @@ export class Analyser {
 	}
 	//#endregion 用逗号分割
 
-	/***** 多次分析 *****/
+	/***** 分析 *****/
 
 	//#region 第一次分析
 	/**第一次分析 */
@@ -229,7 +229,7 @@ export class Analyser {
 
 			// @ts-ignore
 			if (line.lineType === LineType.Error) {
-				Compiler.enviroment.stopCompiling = true;
+				Compiler.stopCompiling = true;
 			}
 
 			i = option.index;
@@ -253,7 +253,7 @@ export class Analyser {
 					const result = Analyser.MatchLine(line.org, false, ["macro", Compiler.enviroment.allMacro]);
 					if (result.key === "macro") {
 						temp = MacroLine.Create(result.content!, line.comment);
-						temp?.AnalyseSecond(option);
+						temp?.AnalyseLabel();
 					} else {
 						temp = LabelLine.Create(line.org, line.comment);
 						temp?.Analyse();
@@ -267,7 +267,7 @@ export class Analyser {
 			if (temp) {
 				option.allLines[option.index] = temp;
 				if (temp.lineType === LineType.Error)
-					Compiler.enviroment.stopCompiling = true;
+					Compiler.stopCompiling = true;
 
 			}
 
@@ -276,8 +276,8 @@ export class Analyser {
 	}
 	//#endregion 第二次分析
 
-	//#region 第三次分析（编译的时候不进行第三次分析）
-	/**第三次分析（编译的时候不进行第三次分析） */
+	//#region 第三次分析
+	/**第三次分析 */
 	static async AnalyseThird(option: CompileOption) {
 		for (let i = 0; i < option.allLines.length; i++) {
 			option.index = i;
@@ -304,48 +304,7 @@ export class Analyser {
 			i = option.index;
 		}
 	}
-	//#endregion 第三次分析（编译的时候不进行第三次分析）
-
-	//#region 编译所有行
-	static async Compile(option: CompileOption) {
-		for (let i = 0; i < option.allLines.length; i++) {
-			option.index = i;
-
-			const line = option.allLines[i];
-			if (!line || line.lineType !== LineType.None)
-				continue;
-
-			switch (line.key) {
-				case "instruction":
-					line.Compile(option);
-					break;
-				case "label":
-					line.Compile(option);
-					break;
-				case "variable":
-					line.Compile(option);
-					break;
-				case "command":
-					await Command.Compile(option);
-					break;
-				case "macro":
-					await line.Compile(option);
-					break;
-			}
-
-			i = option.index;
-
-			// @ts-ignore
-			if (line.lineType === LineType.Error)
-				Compiler.enviroment.stopCompiling = true;
-
-			if (Compiler.enviroment.stopCompiling) {
-				Compiler.enviroment.compileTime = Config.ProjectSetting.compileTimes;
-				break;
-			}
-		}
-	}
-	//#endregion 编译所有行
+	//#endregion 第三次分析
 
 	/***** 文本分析 *****/
 

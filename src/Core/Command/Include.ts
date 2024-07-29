@@ -42,42 +42,32 @@ export class Include implements ICommand {
 
 		const tag: IncludeTag = { orgPath: line.arguments[0], path: result.path, option: new CompileOption() };
 		line.tag = tag;
-		
-		if (Compiler.enviroment.compileTime < 0)
-			return;
-
-		const data = await FileUtils.ReadFile(result.path);
-		const text = FileUtils.BytesToString(data);
-
-		const saveFileIndex = Compiler.enviroment.fileIndex;
-		Compiler.enviroment.fileIndex = Compiler.enviroment.GetFileIndex(result.path);
-
-		tag.option.allLines = Analyser.AnalyseText(text, result.path);
-
-		await Analyser.AnalyseFirst(tag.option);
-		Compiler.enviroment.fileIndex = saveFileIndex;
-	}
-
-	async AnalyseSecond(option: CompileOption) {
-		if (Compiler.enviroment.compileTime < 0)
-			return;
-
-		const line = option.GetCurrent<CommandLine>();
-		const tag: IncludeTag = line.tag;
-
-		const saveFileIndex = Compiler.enviroment.fileIndex;
-		Compiler.enviroment.fileIndex = Compiler.enviroment.GetFileIndex(tag.path);
-		await Analyser.AnalyseSecond(tag.option);
-		Compiler.enviroment.fileIndex = saveFileIndex;
 	}
 
 	async Compile(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
-		const tag: IncludeTag = line.tag;
-
+		let tag: IncludeTag;
 		const saveFileIndex = Compiler.enviroment.fileIndex;
-		Compiler.enviroment.fileIndex = Compiler.enviroment.GetFileIndex(tag.path);
-		await Analyser.Compile(tag.option);
+		if (Compiler.FirstCompile()) {
+			const result = await IncludeUtils.CheckFile(option);
+			if (!result.exsist) {
+				line.lineType = LineType.Error;
+				return;
+			}
+			tag = { orgPath: line.arguments[0], path: result.path, option: new CompileOption() };
+			line.tag = tag;
+
+			const data = await FileUtils.ReadFile(tag.path);
+			const text = FileUtils.BytesToString(data);
+
+			Compiler.enviroment.fileIndex = Compiler.enviroment.GetFileIndex(tag.path);
+			tag.option.allLines = Analyser.AnalyseText(text, tag.path);
+		} else {
+			tag = line.tag;
+			Compiler.enviroment.fileIndex = Compiler.enviroment.GetFileIndex(tag.path);
+		}
+
+		await Compiler.Compile(tag.option);
 		Compiler.enviroment.fileIndex = saveFileIndex;
 	}
 }
@@ -95,24 +85,13 @@ export class Incbin implements ICommand {
 	start = { name: ".INCBIN", min: 1, max: 3 };
 
 	async AnalyseFirst(option: CompileOption) {
-		const result = await IncludeUtils.CheckFile(option);
-		if (!result.exsist)
-			return;
-
-		const line = option.GetCurrent<CommandLine>();
-		const tag: IncbinTag = { orgPath: line.arguments[0], path: result.path, exps: [] };
-		let temp2;
-		if (line.arguments[1] && (temp2 = ExpressionUtils.SplitAndSort(line.arguments[1])))
-			tag.exps[0] = temp2;
-
-		if (line.arguments[2] && (temp2 = ExpressionUtils.SplitAndSort(line.arguments[2])))
-			tag.exps[1] = temp2;
-
-		line.tag = tag;
+		await this.CheckFile(option);
 	}
 
 	async Compile(option: CompileOption) {
-		const line = option.GetCurrent<CommandLine>();
+		const line = await this.CheckFile(option);
+		if (!line)
+			return;
 
 		const tag: IncbinTag = line.tag;
 		const temp = await FileUtils.ReadFile(tag.path);
@@ -139,6 +118,24 @@ export class Incbin implements ICommand {
 
 		line.lineType = LineType.Finished;
 		line.lineResult.AddAddress();
+	}
+
+	private async CheckFile(option:CompileOption) {
+		const result = await IncludeUtils.CheckFile(option);
+		if (!result.exsist)
+			return;
+
+		const line = option.GetCurrent<CommandLine>();
+		const tag: IncbinTag = { orgPath: line.arguments[0], path: result.path, exps: [] };
+		let temp2;
+		if (line.arguments[1] && (temp2 = ExpressionUtils.SplitAndSort(line.arguments[1])))
+			tag.exps[0] = temp2;
+
+		if (line.arguments[2] && (temp2 = ExpressionUtils.SplitAndSort(line.arguments[2])))
+			tag.exps[1] = temp2;
+
+		line.tag = tag;
+		return line;
 	}
 }
 

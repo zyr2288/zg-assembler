@@ -97,17 +97,15 @@ export class ZGAssembler {
 		const option = new CompileOption();
 		option.allLines = Analyser.AnalyseText(text, filePath);
 
-		// await Analyser.AnalyseFirst(option);
-		// await Analyser.AnalyseSecond(option);
-
 		for (let i = 0; i < Config.ProjectSetting.compileTimes; i++) {
 			Compiler.enviroment.compileTime = i;
-			await Analyser.Compile(option);
+			await Compiler.Compile(option);
 		}
 
-		Compiler.isCompiling = false;
-		if (Compiler.enviroment.stopCompiling)
+		if (Compiler.stopCompiling) {
+			Compiler.isCompiling = false;
 			return;
+		}
 
 		const tempResult: number[] = [];
 		Compiler.GetLinesResult(option, tempResult);
@@ -120,6 +118,8 @@ export class ZGAssembler {
 			}
 			result[i] = tempResult[i] & 0xFF;
 		}
+
+		Compiler.isCompiling = false;
 		return result;
 	}
 

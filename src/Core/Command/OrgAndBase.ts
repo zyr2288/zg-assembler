@@ -5,15 +5,21 @@ import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
 import { CommandTagBase, ICommand } from "./Command";
 
-
-
 export class Original implements ICommand {
+
 	start = { name: ".ORG", min: 1, max: 1 };
-	AnalyseFirst = AddressUtils.AnalyseFirst;
-	AnalyseThird = AddressUtils.AnalyseThird;
+
+	AnalyseFirst(option:CompileOption) {
+		AddressUtils.Analyse(option);
+	}
+
+	AnalyseThird = AddressUtils.CheckLabels;
 
 	Compile(option: CompileOption) {
-		const line = option.GetCurrent<CommandLine>();
+		const line = AddressUtils.Analyse(option);
+		if (!line?.tag?.exp)
+			return;
+
 		const tag: CommandTagBase = line.tag;
 		const temp = ExpressionUtils.GetValue(tag.exp!.parts, { macro: option.macro, tryValue: false });
 		if (!temp.success || temp.value < 0) {
@@ -36,12 +42,20 @@ export class Original implements ICommand {
 }
 
 export class Base implements ICommand {
+
 	start = { name: ".BASE", min: 1, max: 1 };
-	AnalyseFirst = AddressUtils.AnalyseFirst;
-	AnalyseThird = AddressUtils.AnalyseThird;
+
+	AnalyseFirst(option:CompileOption) {
+		AddressUtils.Analyse(option);
+	}
+
+	AnalyseThird = AddressUtils.CheckLabels;
 
 	Compile(option: CompileOption) {
-		const line = option.GetCurrent<CommandLine>();
+		const line = AddressUtils.Analyse(option);
+		if (!line?.tag?.exp)
+			return;
+
 		const tag: CommandTagBase = line.tag;
 		const temp = ExpressionUtils.GetValue(tag.exp!.parts, { macro: option.macro, tryValue: false });
 		if (!temp.success || temp.value < 0) {
@@ -57,18 +71,18 @@ export class Base implements ICommand {
 
 class AddressUtils {
 
-	static AnalyseFirst(option: CompileOption) {
+	static Analyse(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
 		const tag: CommandTagBase = { exp: ExpressionUtils.SplitAndSort(line.arguments[0]) };
 		if (!tag.exp) {
 			line.lineType = LineType.Error;
 			return;
 		}
-
 		line.tag = tag;
+		return line;
 	}
 
-	static AnalyseThird(option: CompileOption) {
+	static CheckLabels(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
 		const tag: CommandTagBase = line.tag;
 		ExpressionUtils.CheckLabels(option, tag.exp!);

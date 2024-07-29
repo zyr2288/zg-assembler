@@ -5,6 +5,7 @@ import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
 import { Localization } from "../I18n/Localization";
 import { MyDiagnostic } from "../Base/MyDiagnostic";
+import { Compiler } from "../Compiler/Compiler";
 
 export type DataCommandTag = Expression[];
 
@@ -62,6 +63,9 @@ export class DataCommand {
 	}
 
 	static Compile(dataLength: number, option: CompileOption) {
+		if (Compiler.FirstCompile())
+			DataCommand.AnalyseFirst(option);
+
 		const line = option.GetCurrent<CommandLine>();
 		line.lineResult.SetAddress();
 
@@ -91,5 +95,4 @@ export class DataCommand {
 
 		line.lineResult.AddAddress();
 	}
-
 }

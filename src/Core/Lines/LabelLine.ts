@@ -22,7 +22,7 @@ export class LabelLine {
 	labelToken!: Token;
 	comment?: string;
 
-	/**分析，不会走编译 */
+	/**分析，走第一次编译 */
 	Analyse() {
 		const label = LabelUtils.CreateCommonLabel(this.labelToken, { comment: this.comment });
 		if (!label) {
@@ -31,21 +31,16 @@ export class LabelLine {
 		}
 
 		label.type = LabelType.Label;
-		this.lineType = LineType.Finished;
 	}
 
 	Compile(option: CompileOption) {
-		let label;
-		if (Compiler.enviroment.compileTime === 0) {
-			label = LabelUtils.CreateCommonLabel(this.labelToken, { macro:option.macro, comment: this.comment });
-			if (!label) {
-				this.lineType = LineType.Error;
-				return;
-			}
-		} else {
-			label = LabelUtils.FindLabel(this.labelToken, option);
-		}
+		if (Compiler.FirstCompile())
+			this.Analyse();
 
+		if (this.lineType === LineType.Finished)
+			return;
+
+		let label = LabelUtils.FindLabel(this.labelToken, option);
 		if (!label)
 			return;
 

@@ -21,7 +21,7 @@ type IfDefTag = (IfCommonLineTag & { token?: Token })[];
 
 type IfCommonLineTag = { offsetFirstLine: number, confident: boolean };
 
-
+/**.IF */
 export class IfConfident implements ICommand {
 
 	start = { name: ".IF", min: 1, max: 1 };
@@ -33,52 +33,57 @@ export class IfConfident implements ICommand {
 	sameEnd = [".IFDEF", ".IFNDEF"];
 	allowLabel = false;
 
-	AnalyseFirst = IfConfidentUtils.AnalyseFirst;
-	AnalyseThird = IfConfidentUtils.AnalyseThird;
-	Compile = IfConfidentUtils.Compile;
-}
+	AnalyseFirst(option: CompileOption) {
+		this.Analyse(option);
+	}
 
-export class IfDefConfident implements ICommand {
-	start = { name: ".IFDEF", min: 1, max: 1 };
-	rest = [
-		{ name: ".ELSE", min: 0, max: 0 }
-	];
-	end = ".ENDIF";
-	sameEnd = [".IF", ".IFNDEF"];
-	allowLabel = false;
+	AnalyseThird(option: CompileOption) {
+		const line = option.GetCurrent<CommandLine>();
+		const tag = line.tag as IfConfidentTag;
 
-	AnalyseFirst = IfDefConfidentUtils.AnalyseFirst;
+		for (let i = 0; i < tag.lines.length - 1; ++i) {
+			const exp = tag.lines[i].exp;
+			if (exp && ExpressionUtils.CheckLabels(option, exp)) {
+				line.lineType = LineType.Error;
+			}
+		}
+	}
 
 	Compile(option: CompileOption) {
-		IfDefConfidentUtils.Compile(option, true);
+		const line = this.Analyse(option);
+		if (line.lineType === LineType.Error)
+			return;
+
+		const tag = line.tag as IfConfidentTag;
+
+		const startIndex = option.index;
+		for (let i = 0; i < tag.lines.length - 1; i++) {
+			const confident = tag.lines[i];
+			const line = option.allLines[startIndex + confident.offsetFirstLine] as CommandLine;
+
+			if (line.command.text.toUpperCase() === ".ELSE") {
+				confident.confident = true;
+				break;
+			}
+
+			const value = ExpressionUtils.GetValue(confident.exp!.parts, { macro: option.macro, tryValue: false });
+			if (value.success && value.value) {
+				tag.lines[i].confident = true;
+				break;
+			}
+		}
+
+		line.lineType = LineType.Finished;
+		IfCommonUtils.MarkLineFinished(option, startIndex, tag.lines);
 	}
-}
 
-export class IfNDefConfident implements ICommand {
-	start = { name: ".IFNDEF", min: 1, max: 1 };
-	rest = [
-		{ name: ".ELSE", min: 0, max: 0 }
-	];
-	end = ".ENDIF";
-	sameEnd = [".IF", ".IFDEF"];
-	allowLabel = false;
-
-	AnalyseFirst = IfDefConfidentUtils.AnalyseFirst;
-
-	Compile(option: CompileOption) {
-		IfDefConfidentUtils.Compile(option, false);
-	}
-}
-
-//#region IF条件工具
-class IfConfidentUtils {
-
-	//#region 第一次分析，判断层级关系是否正确
+	//#region 分析层级关系
 	/**
-	 * 第一次分析，判断层级关系是否正确
-	 * @param option 编译选项
+	 * 分析层级关系
+	 * @param option 
+	 * @returns 
 	 */
-	static AnalyseFirst(option: CompileOption) {
+	private Analyse(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
 
 		const result = option.matchIndex!;
@@ -121,50 +126,50 @@ class IfConfidentUtils {
 		}
 
 		line.tag = tag;
+		return line;
 	}
-	//#endregion 第一次分析，判断层级关系是否正确
-
-	static AnalyseThird(option: CompileOption) {
-		const line = option.GetCurrent<CommandLine>();
-		const tag = line.tag as IfConfidentTag;
-
-		for (let i = 0; i < tag.lines.length - 1; ++i) {
-			const exp = tag.lines[i].exp;
-			if (exp && ExpressionUtils.CheckLabels(option, exp)) {
-				line.lineType = LineType.Error;
-			}
-		}
-	}
-
-	static Compile(option: CompileOption) {
-		const line = option.GetCurrent<CommandLine>();
-		const tag = line.tag as IfConfidentTag;
-
-		const startIndex = option.index;
-		for (let i = 0; i < tag.lines.length - 1; i++) {
-			const confident = tag.lines[i];
-			const line = option.allLines[startIndex + confident.offsetFirstLine] as CommandLine;
-
-			if (line.command.text.toUpperCase() === ".ELSE") {
-				confident.confident = true;
-				break;
-			}
-
-			const value = ExpressionUtils.GetValue(confident.exp!.parts, { macro: option.macro, tryValue: false });
-			if (value.success && value.value) {
-				tag.lines[i].confident = true;
-				break;
-			}
-		}
-
-		line.lineType = LineType.Finished;
-		IfCommonUtils.MarkLineFinished(option, startIndex, tag.lines);
-	}
+	//#endregion 分析层级关系
 
 }
-//#endregion IF条件工具
 
-//#region IFDEF IFNDEF条件工具
+/**.IFDEF */
+export class IfDefConfident implements ICommand {
+	start = { name: ".IFDEF", min: 1, max: 1 };
+	rest = [
+		{ name: ".ELSE", min: 0, max: 0 }
+	];
+	end = ".ENDIF";
+	sameEnd = [".IF", ".IFNDEF"];
+	allowLabel = false;
+
+	AnalyseFirst(option: CompileOption) {
+		IfDefConfidentUtils.AnalyseFirst(option);
+	}
+
+	Compile(option: CompileOption) {
+		IfDefConfidentUtils.Compile(option, true);
+	}
+}
+
+/**.IFNDEF */
+export class IfNDefConfident implements ICommand {
+	start = { name: ".IFNDEF", min: 1, max: 1 };
+	rest = [
+		{ name: ".ELSE", min: 0, max: 0 }
+	];
+	end = ".ENDIF";
+	sameEnd = [".IF", ".IFDEF"];
+	allowLabel = false;
+
+	AnalyseFirst(option: CompileOption) {
+		IfDefConfidentUtils.AnalyseFirst(option);
+	}
+
+	Compile(option: CompileOption) {
+		IfDefConfidentUtils.Compile(option, false);
+	}
+}
+
 class IfDefConfidentUtils {
 
 	//#region 第一次分析，判断层级关系是否正确
@@ -204,11 +209,13 @@ class IfDefConfidentUtils {
 		}
 
 		line.tag = tag;
+		return line;
 	}
 	//#endregion 第一次分析，判断层级关系是否正确
 
+	//#region 编译结果
 	static Compile(option: CompileOption, isDef: boolean) {
-		const line = option.GetCurrent<CommandLine>();
+		const line = IfDefConfidentUtils.AnalyseFirst(option);
 		const tag = line.tag as IfDefTag;
 
 		const startIndex = option.index;
@@ -240,8 +247,9 @@ class IfDefConfidentUtils {
 		line.lineType = LineType.Finished;
 		IfCommonUtils.MarkLineFinished(option, startIndex, tag);
 	}
+	//#endregion 编译结果
+
 }
-//#endregion IFDEF IFNDEF条件工具
 
 class IfCommonUtils {
 
@@ -264,7 +272,7 @@ class IfCommonUtils {
 				if (!option.allLines[j])
 					continue;
 
-				option.allLines[j].lineType = LineType.Finished;
+				option.allLines[j].lineType = LineType.Ignore;
 			}
 		}
 	}

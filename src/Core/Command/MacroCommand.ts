@@ -34,9 +34,6 @@ export class MacroCommand implements ICommand {
 	end = ".ENDM";
 
 	async AnalyseFirst(option: CompileOption) {
-		if (Compiler.enviroment.compileTime >= 0)
-			return;
-
 		const line = option.GetCurrent<CommandLine>();
 
 		if (!LabelUtils.CheckIllegal(line.arguments[0].text, false)) {
@@ -126,5 +123,8 @@ export class MacroCommand implements ICommand {
 		await Analyser.AnalyseThird(macroOp);
 	}
 
-
+	async Compile(option: CompileOption) {
+		if (Compiler.FirstCompile())
+			await this.AnalyseFirst(option);
+	}
 }

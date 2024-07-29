@@ -7,7 +7,7 @@ import { CommandLine } from "../Lines/CommandLine";
 import { CommonLine, LineType } from "../Lines/CommonLine";
 import { CommandTagBase, ICommand } from "./Command";
 
-interface RepeatTag extends CommandTagBase{
+interface RepeatTag extends CommandTagBase {
 	orgLines: CommonLine[];
 	compileLines: CommonLine[];
 }
@@ -27,22 +27,7 @@ export class RepeatCommand implements ICommand {
 	end = ".ENDR";
 
 	AnalyseFirst(option: CompileOption) {
-		const line = option.GetCurrent<CommandLine>();
-
-		const temp = ExpressionUtils.SplitAndSort(line.arguments[0]);
-		if (!temp) {
-			line.lineType = LineType.Error;
-			return;
-		}
-
-		const tag: RepeatTag = { exp: temp, orgLines: [], compileLines: [] };
-		const matchIndex = option.matchIndex![0];
-
-		tag.orgLines = option.allLines.slice(option.index + 1, matchIndex);
-
-		option.allLines[matchIndex].lineType = LineType.Finished;
-
-		line.tag = tag;
+		this.AnalyseLines(option);
 	}
 
 	AnalyseThird(option: CompileOption) {
@@ -54,33 +39,62 @@ export class RepeatCommand implements ICommand {
 
 	async Compile(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
-		const tag: RepeatTag = line.tag;
+		const exp = ExpressionUtils.SplitAndSort(line.arguments[0]);
+		if (!exp) {
+			line.lineType = LineType.Error;
+			return;
+		}
 
-		if (Compiler.enviroment.compileTime === 0) {
-			const times = ExpressionUtils.GetValue(tag.exp!.parts, { macro: option.macro, tryValue: false });
+		let tag: RepeatTag | undefined;
+		if (Compiler.FirstCompile()) {
+			tag = this.AnalyseLines(option);
+			if (!tag)
+				return;
+
+			const times = ExpressionUtils.GetValue(exp.parts, { macro: option.macro, tryValue: false });
 			if (!times.success)
 				return;
 
 			const lines: CommonLine[] = [];
 			while (times.value > 0) {
-				const tempLines = Utils.DeepClone(tag.orgLines);
+				const tempLines = Utils.DeepClone(line.tag.orgLines);
 				lines.push(...tempLines);
 				times.value--;
 			}
 
-			for (let i = 0; i < tag.orgLines.length; i++)
-				tag.orgLines[i].lineType = LineType.Finished;
+			for (let i = 0; i < line.tag.orgLines.length; i++) {
+				if (line.tag.orgLines[i])
+					line.tag.orgLines[i].lineType = LineType.Finished;
+			}
 
-			tag.compileLines = lines;
+			line.tag.compileLines = lines;
 		}
-		line.tag = tag;
+		tag = line.tag as RepeatTag;
 
 		const repeatOp = new CompileOption();
 		repeatOp.allLines = tag.compileLines;
 		repeatOp.macro = option.macro;
 
-		await Analyser.Compile(repeatOp);
+		await Compiler.Compile(repeatOp);
 
 		option.index += tag.orgLines.length + 1;
+	}
+
+	private AnalyseLines(option: CompileOption) {
+		const line = option.GetCurrent<CommandLine>();
+		const temp = ExpressionUtils.SplitAndSort(line.arguments[0]);
+		if (!temp) {
+			line.lineType = LineType.Error;
+			return;
+		}
+
+		const tag: RepeatTag = { exp: temp, orgLines: [], compileLines: [] };
+		const endLineIndex = option.matchIndex![0];
+
+		tag.orgLines = option.allLines.slice(option.index + 1, endLineIndex);
+
+		option.allLines[endLineIndex].lineType = LineType.Ignore;
+		line.tag = tag;
+		return tag;
 	}
 }

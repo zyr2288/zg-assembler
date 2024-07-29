@@ -7,6 +7,7 @@ import { MyDiagnostic } from "./MyDiagnostic";
 import { Token } from "./Token";
 import { Utils } from "./Utils";
 import { Macro } from "./Macro";
+import { Config } from "./Config";
 
 /**运算符的正则表达式 */
 const OperationRegex = /((?<!\\)")|\(|\)|\[|\]|\~|\!=|==|\!|\>\>|\>=|\<=|\<\<|\>|\<|=|\+|\-|\*|\/|%|&&|&|\|\||\||\^|\$(?![0-9a-fA-F])/g;
@@ -181,7 +182,7 @@ export class ExpressionUtils {
 			return tempPart[index];
 		}
 
-		let tryValue = Compiler.NotLastCompile();
+		let tryValue = Compiler.enviroment.compileTime < Config.ProjectSetting.compileTimes - 1;
 		if (option?.tryValue !== undefined)
 			tryValue = option.tryValue;
 

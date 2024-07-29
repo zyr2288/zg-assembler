@@ -76,7 +76,7 @@ export class MacroLine {
 	/**所有参数表达式 */
 	expressions: Expression[] = [];
 
-	AnalyseSecond(option: CompileOption) {
+	AnalyseLabel() {
 		this.label?.Analyse();
 	}
 
@@ -128,17 +128,7 @@ export class MacroLine {
 		macroOp.allLines = this.macro.lines;
 		macroOp.macro = this.macro;
 
-		await Analyser.Compile(macroOp);
-	}
-
-	private ReplaceExpression(lines: CommonLine[]) {
-		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i];
-			switch (line.key) {
-
-			}
-
-		}
+		await Compiler.Compile(macroOp);
 	}
 
 }

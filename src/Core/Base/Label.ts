@@ -140,13 +140,13 @@ export class LabelUtils {
 				const labels = collection.upLabels;
 				count = -count;
 				for (let i = 0; i < labels.length; ++i) {
-					if (labels[i].count == count && labels[i].token.line < token.line)
+					if (labels[i].count == count && labels[i].token.line <= token.line)
 						return labels[i];
 				}
 			} else {
 				const labels = collection.downLabels;
 				for (let i = 0; i < labels.length; ++i) {
-					if (labels[i].token.length == count && labels[i].token.line > token.line)
+					if (labels[i].token.length == count && labels[i].token.line >= token.line)
 						return labels[i];
 				}
 			}
