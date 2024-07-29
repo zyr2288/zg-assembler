@@ -86,6 +86,7 @@ export class ZGAssembler {
 			return;
 
 		Compiler.isCompiling = true;
+		Compiler.stopCompiling = false;
 		Compiler.ChangeEnv("compile");
 
 		Compiler.enviroment.compileTime = 0;
@@ -97,9 +98,10 @@ export class ZGAssembler {
 		const option = new CompileOption();
 		option.allLines = Analyser.AnalyseText(text, filePath);
 
-		for (let i = 0; i < Config.ProjectSetting.compileTimes; i++) {
-			Compiler.enviroment.compileTime = i;
+		while (true) {
 			await Compiler.Compile(option);
+			if (++Compiler.enviroment.compileTime >= Config.ProjectSetting.compileTimes)
+				break;
 		}
 
 		if (Compiler.stopCompiling) {
@@ -107,6 +109,23 @@ export class ZGAssembler {
 			return;
 		}
 
+		return this.GetAllResult(option);
+	}
+
+	SwitchPlatform(platform: string) {
+		Platform.SwitchPlatform(platform);
+	}
+
+	SwitchLanguage(language: string) {
+		Localization.ChangeLanguage(language);
+	}
+
+	ClearFile(filePath: string) {
+		const fileIndex = Compiler.enviroment.GetFileIndex(filePath);
+		Compiler.enviroment.ClearFile(fileIndex);
+	}
+
+	private GetAllResult(option: CompileOption) {
 		const tempResult: number[] = [];
 		Compiler.GetLinesResult(option, tempResult);
 		Compiler.enviroment.compileResult.finished = true;
@@ -121,18 +140,5 @@ export class ZGAssembler {
 
 		Compiler.isCompiling = false;
 		return result;
-	}
-
-	SwitchPlatform(platform: string) {
-		Platform.SwitchPlatform(platform);
-	}
-
-	SwitchLanguage(language: string) {
-		Localization.ChangeLanguage(language);
-	}
-
-	ClearFile(filePath: string) {
-		const fileIndex = Compiler.enviroment.GetFileIndex(filePath);
-		Compiler.enviroment.ClearFile(fileIndex);
 	}
 }

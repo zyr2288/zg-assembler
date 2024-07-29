@@ -33,6 +33,9 @@ export class ErrorCommand implements ICommand {
 	AnalyseThird = Message.AnalyseThird;
 
 	Compile(option: CompileOption) {
+		if (Compiler.FirstCompile())
+			this.AnalyseFirst(option);
+
 		const line = option.GetCurrent<CommandLine>();
 		Message.Compile(option);
 		line.lineType = LineType.Error;

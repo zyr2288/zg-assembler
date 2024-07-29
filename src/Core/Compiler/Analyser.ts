@@ -226,12 +226,7 @@ export class Analyser {
 					line.AnalyseFirst(option);
 					break;
 			}
-
-			// @ts-ignore
-			if (line.lineType === LineType.Error) {
-				Compiler.stopCompiling = true;
-			}
-
+			
 			i = option.index;
 		}
 	}
@@ -266,9 +261,6 @@ export class Analyser {
 
 			if (temp) {
 				option.allLines[option.index] = temp;
-				if (temp.lineType === LineType.Error)
-					Compiler.stopCompiling = true;
-
 			}
 
 			i = option.index;
