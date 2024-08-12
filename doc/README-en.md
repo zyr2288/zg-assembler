@@ -424,15 +424,15 @@ For example:
 <details>
 <summary>.MSG</summary>
 
-### `.MSG`
+### `.MSG` `.ERROR`
 
 ```
     .MSG message[, arg1, arg2...]
     .ERROR message[, arg1, arg2...]
 ```
 
-* Out put a message.
-* Out put a message and stop
+* `MSG` - Out put a message.
+* `ERROR` - Out put a message and stop
 
 ```
     .ORG $8000
