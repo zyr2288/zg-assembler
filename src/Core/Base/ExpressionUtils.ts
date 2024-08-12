@@ -186,7 +186,9 @@ export class ExpressionUtils {
 			return exps[index];
 		}
 
+		let errorIndex = -1;
 		for (let index = 0; index < exps.length; index++) {
+			errorIndex++;
 			let element = exps[index];
 			if (typeof element === "number")
 				continue;
@@ -198,10 +200,10 @@ export class ExpressionUtils {
 				case "(<)":
 				case "(~)":
 					const pre = GetPart(index - 1) as number;
-					if (!pre) {
+					if (pre === undefined) {
 						result.success = false;
 						const errorMsg = Localization.GetMessage("Expression error");
-						MyDiagnostic.PushException(parts[0].token, errorMsg);
+						MyDiagnostic.PushException(parts[errorIndex].token, errorMsg);
 						break;
 					}
 
@@ -218,10 +220,10 @@ export class ExpressionUtils {
 				default:
 					const value1 = GetPart(index - 2) as number;
 					const value2 = GetPart(index - 1) as number;
-					if (!value1 || !value2) {
+					if (value1 === undefined || value2 === undefined) {
 						result.success = false;
 						const errorMsg = Localization.GetMessage("Expression error");
-						MyDiagnostic.PushException(parts[0].token, errorMsg);
+						MyDiagnostic.PushException(parts[errorIndex].token, errorMsg);
 						break;
 					}
 
