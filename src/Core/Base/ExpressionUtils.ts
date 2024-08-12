@@ -17,8 +17,8 @@ export enum PriorityType {
 	Level_0_Sure = -1,
 	/**标签、数字 */
 	Level_1_Label,
-	/**数字 */
-	Level_2_Number,
+	/**地址，ORG BASE */
+	Level_2_Address,
 	/**字符串 */
 	Level_3_CharArray,
 	/**括号 */
@@ -174,185 +174,86 @@ export class ExpressionUtils {
 	 * @returns 
 	 */
 	static GetValue(parts: ExpressionPart[], option?: { macro?: Macro, tryValue?: boolean }) {
-		const tempPart = Utils.DeepClone(parts);
+		const result = { success: true, value: 0 };
+		const exps = ExpressionUtils.CheckLabelAndGetValue(parts, option);
+		if (!exps)
+			return result;
+
 		const GetPart = (index: number) => {
-			if (index < 0 || index >= tempPart.length)
+			if (index < 0 || index >= exps.length)
 				return;
 
-			return tempPart[index];
+			return exps[index];
 		}
 
-		let tryValue = Compiler.enviroment.compileTime < Config.ProjectSetting.compileTimes - 1;
-		if (option?.tryValue !== undefined)
-			tryValue = option.tryValue;
-
-		let labelUnknow = false;
-		const result = { success: true, value: 0 };
-		for (let index = 0; index < tempPart.length; index++) {
-			const element = tempPart[index];
-			if (element.type === PriorityType.Level_0_Sure)
+		for (let index = 0; index < exps.length; index++) {
+			let element = exps[index];
+			if (typeof element === "number")
 				continue;
 
-			if (element.type === PriorityType.Level_3_CharArray) {
-				const error = Localization.GetMessage("Expression error");
-				MyDiagnostic.PushException(element.token, error);
-				continue;
-			}
-
-			// 用于判断标签等
-			if (element.type < PriorityType.Level_4_Brackets && element.type >= 0) {
-				if (labelUnknow)
-					continue;
-
-				if (element.token.text === "*" && Compiler.enviroment.address.org >= 0) {
-					element.value = Compiler.enviroment.address.org;
-					element.type = PriorityType.Level_0_Sure;
-					continue;
-				}
-
-				if (element.token.text === "$" && Compiler.enviroment.address.base >= 0) {
-					element.value = Compiler.enviroment.address.base;
-					element.type = PriorityType.Level_0_Sure;
-					continue;
-				}
-
-				const temp = ExpressionUtils.GetNumber(element.token.text);
-				if (temp.success) {		// 如果是数字
-					element.value = temp.value;
-					element.type = PriorityType.Level_0_Sure;
-				} else {				// 如果是标签
-					const label = LabelUtils.FindLabel(element.token, { macro: option?.macro });
-					if (label?.value === undefined) {
-						if (!tryValue) {
-							const errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
-							MyDiagnostic.PushException(element.token, errorMsg);
-							result.success = false;
-							break;
-						}
-						labelUnknow = true;
-					} else {
-						element.value = label.value;
-						element.type = PriorityType.Level_0_Sure;
+			switch (element) {
+				case "(!)":
+				case "(-)":
+				case "(>)":
+				case "(<)":
+				case "(~)":
+					const pre = GetPart(index - 1) as number;
+					if (!pre) {
+						result.success = false;
+						const errorMsg = Localization.GetMessage("Expression error");
+						MyDiagnostic.PushException(parts[0].token, errorMsg);
+						break;
 					}
-				}
-				continue;
-			}
 
-			const pre1 = GetPart(index - 2);
-			const pre2 = GetPart(index - 1);
-			const operation = element;
-			if (element.type === PriorityType.Level_5) {
-				if (!pre2) {
-					result.success = false;
-					let errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
-					MyDiagnostic.PushException(element.token, errorMsg);
+					switch (element) {
+						case "(!)": element = pre !== 0 ? 1 : 0; break;
+						case "(-)": element = -pre; break;
+						case "(>)": element = (pre & 0xFF00) >> 8; break;
+						case "(<)": element = pre & 0xFF; break;
+						case "(~)": element = ~pre; break;
+					}
+					exps.splice(index - 1, 1);
+					index -= 1;
 					break;
-				}
+				default:
+					const value1 = GetPart(index - 2) as number;
+					const value2 = GetPart(index - 1) as number;
+					if (!value1 || !value2) {
+						result.success = false;
+						const errorMsg = Localization.GetMessage("Expression error");
+						MyDiagnostic.PushException(parts[0].token, errorMsg);
+						break;
+					}
 
-				const value2 = pre2.value;
+					switch (element) {
+						case "*": element = value1 * value2; break;
+						case "/": element = value1 / value2; break;
+						case "%": element = value1 % value2; break;
+						case "+": element = value1 + value2; break;
+						case "-": element = value1 - value2; break;
+						case "<<": element = value1 << value2; break;
+						case ">>": element = value1 >>> value2; break;
+						case "==": element = value1 === value2 ? 1 : 0; break;
+						case "!=": element = value1 !== value2 ? 1 : 0; break;
+						case "&": element = value1 & value2; break;
+						case "^": element = value1 ^ value2; break;
+						case "|": element = value1 | value2; break;
+						case "&&": element = value1 && value2; break;
+						case "||": element = value1 || value2; break;
+						case ">": element = value1 > value2 ? 1 : 0; break;
+						case ">=": element = value1 >= value2 ? 1 : 0; break;
+						case "<": element = value1 < value2 ? 1 : 0; break;
+						case "<=": element = value1 <= value2 ? 1 : 0; break;
+					}
 
-				switch (operation.token.text) {
-					case "!":
-						operation.value = value2 !== 0 ? 1 : 0;
-						break;
-					case "-":
-						operation.value = -value2;
-						break;
-					case ">":
-						operation.value = (value2 & 0xFF00) >> 8;
-						break;
-					case "<":
-						operation.value = value2 & 0xFF;
-						break;
-					case "~":
-						operation.value = ~value2;
-						break;
-				}
-				operation.type = PriorityType.Level_0_Sure;
-				tempPart.splice(index - 1, 1);
-				index -= 1;
-			} else {
-				if (!pre1 || !pre2) {
-					result.success = false;
-					let errorMsg = Localization.GetMessage("Label {0} not found", element.token.text);
-					MyDiagnostic.PushException(element.token, errorMsg);
+					exps.splice(index - 2, 2);
+					index -= 2;
 					break;
-				}
-
-				const value1 = pre1.value;
-				const value2 = pre2.value;
-
-				switch (operation.token.text) {
-					case "*":
-						operation.value = value1 * value2;
-						break;
-					case "/":
-						operation.value = value1 / value2;
-						break;
-					case "%":
-						operation.value = value1 % value2;
-						break;
-					case "+":
-						operation.value = value1 + value2;
-						break;
-					case "-":
-						operation.value = value1 - value2;
-						break;
-					case "<<":
-						operation.value = value1 << value2;
-						break;
-					case ">>":
-						operation.value = value1 >>> value2;
-						break;
-					case "==":
-						operation.value = value1 === value2 ? 1 : 0;
-						break;
-					case "!=":
-						operation.value = value1 !== value2 ? 1 : 0;
-						break;
-					case "&":
-						operation.value = value1 & value2;
-						break;
-					case "^":
-						operation.value = value1 ^ value2;
-						break;
-					case "|":
-						operation.value = value1 | value2;
-						break;
-					case "&&":
-						operation.value = value1 && value2;
-						break;
-					case "||":
-						operation.value = value1 || value2;
-						break;
-					case ">":
-						operation.value = value1 > value2 ? 1 : 0;
-						break;
-					case ">=":
-						operation.value = value1 >= value2 ? 1 : 0;
-						break;
-					case "<":
-						operation.value = value1 < value2 ? 1 : 0;
-						break;
-					case "<=":
-						operation.value = value1 <= value2 ? 1 : 0;
-						break;
-				}
-
-				operation.type = PriorityType.Level_0_Sure;
-				tempPart.splice(index - 2, 2);
-				index -= 2;
 			}
-
-			if (!result.success)
-				break;
 		}
-
-		if (labelUnknow)
-			result.success = false;
 
 		if (result.success)
-			result.value = tempPart[0].value as number;
+			result.value = exps[0] as number;
 
 		return result;
 	}
@@ -563,7 +464,7 @@ export class ExpressionUtils {
 						break;
 					};
 
-					part.type = PriorityType.Level_2_Number;
+					part.type = PriorityType.Level_2_Address;
 					isLabel = false;
 					break;
 				case "+":
@@ -654,11 +555,11 @@ export class ExpressionUtils {
 					result.parts.push(part);
 					break;
 				case PriorityType.Level_1_Label:
-				case PriorityType.Level_2_Number:
+				case PriorityType.Level_2_Address:
 					const temp = ExpressionUtils.GetNumber(part.token.text);
 					if (temp.success) {
 						part.value = temp.value;
-						part.type = PriorityType.Level_2_Number;
+						part.type = PriorityType.Level_0_Sure;
 					}
 					result.parts.push(part);
 					break;
@@ -741,25 +642,77 @@ export class ExpressionUtils {
 	}
 	//#endregion 表达式优先级排序
 
-	//#region 检查表达式小节是否包含长度大于1的字符串
+	//#region 检查所有小节并获取值，简化计算量
 	/**
-	 * 检查表达式小节是否包含长度大于1的字符串
+	 * 检查所有小节并获取值，简化计算量
 	 * @param parts 所有表达式小节
-	 * @returns 
+	 * @param option.tryValue 是否是尝试获取值
+	 * @param option.macro 自定义函数
+	 * @returns true为正确，false为有误
 	 */
-	private static CheckString(parts: ExpressionPart[]) {
-		let index = -1;
+	private static CheckLabelAndGetValue(parts: ExpressionPart[], option?: { tryValue?: boolean, macro?: Macro }) {
+		const result: (string | number)[] = [];
+		let tryValue = Compiler.enviroment.compileTime < Config.ProjectSetting.compileTimes - 1;
+		if (option?.tryValue !== undefined)
+			tryValue = option.tryValue;
+
+		let noError = true;
+
+		const SaveValue = (part: ExpressionPart, value: number) => {
+			part.value = value;
+			part.type = PriorityType.Level_0_Sure;
+			result.push(part.value);
+		}
+
 		for (let i = 0; i < parts.length; i++) {
 			const part = parts[i];
-			if (part.type === PriorityType.Level_3_CharArray) {
-				index = i;
-				break;
-			}
+			switch (part.type) {
+				case PriorityType.Level_0_Sure:
+					result.push(part.value);
+					break;
+				case PriorityType.Level_1_Label:
+					const temp = ExpressionUtils.GetNumber(part.token.text);
+					if (temp.success) {
+						SaveValue(part, temp.value);
+						break;
+					}
 
+					const label = LabelUtils.FindLabel(part.token, { macro: option?.macro });
+					if (label?.value === undefined) {
+						noError = false;
+						if (!tryValue) {
+							const errorMsg = Localization.GetMessage("Label {0} not found", part.token.text);
+							MyDiagnostic.PushException(part.token, errorMsg);
+						}
+					} else {
+						SaveValue(part, label.value);
+					}
+					break;
+				case PriorityType.Level_2_Address:
+					switch (part.token.text) {
+						case "*": SaveValue(part, Compiler.enviroment.address.org); break;
+						case "$": SaveValue(part, Compiler.enviroment.address.base); break;
+					}
+					break;
+				case PriorityType.Level_3_CharArray:
+					const error = Localization.GetMessage("Expression error");
+					MyDiagnostic.PushException(part.token, error);
+					noError = false;
+					break;
+				case PriorityType.Level_5:
+					result.push("(" + part.token.text + ")");
+					break;
+				default:
+					result.push(part.token.text);
+					break;
+			}
 		}
-		return index;
+		if (!noError)
+			return;
+
+		return result;
 	}
-	//#endregion 检查表达式小节是否包含长度大于1的字符串
+	//#endregion 检查所有小节并获取值，简化计算量
 
 	//#region 获取数字
 	/**获取数字 */

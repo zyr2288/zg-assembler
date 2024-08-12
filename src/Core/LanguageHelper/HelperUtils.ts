@@ -327,7 +327,7 @@ export class HelperUtils {
 
 				switch (part.type) {
 					case PriorityType.Level_1_Label:
-					case PriorityType.Level_2_Number:
+					case PriorityType.Level_2_Address:
 						if (part.token.start <= current && current <= end) {
 							result.expIndex = i;
 							result.token = part.token;
