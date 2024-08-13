@@ -214,6 +214,8 @@ export class ExpressionUtils {
 						case "(<)": element = pre & 0xFF; break;
 						case "(~)": element = ~pre; break;
 					}
+					
+					exps[index] = element;
 					exps.splice(index - 1, 1);
 					index -= 1;
 					break;
@@ -248,6 +250,7 @@ export class ExpressionUtils {
 						case "<=": element = value1 <= value2 ? 1 : 0; break;
 					}
 
+					exps[index] = element;
 					exps.splice(index - 2, 2);
 					index -= 2;
 					break;

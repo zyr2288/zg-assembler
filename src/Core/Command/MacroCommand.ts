@@ -92,7 +92,7 @@ export class MacroCommand implements ICommand {
 		Command.MarkLineFinished(option, option.index + 1, matchEnd);
 
 		line.tag = macro as MacroLineTag;
-		Compiler.enviroment.allMacro.set(macro.name.text, macro);
+		Compiler.enviroment.AddMacro(macro);
 
 		const macroOp = new CompileOption();
 		macroOp.macro = macro;

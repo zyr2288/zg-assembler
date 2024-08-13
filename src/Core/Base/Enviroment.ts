@@ -60,6 +60,14 @@ export class Enviroment {
 	/**文件区域，key为fileIndex */
 	private highlightRanges = new Map<number, HighlightRange[]>();
 
+	//#region 添加Macro
+	AddMacro(macro: Macro) {
+		this.allMacro.set(macro.name.text, macro);
+		const macroNames = this.fileMacros.get(macro.fileIndex) ?? new Set();
+		macroNames.add(macro.name.text);
+		this.fileMacros.set(macro.fileIndex, macroNames);
+	}
+	//#endregion 添加Macro
 
 	//#region 清除文件内的所有标记
 	ClearFile(fileIndex: number) {
