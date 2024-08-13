@@ -40,7 +40,7 @@ export class FileUtils {
 
 	//#region 获取目录下所有文件和文件夹
 	/**
-	 * 获取目录下所有文件和文件夹（需要实现）
+	 * 获取目录下所有文件和文件夹（需要实现），仅在智能提示下使用
 	 * @param path 路径
 	 */
 	static GetFolderFiles: (path: string) => Promise<{ name: string, type: "folder" | "file" }[]>
@@ -120,7 +120,7 @@ export class FileUtils {
 	 * @returns 获取的路径
 	 */
 	static async GetPathFolder(path: string) {
-		let type = await FileUtils.PathType(path);
+		const type = await FileUtils.PathType(path);
 		if (type === "none")
 			return "";
 

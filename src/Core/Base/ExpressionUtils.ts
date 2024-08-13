@@ -176,8 +176,10 @@ export class ExpressionUtils {
 	static GetValue(parts: ExpressionPart[], option?: { macro?: Macro, tryValue?: boolean }) {
 		const result = { success: true, value: 0 };
 		const exps = ExpressionUtils.CheckLabelAndGetValue(parts, option);
-		if (!exps)
+		if (!exps) {
+			result.success = false;
 			return result;
+		}
 
 		const GetPart = (index: number) => {
 			if (index < 0 || index >= exps.length)
