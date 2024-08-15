@@ -12,7 +12,7 @@ const packageJson = require("./package.json");
 const coreBuilderCS = {
 	target: ["web", "es2020"],
 	mode: "production",
-	entry: ["./src/Core/ZGAssembler.ts"],
+	entry: "./src/Core/ZGAssembler.ts",
 	output: {
 		// the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
 		path: path.resolve(__dirname, "dist"),
@@ -51,12 +51,12 @@ const coreBuilderCS = {
 const coreBuilderNode = {
 	target: "node",
 	mode: "production",
-	entry: ["./src/Core/ZGAssembler.ts"],
+	entry: "./src/Core/ZGAssembler.ts",
 	output: {
 		// the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
-		path: path.resolve(__dirname, "dist"),
+		path: path.resolve(__dirname, "dist", "core"),
 		filename: `core-nodejs-${packageJson.version}.js`,
-		library: { name: "zgassembler", type: "commonjs", export: "ZGAssembler" },
+		library: { name: "zgassembler", type: "commonjs2", export: "ZGAssembler" },
 	},
 	externals: {
 		vscode: 'commonjs vscode' // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/

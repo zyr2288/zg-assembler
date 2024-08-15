@@ -20,7 +20,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		const server = new LanguageServer();
 		await server.Initialize(context);
 	} catch (e) {
-		console.log(e);
+		console.error(e);
 		throw e;
 	}
 
