@@ -64,6 +64,8 @@ export class Command {
 	 */
 	static async AnalyseFirst(option: CompileOption) {
 		const analyseResult = await Command.AnalyseCommand(option);
+		analyseResult?.line.label?.Analyse();
+
 		if (analyseResult?.com.AnalyseFirst)
 			await analyseResult.com.AnalyseFirst(option);
 	}
@@ -133,14 +135,10 @@ export class Command {
 				return;
 		}
 
-		if (line.label) {
-			if (com!.allowLabel) {
-				line.label.Analyse();
-			} else {
-				const error = Localization.GetMessage("Command {0} can not use label", line.command.text);
-				MyDiagnostic.PushException(line.label.labelToken, error);
-				line.lineType = LineType.Error;
-			}
+		if (line.label && com!.allowLabel === false) {
+			const error = Localization.GetMessage("Command {0} can not use label", line.command.text);
+			MyDiagnostic.PushException(line.label.labelToken, error);
+			line.lineType = LineType.Error;
 		}
 		return { line, com };
 	}
