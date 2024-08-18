@@ -102,7 +102,10 @@ export class HelperUtils {
 
 		switch (match.key) {
 			case "instruction":
-				if (HelperUtils.CurrentInToken(current, match.content!.main)) {
+				if (current < match.content!.main.start && !match.content!.pre.isEmpty) {
+					result.type = "label";
+					result.token = match.content!.pre.Trim();
+				} else if (HelperUtils.CurrentInToken(current, match.content!.main)) {
 					result.type = match.key;
 					result.token = match.content!.main;
 					return result;
@@ -119,7 +122,10 @@ export class HelperUtils {
 				}
 				break;
 			case "command":
-				if (HelperUtils.CurrentInToken(current, match.content!.main)) {
+				if (current < match.content!.main.start && !match.content!.pre.isEmpty) {
+					result.type = "label";
+					result.token = match.content!.pre.Trim();
+				} else if (HelperUtils.CurrentInToken(current, match.content!.main)) {
 					result.type = match.key;
 					result.token = match.content!.main;
 					return result;
@@ -135,7 +141,7 @@ export class HelperUtils {
 					HelperUtils.MatchLabelOrNumber(lineText, current, result);
 				} else if (current < match.content!.main.start && !match.content!.pre.isEmpty) {
 					result.type = "label";
-					result.token = match.content!.pre;
+					result.token = match.content!.pre.Trim();
 				}
 				break;
 			case "unknow":
