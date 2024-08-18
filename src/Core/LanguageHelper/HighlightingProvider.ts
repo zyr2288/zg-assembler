@@ -8,6 +8,7 @@ import { DataCommandTag } from "../Command/DataCommand";
 import { CommandLine } from "../Lines/CommandLine";
 import { MacroCommand } from "../Command/MacroCommand";
 import { CommandTagBase } from "../Command/Command";
+import { DefTag } from "../Command/DefinedCommand";
 
 export class HighlightOption {
 	lines: CommonLine[] = [];
@@ -129,6 +130,12 @@ export class HighlightingProvider {
 		let tag;
 		HighlightingProvider.GetLabel(line.label, option.result);
 		switch (line.command.text) {
+			case ".DEF":
+				tag = option.GetCurrent<CommandLine>()!.tag as DefTag;
+				if (tag.exp)
+					HighlightingProvider.GetExpression(tag.exp, option.result);
+				
+				break;
 			case ".ENUM":
 				tag = option.GetCurrent<CommandLine>()!.tag as EnumTag;
 				if (tag.exp)
