@@ -514,7 +514,7 @@ export class IntellisenseProvider {
 			return IntellisenseProvider.GetInstructionAddressingModes(content.main.text);
 		}
 
-		if (!trigger) {
+		if (!trigger || trigger === ".") {
 			const prefix = HelperUtils.GetWord(content.rest.text, current);
 			return IntellisenseProvider.GetLabel(fileIndex, prefix.leftText, macro);
 		}
@@ -541,7 +541,7 @@ export class IntellisenseProvider {
 
 				break;
 			default:
-				if (!trigger) {
+				if (!trigger || trigger === ".") {
 					const prefix = HelperUtils.GetWord(content.rest.text, current);
 					result = IntellisenseProvider.GetLabel(fileIndex, prefix.leftText, macro);
 				}
