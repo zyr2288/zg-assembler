@@ -754,6 +754,8 @@ export class ExpressionUtils {
 				part.chars = param.values;
 				expression.stringIndex = i;
 				expression.stringLength = param.values.length;
+			} else if (param.values.length === 0) {
+				continue;
 			} else {
 				part.value = param.values[0];
 				part.type = PriorityType.Level_0_Sure;

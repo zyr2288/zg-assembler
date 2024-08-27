@@ -82,15 +82,12 @@ export class HighlightingProvider {
 				HighlightingProvider.GetLabel(line, option.result);
 				break;
 			case "variable":
-				HighlightingProvider.GetExpression(line.expression, option.result);
+				HighlightingProvider.GetExpression(option.result, line.expression);
 				break;
 			case "instruction":
 				HighlightingProvider.GetLabel(line.label, option.result);
 				HighlightingProvider.GetToken(line.instruction, HighlightType.Keyword, option.result);
-
-				for (let i = 0; i < line.expressions.length; i++)
-					HighlightingProvider.GetExpression(line.expressions[i], option.result);
-
+				HighlightingProvider.GetExpression(option.result, ...line.expressions);
 				break;
 			case "command":
 				HighlightingProvider.GetCommandHighlighting(option);
@@ -98,6 +95,7 @@ export class HighlightingProvider {
 			case "macro":
 				HighlightingProvider.GetLabel(line.label, option.result);
 				HighlightingProvider.GetToken(line.name, HighlightType.Macro, option.result);
+				HighlightingProvider.GetExpression(option.result, ...line.expressions)
 				break;
 		}
 	}
@@ -111,10 +109,12 @@ export class HighlightingProvider {
 		});
 	}
 
-	static GetExpression(expression: Expression, result: HighlightToken[]) {
-		for (let i = 0; i < expression.parts.length; i++) {
-			const part = expression.parts[i];
-			HighlightingProvider.GetToken(part.token, part.highlightType, result);
+	static GetExpression(result: HighlightToken[], ...expressions: Expression[]) {
+		for (let i = 0; i < expressions.length; i++) {
+			for (let j = 0; j < expressions[i].parts.length; j++) {
+				const part = expressions[i].parts[j];
+				HighlightingProvider.GetToken(part.token, part.highlightType, result);
+			}
 		}
 	}
 
@@ -133,13 +133,13 @@ export class HighlightingProvider {
 			case ".DEF":
 				tag = option.GetCurrent<CommandLine>()!.tag as DefTag;
 				if (tag.exp)
-					HighlightingProvider.GetExpression(tag.exp, option.result);
-				
+					HighlightingProvider.GetExpression(option.result, tag.exp);
+
 				break;
 			case ".ENUM":
 				tag = option.GetCurrent<CommandLine>()!.tag as EnumTag;
 				if (tag.exp)
-					HighlightingProvider.GetExpression(tag.exp, option.result);
+					HighlightingProvider.GetExpression(option.result, tag.exp);
 
 				for (let i = 0; i < tag.lines.length; i++) {
 					const line = tag.lines[i];
@@ -147,7 +147,7 @@ export class HighlightingProvider {
 						continue;
 
 					HighlightingProvider.GetToken(line.labelToken, HighlightType.Defined, option.result);
-					HighlightingProvider.GetExpression(line.expression, option.result);
+					HighlightingProvider.GetExpression(option.result, line.expression);
 				}
 				option.index += tag.lines.length;
 				break;
@@ -155,9 +155,7 @@ export class HighlightingProvider {
 			case ".DW":
 			case ".DL":
 				tag = line.tag as DataCommandTag;
-				for (let i = 0; i < tag.length; i++)
-					HighlightingProvider.GetExpression(tag[i], option.result);
-
+				HighlightingProvider.GetExpression(option.result, ...tag);
 				break;
 			case ".MACRO":
 				MacroCommand.GetHighlight(option);
@@ -168,7 +166,7 @@ export class HighlightingProvider {
 			case ".ELSEIF":
 				tag = line.tag as CommandTagBase;
 				if (tag.exp)
-					HighlightingProvider.GetExpression(tag.exp, option.result);
+					HighlightingProvider.GetExpression(option.result, tag.exp);
 				break;
 		}
 	}

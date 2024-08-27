@@ -76,9 +76,11 @@ export class Compiler {
 
 			i = option.index;
 
-			// @ts-ignore
-			if (line.lineType === LineType.Error) {
+			if (line?.lineType === LineType.Error) {
 				Compiler.stopCompiling = true;
+			}
+
+			if (Compiler.stopCompiling) {
 				Compiler.enviroment.compileTime = Config.ProjectSetting.compileTimes;
 				break;
 			}
