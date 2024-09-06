@@ -9,6 +9,8 @@ import { Localization } from "../I18n/Localization";
 import { HighlightOption, HighlightingProvider } from "../LanguageHelper/HighlightingProvider";
 import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
+import { LabelLine } from "../Lines/LabelLine";
+import { MacroLine } from "../Lines/MacroLine";
 import { Command, ICommand } from "./Command";
 
 export type MacroLineTag = Macro;
@@ -124,7 +126,33 @@ export class MacroCommand implements ICommand {
 	}
 
 	async Compile(option: CompileOption) {
-		if (Compiler.FirstCompile())
-			await this.AnalyseFirst(option);
+		if (!Compiler.FirstCompile())
+			return;
+
+		await this.AnalyseFirst(option);
+
+		const line = option.GetCurrent<CommandLine>();
+		const macro = line.tag as Macro;
+
+		for (let i = 0; i < macro.lines.length; i++) {
+			const line = macro.lines[i];
+			if (!line || line.lineType === LineType.Error)
+				continue;
+
+			let temp;
+			switch (line.key) {
+				case "unknow":
+					const result = Analyser.MatchLine(line.org, false, ["macro", Compiler.enviroment.allMacro]);
+					if (result.key === "macro") {
+						temp = MacroLine.Create(result.content!, line.comment);
+					} else {
+						temp = LabelLine.Create(line.org, line.comment);
+					}
+					break;
+			}
+
+			if (temp)
+				macro.lines[i] = temp;
+		}
 	}
 }

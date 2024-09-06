@@ -23,8 +23,8 @@ export class LabelLine {
 	comment?: string;
 
 	/**分析，走第一次编译 */
-	Analyse() {
-		const label = LabelUtils.CreateCommonLabel(this.labelToken, { comment: this.comment });
+	Analyse(option: CompileOption) {
+		const label = LabelUtils.CreateCommonLabel(this.labelToken, { comment: this.comment, macro: option.macro });
 		if (!label) {
 			this.lineType = LineType.Error;
 			return;
@@ -35,7 +35,7 @@ export class LabelLine {
 
 	Compile(option: CompileOption) {
 		if (Compiler.FirstCompile())
-			this.Analyse();
+			this.Analyse(option);
 
 		if (this.lineType === LineType.Finished)
 			return;

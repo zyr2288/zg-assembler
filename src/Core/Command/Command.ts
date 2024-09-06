@@ -64,7 +64,7 @@ export class Command {
 	 */
 	static async AnalyseFirst(option: CompileOption) {
 		const analyseResult = await Command.AnalyseCommand(option);
-		analyseResult?.line.label?.Analyse();
+		analyseResult?.line.label?.Analyse(option);
 
 		if (analyseResult?.com.AnalyseFirst)
 			await analyseResult.com.AnalyseFirst(option);

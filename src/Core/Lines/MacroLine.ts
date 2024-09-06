@@ -76,8 +76,8 @@ export class MacroLine {
 	/**所有参数表达式 */
 	expressions: Expression[] = [];
 
-	AnalyseLabel() {
-		this.label?.Analyse();
+	AnalyseLabel(option: CompileOption) {
+		this.label?.Analyse(option);
 	}
 
 	AnalyseThird(option: CompileOption) {

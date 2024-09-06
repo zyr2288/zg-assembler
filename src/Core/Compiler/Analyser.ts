@@ -248,10 +248,10 @@ export class Analyser {
 					const result = Analyser.MatchLine(line.org, false, ["macro", Compiler.enviroment.allMacro]);
 					if (result.key === "macro") {
 						temp = MacroLine.Create(result.content!, line.comment);
-						temp?.AnalyseLabel();
+						temp?.AnalyseLabel(option);
 					} else {
 						temp = LabelLine.Create(line.org, line.comment);
-						temp?.Analyse();
+						temp?.Analyse(option);
 					}
 					break;
 				case "command":

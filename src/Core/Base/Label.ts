@@ -103,7 +103,7 @@ export class LabelUtils {
 		if (option?.macro) {
 			if (option.macro.labels.has(token.text) || option.macro.name.text === token.text) {
 				const errorMsg = Localization.GetMessage("Label {0} is already defined", token.text);
-				MyDiagnostic.PushException(token, errorMsg);
+				MyDiagnostic.PushException(token, errorMsg, option.macro.fileIndex);
 				return;
 			}
 			const label: ILabelNormal = { type: LabelType.Label, scope: LabelScope.Global, token, fileIndex: 0 };

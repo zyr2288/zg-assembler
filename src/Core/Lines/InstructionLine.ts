@@ -49,7 +49,7 @@ export class InstructionLine {
 
 	/**第一次分析 */
 	AnalyseFirst(option: CompileOption) {
-		this.label?.Analyse();
+		this.label?.Analyse(option);
 	}
 
 	/**第三次分析 */
