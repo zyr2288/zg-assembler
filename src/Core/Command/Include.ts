@@ -25,7 +25,10 @@ export class Include implements ICommand {
 		const line = option.GetCurrent<CommandLine>();
 		const tag: IncludeTag = line.tag;
 
+		const saveFileIndex = Compiler.enviroment.fileIndex;
+		Compiler.enviroment.fileIndex = Compiler.enviroment.GetFileIndex(tag.path);
 		Compiler.GetLinesResult(tag.option, result);
+		Compiler.enviroment.fileIndex = saveFileIndex;
 	}
 
 	/***** class *****/
@@ -120,7 +123,7 @@ export class Incbin implements ICommand {
 		line.lineResult.AddAddress();
 	}
 
-	private async CheckFile(option:CompileOption) {
+	private async CheckFile(option: CompileOption) {
 		const result = await IncludeUtils.CheckFile(option);
 		if (!result.exsist)
 			return;

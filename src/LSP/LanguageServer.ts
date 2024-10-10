@@ -12,6 +12,7 @@ import { HoverProvider } from "./HoverProvider";
 import { Rename } from "./Rename";
 import { ZGAssemblerDebugAdapter } from "./DebugAdapter/ZGAssemblerDebugAdapter";
 import { ReferencesProvider } from "./ReferencesProvider";
+import { TextDecoration } from "./TextDecoration";
 
 export class LanguageServer {
 
@@ -35,7 +36,7 @@ export class LanguageServer {
 		Rename.Initialize(context);
 		ReferencesProvider.Initialize(context);
 		Intellisense.Initialize(context);
-		// TextDecoration.Initialize(context);
+		TextDecoration.Initialize(context);
 		// // LabelTreeViewer.Initialize(context);
 
 		HoverProvider.Initialize(context);
