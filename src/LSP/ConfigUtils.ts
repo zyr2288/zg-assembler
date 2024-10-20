@@ -19,6 +19,8 @@ export class ConfigUtils {
 			const json = LSPUtils.assembler.fileUtils.BytesToString(buffer);
 			LSPUtils.assembler.config.ReadConfigJson(json);
 		}
+
+		LSPUtils.assembler.SwitchPlatform(LSPUtils.assembler.config.ProjectSetting.platform);
 	}
 	//#endregion 读取配置文件
 }

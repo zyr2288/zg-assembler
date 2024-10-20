@@ -122,12 +122,7 @@ export class UpdateFile {
 		if (fileName !== LSPUtils.assembler.config.ConfigFile)
 			return;
 
-		let platform = LSPUtils.assembler.config.ProjectSetting.platform;
 		await ConfigUtils.ReadConfig();
-		if (platform === LSPUtils.assembler.config.ProjectSetting.platform)
-			return;
-
-		LSPUtils.assembler.SwitchPlatform(LSPUtils.assembler.config.ProjectSetting.platform);
 	}
 
 	/**文件创建 */
