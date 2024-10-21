@@ -1,8 +1,8 @@
 /**
  * 发送以及接收消息统一格式
- * message;command;data
+ * messageId;command;data
  * 其中：
- * message是一个长度为8的数字字符串
+ * messageId是一个长度为8的数字字符串
  * command是命令，可以看以下type查看命令格式
  * data是以 data1=value,data2=value 的形式进行传输
  */
@@ -48,7 +48,7 @@ export class DebugClient {
 
 	async Connect() {
 		let index = 10;
-		while(index-- > 0) {
+		while (index-- > 0) {
 			this.client.Connect();
 			await this.client.Wait(1);
 		}
@@ -119,10 +119,7 @@ class TcpClient {
 
 	Connect() {
 		this.clientSocket.setTimeout(10 * 1000);
-		this.clientSocket.connect({
-			host: "127.0.0.1",
-			port: this.port
-		});
+		this.clientSocket.connect({ host: this.host, port: this.port });
 	}
 
 	SendMessage(command: keyof ReceiveDatas, data: Record<string, any>) {
