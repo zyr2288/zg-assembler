@@ -12,14 +12,14 @@ local commandAndData = nil;
 local functions = {};
 local breakpoints = {};
 local eventCallback = {};
+local nesAddressOffset = -0x10;
 
 -- 命中断点
 function BreakpointHit(cpuType)
 	local state = emu.getState();
 	local baseAddr = emu.convertAddress(state["cpu.pc"], emu.memType.nesMemory, emu.cpuType.nes);
 	local data = {};
-	data["baseAddress"] = baseAddr["address"];
-	GetCPURegs(data);
+	data["baseAddress"] = baseAddr["address"] - nesAddressOffset;
 	commandAndData = ProcessSendData("breakpoint-hit", data);
 	ProcessMessage();
 end
@@ -28,20 +28,23 @@ emu.addEventCallback(BreakpointHit, emu.eventType.codeBreak);
 -- 获取CPU状态
 function GetCPURegs(data)
 	local state = emu.getState();
+	local data = {};
 	data["a"] = state["cpu.a"];
 	data["x"] = state["cpu.x"];
 	data["y"] = state["cpu.y"];
 	data["pc"] = state["cpu.pc"];
 	data["sp"] = state["cpu.sp"];
 	data["p"] = state["cpu.p"];
+	return ProcessSendData("registers-get", data);
 end
 functions["registers-get"] = GetCPURegs;
 
 -- 设定断点
 function SetBreakpoint(data)
-	local address = data["baseAddress"];
+	local address = data["baseAddress"] + nesAddressOffset;
 	local memAddr = emu.convertAddress(address, emu.memType.nesPrgRom, emu.cpuType.nes);
 	local addr = memAddr["address"];
+	emu.log("Set breakpoint at " .. addr);
 	breakpoints[address] = {};
 	breakpoints[address]["callback"] = emu.addMemoryCallback(MemoryCallback, emu.callbackType.exec, addr, addr, emu.cpuType.nes, emu.memType.nesMemory);
 	breakpoints[address]["address"] = addr;
@@ -50,7 +53,7 @@ functions["breakpoint-set"] = SetBreakpoint;
 
 -- 移除断点
 function RemoveBreakpoint(data)
-	local address = data["baseAddress"];
+	local address = data["baseAddress"] + nesAddressOffset;
 	if breakpoints[address] ~= nil then
 		local callback = breakpoints[address]["callback"];
 		local addr = breakpoints[address]["address"];
@@ -62,7 +65,7 @@ functions["breakpoint-remove"] = RemoveBreakpoint;
 
 function MemoryCallback(address)
 	address = tonumber(address);
-	emu.log(address);
+	emu.log("break-hit " .. address);
 	emu.breakExecution();
 end
 
@@ -79,7 +82,8 @@ function ProcessMessage()
 		local data, err, partial = connection:receive();
 		if data ~= nil then
 			local args = StringSplit(data, ";");
-			local msgId = tonumber(args[1]);
+			local msgId = args[1];
+			emu.log("messageID:" .. msgId .. " command:" .. args[2]);
 			local tempData = nil;
 			if args[3] ~= nil then
 				tempData = ProcessReceiveData(args[3]);
@@ -114,7 +118,7 @@ function ProcessSendData(command, data)
 	return string.sub(result, 1, length - 1) .. "\n";
 end
 
--- 
+-- 处理接收数据
 function ProcessReceiveData(dataStr)
 	if dataStr == nil then
 		return nil;

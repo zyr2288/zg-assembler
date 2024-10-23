@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { DebugSession, StoppedEvent, InitializedEvent, Breakpoint, Thread, StackFrame, Source, TerminatedEvent, Scope } from "@vscode/debugadapter";
+import { DebugSession, StoppedEvent, InitializedEvent, Breakpoint, Thread, StackFrame, Source, TerminatedEvent, Scope, Variable } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
 import { LSPUtils } from "../LSPUtils";
 import { DebugClient } from "./DebugClient";
@@ -8,16 +8,16 @@ const SessionThreadID = 1;
 
 export interface ZGAssemblerDebugConfig {
 	type: "zgassembly";
-	request: "launch";
+	request: "attach";
 	name: "Debug rom with Emulator",
 	host: string;
 	port: number;
+	romOffset: number;
 }
 
 export class ZGAssemblerDebugSession extends DebugSession {
 
 	private hitStack: StackFrame | undefined;
-	private variables: DebugProtocol.Variable[] = [];
 	private debugClient!: DebugClient;
 	private CompileDebug = LSPUtils.assembler.languageHelper.debug;
 	private config: ZGAssemblerDebugConfig;
@@ -32,9 +32,9 @@ export class ZGAssemblerDebugSession extends DebugSession {
 
 		this.debugClient = new DebugClient(this.config.host, this.config.port);
 
-		this.debugClient.BreakPointHit = (data) => {
+		this.debugClient.BreakPointHit = async (data) => {
 			// @ts-ignore
-			let temp = parseInt(data);
+			let temp = parseInt(data.baseAddress) - this.config.romOffset;
 			const line = this.CompileDebug.GetDebugLine(temp);
 			if (!line)
 				return;
@@ -70,13 +70,12 @@ export class ZGAssemblerDebugSession extends DebugSession {
 			if (args.breakpoints && args.breakpoints.length !== 0) {
 				for (let i = 0; i < args.breakpoints.length; i++) {
 					const bp = args.breakpoints[i];
-					const line = this.debugClient.BreakpointSet(args.source.path, bp.line - 1);
+					const line = this.debugClient.BreakpointSet(args.source.path, bp.line - 1, this.config.romOffset);
 					const newBp = new Breakpoint(true, bp.line);
 
 					// 是否通过验证
 					newBp.verified = !!line;
 					response.body.breakpoints.push(newBp);
-
 				}
 			}
 		}
@@ -107,20 +106,17 @@ export class ZGAssemblerDebugSession extends DebugSession {
 	}
 
 	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request) {
-		if (this.variables.length === 0) {
-			this.sendResponse(response);
-			return;
-		}
-
 		switch (args.variablesReference) {
 			case 1:
-				response.body = {
-					variables: this.variables
-				};
+				const registers = await this.debugClient.RegistersGet();
+				const vars: Variable[] = [];
+				for (const key in registers)
+					vars.push({ name: key, value: registers[key].toString(16), variablesReference: 1 });
+
+				response.body = { variables: vars };
 				break;
 		}
 		this.sendResponse(response);
-		this.variables = [];
 	}
 
 	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments, request?: DebugProtocol.Request): void {

@@ -30,17 +30,17 @@ interface ReceiveDatas {
 
 export class DebugClient {
 
-	BreakPointHit?: (data: ReceiveDatas["breakpoint-hit"]) => void;
+	BreakPointHit?: (data: ReceiveDatas["breakpoint-hit"]) => Promise<void> | void;
 	private client: TcpClient;
 	private CompileDebug = LSPUtils.assembler.languageHelper.debug;
 
 	constructor(host: string, port: number) {
 		this.client = new TcpClient({ host, port });
 
-		this.client.OnMessage = (command, data) => {
+		this.client.OnMessage = async (command, data) => {
 			switch (command) {
 				case "breakpoint-hit":
-					this.BreakPointHit?.(data as ReceiveDatas["breakpoint-hit"]);
+					await this.BreakPointHit?.(data as ReceiveDatas["breakpoint-hit"]);
 					break;
 			}
 		}
@@ -54,10 +54,10 @@ export class DebugClient {
 		}
 	}
 
-	BreakpointSet(filePath: string, lineNumber: number) {
+	BreakpointSet(filePath: string, lineNumber: number, romOffset: number) {
 		const line = this.CompileDebug.GetDebugLineWithFile(filePath, lineNumber);
 		if (line) {
-			this.client.SendMessage("breakpoint-set", { baseAddress: line.baseAddress });
+			this.client.SendMessage("breakpoint-set", { baseAddress: line.baseAddress + romOffset });
 		}
 
 		return line;
@@ -115,6 +115,8 @@ class TcpClient {
 			this.isConnected = false;
 			this.OnClose?.();
 		});
+
+		this.Connect();
 	}
 
 	Connect() {
@@ -144,10 +146,11 @@ class TcpClient {
 
 			let msgId;
 			while ((msgId = Math.random()) === 0) { }
-			msgId = Math.floor(msgId).toString().padStart(8, "0");
+			msgId = Math.floor(msgId * 100000000).toString().padStart(8, "0");
 			const temp = msgId + ";" + this.SendDataProcess(command, data);
 			this.clientSocket.write(temp);
 			this.messageStack[msgId] = (response: any) => {
+				console.log(response);
 				resolve(response);
 				delete (this.messageStack[msgId]);
 			};

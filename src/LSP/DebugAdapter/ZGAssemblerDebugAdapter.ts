@@ -39,6 +39,7 @@ class ZGAssemblerDebugConfig implements vscode.DebugConfigurationProvider {
 				config.request = "attach";
 				config.host = "127.0.0.1";
 				config.port = 4065;
+				config.romOffset = -16;
 			}
 		}
 
