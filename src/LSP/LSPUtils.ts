@@ -103,6 +103,11 @@ export class LSPUtils {
 	//#endregion 获取编译的String
 
 	//#region 状态栏显示文本
+	/**
+	 * 状态栏显示文本
+	 * @param text 要显示的文本
+	 * @param timer 显示时间，默认3秒
+	 */
 	static StatueBarShowText(text: string, timer = 3000) {
 		if (LSPUtils.statusTimer)
 			clearTimeout(LSPUtils.statusTimer);

@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { LSPUtils } from "../LSPUtils";
-import { ZGAssemblerDebugSession } from "./ZGAssemblerDebugSession";
+import { ZGAssemblerDebugConfig, ZGAssemblerDebugSession } from "./ZGAssemblerDebugSession";
 
 /**与lanch的type一致 */
 const DebugType = "zgassembler";
@@ -9,7 +9,7 @@ export class ZGAssemblerDebugAdapter {
 
 	static Initialize(context: vscode.ExtensionContext) {
 		context.subscriptions.push(
-			vscode.debug.registerDebugConfigurationProvider(DebugType, new ZGAssemblerDebugConfig())
+			vscode.debug.registerDebugConfigurationProvider(DebugType, new ZGAssemblerDebugConfigProvider())
 		);
 
 		context.subscriptions.push(
@@ -26,16 +26,17 @@ class ZGAssemblerDebugFactory implements vscode.DebugAdapterDescriptorFactory {
 	}
 }
 
-class ZGAssemblerDebugConfig implements vscode.DebugConfigurationProvider {
+class ZGAssemblerDebugConfigProvider implements vscode.DebugConfigurationProvider {
 
-	async resolveDebugConfiguration(folder: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration, token?: vscode.CancellationToken) {
+	async resolveDebugConfiguration(folder: vscode.WorkspaceFolder | undefined, config: ZGAssemblerDebugConfig, token?: vscode.CancellationToken) {
 
+		// @ts-ignore
+		const testValue = parseInt(config.romOffset);
 		// 如果 launch.json 缺失
-		if (!config.type && !config.request && !config.name) {
+		if (isNaN(testValue)) {
 			const editor = vscode.window.activeTextEditor;
 			if (editor && editor.document.languageId === LSPUtils.assembler.config.FileExtension.language) {
-				config.type = DebugType;
-				config.name = "ZG-Assembler Debugger";
+				config.name = "Debug rom with Emulator";
 				config.request = "attach";
 				config.host = "127.0.0.1";
 				config.port = 4065;

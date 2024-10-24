@@ -12,16 +12,19 @@ local commandAndData = nil;
 local functions = {};
 local breakpoints = {};
 local eventCallback = {};
-local nesAddressOffset = -0x10;
+local tempValue = 0;
 
 -- 命中断点
 function BreakpointHit(cpuType)
 	local state = emu.getState();
 	local baseAddr = emu.convertAddress(state["cpu.pc"], emu.memType.nesMemory, emu.cpuType.nes);
 	local data = {};
-	data["baseAddress"] = baseAddr["address"] - nesAddressOffset;
+	data["baseAddress"] = baseAddr["address"];
+	emu.log("breakpoint-hit " .. baseAddr["address"]);
 	commandAndData = ProcessSendData("breakpoint-hit", data);
 	ProcessMessage();
+	
+	BreakLoop();
 end
 emu.addEventCallback(BreakpointHit, emu.eventType.codeBreak);
 
@@ -41,10 +44,9 @@ functions["registers-get"] = GetCPURegs;
 
 -- 设定断点
 function SetBreakpoint(data)
-	local address = data["baseAddress"] + nesAddressOffset;
+	local address = data["baseAddress"];
 	local memAddr = emu.convertAddress(address, emu.memType.nesPrgRom, emu.cpuType.nes);
 	local addr = memAddr["address"];
-	emu.log("Set breakpoint at " .. addr);
 	breakpoints[address] = {};
 	breakpoints[address]["callback"] = emu.addMemoryCallback(MemoryCallback, emu.callbackType.exec, addr, addr, emu.cpuType.nes, emu.memType.nesMemory);
 	breakpoints[address]["address"] = addr;
@@ -53,7 +55,7 @@ functions["breakpoint-set"] = SetBreakpoint;
 
 -- 移除断点
 function RemoveBreakpoint(data)
-	local address = data["baseAddress"] + nesAddressOffset;
+	local address = data["baseAddress"];
 	if breakpoints[address] ~= nil then
 		local callback = breakpoints[address]["callback"];
 		local addr = breakpoints[address]["address"];
@@ -63,10 +65,29 @@ function RemoveBreakpoint(data)
 end
 functions["breakpoint-remove"] = RemoveBreakpoint;
 
-function MemoryCallback(address)
-	address = tonumber(address);
-	emu.log("break-hit " .. address);
+function Resume(data)
+	pause = false;
+	emu.log("resume");
+	emu.resume();
+end
+functions["resume"] = Resume;
+
+function Pause(data)
 	emu.breakExecution();
+	pause = true;
+end
+functions["pause"] = Pause;
+
+function Step(data)
+	pause = false;
+	emu.step(1, emu.stepType.step);
+end
+functions["step"] = Step;
+
+function MemoryCallback(address)
+	emu.log("memory callback" .. address);
+	address = tonumber(address);
+	Pause(nil);
 end
 
 -- 处理接收和发送数据
@@ -79,6 +100,7 @@ function ProcessMessage()
 		end
 	end
 	if connection ~= nil then
+		connection:settimeout(TimeoutFast);
 		local data, err, partial = connection:receive();
 		if data ~= nil then
 			local args = StringSplit(data, ";");
@@ -150,7 +172,8 @@ function EndingLoop()
 end
 
 function BreakLoop()
-	while ProcessMessage() do
+	while pause do
+		ProcessMessage()
 	end
 end
 

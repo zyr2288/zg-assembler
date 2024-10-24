@@ -6,7 +6,7 @@ import { DebugClient } from "./DebugClient";
 
 const SessionThreadID = 1;
 
-export interface ZGAssemblerDebugConfig {
+export interface ZGAssemblerDebugConfig extends vscode.DebugConfiguration {
 	type: "zgassembly";
 	request: "attach";
 	name: "Debug rom with Emulator",
@@ -30,7 +30,7 @@ export class ZGAssemblerDebugSession extends DebugSession {
 		this.setDebuggerLinesStartAt1(false);
 		this.setDebuggerColumnsStartAt1(false);
 
-		this.debugClient = new DebugClient(this.config.host, this.config.port);
+		this.debugClient = new DebugClient({ host: this.config.host, port: this.config.port, tryReconnect: true });
 
 		this.debugClient.BreakPointHit = async (data) => {
 			// @ts-ignore
@@ -43,9 +43,26 @@ export class ZGAssemblerDebugSession extends DebugSession {
 			this.hitStack = new StackFrame(1, "line", source, line.lineNumber + 1);
 			this.sendEvent(new StoppedEvent("breakpoint", SessionThreadID));
 		}
+
+		this.debugClient.client.ConnectMessage = async (type, data) => {
+			let msg = "";
+			switch (type) {
+				case "tryConnect":
+					msg = LSPUtils.assembler.localization.GetMessage("Connect to emulator...{0}", data as number);
+					break;
+				case "tryConnectFail":
+					msg = LSPUtils.assembler.localization.GetMessage("Debugger can not connect to the emulator");
+					this.sendEvent(new TerminatedEvent());
+					break;
+				case "connected":
+					msg = LSPUtils.assembler.localization.GetMessage("Connected emulator");
+					break;
+			}
+			LSPUtils.StatueBarShowText(msg);
+		}
 	}
 
-	protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments) {
+	protected async initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments) {
 
 		// 如果没有编译文件，则停止调试
 		if (!LSPUtils.assembler.compiler.enviroment.compileResult.finished) {
@@ -61,8 +78,9 @@ export class ZGAssemblerDebugSession extends DebugSession {
 		this.sendEvent(new InitializedEvent());
 	}
 
-	protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments, request?: DebugProtocol.Request): void {
-
+	//#region 设定断点请求
+	/**设定断点请求 */
+	protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments, request?: DebugProtocol.Request) {
 		// 判断设定的断点是否失效
 		response.body = { breakpoints: [] };
 
@@ -82,13 +100,24 @@ export class ZGAssemblerDebugSession extends DebugSession {
 
 		this.sendResponse(response);
 	}
+	//#endregion 设定断点请求
 
-	protected attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments, request?: DebugProtocol.Request): void {
+	//#region 附加进程请求
+	/**附加进程请求 */
+	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments, request?: DebugProtocol.Request) {
+
+		await this.debugClient.client.Connect();
+
+		if (this.debugClient.client.connectType !== "connected") {
+			this.sendEvent(new TerminatedEvent());
+			return;
+		}
 
 		// 执行初始化
 		this.sendResponse(response);
 		this.sendEvent(new InitializedEvent());
 	}
+	//#endregion 附加进程请求
 
 	protected threadsRequest(response: DebugProtocol.ThreadsResponse, request?: DebugProtocol.Request): void {
 		// session进程，不能移除，移除后无法停止在断点
@@ -127,5 +156,20 @@ export class ZGAssemblerDebugSession extends DebugSession {
 		response.body = { stackFrames: [this.hitStack] };
 		this.sendResponse(response);
 		this.hitStack = undefined;
+	}
+
+	protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments, request?: DebugProtocol.Request): void {
+		this.debugClient.Pause();
+		this.sendResponse(response);
+	}
+
+	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments, request?: DebugProtocol.Request): void {
+		this.debugClient.Resume();
+		this.sendResponse(response);
+	}
+
+	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments, request?: DebugProtocol.Request): void {
+		this.debugClient.Step();
+		this.sendResponse(response);
 	}
 }

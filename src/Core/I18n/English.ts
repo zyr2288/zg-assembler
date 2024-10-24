@@ -41,6 +41,8 @@ export const English = {
 
 	"Please compile the file before Debug": "Please compile the file before Debug",
 	"Debugger can not connect to the emulator": "Debugger can not connect to the emulator",
+	"Connect to emulator...{0}": "Connecting emulator ... {0}",
+	"Connected emulator": "Connected emulator",
 	"Cannot find launch.json": "Cannot find launch.json",
 	"Cannot find rom file {0}": "Cannot find rom file {0}",
 	"Cannot find program path {0}": "Cannot find program path {0}",
