@@ -2,7 +2,7 @@
 	"name": "zg-assembler",
 	"displayName": "ZG Assembler",
 	"description": "",
-	"version": "0.3.23",
+	"version": "0.3.25",
 	"engines": {
 		"vscode": "^1.85.0"
 	},
@@ -23,6 +23,7 @@
 		"6502",
 		"65c816",
 		"z80-gb",
+		"APC700",
 		"assembly"
 	],
 	"activationEvents": [
@@ -95,7 +96,8 @@
 						"request": "attach",
 						"name": "Debug rom with Emulator",
 						"host": "127.0.0.1",
-						"port": "4065"
+						"port": 4065,
+						"romOffset": -16
 					}
 				],
 				"configurationAttributes": {
@@ -104,7 +106,7 @@
 							"port": {
 								"type": "number",
 								"description": "连接端口",
-								"default": "4065"
+								"default": 4065
 							}
 						}
 					}

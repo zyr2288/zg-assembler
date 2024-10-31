@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { DebugSession, StoppedEvent, InitializedEvent, Breakpoint, Thread, StackFrame, Source, TerminatedEvent, Scope, Variable } from "@vscode/debugadapter";
+import { DebugSession, StoppedEvent, InitializedEvent, Breakpoint, Thread, StackFrame, Source, TerminatedEvent, Scope, Variable, ContinuedEvent } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
 import { LSPUtils } from "../LSPUtils";
 import { DebugClient } from "./DebugClient";
@@ -32,16 +32,24 @@ export class ZGAssemblerDebugSession extends DebugSession {
 
 		this.debugClient = new DebugClient({ host: this.config.host, port: this.config.port, tryReconnect: true });
 
-		this.debugClient.BreakPointHit = async (data) => {
+		this.debugClient.BreakPointHitHandle = async (data) => {
+
 			// @ts-ignore
 			let temp = parseInt(data.baseAddress) - this.config.romOffset;
 			const line = this.CompileDebug.GetDebugLine(temp);
-			if (!line)
+			if (!line) {
+				this.hitStack = new StackFrame(SessionThreadID, "line");
+				this.sendEvent(new StoppedEvent("pause", SessionThreadID));
 				return;
+			}
 
 			const source = new Source(line.filePath, line.filePath)
-			this.hitStack = new StackFrame(1, "line", source, line.lineNumber + 1);
+			this.hitStack = new StackFrame(SessionThreadID, "line", source, line.lineNumber + 1);
 			this.sendEvent(new StoppedEvent("breakpoint", SessionThreadID));
+		}
+
+		this.debugClient.EmuResumeHandle = () => {
+			this.sendEvent(new ContinuedEvent(SessionThreadID, true));
 		}
 
 		this.debugClient.client.ConnectMessage = async (type, data) => {
@@ -60,6 +68,7 @@ export class ZGAssemblerDebugSession extends DebugSession {
 			}
 			LSPUtils.StatueBarShowText(msg);
 		}
+
 	}
 
 	protected async initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments) {
@@ -72,6 +81,9 @@ export class ZGAssemblerDebugSession extends DebugSession {
 			return;
 		}
 
+		if (!await this.debugClient.client.Connect())
+			return;
+
 		response.body = response.body || {};
 
 		this.sendResponse(response);
@@ -81,6 +93,9 @@ export class ZGAssemblerDebugSession extends DebugSession {
 	//#region 设定断点请求
 	/**设定断点请求 */
 	protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments, request?: DebugProtocol.Request) {
+
+		await this.debugClient.WaitForGameLoaded();
+
 		// 判断设定的断点是否失效
 		response.body = { breakpoints: [] };
 
@@ -106,8 +121,6 @@ export class ZGAssemblerDebugSession extends DebugSession {
 	/**附加进程请求 */
 	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments, request?: DebugProtocol.Request) {
 
-		await this.debugClient.client.Connect();
-
 		if (this.debugClient.client.connectType !== "connected") {
 			this.sendEvent(new TerminatedEvent());
 			return;
@@ -129,7 +142,7 @@ export class ZGAssemblerDebugSession extends DebugSession {
 
 	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments, request?: DebugProtocol.Request) {
 		response.body = {
-			scopes: [new Scope("Registers", 1, false)]
+			scopes: [new Scope("Registers", SessionThreadID, false)]
 		};
 		this.sendResponse(response);
 	}
@@ -170,6 +183,16 @@ export class ZGAssemblerDebugSession extends DebugSession {
 
 	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments, request?: DebugProtocol.Request): void {
 		this.debugClient.Step();
+		this.sendResponse(response);
+	}
+
+	protected terminateRequest(response: DebugProtocol.TerminateResponse, args: DebugProtocol.TerminateArguments, request?: DebugProtocol.Request): void {
+		this.debugClient.client.Close();
+		this.sendResponse(response);
+	}
+
+	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request): void {
+		this.debugClient.client.Close();
 		this.sendResponse(response);
 	}
 }

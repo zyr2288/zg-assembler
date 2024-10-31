@@ -19,7 +19,7 @@
 11. [.INCLUDE](#include)
 12. [.MACRO .ENDM](#macro-endm)
 13. [.REPEAT .ENDR](#repeat-endr)
-14. [.MSG .ERROR](#msg)
+14. [.MSG .ERROR](#msg-error)
 ---
 
 ## 配置文件
@@ -433,7 +433,7 @@
 -----
 
 <details>
-<summary>.MSG</summary>
+<summary>.MSG .ERROR</summary>
 
 ### `.MSG` `.ERROR`
 

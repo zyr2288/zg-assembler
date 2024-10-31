@@ -17,7 +17,7 @@
 10. [.INCLUDE](#include)
 11. [.MACRO .ENDM](#macro-endm)
 12. [.REPEAT .ENDR](#repeat-endr)
-13. [.MSG .ERROR](#msg)
+13. [.MSG .ERROR](#msg-error)
 
 * [ZG Assembler in Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZENG-GE.zg-assembler)
 * An extensible compiler for [VSCode](https://code.visualstudio.com/), supporting `6502` `65c816` (Special thanks Thirteen) `z80-gb`.
@@ -422,7 +422,7 @@ For example:
 ---
 
 <details>
-<summary>.MSG</summary>
+<summary>.MSG .ERROR</summary>
 
 ### `.MSG` `.ERROR`
 

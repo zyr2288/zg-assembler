@@ -13,11 +13,11 @@ import { LSPUtils } from "../LSPUtils";
 /**接受的消息 */
 interface ReceiveDatas {
 	/**设定断点 */
-	"breakpoint-set": { baseAddress: number };
+	"breakpoint-set": { baseAddress: number, orgAddress: number };
 	/**移除断点 */
-	"breakpoint-remove": { baseAddress: number };
+	"breakpoint-remove": { baseAddress: number, orgAddress: number };
 	/**命中断点 */
-	"breakpoint-hit": { baseAddress: number };
+	"breakpoint-hit": { baseAddress: number, orgAddress: number };
 	/**获取寄存器信息 */
 	"registers-get": Record<string, number>;
 	/**暂停 */
@@ -25,9 +25,11 @@ interface ReceiveDatas {
 	/**继续 */
 	"resume": undefined;
 	/**单步 */
-	"step": undefined;
+	"step-into": undefined;
 	/**重启 */
 	"reset": undefined;
+	/**当前游戏状态 */
+	"game-state": { state: "open" | "close" };
 }
 
 /**连接选项 */
@@ -46,20 +48,26 @@ export interface ClientOption {
 
 export class DebugClient {
 
-	BreakPointHit?: (data: ReceiveDatas["breakpoint-hit"]) => Promise<void> | void;
+	BreakPointHitHandle?: (data: ReceiveDatas["breakpoint-hit"]) => Promise<void> | void;
+	EmuResumeHandle?: () => Promise<void> | void;
+
 	client: TcpClient;
 
 	private CompileDebug = LSPUtils.assembler.languageHelper.debug;
+	private gameState: ReceiveDatas["game-state"]["state"] = "close";
 
 	constructor(option: ClientOption) {
 		this.client = new TcpClient(option);
-
 		this.client.OnMessage = async (command, data) => {
-			console.log(command);
-			console.log(data);
 			switch (command) {
 				case "breakpoint-hit":
-					await this.BreakPointHit?.(data as ReceiveDatas["breakpoint-hit"]);
+					await this.BreakPointHitHandle?.(data as ReceiveDatas["breakpoint-hit"]);
+					break;
+				case "game-state":
+					this.gameState = (data as ReceiveDatas["game-state"]).state;
+					break;
+				case "resume":
+					await this.EmuResumeHandle?.();
 					break;
 			}
 		}
@@ -67,16 +75,16 @@ export class DebugClient {
 
 	BreakpointSet(filePath: string, lineNumber: number, romOffset: number) {
 		const line = this.CompileDebug.GetDebugLineWithFile(filePath, lineNumber);
-		if (line) 
-			this.client.SendMessage("breakpoint-set", { baseAddress: line.baseAddress + romOffset });
-		
+		if (line)
+			this.client.SendMessage("breakpoint-set", { baseAddress: line.baseAddress + romOffset, orgAddress: line.line.lineResult.address.org });
+
 		return line;
 	}
 
-	BreakpointRemove(filePath: string, lineNumber: number) {
+	BreakpointRemove(filePath: string, lineNumber: number, romOffset: number) {
 		const line = this.CompileDebug.GetDebugLineWithFile(filePath, lineNumber);
 		if (line) {
-			this.client.SendMessage("breakpoint-remove", { baseAddress: line.baseAddress });
+			this.client.SendMessage("breakpoint-remove", { baseAddress: line.baseAddress + romOffset, orgAddress: line.line.lineResult.address.org });
 		}
 
 		return line;
@@ -91,11 +99,30 @@ export class DebugClient {
 	}
 
 	Step() {
-		this.client.SendMessage("step");
+		this.client.SendMessage("step-into");
 	}
 
 	async RegistersGet() {
 		return await this.client.SendMessageAndWaitBack("registers-get");
+	}
+
+	async WaitForGameLoaded(): Promise<void> {
+		this.client.SendMessage("game-state");
+		return new Promise((resolve, reject) => {
+			const thread = setInterval(() => {
+				if (this.client.connectType === "close" || this.client.connectType === "abort") {
+					resolve();
+					clearInterval(thread);
+					return;
+				}
+
+				if (this.gameState === "open") {
+					resolve();
+					clearInterval(thread);
+					return;
+				}
+			}, 500);
+		});
 	}
 }
 
@@ -140,13 +167,14 @@ class TcpClient {
 
 		this.clientSocket.on("data", (e) => {
 			let data = e.toString();
+			console.log(data);
 			const temp = this.ReceiveData(data);
-			for(const d of temp) {
+			for (const d of temp) {
 				if (d.msgId !== NotWaitMsgId && this.messageStack[d.msgId]) {
 					this.messageStack[d.msgId](d.data);
 					continue;
 				}
-	
+
 				this.OnMessage?.(d.command as keyof ReceiveDatas, d.data);
 			}
 
@@ -173,6 +201,11 @@ class TcpClient {
 
 	get connectType() { return this._connectType; }
 
+	//#region 连接Socket
+	/**
+	 * 连接 Socket
+	 * @returns true为连接上了
+	 */
 	async Connect() {
 		this.clientSocket.setTimeout(5 * 1000);
 		if (this.option.tryTimes < 1)
@@ -187,9 +220,9 @@ class TcpClient {
 			switch (this._connectType as ClientConnectType) {
 				case "connected":
 					this.ConnectMessage?.("connected", null);
-					return;
+					return true;
 				case "abort":
-					return;
+					return false;
 			}
 
 			times++;
@@ -197,28 +230,13 @@ class TcpClient {
 
 		this.ConnectMessage?.("tryConnectFail", null);
 		this.Close();
+		return false;
 	}
+	//#endregion 连接Socket
 
 	Close() {
 		this._connectType = "abort";
 		this.clientSocket.destroySoon();
-	}
-
-	async WaitingConnected() {
-		return new Promise((resolve, reject) => {
-			const thread = setInterval(() => {
-				switch (this._connectType) {
-					case "connected":
-						resolve(null);
-						break;
-					case "close":
-					case "abort":
-						clearInterval(thread);
-						reject();
-						break;
-				}
-			}, 500);
-		});
 	}
 
 	SendMessage(command: keyof ReceiveDatas, data?: Record<string, any>) {

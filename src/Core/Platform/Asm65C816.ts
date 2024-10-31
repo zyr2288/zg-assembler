@@ -39,11 +39,11 @@ export class Asm65C816 implements IAsmPlatform {
 		this.AddInstruction("ASL", { addressingMode: "[exp]", opCode: [, 0x06, 0x0E] });
 
 		const instrs1 = ["BCC", "BCS", "BEQ", "BNE", "BMI", "BPL", "BVC", "BVS", "BRA"];
-		const opCode3 = [0x90, 0xB0, 0xF0, 0xD0, 0x30, 0x10, 0x50, 0x70];
+		const opCode3 = [0x90, 0xB0, 0xF0, 0xD0, 0x30, 0x10, 0x50, 0x70, 0x80];
 		for (let i = 0; i < instrs1.length; ++i)
 			this.AddInstruction(instrs1[i], { addressingMode: "[exp]", opCode: [, opCode3[i]], spProcess: this.Condition });
 
-		this.AddInstruction("BRL", { addressingMode: "[exp]", opCode: [, , 0x82] });
+		this.AddInstruction("BRL", { addressingMode: "[exp]", opCode: [, , 0x82], spProcess: this.Condition2 });
 
 		this.AddInstruction("BIT", { addressingMode: "#[exp]", opCode: [, 0x89, 0x89] });
 		this.AddInstruction("BIT", { addressingMode: "[exp],X", opCode: [, 0x34, 0x3C] });
@@ -222,6 +222,27 @@ export class Asm65C816 implements IAsmPlatform {
 
 		line.lineResult.SetResult(line.addressMode.opCode[1]!, 0, 1);
 		line.lineResult.SetResult(temp & 0xFF, 1, 1);
+		line.lineType = LineType.Finished;
+	}
+
+	private Condition2(option: CompileOption) {
+		const line = option.GetCurrent<InstructionLine>();
+		const tempValue = ExpressionUtils.GetValue(line.expressions[0].parts, option);
+		if (!tempValue.success) {
+			line.lineResult.result.length = 3;
+			return;
+		}
+
+		const temp = tempValue.value - line.lineResult.address.org - 3;
+		if (temp > 32767 || temp < -32768) {
+			line.lineType = LineType.Error;
+			const errorMsg = Localization.GetMessage("Argument out of range")
+			MyDiagnostic.PushException(line.instruction, errorMsg);
+			return;
+		}
+
+		line.lineResult.SetResult(line.addressMode.opCode[2]!, 0, 1);
+		line.lineResult.SetResult(temp & 0xFFFF, 1, 2);
 		line.lineType = LineType.Finished;
 	}
 
