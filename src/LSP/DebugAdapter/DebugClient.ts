@@ -18,6 +18,8 @@ interface ReceiveDatas {
 	"breakpoint-remove": { baseAddress: number, orgAddress: number };
 	/**命中断点 */
 	"breakpoint-hit": { baseAddress: number, orgAddress: number };
+	/**获取断点 */
+	"breakpoint-get": Record<number, number>;
 	/**获取寄存器信息 */
 	"registers-get": Record<string, number>;
 	/**暂停 */
@@ -98,7 +100,7 @@ export class DebugClient {
 		this.client.SendMessage("resume");
 	}
 
-	Step() {
+	StepInto() {
 		this.client.SendMessage("step-into");
 	}
 
@@ -134,9 +136,9 @@ interface ConnectType {
 	tryConnectFail: null;
 }
 
-
-const NotWaitMsgId = "00000000";
 //#region Tcp客户端
+const NotWaitMsgId = "00000000";
+
 class TcpClient {
 
 	OnMessage?: <T extends keyof ReceiveDatas>(command: T, args: ReceiveDatas[T]) => void;

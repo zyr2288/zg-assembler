@@ -132,6 +132,7 @@ export class ZGAssemblerDebugSession extends DebugSession {
 	}
 	//#endregion 附加进程请求
 
+
 	protected threadsRequest(response: DebugProtocol.ThreadsResponse, request?: DebugProtocol.Request): void {
 		// session进程，不能移除，移除后无法停止在断点
 		response.body = {
@@ -182,7 +183,7 @@ export class ZGAssemblerDebugSession extends DebugSession {
 	}
 
 	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments, request?: DebugProtocol.Request): void {
-		this.debugClient.Step();
+		this.debugClient.StepInto();
 		this.sendResponse(response);
 	}
 
