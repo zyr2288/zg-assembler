@@ -46,6 +46,8 @@ export interface ClientOption {
 	tryTimes?: number;
 	/**超时时间 */
 	timeoutSecond?: number;
+	/**编辑器Debug行号基础，默认1 */
+	debugBaseLinenumber?: number;
 }
 
 export class DebugClient {
@@ -56,7 +58,10 @@ export class DebugClient {
 	client: TcpClient;
 
 	private CompileDebug = LSPUtils.assembler.languageHelper.debug;
-	private gameState: ReceiveDatas["game-state"]["state"] = "close";
+	private option = { gameState: "close", debugBaseline: 1 };
+
+	/**Debug合集，key1是文件路径，key2是行号 */
+	private debugCollection = new Map<string, Map<number, { baseAddr: number, orgAddr: number, verified: boolean }>>();
 
 	constructor(option: ClientOption) {
 		this.client = new TcpClient(option);
@@ -66,7 +71,7 @@ export class DebugClient {
 					await this.BreakPointHitHandle?.(data as ReceiveDatas["breakpoint-hit"]);
 					break;
 				case "game-state":
-					this.gameState = (data as ReceiveDatas["game-state"]).state;
+					this.option.gameState = (data as ReceiveDatas["game-state"]).state;
 					break;
 				case "resume":
 					await this.EmuResumeHandle?.();
@@ -75,21 +80,49 @@ export class DebugClient {
 		}
 	}
 
-	BreakpointSet(filePath: string, lineNumber: number, romOffset: number) {
-		const line = this.CompileDebug.GetDebugLineWithFile(filePath, lineNumber);
-		if (line)
-			this.client.SendMessage("breakpoint-set", { baseAddress: line.baseAddress + romOffset, orgAddress: line.line.lineResult.address.org });
+	BreakpointsAnalyse(filePath: string, romOffset: number, lineNumbers: number[]) {
+		const result: { line: number, verified: boolean }[] = [];
 
-		return line;
-	}
-
-	BreakpointRemove(filePath: string, lineNumber: number, romOffset: number) {
-		const line = this.CompileDebug.GetDebugLineWithFile(filePath, lineNumber);
-		if (line) {
-			this.client.SendMessage("breakpoint-remove", { baseAddress: line.baseAddress + romOffset, orgAddress: line.line.lineResult.address.org });
+		let collection = this.debugCollection.get(filePath);
+		if (!collection) {
+			collection = new Map();
+			this.debugCollection.set(filePath, collection);
 		}
 
-		return line;
+		const tempSet = new Set(collection.keys());
+		for (let i = 0; i < lineNumbers.length; i++) {
+			const lineNumber = lineNumbers[i] - this.option.debugBaseline;
+			const colLine = collection.get(lineNumber);
+			if (colLine) {
+				tempSet.delete(lineNumber);
+				result.push({ line: lineNumber + this.option.debugBaseline, verified: colLine.verified });
+				continue;
+			}
+
+			const line = this.CompileDebug.GetDebugLineWithFile(filePath, lineNumber);
+			result.push({ line: lineNumber + this.option.debugBaseline, verified: !!line });
+			if (line) {
+				collection.set(lineNumber, { baseAddr: line.baseAddress, orgAddr: line.line.lineResult.address.org, verified: !!line });
+				this.client.SendMessage(
+					"breakpoint-set",
+					{ baseAddress: line.baseAddress + romOffset, orgAddress: line.line.lineResult.address.org }
+				);
+			}
+		}
+
+		for (var temp of tempSet) {
+			const line = collection.get(temp);
+			collection.delete(temp);
+			if (!line)
+				continue;
+
+			this.client.SendMessage(
+				"breakpoint-remove",
+				{ baseAddress: line.baseAddr + romOffset, orgAddress: line.orgAddr }
+			);
+		}
+
+		return result;
 	}
 
 	Pause() {
@@ -113,12 +146,12 @@ export class DebugClient {
 		return new Promise((resolve, reject) => {
 			const thread = setInterval(() => {
 				if (this.client.connectType === "close" || this.client.connectType === "abort") {
-					resolve();
+					reject();
 					clearInterval(thread);
 					return;
 				}
 
-				if (this.gameState === "open") {
+				if (this.option.gameState === "open") {
 					resolve();
 					clearInterval(thread);
 					return;

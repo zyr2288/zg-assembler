@@ -42,8 +42,7 @@ export class ZGAssemblerDebugSession extends DebugSession {
 				this.sendEvent(new StoppedEvent("pause", SessionThreadID));
 				return;
 			}
-
-			const source = new Source(line.filePath, line.filePath)
+			const source = new Source(line.filePath, line.filePath);
 			this.hitStack = new StackFrame(SessionThreadID, "line", source, line.lineNumber + 1);
 			this.sendEvent(new StoppedEvent("breakpoint", SessionThreadID));
 		}
@@ -99,17 +98,13 @@ export class ZGAssemblerDebugSession extends DebugSession {
 		// 判断设定的断点是否失效
 		response.body = { breakpoints: [] };
 
-		if (args.source.path) {
-			if (args.breakpoints && args.breakpoints.length !== 0) {
-				for (let i = 0; i < args.breakpoints.length; i++) {
-					const bp = args.breakpoints[i];
-					const line = this.debugClient.BreakpointSet(args.source.path, bp.line - 1, this.config.romOffset);
-					const newBp = new Breakpoint(true, bp.line);
-
-					// 是否通过验证
-					newBp.verified = !!line;
-					response.body.breakpoints.push(newBp);
-				}
+		if (args.source.path && args.breakpoints) {
+			const lineNumbers = args.breakpoints.map(v => v.line);
+			const breaks = this.debugClient.BreakpointsAnalyse(args.source.path, this.config.romOffset, lineNumbers);
+			for (let i = 0; i < breaks.length; i++) {
+				const bp = breaks[i];
+				const newBp = new Breakpoint(bp.verified, bp.line);
+				response.body.breakpoints.push(newBp);
 			}
 		}
 
