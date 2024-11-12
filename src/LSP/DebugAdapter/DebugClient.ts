@@ -125,6 +125,10 @@ export class DebugClient {
 		return result;
 	}
 
+	BreakPointGet() {
+
+	}
+
 	Pause() {
 		this.client.SendMessage("pause");
 	}
