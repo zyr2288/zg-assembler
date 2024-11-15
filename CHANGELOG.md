@@ -1,8 +1,8 @@
 # Change Log
 
-### 2024-10-31 v0.3.25
+### 2024-11-15 v0.3.26
+* 添加以及修复 Debug 部分功能
 * 修复 `65c816` 的`BRA`和`BRL`指令。
-* 修复Debug部分一些错误
 
 <details>
 <summary>之前版本更新记录</summary>
