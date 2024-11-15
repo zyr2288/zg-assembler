@@ -35,7 +35,7 @@ export class ZGAssemblerDebugSession extends DebugSession {
 		this.debugClient.BreakPointHitHandle = async (data) => {
 
 			// @ts-ignore
-			let temp = parseInt(data.baseAddress) - this.config.romOffset;
+			let temp = parseInt(data.baseAddress) + this.config.romOffset;
 			const line = this.CompileDebug.GetDebugLine(temp);
 			if (!line) {
 				this.hitStack = new StackFrame(SessionThreadID, "line");

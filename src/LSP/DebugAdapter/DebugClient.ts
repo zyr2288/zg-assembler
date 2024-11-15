@@ -105,7 +105,7 @@ export class DebugClient {
 				collection.set(lineNumber, { baseAddr: line.baseAddress, orgAddr: line.line.lineResult.address.org, verified: !!line });
 				this.client.SendMessage(
 					"breakpoint-set",
-					{ baseAddress: line.baseAddress + romOffset, orgAddress: line.line.lineResult.address.org }
+					{ baseAddress: line.baseAddress - romOffset, orgAddress: line.line.lineResult.address.org }
 				);
 			}
 		}
@@ -118,7 +118,7 @@ export class DebugClient {
 
 			this.client.SendMessage(
 				"breakpoint-remove",
-				{ baseAddress: line.baseAddr + romOffset, orgAddress: line.orgAddr }
+				{ baseAddress: line.baseAddr - romOffset, orgAddress: line.orgAddr }
 			);
 		}
 

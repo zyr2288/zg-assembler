@@ -97,7 +97,7 @@
 						"name": "Debug rom with Emulator",
 						"host": "127.0.0.1",
 						"port": 4065,
-						"romOffset": -16
+						"romOffset": 16
 					}
 				],
 				"configurationAttributes": {
