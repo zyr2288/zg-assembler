@@ -10,8 +10,9 @@
 import { Socket } from "net";
 import { LSPUtils } from "../LSPUtils";
 
-/**接受的消息 */
+/**发送或接受的消息 */
 interface ReceiveDatas {
+	"debug-init": { platform: string };
 	/**设定断点 */
 	"breakpoint-set": { baseAddress: number, orgAddress: number };
 	/**移除断点 */
@@ -65,21 +66,43 @@ export class DebugClient {
 
 	constructor(option: ClientOption) {
 		this.client = new TcpClient(option);
-		this.client.OnMessage = async (command, data) => {
-			switch (command) {
-				case "breakpoint-hit":
-					await this.BreakPointHitHandle?.(data as ReceiveDatas["breakpoint-hit"]);
-					break;
-				case "game-state":
-					this.option.gameState = (data as ReceiveDatas["game-state"]).state;
-					break;
-				case "resume":
-					await this.EmuResumeHandle?.();
-					break;
-			}
-		}
+		this.client.OnMessage = this.OnMessage.bind(this);
+		this.client.OnConnected = this.OnConnected.bind(this);
 	}
 
+	//#region 接收消息
+	async OnMessage<T extends keyof ReceiveDatas>(command: T, data: ReceiveDatas[T]) {
+		switch (command) {
+			case "breakpoint-hit":
+				await this.BreakPointHitHandle?.(data as ReceiveDatas["breakpoint-hit"]);
+				break;
+			case "game-state":
+				this.option.gameState = (data as ReceiveDatas["game-state"]).state;
+				break;
+			case "resume":
+				await this.EmuResumeHandle?.();
+				break;
+		}
+	}
+	//#endregion 接收消息
+
+	/***** VSCode Debug端与模拟器通信事件 *****/
+
+	//#region 连接之后的事件
+	OnConnected() {
+		const option = { platform: LSPUtils.assembler.config.ProjectSetting.platform };
+		this.client.SendMessage("debug-init", option);
+	}
+	//#endregion 连接之后的事件
+
+	//#region 所有断点进行分析，是设置还是要移除
+	/**
+	 * 所有断点进行分析，是设置还是要移除
+	 * @param filePath 文件路径
+	 * @param romOffset 文件基址偏转
+	 * @param lineNumbers Debug在第几行
+	 * @returns 
+	 */
 	BreakpointsAnalyse(filePath: string, romOffset: number, lineNumbers: number[]) {
 		const result: { line: number, verified: boolean }[] = [];
 
@@ -124,27 +147,34 @@ export class DebugClient {
 
 		return result;
 	}
+	//#endregion 所有断点进行分析，是设置还是要移除
 
-	BreakPointGet() {
-
-	}
-
+	//#region 暂停
 	Pause() {
 		this.client.SendMessage("pause");
 	}
+	//#endregion 暂停
 
+	//#region 恢复运行
 	Resume() {
 		this.client.SendMessage("resume");
 	}
+	//#endregion 恢复运行
 
+	//#region 单步执行
 	StepInto() {
 		this.client.SendMessage("step-into");
 	}
+	//#endregion 单步执行
 
+	//#region 获取所有寄存器信息
 	async RegistersGet() {
 		return await this.client.SendMessageAndWaitBack("registers-get");
 	}
+	//#endregion 获取所有寄存器信息
 
+	//#region 等待游戏载入
+	/**等待游戏载入 */
 	async WaitForGameLoaded(): Promise<void> {
 		this.client.SendMessage("game-state");
 		return new Promise((resolve, reject) => {
@@ -163,6 +193,8 @@ export class DebugClient {
 			}, 500);
 		});
 	}
+	//#endregion 等待游戏载入
+
 }
 
 export type ClientConnectType = "close" | "tryConnect" | "connected" | "abort";
@@ -180,6 +212,7 @@ class TcpClient {
 
 	OnMessage?: <T extends keyof ReceiveDatas>(command: T, args: ReceiveDatas[T]) => void;
 	ConnectMessage?: <T extends keyof ConnectType>(type: T, data: ConnectType[T]) => void;
+	OnConnected?: () => void;
 	OnClose?: () => void;
 
 	option = { tryReconnect: false, tryTimes: 10, timeout: 1 };
@@ -259,6 +292,7 @@ class TcpClient {
 			switch (this._connectType as ClientConnectType) {
 				case "connected":
 					this.ConnectMessage?.("connected", null);
+					this.OnConnected?.();
 					return true;
 				case "abort":
 					return false;
