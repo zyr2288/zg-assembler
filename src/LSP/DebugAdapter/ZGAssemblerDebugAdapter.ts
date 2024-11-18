@@ -3,7 +3,7 @@ import { LSPUtils } from "../LSPUtils";
 import { ZGAssemblerDebugConfig, ZGAssemblerDebugSession } from "./ZGAssemblerDebugSession";
 
 /**与lanch的type一致 */
-const DebugType = "zgassembler";
+const DebugType = "ZG-Assembler";
 
 export class ZGAssemblerDebugAdapter {
 

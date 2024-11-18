@@ -66,8 +66,7 @@ export class DebugClient {
 
 	constructor(option: ClientOption) {
 		this.client = new TcpClient(option);
-		this.client.OnMessage = this.OnMessage.bind(this);
-		this.client.OnConnected = this.OnConnected.bind(this);
+		this.client.OnMessageHandle = this.OnMessage.bind(this);
 	}
 
 	//#region 接收消息
@@ -87,13 +86,6 @@ export class DebugClient {
 	//#endregion 接收消息
 
 	/***** VSCode Debug端与模拟器通信事件 *****/
-
-	//#region 连接之后的事件
-	OnConnected() {
-		const option = { platform: LSPUtils.assembler.config.ProjectSetting.platform };
-		this.client.SendMessage("debug-init", option);
-	}
-	//#endregion 连接之后的事件
 
 	//#region 所有断点进行分析，是设置还是要移除
 	/**
@@ -210,10 +202,10 @@ const NotWaitMsgId = "00000000";
 
 class TcpClient {
 
-	OnMessage?: <T extends keyof ReceiveDatas>(command: T, args: ReceiveDatas[T]) => void;
-	ConnectMessage?: <T extends keyof ConnectType>(type: T, data: ConnectType[T]) => void;
-	OnConnected?: () => void;
-	OnClose?: () => void;
+	OnMessageHandle?: <T extends keyof ReceiveDatas>(command: T, args: ReceiveDatas[T]) => void;
+	ConnectMessageHandle?: <T extends keyof ConnectType>(type: T, data: ConnectType[T]) => void;
+	OnConnectedHandle?: () => void;
+	OnCloseHandle?: () => void;
 
 	option = { tryReconnect: false, tryTimes: 10, timeout: 1 };
 
@@ -247,7 +239,7 @@ class TcpClient {
 					continue;
 				}
 
-				this.OnMessage?.(d.command as keyof ReceiveDatas, d.data);
+				this.OnMessageHandle?.(d.command as keyof ReceiveDatas, d.data);
 			}
 
 		});
@@ -259,7 +251,7 @@ class TcpClient {
 				case "abort":
 					console.log("connect close");
 					this._connectType = "close";
-					this.OnClose?.();
+					this.OnCloseHandle?.();
 					return;
 				case "connected":
 				case "close":
@@ -286,13 +278,13 @@ class TcpClient {
 		let times = 0;
 		this._connectType = "tryConnect";
 		while (times < this.option.tryTimes) {
-			this.ConnectMessage?.("tryConnect", times + 1);
+			this.ConnectMessageHandle?.("tryConnect", times + 1);
 			this.clientSocket.connect({ host: this.host, port: this.port });
 			await this.Wait(this.option.timeout);
 			switch (this._connectType as ClientConnectType) {
 				case "connected":
-					this.ConnectMessage?.("connected", null);
-					this.OnConnected?.();
+					this.ConnectMessageHandle?.("connected", null);
+					this.OnConnectedHandle?.();
 					return true;
 				case "abort":
 					return false;
@@ -301,7 +293,7 @@ class TcpClient {
 			times++;
 		}
 
-		this.ConnectMessage?.("tryConnectFail", null);
+		this.ConnectMessageHandle?.("tryConnectFail", null);
 		this.Close();
 		return false;
 	}

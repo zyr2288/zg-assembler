@@ -76,6 +76,10 @@
 			{
 				"fileMatch": "/project-settings.json",
 				"url": "./syntaxes/config.json"
+			},
+			{
+				"fileMatch": "/.vscode/launch.json",
+				"url": "./syntaxes/debug-config.json"
 			}
 		],
 		"breakpoints": [
@@ -85,18 +89,19 @@
 		],
 		"debuggers": [
 			{
-				"type": "zgassembler",
+				"type": "ZG-Assembler",
 				"label": "ZG-Assembler Debugger",
 				"languages": [
 					"zg-assembly"
 				],
 				"initialConfigurations": [
 					{
-						"type": "zgassembler",
+						"type": "ZG-Assembler",
 						"request": "attach",
 						"name": "Debug rom with Emulator",
 						"host": "127.0.0.1",
 						"port": 4065,
+						"cpuType": "Nes",
 						"romOffset": 16
 					}
 				],

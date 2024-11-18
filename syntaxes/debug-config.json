@@ -1,0 +1,28 @@
+{
+	"$schema": "https://json-schema.org/schema",
+	"type": "object",
+	"description": "调试器配置文件",
+	"title": "Assembly debugger configuration",
+	"properties": {
+		"configurations": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"type": { "type": "string", "default": "ZG-Assembler", "enum": ["ZG-Assembler"], "description": "Debug类型，必须是:ZG-Assembler" },
+					"request": { "type": "string", "default": "attach", "description": "连接类型，必须是:attach" },
+					"name": { "type": "string", "default": "Debug rom with Emulator", "description": "名称" },
+					"host": { "type": "string", "default": "127.0.0.1", "description": "模拟器TCP连接地址" },
+					"port": { "type": "number", "default": 4065, "description": "模拟器TCP连接端口" },
+					"cpuType": {
+						"type": "string",
+						"description": "所调试的CPU类型",
+						"enum": ["Snes", "Spc", "NecDsp", "Sa1", "Gsu", "Cx4", "Gameboy", "Nes", "Pce", "Sms", "Gba", "Ws"]
+					},
+					"romOffset": { "type": "number", "minimum": 0, "description": "文件地址偏转" }
+				},
+				"required": ["type", "request", "name", "host", "port", "cpuType", "romOffset"]
+			}
+		}
+	}
+}

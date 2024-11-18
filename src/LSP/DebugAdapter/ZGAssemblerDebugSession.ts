@@ -13,6 +13,7 @@ export interface ZGAssemblerDebugConfig extends vscode.DebugConfiguration {
 	host: string;
 	port: number;
 	romOffset: number;
+	cpuType: "Snes" | "Spc" | "NecDsp" | "Sa1" | "Gsu" | "Cx4" | "Gameboy" | "Nes" | "Pce" | "Sms" | "Gba" | "Ws";
 }
 
 export class ZGAssemblerDebugSession extends DebugSession {
@@ -33,7 +34,6 @@ export class ZGAssemblerDebugSession extends DebugSession {
 		this.debugClient = new DebugClient({ host: this.config.host, port: this.config.port, tryReconnect: true });
 
 		this.debugClient.BreakPointHitHandle = async (data) => {
-
 			// @ts-ignore
 			let temp = parseInt(data.baseAddress) + this.config.romOffset;
 			const line = this.CompileDebug.GetDebugLine(temp);
@@ -47,11 +47,18 @@ export class ZGAssemblerDebugSession extends DebugSession {
 			this.sendEvent(new StoppedEvent("breakpoint", SessionThreadID));
 		}
 
+		// 连接后Debug初始化
+		this.debugClient.client.OnConnectedHandle = () => {
+			const option = { cpuType: this.config.cpuType };
+			this.debugClient.client.SendMessage("debug-init", option);
+		}
+
 		this.debugClient.EmuResumeHandle = () => {
 			this.sendEvent(new ContinuedEvent(SessionThreadID, true));
 		}
 
-		this.debugClient.client.ConnectMessage = async (type, data) => {
+		// 连接信息绑定
+		this.debugClient.client.ConnectMessageHandle = async (type, data) => {
 			let msg = "";
 			switch (type) {
 				case "tryConnect":
