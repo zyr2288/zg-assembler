@@ -214,7 +214,7 @@ export class Platform {
 					}
 
 					const token = expression.Substring(start, match.index);
-					if (!type.addressType[j].startsWith("^")) {
+					if (!type.addressType[j].startsWith("^") && !token.isEmpty) {
 						result.exprs.push(token);
 					}
 

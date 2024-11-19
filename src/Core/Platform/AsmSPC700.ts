@@ -127,7 +127,6 @@ export class AsmSPC700 implements IAsmPlatform {
 		this.Add("DBNZ", { addressingMode: "Y,[exp]", opCode: [, 0xFE], spProcess: this.Branch1 });
 		this.Add("DBNZ", { addressingMode: "[exp],[exp]", opCode: [, , 0x6E], spProcess: this.Branch2 });
 
-
 		this.Add("DEC", { addressingMode: "A", opCode: [0x9C] });
 		this.Add("DEC", { addressingMode: "[exp],X", opCode: [, 0x9B] });
 		this.Add("DEC", { addressingMode: "[exp]", opCode: [, 0x8B, 0x8C] });
