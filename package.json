@@ -2,7 +2,7 @@
 	"name": "zg-assembler",
 	"displayName": "ZG Assembler",
 	"description": "",
-	"version": "0.3.28",
+	"version": "0.3.29",
 	"engines": {
 		"vscode": "^1.85.0"
 	},
@@ -76,10 +76,6 @@
 			{
 				"fileMatch": "/project-settings.json",
 				"url": "./syntaxes/config.json"
-			},
-			{
-				"fileMatch": "/.vscode/launch.json",
-				"url": "./syntaxes/debug-config.json"
 			}
 		],
 		"breakpoints": [
@@ -108,10 +104,37 @@
 				"configurationAttributes": {
 					"attach": {
 						"properties": {
+							"host": {
+								"type": "string",
+								"default": "127.0.0.1"
+							},
 							"port": {
 								"type": "number",
 								"description": "连接端口",
 								"default": 4065
+							},
+							"cpuType": {
+								"type": "string",
+								"description": "所调试的CPU类型",
+								"enum": [
+									"Snes",
+									"Spc",
+									"NecDsp",
+									"Sa1",
+									"Gsu",
+									"Cx4",
+									"Gameboy",
+									"Nes",
+									"Pce",
+									"Sms",
+									"Gba",
+									"Ws"
+								]
+							},
+							"romOffset": {
+								"type": "number",
+								"minimum": 0,
+								"description": "文件地址偏转"
 							}
 						}
 					}

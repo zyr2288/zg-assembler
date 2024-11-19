@@ -1,9 +1,10 @@
 # Change Log
 
-### 2024-11-15 v0.3.28
+### 2024-11-19 v0.3.29
 * 添加以及修复 Debug 部分功能
 * 给Debug添加连接后初始化信息
 * 修复 `65c816` 的`BRA`和`BRL`指令。
+* 修复Debug配置文件的launch.json相关提示
 
 <details>
 <summary>之前版本更新记录</summary>
