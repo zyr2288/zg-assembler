@@ -175,7 +175,7 @@ export class HelperUtils {
 		let inString = false;
 		let lastString = "";
 
-		const range = [0, 0];
+		const range: [start: number, end: number] = [0, 0];
 		current -= start;
 
 		const match = "\t +-*/&|!^#,()[]{}<>";

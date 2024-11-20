@@ -515,7 +515,7 @@ export class IntellisenseProvider {
 		}
 
 		if (!trigger || trigger === ".") {
-			const prefix = HelperUtils.GetWord(content.rest.text, current);
+			const prefix = HelperUtils.GetWord(content.rest.text, current, content.rest.start);
 			return IntellisenseProvider.GetLabel(fileIndex, prefix.leftText, macro);
 		}
 
@@ -525,6 +525,7 @@ export class IntellisenseProvider {
 
 	/***** 关于命令 *****/
 
+	//#region 处理命令
 	private static async ProcessCommand(
 		content: { pre: Token, main: Token, rest: Token },
 		fileIndex: number, current: number, macro?: Macro, trigger?: string): Promise<Completion[]> {
@@ -542,7 +543,7 @@ export class IntellisenseProvider {
 				break;
 			default:
 				if (!trigger || trigger === ".") {
-					const prefix = HelperUtils.GetWord(content.rest.text, current);
+					const prefix = HelperUtils.GetWord(content.rest.text, current, content.rest.start);
 					result = IntellisenseProvider.GetLabel(fileIndex, prefix.leftText, macro);
 				}
 				break;
@@ -550,7 +551,9 @@ export class IntellisenseProvider {
 
 		return result;
 	}
+	//#endregion 处理命令
 
+	//#region .INCLUDE命令
 	private static async ProcessInclude(isIncbin: boolean, isTrigger: boolean, rest: Token, current: number, fileIndex: number) {
 		let tokens = Analyser.SplitComma(rest);
 		if (!tokens)
@@ -586,4 +589,6 @@ export class IntellisenseProvider {
 		}
 		return;
 	}
+	//#endregion .INCLUDE命令
+	
 }
