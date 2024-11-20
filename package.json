@@ -2,7 +2,7 @@
 	"name": "zg-assembler",
 	"displayName": "ZG Assembler",
 	"description": "",
-	"version": "0.3.31",
+	"version": "0.3.32",
 	"engines": {
 		"vscode": "^1.85.0"
 	},

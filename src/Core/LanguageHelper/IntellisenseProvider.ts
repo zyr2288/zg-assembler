@@ -172,6 +172,13 @@ export class IntellisenseProvider {
 				return IntellisenseProvider.ProcessInstruction(match.content!, fileIndex, option.current, macro, option.trigger);
 			case "command":
 				return await IntellisenseProvider.ProcessCommand(match.content!, fileIndex, option.current, macro, option.trigger);
+			case "macro":
+			case "variable":
+				if (option.current < match.content!.main.start)
+					break;
+				
+				const prefix = HelperUtils.GetWord(match.content!.rest.text, option.current, match.content!.rest.start);
+				return IntellisenseProvider.GetLabel(fileIndex, prefix.leftText, macro);
 		}
 
 		return [];

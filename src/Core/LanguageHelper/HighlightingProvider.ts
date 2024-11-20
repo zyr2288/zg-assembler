@@ -9,6 +9,7 @@ import { CommandLine } from "../Lines/CommandLine";
 import { MacroCommand } from "../Command/MacroCommand";
 import { CommandTagBase } from "../Command/Command";
 import { DefTag } from "../Command/DefinedCommand";
+import { MsgTag } from "../Command/MsgErrCommand";
 
 export class HighlightOption {
 	lines: CommonLine[] = [];
@@ -167,6 +168,13 @@ export class HighlightingProvider {
 				tag = line.tag as CommandTagBase;
 				if (tag.exp)
 					HighlightingProvider.GetExpression(option.result, tag.exp);
+				break;
+			case ".MSG":
+			case ".ERROR":
+				tag = line.tag as MsgTag;
+				if (tag.expressions)
+					HighlightingProvider.GetExpression(option.result, ...tag.expressions);
+				
 				break;
 		}
 	}

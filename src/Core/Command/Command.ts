@@ -195,6 +195,10 @@ export class Command {
 
 			const error = Localization.GetMessage("Unmatched command {0}", matchOption.start);
 			MyDiagnostic.PushException(line.command, error);
+
+			// 标记为已分析行
+			Command.MarkLineFinished(option, option.index + 1, option.allLines.length - 1);
+
 			option.index = option.allLines.length;
 			return;
 		}
@@ -238,7 +242,13 @@ export class Command {
 	}
 	//#endregion 分割参数
 
-	//#region 标记行分析
+	//#region 标记已分析的行
+	/**
+	 * 标记已分析的行
+	 * @param option 编译选项
+	 * @param start 起始行
+	 * @param end 结束行
+	 */
 	static MarkLineFinished(option: CompileOption, start: number, end: number) {
 		for (let j = start; j <= end; j++) {
 			if (!option.allLines[j])
@@ -247,7 +257,7 @@ export class Command {
 			option.allLines[j].lineType = LineType.Ignore;
 		}
 	}
-	//#endregion 标记行分析
+	//#endregion 标记已分析的行
 
 	/***** private *****/
 

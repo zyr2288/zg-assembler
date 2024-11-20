@@ -46,7 +46,7 @@ export class ErrorCommand implements ICommand {
 	}
 }
 
-interface MsgTag {
+export interface MsgTag {
 	message: Token;
 	expressions: Expression[];
 }
