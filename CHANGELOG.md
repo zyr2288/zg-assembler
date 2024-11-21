@@ -7,7 +7,7 @@
 * 修复 `SPC700` 的`DEC A`指令以及相关固定寻址标识错误的Bug。
 * 修复Debug配置文件的launch.json相关提示
 * 修复智能提示部分Bug
-* 修复取高位运算符 `>` 计算错误的Bug
+* 修复重命名、查找所有引用出错的Bug
 
 <details>
 <summary>之前版本更新记录</summary>

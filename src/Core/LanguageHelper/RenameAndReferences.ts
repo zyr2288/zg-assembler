@@ -1,5 +1,5 @@
 import { Expression, PriorityType } from "../Base/ExpressionUtils";
-import { ILabelNormal, LabelUtils } from "../Base/Label";
+import { ILabelNormal, LabelScope, LabelUtils } from "../Base/Label";
 import { Macro } from "../Base/Macro";
 import { Token } from "../Base/Token";
 import { CommandTagBase } from "../Command/Command";
@@ -9,7 +9,7 @@ import { MacroLineTag } from "../Command/MacroCommand";
 import { Compiler } from "../Compiler/Compiler";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
-import { CommonLine } from "../Lines/CommonLine";
+import { CommonLine, LineType } from "../Lines/CommonLine";
 import { HelperUtils } from "./HelperUtils";
 
 type MatchType = "none" | "macro" | "label" | "macroLabel" | "dataGroup";
@@ -20,7 +20,9 @@ export class RenameAndReferences {
 		token: undefined as Token | undefined,
 		type: "none" as MatchType,
 		macro: undefined as Macro | undefined,
-		fileIndex: 0
+		fileIndex: 0,
+		/**是否搜索特定的文件，-1为不是特定文件 */
+		targetFile: -1
 	};
 
 	/***** 重命名 *****/
@@ -99,7 +101,7 @@ export class RenameAndReferences {
 			return Localization.GetMessage("rename error");
 
 		const newLabelToken = new Token(newLabelStr);
-		const orgLabel = LabelUtils.FindLabel(newLabelToken, {fileIndex:RenameAndReferences.SaveRename.fileIndex});
+		const orgLabel = LabelUtils.FindLabel(newLabelToken, { fileIndex: RenameAndReferences.SaveRename.fileIndex });
 		if (orgLabel) {
 			return Localization.GetMessage("Label {0} is already defined", newLabelStr);
 		}
@@ -115,8 +117,14 @@ export class RenameAndReferences {
 		// 原始位置重命名
 		switch (RenameAndReferences.SaveRename.type) {
 			case "label":
-				const label = LabelUtils.FindLabel(RenameAndReferences.SaveRename.token!, { macro: RenameAndReferences.SaveRename.macro });
+				const label = LabelUtils.FindLabel(
+					RenameAndReferences.SaveRename.token!,
+					{ fileIndex: RenameAndReferences.SaveRename.fileIndex, macro: RenameAndReferences.SaveRename.macro }
+				);
 				if (label) {
+					if (label.scope === LabelScope.Local)
+						RenameAndReferences.SaveRename.targetFile = RenameAndReferences.SaveRename.fileIndex;
+
 					const fileName = Compiler.enviroment.GetFilePath(label.fileIndex);
 					const tokens = result.get(fileName) ?? [];
 					tokens.push(label.token);
@@ -124,7 +132,10 @@ export class RenameAndReferences {
 				}
 				break;
 			case "macroLabel":
-				const macroLabel = LabelUtils.FindLabel(RenameAndReferences.SaveRename.token!, { macro: RenameAndReferences.SaveRename.macro });
+				const macroLabel = LabelUtils.FindLabel(
+					RenameAndReferences.SaveRename.token!,
+					{ macro: RenameAndReferences.SaveRename.macro }
+				);
 				if (macroLabel) {
 					const fileName = Compiler.enviroment.GetFilePath(macroLabel.fileIndex);
 					const tokens = result.get(fileName) ?? [];
@@ -153,6 +164,10 @@ export class RenameAndReferences {
 		// 所有引用重命名
 		const allLineKeys = Compiler.enviroment.allLine.keys();
 		for (const key of allLineKeys) {
+			if (RenameAndReferences.SaveRename.targetFile >= 0 && 
+				key !== RenameAndReferences.SaveRename.targetFile)
+				continue;
+
 			const lines = Compiler.enviroment.allLine.get(key)!;
 			const fileName = Compiler.enviroment.GetFilePath(key);
 			const tokens = result.get(fileName) ?? [];
@@ -166,6 +181,7 @@ export class RenameAndReferences {
 	//#region 清除重命名参数
 	private static ClearRename() {
 		RenameAndReferences.SaveRename.fileIndex = -1;
+		RenameAndReferences.SaveRename.targetFile = -1;
 		RenameAndReferences.SaveRename.type = "none";
 		RenameAndReferences.SaveRename.token = undefined;
 		RenameAndReferences.SaveRename.macro = undefined;
@@ -208,6 +224,7 @@ export class RenameAndReferences {
 	 * @returns 
 	 */
 	static GetReferences(filePath: string, lineText: string, lineNumber: number, currect: number) {
+		RenameAndReferences.ClearRename();
 		const fileIndex = Compiler.enviroment.GetFileIndex(filePath, false);
 		const temp = HelperUtils.FindMatchToken(fileIndex, lineText, lineNumber, currect);
 
@@ -221,6 +238,9 @@ export class RenameAndReferences {
 			case "filePath":
 				return result;
 			case "label":
+				if (temp.token?.text.startsWith("."))
+					RenameAndReferences.SaveRename.targetFile = fileIndex;
+				
 				break;
 			case "macro":
 				break;
@@ -237,6 +257,10 @@ export class RenameAndReferences {
 		// 所有引用重命名
 		const allLineKeys = Compiler.enviroment.allLine.keys();
 		for (const key of allLineKeys) {
+			if (RenameAndReferences.SaveRename.targetFile >= 0 && 
+				key !== RenameAndReferences.SaveRename.targetFile)
+				continue;
+
 			const lines = Compiler.enviroment.allLine.get(key)!;
 			const fileName = Compiler.enviroment.GetFilePath(key);
 			const tokens = result.get(fileName) ?? [];
@@ -258,7 +282,7 @@ export class RenameAndReferences {
 	private static SaveLineToken(matchType: MatchType, matchText: string, lines: CommonLine[], resultToken: Token[]) {
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			if (!line)
+			if (!line || line.lineType == LineType.Ignore)
 				continue;
 
 			switch (line.key) {
