@@ -18,8 +18,8 @@ export interface ZGAssemblerDebugConfig extends vscode.DebugConfiguration {
 
 export class ZGAssemblerDebugSession extends DebugSession {
 
+	debugClient: DebugClient;
 	private hitStack: StackFrame | undefined;
-	private debugClient!: DebugClient;
 	private CompileDebug = LSPUtils.assembler.languageHelper.debug;
 	private config: ZGAssemblerDebugConfig;
 
@@ -77,6 +77,8 @@ export class ZGAssemblerDebugSession extends DebugSession {
 
 	}
 
+	//#region 插件初始化
+	/**插件初始化 */
 	protected async initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments) {
 
 		// 如果没有编译文件，则停止调试
@@ -95,6 +97,7 @@ export class ZGAssemblerDebugSession extends DebugSession {
 		this.sendResponse(response);
 		this.sendEvent(new InitializedEvent());
 	}
+	//#endregion 插件初始化
 
 	//#region 设定断点请求
 	/**设定断点请求 */
@@ -134,7 +137,7 @@ export class ZGAssemblerDebugSession extends DebugSession {
 	}
 	//#endregion 附加进程请求
 
-
+	//#region 线程请求，勿动
 	protected threadsRequest(response: DebugProtocol.ThreadsResponse, request?: DebugProtocol.Request): void {
 		// session进程，不能移除，移除后无法停止在断点
 		response.body = {
@@ -142,7 +145,9 @@ export class ZGAssemblerDebugSession extends DebugSession {
 		}
 		this.sendResponse(response);
 	}
+	//#endregion 线程请求，勿动
 
+	//#region 获取寄存器信息
 	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments, request?: DebugProtocol.Request) {
 		response.body = {
 			scopes: [new Scope("Registers", SessionThreadID, false)]
@@ -163,7 +168,9 @@ export class ZGAssemblerDebugSession extends DebugSession {
 		}
 		this.sendResponse(response);
 	}
+	//#endregion 获取寄存器信息
 
+	//#region 线程追踪，勿动
 	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments, request?: DebugProtocol.Request): void {
 
 		if (!this.hitStack)
@@ -173,29 +180,41 @@ export class ZGAssemblerDebugSession extends DebugSession {
 		this.sendResponse(response);
 		this.hitStack = undefined;
 	}
+	//#endregion 线程追踪，勿动
 
+	//#region 暂停请求
 	protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments, request?: DebugProtocol.Request): void {
 		this.debugClient.Pause();
 		this.sendResponse(response);
 	}
+	//#endregion 暂停请求
 
+	//#region 继续/恢复请求
 	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments, request?: DebugProtocol.Request): void {
 		this.debugClient.Resume();
 		this.sendResponse(response);
 	}
+	//#endregion 继续/恢复请求
 
+	//#region 单步请求
 	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments, request?: DebugProtocol.Request): void {
 		this.debugClient.StepInto();
 		this.sendResponse(response);
 	}
+	//#endregion 单步请求
 
+	//#region 终止 请求
 	protected terminateRequest(response: DebugProtocol.TerminateResponse, args: DebugProtocol.TerminateArguments, request?: DebugProtocol.Request): void {
 		this.debugClient.client.Close();
 		this.sendResponse(response);
 	}
+	//#endregion 终止 请求
 
+	//#region 断开连接
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request): void {
 		this.debugClient.client.Close();
 		this.sendResponse(response);
 	}
+	//#endregion 断开连接
+
 }

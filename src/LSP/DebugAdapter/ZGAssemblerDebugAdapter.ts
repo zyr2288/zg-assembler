@@ -4,8 +4,13 @@ import { ZGAssemblerDebugConfig, ZGAssemblerDebugSession } from "./ZGAssemblerDe
 
 /**与lanch的type一致 */
 const DebugType = "ZG-Assembler";
+const DebugReloadCommand = "zg-assembly.reloadRom";
 
 export class ZGAssemblerDebugAdapter {
+
+	static debugAdapterOption: {
+		reloadRomFunction?: () => void;
+	} = {};
 
 	static Initialize(context: vscode.ExtensionContext) {
 		context.subscriptions.push(
@@ -15,13 +20,20 @@ export class ZGAssemblerDebugAdapter {
 		context.subscriptions.push(
 			vscode.debug.registerDebugAdapterDescriptorFactory(DebugType, new ZGAssemblerDebugFactory())
 		);
-	}
 
+		context.subscriptions.push(
+			vscode.commands.registerCommand(DebugReloadCommand, () => {
+				ZGAssemblerDebugAdapter.debugAdapterOption.reloadRomFunction?.();
+			})
+		);
+	}
 }
 
 class ZGAssemblerDebugFactory implements vscode.DebugAdapterDescriptorFactory {
 	createDebugAdapterDescriptor(session: vscode.DebugSession): vscode.ProviderResult<vscode.DebugAdapterTracker> {
-		const temp = new vscode.DebugAdapterInlineImplementation(new ZGAssemblerDebugSession(session.configuration));
+		const debugSession = new ZGAssemblerDebugSession(session.configuration);
+		ZGAssemblerDebugAdapter.debugAdapterOption.reloadRomFunction = debugSession.debugClient.ReloadRom.bind(debugSession.debugClient);
+		const temp = new vscode.DebugAdapterInlineImplementation(debugSession);
 		return temp;
 	}
 }
@@ -29,7 +41,6 @@ class ZGAssemblerDebugFactory implements vscode.DebugAdapterDescriptorFactory {
 class ZGAssemblerDebugConfigProvider implements vscode.DebugConfigurationProvider {
 
 	async resolveDebugConfiguration(folder: vscode.WorkspaceFolder | undefined, config: ZGAssemblerDebugConfig, token?: vscode.CancellationToken) {
-
 		// @ts-ignore
 		const testValue = parseInt(config.romOffset);
 		// 如果 launch.json 缺失
@@ -43,7 +54,6 @@ class ZGAssemblerDebugConfigProvider implements vscode.DebugConfigurationProvide
 				config.romOffset = -16;
 			}
 		}
-
 		return config;
 	}
 }

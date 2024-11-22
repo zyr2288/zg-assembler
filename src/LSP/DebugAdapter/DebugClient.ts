@@ -31,6 +31,8 @@ interface ReceiveDatas {
 	"step-into": undefined;
 	/**重启 */
 	"reset": undefined;
+	/**重新载入ROM */
+	"reload": undefined;
 	/**当前游戏状态 */
 	"game-state": { state: "open" | "close" };
 }
@@ -164,6 +166,12 @@ export class DebugClient {
 		return await this.client.SendMessageAndWaitBack("registers-get");
 	}
 	//#endregion 获取所有寄存器信息
+
+	//#region 重新载入ROM
+	ReloadRom() {
+		this.client.SendMessage("reload");
+	}
+	//#endregion 重新载入ROM
 
 	//#region 等待游戏载入
 	/**等待游戏载入 */

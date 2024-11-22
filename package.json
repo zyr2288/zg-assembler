@@ -40,6 +40,14 @@
 			{
 				"command": "zg-assembly.compliteMain",
 				"title": "%Compile Entry File%"
+			},
+			{
+				"command": "zg-assembly.reloadRom",
+				"title": "%Reload Rom%",
+				"icon": {
+					"light": "syntaxes/file-reload.svg",
+					"dark": "syntaxes/file-reload.svg"
+				}
 			}
 		],
 		"languages": [
@@ -61,14 +69,20 @@
 		"menus": {
 			"editor/context": [
 				{
-					"when": "editorLangId == zg-assembly",
 					"command": "zg-assembly.compliteThis",
+					"when": "editorLangId == zg-assembly",
 					"group": "z_command"
 				},
 				{
-					"when": "editorLangId == zg-assembly",
 					"command": "zg-assembly.compliteMain",
+					"when": "editorLangId == zg-assembly",
 					"group": "z_command"
+				}
+			],
+			"debug/toolBar": [
+				{
+					"command": "zg-assembly.reloadRom",
+					"when": "debugType == ZG-Assembler"
 				}
 			]
 		},
