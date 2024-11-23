@@ -1,5 +1,11 @@
 # Change Log
 
+### 2024-11-23 v0.3.33
+* 添加 `Step Out` `Step Over` 两个请求
+
+<details>
+<summary>之前版本更新记录</summary>
+
 ### 2024-11-20 v0.3.32
 * 添加以及修复 Debug 部分功能
 * Debug添加重新载入Rom功能
@@ -9,9 +15,6 @@
 * 修复Debug配置文件的launch.json相关提示
 * 修复智能提示部分Bug
 * 修复重命名、查找所有引用出错的Bug
-
-<details>
-<summary>之前版本更新记录</summary>
 
 ### 2024-10-10 v0.3.23
 * 添加编译指令编译后点击直接显示结果

@@ -27,8 +27,12 @@ interface ReceiveDatas {
 	"pause": undefined;
 	/**继续 */
 	"resume": undefined;
-	/**单步 */
+	/**单步进入 */
 	"step-into": undefined;
+	/**单步出 */
+	"step-out": undefined;
+	/**单步跳过 */
+	"step-over": undefined;
 	/**重启 */
 	"reset": undefined;
 	/**重新载入ROM */
@@ -155,11 +159,11 @@ export class DebugClient {
 	}
 	//#endregion 恢复运行
 
-	//#region 单步执行
-	StepInto() {
-		this.client.SendMessage("step-into");
+	//#region 单步
+	Step<T extends keyof ReceiveDatas>(type: T) {
+		this.client.SendMessage(type);
 	}
-	//#endregion 单步执行
+	//#endregion 单步
 
 	//#region 获取所有寄存器信息
 	async RegistersGet() {

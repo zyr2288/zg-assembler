@@ -198,7 +198,17 @@ export class ZGAssemblerDebugSession extends DebugSession {
 
 	//#region 单步请求
 	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments, request?: DebugProtocol.Request): void {
-		this.debugClient.StepInto();
+		this.debugClient.Step("step-into");
+		this.sendResponse(response);
+	}
+
+	protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments, request?: DebugProtocol.Request): void {
+		this.debugClient.Step("step-out");
+		this.sendResponse(response);
+	}
+
+	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments, request?: DebugProtocol.Request): void {
+		this.debugClient.Step("step-over");
 		this.sendResponse(response);
 	}
 	//#endregion 单步请求
