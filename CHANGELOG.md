@@ -2,6 +2,7 @@
 
 ### 2024-11-23 v0.3.33
 * 添加 `Step Out` `Step Over` 两个请求
+* 修复编译过后无法移动到标签上查看编译结果
 
 <details>
 <summary>之前版本更新记录</summary>

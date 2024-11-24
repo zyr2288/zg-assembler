@@ -1,4 +1,5 @@
 import { Expression, ExpressionUtils, PriorityType } from "../Base/ExpressionUtils";
+import { LabelUtils } from "../Base/Label";
 import { Macro } from "../Base/Macro";
 import { Token } from "../Base/Token";
 import { CommandTagBase } from "../Command/Command";
@@ -114,7 +115,7 @@ export class HelperUtils {
 					if (!line)
 						return result;
 
-					if (temp = HelperUtils.CurrentInExpression(current, ...line.expressions)) {
+					if (temp = HelperUtils.CurrentInExpression({ current, fileIndex }, ...line.expressions)) {
 						result.type = temp.type;
 						result.token = temp.token;
 						return result;
@@ -315,7 +316,7 @@ export class HelperUtils {
 	 * @param exp 
 	 * @returns 
 	 */
-	static CurrentInExpression(current: number, ...exp: Expression[]) {
+	static CurrentInExpression(option: { current: number, fileIndex?: number }, ...exp: Expression[]) {
 		let range;
 		let result = { expIndex: -1, token: {} as Token, type: "none" as "none" | "label" | "number" };
 		for (let i = 0; i < exp.length; i++) {
@@ -332,12 +333,19 @@ export class HelperUtils {
 				}
 
 				switch (part.type) {
+					case PriorityType.Level_0_Sure:
 					case PriorityType.Level_1_Label:
 					case PriorityType.Level_2_Address:
-						if (part.token.start <= current && current <= end) {
+						if (part.token.start <= option.current && option.current <= end) {
 							result.expIndex = i;
 							result.token = part.token;
-							result.type = part.type === PriorityType.Level_1_Label ? "label" : "number";
+							if (part.type === PriorityType.Level_0_Sure) {
+								const label = LabelUtils.FindLabel(result.token, option);
+								if (label)
+									result.type = "label";
+							} else {
+								result.type = part.type === PriorityType.Level_1_Label ? "label" : "number";
+							}
 							return result;
 						}
 						continue;
@@ -346,7 +354,7 @@ export class HelperUtils {
 				}
 			}
 
-			if (range.min !== undefined && current >= range.min && current <= (range.max as number)) {
+			if (range.min !== undefined && option.current >= range.min && option.current <= (range.max as number)) {
 				result.expIndex = i;
 				return result;
 			}
@@ -412,7 +420,7 @@ export class HelperUtils {
 					return;
 				}
 
-				if (tag.exp && (temp = HelperUtils.CurrentInExpression(current, tag.exp))) {
+				if (tag.exp && (temp = HelperUtils.CurrentInExpression({ current, fileIndex }, tag.exp))) {
 					matchResult.type = temp.type;
 					matchResult.token = temp.token;
 					return;
@@ -428,7 +436,7 @@ export class HelperUtils {
 				}
 
 				temp = (tag as IncbinTag).exps;
-				if (temp && (temp = HelperUtils.CurrentInExpression(current, ...temp))) {
+				if (temp && (temp = HelperUtils.CurrentInExpression({ current, fileIndex }, ...temp))) {
 					matchResult.type = temp.type;
 					matchResult.token = temp.token;
 					return;
@@ -440,7 +448,7 @@ export class HelperUtils {
 			case ".ELSEIF":
 			case ".REPEAT":
 				temp = line.tag as CommandTagBase;
-				if (temp?.exp && (temp = HelperUtils.CurrentInExpression(current, temp.exp))) {
+				if (temp?.exp && (temp = HelperUtils.CurrentInExpression({ current, fileIndex }, temp.exp))) {
 					matchResult.type = temp.type;
 					matchResult.token = temp.token;
 					return;
@@ -479,7 +487,7 @@ export class HelperUtils {
 		const tag: DataGroupTag = tempLine.tag;
 		for (let i = 0; i < tag.expressions.length; i++) {
 			const exp = tag.expressions[i];
-			const match = HelperUtils.CurrentInExpression(current, exp);
+			const match = HelperUtils.CurrentInExpression({ current, fileIndex }, exp);
 			if (!match)
 				continue;
 
