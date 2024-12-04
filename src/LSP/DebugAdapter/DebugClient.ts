@@ -40,7 +40,7 @@ interface ReceiveDatas {
 	/**重新载入ROM */
 	"reload": undefined;
 	/**热重载 */
-	"hot-reload": undefined;
+	"hot-reload": { path: string };
 	/**当前游戏状态 */
 	"game-state": { state: "open" | "close" };
 }
