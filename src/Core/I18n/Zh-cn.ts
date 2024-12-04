@@ -49,6 +49,7 @@ export const Chinese: LocalizationMsg = {
 	"Cannot find launch.json": "找不到 launch.json",
 	"Cannot find rom file {0}": "找不到 rom {0}",
 	"Cannot find program path {0}": "找不到启动程序 {0}",
+	"Hot Reload Success": "热重载成功",
 }
 
 export const CommandTip_Chinese: LocalizationTip = {

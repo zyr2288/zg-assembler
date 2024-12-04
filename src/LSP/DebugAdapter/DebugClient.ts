@@ -10,6 +10,8 @@
 import { Socket } from "net";
 import { LSPUtils } from "../LSPUtils";
 
+const DiffFileName = "zgasm-diff";
+
 /**发送或接受的消息 */
 interface ReceiveDatas {
 	"debug-init": { platform: string };
@@ -37,6 +39,8 @@ interface ReceiveDatas {
 	"reset": undefined;
 	/**重新载入ROM */
 	"reload": undefined;
+	/**热重载 */
+	"hot-reload": undefined;
 	/**当前游戏状态 */
 	"game-state": { state: "open" | "close" };
 }
@@ -177,6 +181,32 @@ export class DebugClient {
 	}
 	//#endregion 重新载入ROM
 
+	//#region 热重载
+	async HotReload(rootFolder: string, offset: number) {
+		const diff = await this.CompileDebug.GetEntryFile(rootFolder, offset);
+		if (!diff)
+			return;
+
+		const filePath = LSPUtils.assembler.fileUtils.Combine(rootFolder, DiffFileName);
+		let data = "";
+		diff.forEach((value, key) => {
+			data += `${key}:`;
+			value.forEach(v => {
+				data += `${v} `;
+			});
+			data = data.substring(0, data.length - 1) + "\n";
+		});
+		data = data.substring(0, data.length - 1);
+
+		const buffer = LSPUtils.assembler.fileUtils.StringToBytes(data);
+		await LSPUtils.assembler.fileUtils.SaveFile(filePath, buffer);
+
+		const msg = LSPUtils.assembler.localization.GetMessage("Hot Reload Success");
+		LSPUtils.StatueBarShowText(msg);
+		this.client.SendMessage("hot-reload", { path: filePath });
+	}
+	//#endregion 热重载
+
 	//#region 等待游戏载入
 	/**等待游戏载入 */
 	async WaitForGameLoaded(): Promise<void> {
@@ -198,6 +228,12 @@ export class DebugClient {
 		});
 	}
 	//#endregion 等待游戏载入
+
+	//#region 清空所有Debug
+	ClearAll() {
+		this.CompileDebug.tempFile = undefined;
+	}
+	//#endregion 清空所有Debug
 
 }
 

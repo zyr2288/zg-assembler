@@ -33,7 +33,7 @@ export class AssCommands {
 	}
 
 	/**编译本文件 */
-	private static async CompileThisFile() {
+	static async CompileThisFile() {
 		if (!vscode.window.activeTextEditor)
 			return;
 
@@ -61,7 +61,7 @@ export class AssCommands {
 	}
 
 	/**编译入口文件 */
-	private static async CompileEntryFile() {
+	static async CompileEntryFile() {
 		if (!vscode.workspace.workspaceFolders)
 			return;
 
@@ -82,7 +82,7 @@ export class AssCommands {
 			return;
 		}
 
-		vscode.workspace.saveAll(false);
+		await vscode.workspace.saveAll(false);
 
 		let data = await LSPUtils.assembler.fileUtils.ReadFile(filePath);
 		let text = LSPUtils.assembler.fileUtils.BytesToString(data);
@@ -96,7 +96,7 @@ export class AssCommands {
 				toClipboard: LSPUtils.assembler.config.ProjectSetting.copyToClipboard
 			});
 		}
-
+		
 		let showText = LSPUtils.assembler.diagnostic.hasError ?
 			` $(alert) ${LSPUtils.assembler.localization.GetMessage("compile error")}` :
 			` $(check) ${LSPUtils.assembler.localization.GetMessage("compile finished")}`;

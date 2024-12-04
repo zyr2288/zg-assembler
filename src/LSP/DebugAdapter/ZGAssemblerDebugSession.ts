@@ -19,9 +19,10 @@ export interface ZGAssemblerDebugConfig extends vscode.DebugConfiguration {
 export class ZGAssemblerDebugSession extends DebugSession {
 
 	debugClient: DebugClient;
+	config: ZGAssemblerDebugConfig;
+	
 	private hitStack: StackFrame | undefined;
 	private CompileDebug = LSPUtils.assembler.languageHelper.debug;
-	private config: ZGAssemblerDebugConfig;
 
 	constructor(config: vscode.DebugConfiguration) {
 		super();

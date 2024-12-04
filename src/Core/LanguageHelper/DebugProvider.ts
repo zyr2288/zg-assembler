@@ -1,6 +1,10 @@
+import { Config } from "../Base/Config";
+import { FileUtils } from "../Base/FileUtils";
 import { Compiler } from "../Compiler/Compiler";
 
 export class DebugProvider {
+
+	static tempFile?: Uint8Array;
 
 	//#region 获取Debug所在文件以及行号
 	/**
@@ -37,5 +41,48 @@ export class DebugProvider {
 		return Compiler.enviroment.compileResult.GetLineWithFileAndLine(fileIndex, lineNumber);
 	}
 	//#endregion 设定断点
+
+	//#region 热重载文件
+	/**热重载观察文件变化 */
+	static async GetEntryFile(rootPath: string, offset:number) {
+		const filePath = FileUtils.Combine(rootPath, Config.ProjectSetting.outputEntryFile);
+		if (!DebugProvider.tempFile) {
+			DebugProvider.tempFile = await FileUtils.ReadFile(filePath);
+			return;
+		}
+
+		const buffer = await FileUtils.ReadFile(filePath);
+		if (DebugProvider.tempFile.length !== buffer.length) {
+			DebugProvider.tempFile = buffer;
+			return;
+		}
+
+		const result = new Map<number, number[]>();
+		let start = 0;
+		for (let i = 0; i < buffer.length; i++) {
+			if (DebugProvider.tempFile[i] === buffer[i]) {
+				start = -1;
+				continue;
+			}
+
+			if (start < 0)
+				start = i;
+
+			let tempBuffer = result.get(start - offset);
+			if (!tempBuffer) {
+				tempBuffer = [];
+				result.set(start - offset, tempBuffer);
+			}
+			tempBuffer.push(buffer[i]);
+		}
+
+		// result.forEach((value, key) => {
+		// 	console.log(`start:${key}, values: ${JSON.stringify(value)}`);
+		// });
+
+		DebugProvider.tempFile = buffer;
+		return result;
+	}
+	//#endregion 热重载文件
 
 }

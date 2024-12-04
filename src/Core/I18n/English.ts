@@ -46,6 +46,7 @@ export const English = {
 	"Cannot find launch.json": "Cannot find launch.json",
 	"Cannot find rom file {0}": "Cannot find rom file {0}",
 	"Cannot find program path {0}": "Cannot find program path {0}",
+	"Hot Reload Success": "Hot reload success",
 }
 
 export const CommandTip_English = {

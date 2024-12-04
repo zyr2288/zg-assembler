@@ -18,6 +18,7 @@ export class Compiler {
 	private static editEnv = new Enviroment();
 	private static compileEnv = new Enviroment();
 
+	//#region 修改编译环境
 	static ChangeEnv(env: "edit" | "compile") {
 		switch (env) {
 			case "edit":
@@ -28,6 +29,7 @@ export class Compiler {
 				break;
 		}
 	}
+	//#endregion 修改编译环境
 
 	//#region 编译所有行
 	/**
@@ -88,6 +90,7 @@ export class Compiler {
 	}
 	//#endregion 编译所有行
 
+	//#region 获取所有行的结果
 	static GetLinesResult(option: CompileOption, result: number[]) {
 		for (let i = 0; i < option.allLines.length; i++) {
 
@@ -134,6 +137,7 @@ export class Compiler {
 			i = option.index;
 		}
 	}
+	//#endregion 获取所有行的结果
 
 	static FirstCompile() {
 		return Compiler.enviroment.compileTime === 0;
