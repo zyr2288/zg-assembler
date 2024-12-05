@@ -184,22 +184,30 @@ export class DebugClient {
 	//#region 热重载
 	async HotReload(rootFolder: string, offset: number) {
 		const diff = await this.CompileDebug.GetEntryFile(rootFolder, offset);
-		if (!diff)
+		if (!diff || diff.size === 0)
 			return;
 
-		const filePath = LSPUtils.assembler.fileUtils.Combine(rootFolder, DiffFileName);
-		let data = "";
-		diff.forEach((value, key) => {
-			data += `${key}:`;
-			value.forEach(v => {
-				data += `${v} `;
-			});
-			data = data.substring(0, data.length - 1) + "\n";
+		let length = 0;
+		diff.forEach((v) => {
+			length += 8 + v.length;
 		});
-		data = data.substring(0, data.length - 1);
+		const result = new Uint8Array(length);
+		const dataView = new DataView(result.buffer);
 
-		const buffer = LSPUtils.assembler.fileUtils.StringToBytes(data);
-		await LSPUtils.assembler.fileUtils.SaveFile(filePath, buffer);
+		let index = 0;
+		diff.forEach((value, key) => {
+			dataView.setUint32(index, key, true);
+			index += 4;
+			dataView.setUint32(index, value.length, true);
+			index += 4;
+			value.forEach(v => {
+				dataView.setUint8(index, v);
+				index++;
+			})
+		});
+
+		const filePath = LSPUtils.assembler.fileUtils.Combine(rootFolder, DiffFileName);
+		await LSPUtils.assembler.fileUtils.SaveFile(filePath, result);
 
 		const msg = LSPUtils.assembler.localization.GetMessage("Hot Reload Success");
 		LSPUtils.StatueBarShowText(msg);
