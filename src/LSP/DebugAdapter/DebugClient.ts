@@ -14,35 +14,35 @@ const DiffFileName = "zgasm-diff";
 
 /**发送或接受的消息 */
 interface ReceiveDatas {
-	"debug-init": { platform: string };
+	"debug-init": { send: { platform: string }, receive: undefined };
 	/**设定断点 */
-	"breakpoint-set": { baseAddress: number, orgAddress: number };
+	"breakpoint-set": { send: { baseAddress: number, orgAddress: number }, receive: undefined };
 	/**移除断点 */
-	"breakpoint-remove": { baseAddress: number, orgAddress: number };
+	"breakpoint-remove": { send: { baseAddress: number, orgAddress: number }, receive: undefined };
 	/**命中断点 */
-	"breakpoint-hit": { baseAddress: number, orgAddress: number };
+	"breakpoint-hit": { send: { baseAddress: number, orgAddress: number }, receive: undefined };
 	/**获取断点 */
 	"breakpoint-get": Record<number, number>;
 	/**获取寄存器信息 */
-	"registers-get": Record<string, number>;
+	"registers-get": { send: undefined, receive: Record<string, number> };
 	/**暂停 */
-	"pause": undefined;
+	"pause": { send: undefined, receive: undefined };
 	/**继续 */
-	"resume": undefined;
+	"resume": { send: undefined, receive: undefined };
 	/**单步进入 */
-	"step-into": undefined;
+	"step-into": { send: undefined, receive: undefined };
 	/**单步出 */
-	"step-out": undefined;
+	"step-out": { send: undefined, receive: undefined };
 	/**单步跳过 */
-	"step-over": undefined;
+	"step-over": { send: undefined, receive: undefined };
 	/**重启 */
-	"reset": undefined;
+	"reset": { send: undefined, receive: undefined };
 	/**重新载入ROM */
-	"reload": undefined;
+	"reload": { send: undefined, receive: undefined };
 	/**热重载 */
-	"hot-reload": { path: string };
+	"hot-reload": { send: { path: string }, receive: { success: boolean } };
 	/**当前游戏状态 */
-	"game-state": { state: "open" | "close" };
+	"game-state": { send: { state: "open" | "close" }, receive: undefined };
 }
 
 /**连接选项 */
@@ -258,7 +258,7 @@ const NotWaitMsgId = "00000000";
 
 class TcpClient {
 
-	OnMessageHandle?: <T extends keyof ReceiveDatas>(command: T, args: ReceiveDatas[T]) => void;
+	OnMessageHandle?: <T extends keyof ReceiveDatas>(command: T, args: ReceiveDatas[T]["receive"]) => void;
 	ConnectMessageHandle?: <T extends keyof ConnectType>(type: T, data: ConnectType[T]) => void;
 	OnConnectedHandle?: () => void;
 	OnCloseHandle?: () => void;
@@ -360,7 +360,7 @@ class TcpClient {
 		this.clientSocket.destroySoon();
 	}
 
-	SendMessage(command: keyof ReceiveDatas, data?: Record<string, any>) {
+	SendMessage<T extends keyof ReceiveDatas>(command: T, data?: ReceiveDatas[T]["send"]) {
 		if (this._connectType !== "connected")
 			return;
 
@@ -425,7 +425,7 @@ class TcpClient {
 		return result;
 	}
 
-	protected SendDataProcess(command: string, data?: Record<string, any>) {
+	protected SendDataProcess(command: string, data?: any) {
 		let result = command;
 		if (!data)
 			return result + "\n";
