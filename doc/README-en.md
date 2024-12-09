@@ -93,7 +93,7 @@
 
 ### String
 
-Sometimes data comes in the form of a string, for example `.DB "HELLO WORLD`
+Sometimes data comes in the form of a string, for example `.DB "HELLO WORLD"`
 
 But due to some special restrictions, such as the spaces in this string being hexadecimal `00`, a simple transformation can be performed with the following result
 
