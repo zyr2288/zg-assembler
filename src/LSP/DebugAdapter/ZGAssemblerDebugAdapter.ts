@@ -42,7 +42,7 @@ class ZGAssemblerDebugFactory implements vscode.DebugAdapterDescriptorFactory {
 			const rootFolder = vscode.workspace.workspaceFolders?.[0];
 			if (!rootFolder)
 				return;
-
+			
 			await AssCommands.CompileEntryFile();
 			await debugSession.debugClient.HotReload(rootFolder.uri.fsPath, debugSession.config.romOffset);
 		}

@@ -17,7 +17,11 @@
 			"name": "string.quoted.double.zg-assembly",
 			"begin": "\"",
 			"end": "\"",
-			"patterns": [{ "match": "\\\\\"", "name": "constant.character.escape.zg-assembly" }]
+			"patterns": [
+				{ "match": "\\\\\"", "name": "constant.character.escape.zg-assembly" },
+				{ "match": "\\\\x[0-9a-fA-F]{2}", "name": "constant.character.escape.zg-assembly" },
+				{ "match": "\\\\u\\{[0-9-a-fA-F]+\\}", "name": "constant.character.escape.zg-assembly" }
+			]
 		},
 		"asmCommand": {
 			"name": "keyword.other.zg-assembly.commands",

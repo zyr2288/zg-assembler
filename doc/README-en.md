@@ -91,6 +91,18 @@
 2. `*` has a special meaning when not used as a multiplication sign, it means currect line original address. e.g. `.ORG *`.
 3. `$` has a special meaning when not used as hex sign, it means currect line base address.
 
+### String
+
+Sometimes data comes in the form of a string, for example `.DB "HELLO WORLD`
+
+But due to some special restrictions, such as the spaces in this string being hexadecimal `00`, a simple transformation can be performed with the following result
+
+`.DB "HELLO\x00WORLD`
+
+Unicode type:
+
+`.DB "HELLO\u{00}WORLD"`
+
 ---
 
 ### Comments and folding
@@ -432,7 +444,7 @@ For example:
 ```
 
 * `MSG` - Out put a message.
-* `ERROR` - Out put a message and stop
+* `ERROR` - Out put a message and stop compile
 
 ```
     .ORG $8000

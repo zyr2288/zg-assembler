@@ -216,7 +216,7 @@ export class ExpressionUtils {
 						case "(<)": element = pre & 0xFF; break;
 						case "(~)": element = ~pre; break;
 					}
-					
+
 					exps[index] = element;
 					exps.splice(index - 1, 1);
 					index -= 1;
@@ -384,6 +384,14 @@ export class ExpressionUtils {
 						continue;
 					} else {
 						part.token = expression.Substring(stringStart - expression.start + 1, part.token.start - stringStart - 1);
+						const temp = ExpressionUtils.ProcessString(part.token);
+						if (temp) {
+							part.token.text = temp;
+						} else {
+							result.success = false;
+							return result;
+						}
+
 						const length = part.token.text.length;
 						switch (length) {
 							case 0:
@@ -764,5 +772,84 @@ export class ExpressionUtils {
 		}
 	}
 	//#endregion 检查在 Macro 里的参数
+
+	//#region 处理字符串
+	private static ProcessString(token: Token) {
+		let result = "";
+		let isConvert = false;
+
+		const GetChar = (str: string, index: number, length: number) => {
+			let result = "";
+			while (true) {
+				if (index >= str.length || length <= 0)
+					break;
+
+				result += str[index];
+
+				index++;
+				length--;
+			}
+
+			if (length !== 0) {
+				const error = Localization.GetMessage("Expression error");
+				MyDiagnostic.PushException(token, error);
+				throw null;
+			}
+
+			return result;
+		}
+
+		try {
+			for (let i = 0; i < token.length; i++) {
+				const char = GetChar(token.text, i, 1);
+				switch (char) {
+					case "\\":
+						isConvert = true;
+						continue;
+					default:
+						if (isConvert) {
+							switch (char) {
+								case "\"":
+									result += "\"";
+									break;
+								case "x":
+									const hex = GetChar(token.text, i + 1, 2);
+									result += String.fromCharCode(parseInt(hex, 16));
+									i += 2;
+									break;
+								case "u":
+									const left = GetChar(token.text, i + 1, 1);
+									if (left !== "{") {
+										const error = Localization.GetMessage("Expression error");
+										MyDiagnostic.PushException(token, error);
+										return;
+									}
+
+									let index = 0;
+									while (true) {
+										const right = GetChar(token.text, i + 2 + index, 1);
+										if (right === "}") {
+											const charCode = parseInt(token.text.substring(i + 2, i + 2 + index - 1), 16);
+											result += String.fromCharCode(charCode);
+											break;
+										}
+										i++;
+									}
+									break;
+							}
+							isConvert = false;
+							continue;
+						}
+
+						result += char;
+						break;
+				}
+			}
+			return result;
+		} catch {
+			return;
+		}
+	}
+	//#endregion 处理字符串
 
 }
