@@ -17,6 +17,7 @@ import { RepeatCommand } from "./RepeatCommand";
 import { EnumCommand } from "./EnumCommand";
 import { Expression } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
+import { DBGCommand, DWGCommand } from "./DataGroup";
 
 interface FindMatchOption {
 	start: string;
@@ -47,6 +48,7 @@ export class Command {
 		Command.AddCommand(
 			DefinedCommand, Original, Base, EnumCommand,
 			DBCommand, DWCommand, DLCommand, HexCommand,
+			DBGCommand, DWGCommand, DLCommand,
 			Include, Incbin,
 			IfConfident, IfDefConfident, IfNDefConfident,
 			MacroCommand, MsgCommand, ErrorCommand,

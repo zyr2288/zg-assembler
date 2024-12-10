@@ -1,5 +1,6 @@
 import { Compiler } from "../Compiler/Compiler";
 import { Token } from "./Token";
+import { Utils } from "./Utils";
 
 export interface OutDiagnosticMsg {
 	filePath: string;
@@ -39,7 +40,8 @@ export class MyDiagnostic {
 			MyDiagnostic.allErrors.set(fileIndex, fileErrors);
 		}
 
-		fileErrors.set(token.line, { word: token, msg });
+		const hash = Utils.GetHashcode(token.length, token.start)
+		fileErrors.set(hash, { word: token, msg });
 	}
 	//#endregion 添加错误
 

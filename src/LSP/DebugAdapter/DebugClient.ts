@@ -20,7 +20,7 @@ interface MsgDataType<T, K> {
 
 /**发送或接受的消息 */
 interface ReceiveDatas {
-	"debug-init": { send: { platform: string }, receive: undefined, waiting: false };
+	"debug-init": { send: { cpuType: string }, receive: undefined, waiting: false };
 	/**设定断点 */
 	"breakpoint-set": { send: { baseAddress: number, orgAddress: number }, receive: undefined, waiting: false };
 	/**移除断点 */
@@ -75,7 +75,7 @@ export class DebugClient {
 	client: TcpClient;
 
 	private CompileDebug = LSPUtils.assembler.languageHelper.debug;
-	private option = { gameState: "close", debugBaseline: 1 };
+	private option = { gameState: "close", debugBaseline: 1, hotReloadBuffer: new Uint8Array() };
 
 	/**Debug合集，key1是文件路径，key2是行号 */
 	private debugCollection = new Map<string, Map<number, { baseAddr: number, orgAddr: number, verified: boolean }>>();
@@ -189,7 +189,7 @@ export class DebugClient {
 
 	//#region 热重载
 	async HotReload(rootFolder: string, offset: number) {
-		const diff = await this.CompileDebug.GetEntryFile(rootFolder, offset);
+		const diff = await this.CompileDebug.WatchHotReloadFile(rootFolder, offset);
 		if (!diff || diff.size === 0)
 			return;
 
@@ -375,7 +375,7 @@ class TcpClient {
 		this.clientSocket.write(temp);
 	}
 
-	async SendMessageAndWaitBack<T extends keyof ReceiveDatas>(command: T, data?: ReceiveDatas[T]): Promise<ReceiveDatas[T]> {
+	async SendMessageAndWaitBack<T extends keyof ReceiveDatas>(command: T, data?: ReceiveDatas[T]["send"]): Promise<ReceiveDatas[T]["receive"]> {
 		return new Promise((resolve, reject) => {
 			if (this._connectType !== "connected") {
 				const error = LSPUtils.assembler.localization.GetMessage("Debugger can not connect to the emulator");

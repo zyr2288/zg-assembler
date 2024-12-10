@@ -108,6 +108,9 @@ class DataGroupUtils {
 
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
+			if (!line)
+				continue;
+
 			let tokens: Token[] | undefined;
 			switch (line.key) {
 				case "label":

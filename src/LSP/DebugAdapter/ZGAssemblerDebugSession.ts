@@ -24,6 +24,7 @@ export class ZGAssemblerDebugSession extends DebugSession {
 	private hitStack: StackFrame | undefined;
 	private CompileDebug = LSPUtils.assembler.languageHelper.debug;
 
+	//#region 构造函数，初始化
 	constructor(config: vscode.DebugConfiguration) {
 		super();
 
@@ -77,6 +78,7 @@ export class ZGAssemblerDebugSession extends DebugSession {
 		}
 
 	}
+	//#endregion 构造函数，初始化
 
 	//#region 插件初始化
 	/**插件初始化 */

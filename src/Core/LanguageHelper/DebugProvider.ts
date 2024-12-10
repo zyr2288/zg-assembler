@@ -44,7 +44,7 @@ export class DebugProvider {
 
 	//#region 热重载文件
 	/**热重载观察文件变化 */
-	static async GetEntryFile(rootPath: string, offset:number) {
+	static async WatchHotReloadFile(rootPath: string, offset: number) {
 		const filePath = FileUtils.Combine(rootPath, Config.ProjectSetting.outputEntryFile);
 		if (!DebugProvider.tempFile) {
 			DebugProvider.tempFile = await FileUtils.ReadFile(filePath);
@@ -75,12 +75,6 @@ export class DebugProvider {
 			}
 			tempBuffer.push(buffer[i]);
 		}
-
-		// result.forEach((value, key) => {
-		// 	console.log(`start:${key}, values: ${JSON.stringify(value)}`);
-		// });
-
-		DebugProvider.tempFile = buffer;
 		return result;
 	}
 	//#endregion 热重载文件
