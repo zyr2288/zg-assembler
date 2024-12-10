@@ -12,37 +12,43 @@ import { LSPUtils } from "../LSPUtils";
 
 const DiffFileName = "zgasm-diff";
 
+interface MsgDataType<T, K> {
+	send: T;
+	receive: K;
+	waiting: boolean;
+}
+
 /**发送或接受的消息 */
 interface ReceiveDatas {
-	"debug-init": { send: { platform: string }, receive: undefined };
+	"debug-init": { send: { platform: string }, receive: undefined, waiting: false };
 	/**设定断点 */
-	"breakpoint-set": { send: { baseAddress: number, orgAddress: number }, receive: undefined };
+	"breakpoint-set": { send: { baseAddress: number, orgAddress: number }, receive: undefined, waiting: false };
 	/**移除断点 */
-	"breakpoint-remove": { send: { baseAddress: number, orgAddress: number }, receive: undefined };
+	"breakpoint-remove": { send: { baseAddress: number, orgAddress: number }, receive: undefined, waiting: false };
 	/**命中断点 */
-	"breakpoint-hit": { send: { baseAddress: number, orgAddress: number }, receive: undefined };
+	"breakpoint-hit": { send: { baseAddress: number, orgAddress: number }, receive: undefined, waiting: false };
 	/**获取断点 */
-	"breakpoint-get": Record<number, number>;
+	"breakpoint-get": { send: undefined, receive: Record<number, number>, waiting: false };
 	/**获取寄存器信息 */
-	"registers-get": { send: undefined, receive: Record<string, number> };
+	"registers-get": { send: undefined, receive: Record<string, number>, waiting: true };
 	/**暂停 */
-	"pause": { send: undefined, receive: undefined };
+	"pause": { send: undefined, receive: undefined, waiting: false };
 	/**继续 */
-	"resume": { send: undefined, receive: undefined };
+	"resume": { send: undefined, receive: undefined, waiting: false };
 	/**单步进入 */
-	"step-into": { send: undefined, receive: undefined };
+	"step-into": { send: undefined, receive: undefined, waiting: false };
 	/**单步出 */
-	"step-out": { send: undefined, receive: undefined };
+	"step-out": { send: undefined, receive: undefined, waiting: false };
 	/**单步跳过 */
-	"step-over": { send: undefined, receive: undefined };
+	"step-over": { send: undefined, receive: undefined, waiting: false };
 	/**重启 */
-	"reset": { send: undefined, receive: undefined };
+	"reset": { send: undefined, receive: undefined, waiting: false };
 	/**重新载入ROM */
-	"reload": { send: undefined, receive: undefined };
+	"reload": { send: undefined, receive: undefined, waiting: false };
 	/**热重载 */
-	"hot-reload": { send: { path: string }, receive: { success: boolean } };
+	"hot-reload": { send: { path: string }, receive: { success: boolean }, waiting: false };
 	/**当前游戏状态 */
-	"game-state": { send: { state: "open" | "close" }, receive: undefined };
+	"game-state": { send: undefined, receive: { state: "open" | "close" }, waiting: false };
 }
 
 /**连接选项 */
@@ -63,7 +69,7 @@ export interface ClientOption {
 
 export class DebugClient {
 
-	BreakPointHitHandle?: (data: ReceiveDatas["breakpoint-hit"]) => Promise<void> | void;
+	BreakPointHitHandle?: (data: ReceiveDatas["breakpoint-hit"]["receive"]) => Promise<void> | void;
 	EmuResumeHandle?: () => Promise<void> | void;
 
 	client: TcpClient;
@@ -80,13 +86,13 @@ export class DebugClient {
 	}
 
 	//#region 接收消息
-	async OnMessage<T extends keyof ReceiveDatas>(command: T, data: ReceiveDatas[T]) {
+	async OnMessage<T extends keyof ReceiveDatas>(command: T, data: ReceiveDatas[T]["receive"]) {
 		switch (command) {
 			case "breakpoint-hit":
-				await this.BreakPointHitHandle?.(data as ReceiveDatas["breakpoint-hit"]);
+				await this.BreakPointHitHandle?.(data as ReceiveDatas["breakpoint-hit"]["receive"]);
 				break;
 			case "game-state":
-				this.option.gameState = (data as ReceiveDatas["game-state"]).state;
+				this.option.gameState = (data as ReceiveDatas["game-state"]["receive"]).state;
 				break;
 			case "resume":
 				await this.EmuResumeHandle?.();
@@ -291,6 +297,7 @@ class TcpClient {
 			const temp = this.ReceiveData(data);
 			for (const d of temp) {
 				if (d.msgId !== NotWaitMsgId && this.messageStack[d.msgId]) {
+					// @ts-ignore
 					this.messageStack[d.msgId](d.data);
 					continue;
 				}
