@@ -37,6 +37,8 @@ export class RenameAndReferences {
 	 * @returns 文本起始位置和长度
 	 */
 	static PreRename(filePath: string, lineText: string, lineNumber: number, currect: number) {
+
+		Compiler.ChangeEnviroment("edit");
 		RenameAndReferences.ClearRename();
 
 		const fileIndex = Compiler.enviroment.GetFileIndex(filePath, false);

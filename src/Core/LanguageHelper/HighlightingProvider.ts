@@ -10,6 +10,7 @@ import { MacroCommand } from "../Command/MacroCommand";
 import { CommandTagBase } from "../Command/Command";
 import { DefTag } from "../Command/DefinedCommand";
 import { MsgTag } from "../Command/MsgErrCommand";
+import { DataGroupTag } from "../Command/DataGroup";
 
 export class HighlightOption {
 	lines: CommonLine[] = [];
@@ -157,6 +158,12 @@ export class HighlightingProvider {
 			case ".DL":
 				tag = line.tag as DataCommandTag;
 				HighlightingProvider.GetExpression(option.result, ...tag);
+				break;
+			case ".DBG":
+			case ".DWG":
+			case ".DLG":
+				tag = line.tag as DataGroupTag;
+				HighlightingProvider.GetExpression(option.result, ...tag.expressions);
 				break;
 			case ".MACRO":
 				MacroCommand.GetHighlight(option);

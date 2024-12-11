@@ -106,6 +106,7 @@ class DataGroupUtils {
 
 		Command.MarkLineFinished(option, start, matchEnd);
 
+		let dataIndex = 0;
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
 			if (!line)
@@ -123,10 +124,18 @@ class DataGroupUtils {
 						continue;
 
 					for (let j = 0; j < tokens.length; j++) {
+						if (tokens[j].isEmpty) {
+							const error = Localization.GetMessage("Expression error");
+							MyDiagnostic.PushException(tokens[j], error);
+							line.lineType = LineType.Error;
+							continue;
+						}
+
 						const expression = ExpressionUtils.SplitAndSort(tokens[j]);
 						if (expression) {
-							tag.expressions[j] = expression;
-							DataGroupUtils.AddExpressionPart(tag.dataGroup, expression, j);
+							tag.expressions[dataIndex] = expression;
+							DataGroupUtils.AddExpressionPart(tag.dataGroup, expression, dataIndex);
+							dataIndex++;
 						}
 					}
 					break;
@@ -134,6 +143,7 @@ class DataGroupUtils {
 		}
 
 		line.tag = tag;
+		Compiler.enviroment.SetRange({ type: "dataGroup", key: "", startLine: option.index, endLine: matchEnd });
 	}
 
 	static AnalyseThird(option: CompileOption) {
@@ -144,18 +154,22 @@ class DataGroupUtils {
 
 	static Compile(option: CompileOption, dataLength: number) {
 		const line = option.GetCurrent<CommandLine>();
-		const tag: DataGroupTag = line.tag;
+		let tag = line.tag as DataGroupTag;
+		if (Compiler.FirstCompile()) {
+			DataGroupUtils.AnalyseFirst(option);
+			tag = line.tag;
+			const label = LabelUtils.CreateCommonLabel(tag.name, { ableNameless: false });
+			if (label) {
+				label.value = Compiler.enviroment.address.org;
+				label.type = LabelType.Label;
+				label.comment = line.comment;
+				Compiler.enviroment.allDataGroup.set(tag.name.text, tag.dataGroup);
+			}
+			line.lineType = LineType.Finished;
+		}
 
 		line.lineResult.SetAddress();
 		line.lineResult.result.length = tag.expressions.length * dataLength;
-
-		const label = LabelUtils.CreateCommonLabel(tag.name, { ableNameless: false });
-		if (label) {
-			label.value = Compiler.enviroment.address.org;
-			label.type = LabelType.Label;
-			label.comment = line.comment;
-		}
-		line.lineType = LineType.Finished;
 
 		let index = 0;
 		for (let i = 0; i < tag.expressions.length; i++) {

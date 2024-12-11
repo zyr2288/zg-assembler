@@ -4,7 +4,7 @@ import { FileUtils } from "../Base/FileUtils";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Macro } from "../Base/Macro";
-import { ILabelCommon, ILabelTree, LabelScope, LabelType } from "../Base/Label";
+import { ILabelCommon, ILabelTree, LabelScope, LabelType, LabelUtils } from "../Base/Label";
 import { HelperUtils } from "./HelperUtils";
 import { HighlightRange } from "../Lines/CommonLine";
 import { Platform } from "../Platform/Platform";
@@ -176,7 +176,7 @@ export class IntellisenseProvider {
 			case "variable":
 				if (option.current < match.content!.main.start)
 					break;
-				
+
 				const prefix = HelperUtils.GetWord(match.content!.rest.text, option.current, match.content!.rest.start);
 				return IntellisenseProvider.GetLabel(fileIndex, prefix.leftText, macro);
 		}
@@ -526,6 +526,11 @@ export class IntellisenseProvider {
 			return IntellisenseProvider.GetLabel(fileIndex, prefix.leftText, macro);
 		}
 
+		if (trigger === ":") {
+			const prefix = HelperUtils.GetWord(content.rest.text, current, content.rest.start);
+			return IntellisenseProvider.ProcessDataGroup(prefix.leftText);
+		}
+
 		return [];
 	}
 	//#endregion 处理汇编指令
@@ -597,5 +602,35 @@ export class IntellisenseProvider {
 		return;
 	}
 	//#endregion .INCLUDE命令
-	
+
+	//#region 处理数据组
+	private static ProcessDataGroup(text: string): Completion[] {
+		let str = text.substring(0, text.length - 1);
+		const parts = str.split(/\:/g);
+		if (parts.length > 2)
+			return [];
+
+		const datagroup = Compiler.enviroment.allDataGroup.get(parts[0]);
+		if (!datagroup)
+			return [];
+
+		let result: Completion[] = [];
+
+		if (parts.length === 1) {
+			datagroup.labelAndIndex.forEach((value, key) => {
+				result.push(new Completion({ showText: key }));
+			});
+		} else {
+			const indexes = datagroup.labelAndIndex.get(parts[1]);
+			if (!indexes)
+				return [];
+
+			for (const index of indexes)
+				result.push(new Completion({ showText: index.index.toString() }));
+		}
+
+		return result;
+	}
+	//#endregion 处理数据组
+
 }

@@ -156,7 +156,7 @@ export class LabelUtils {
 		//#region 数据组
 		if (token.text.includes(":")) {
 			const tokens = token.Split(/\:/g);
-			if (tokens.length > 2) {
+			if (tokens.length > 3) {
 				const msg = Localization.GetMessage("Label {0} illegal");
 				MyDiagnostic.PushException(token, msg);
 				return;
@@ -170,7 +170,7 @@ export class LabelUtils {
 			}
 
 			let index = 0;
-			if (!tokens[2].isEmpty) {
+			if (tokens[2] && !tokens[2].isEmpty) {
 				const temp = ExpressionUtils.GetNumber(tokens[2].text);
 				if (temp.success) {
 					index = temp.value;

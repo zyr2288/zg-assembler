@@ -19,7 +19,11 @@ export class Compiler {
 	private static compileEnv = new Enviroment();
 
 	//#region 修改编译环境
-	static ChangeEnv(env: "edit" | "compile") {
+	/**
+	 * 修改编译环境
+	 * @param env 修改环境是编辑模式还是编译模式
+	 */
+	static ChangeEnviroment(env: "edit" | "compile") {
 		switch (env) {
 			case "edit":
 				Compiler.enviroment = Compiler.editEnv;

@@ -44,7 +44,7 @@ export class ZGAssembler {
 			return;
 
 		Compiler.isCompiling = true;
-		Compiler.ChangeEnv("edit");
+		Compiler.ChangeEnviroment("edit");
 
 		const option = new CompileOption();
 
@@ -87,7 +87,7 @@ export class ZGAssembler {
 
 		Compiler.isCompiling = true;
 		Compiler.stopCompiling = false;
-		Compiler.ChangeEnv("compile");
+		Compiler.ChangeEnviroment("compile");
 
 		Compiler.enviroment.compileTime = 0;
 		Compiler.enviroment.fileIndex = Compiler.enviroment.GetFileIndex(filePath);
