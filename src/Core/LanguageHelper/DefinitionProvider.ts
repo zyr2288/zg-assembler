@@ -1,5 +1,4 @@
 import { LabelUtils } from "../Base/Label";
-import { Macro } from "../Base/Macro";
 import { Token } from "../Base/Token";
 import { Compiler } from "../Compiler/Compiler";
 import { HelperUtils } from "./HelperUtils";
@@ -18,6 +17,8 @@ export class DefinitionProvider {
 	 * @returns 
 	 */
 	static GetDefinitionPosition(filePath: string, text: string, line: number, current: number) {
+		Compiler.ChangeEnviroment("edit");
+
 		const result = { filePath: "", line: 0, start: 0, length: 0 };
 		const fileIndex = Compiler.enviroment.GetFileIndex(filePath, false);
 

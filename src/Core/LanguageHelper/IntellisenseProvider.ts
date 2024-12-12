@@ -557,6 +557,9 @@ export class IntellisenseProvider {
 				if (!trigger || trigger === ".") {
 					const prefix = HelperUtils.GetWord(content.rest.text, current, content.rest.start);
 					result = IntellisenseProvider.GetLabel(fileIndex, prefix.leftText, macro);
+				} else if (trigger === ":") {
+					const prefix = HelperUtils.GetWord(content.rest.text, current, content.rest.start);
+					result = IntellisenseProvider.ProcessDataGroup(prefix.leftText);
 				}
 				break;
 		}
