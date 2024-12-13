@@ -226,6 +226,8 @@ export class RenameAndReferences {
 	 * @returns 
 	 */
 	static GetReferences(filePath: string, lineText: string, lineNumber: number, currect: number) {
+		Compiler.ChangeEnviroment("edit");
+
 		RenameAndReferences.ClearRename();
 		const fileIndex = Compiler.enviroment.GetFileIndex(filePath, false);
 		const temp = HelperUtils.FindMatchToken(fileIndex, lineText, lineNumber, currect);
