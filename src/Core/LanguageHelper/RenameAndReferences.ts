@@ -166,7 +166,7 @@ export class RenameAndReferences {
 		// 所有引用重命名
 		const allLineKeys = Compiler.enviroment.allLine.keys();
 		for (const key of allLineKeys) {
-			if (RenameAndReferences.SaveRename.targetFile >= 0 && 
+			if (RenameAndReferences.SaveRename.targetFile >= 0 &&
 				key !== RenameAndReferences.SaveRename.targetFile)
 				continue;
 
@@ -244,7 +244,7 @@ export class RenameAndReferences {
 			case "label":
 				if (temp.token?.text.startsWith("."))
 					RenameAndReferences.SaveRename.targetFile = fileIndex;
-				
+
 				break;
 			case "macro":
 				break;
@@ -261,7 +261,7 @@ export class RenameAndReferences {
 		// 所有引用重命名
 		const allLineKeys = Compiler.enviroment.allLine.keys();
 		for (const key of allLineKeys) {
-			if (RenameAndReferences.SaveRename.targetFile >= 0 && 
+			if (RenameAndReferences.SaveRename.targetFile >= 0 &&
 				key !== RenameAndReferences.SaveRename.targetFile)
 				continue;
 
