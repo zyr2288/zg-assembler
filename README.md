@@ -125,6 +125,20 @@ Unicode形式
 
 ---
 
+### 关于智能提示
+
+插件默认关闭基于字词的建议，想启用该功能，在vscode的设置内加入 
+
+```json
+{
+    "[zg-assembly]": {
+		"editor.wordBasedSuggestions": "matchingDocuments"
+	}
+}
+````
+
+---
+
 ## 编译器命令
 
 > 以下命令内中括号为可选参数

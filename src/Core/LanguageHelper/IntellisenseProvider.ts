@@ -522,6 +522,13 @@ export class IntellisenseProvider {
 		}
 
 		if (!trigger || trigger === ".") {
+			const addrMode = Platform.MatchAddressingMode(content.main, content.rest);
+			if (addrMode) {
+				if (!HelperUtils.CurrentInToken(current, ...addrMode.exprs)) {
+					return [];
+				}
+			}
+
 			const prefix = HelperUtils.GetWord(content.rest.text, current, content.rest.start);
 			return IntellisenseProvider.GetLabel(fileIndex, prefix.leftText, macro);
 		}

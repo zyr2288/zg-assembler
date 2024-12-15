@@ -369,7 +369,7 @@ export class HelperUtils {
 	 * 查询当前光标所在的Token
 	 * @param current 当前光标位置
 	 * @param tokens 所有要匹配的Token
-	 * @returns 返回匹配中的Index
+	 * @returns 返回匹配的Token和Index
 	 */
 	static CurrentInToken(current: number, ...tokens: Token[]) {
 		for (let i = 0; i < tokens.length; i++) {
