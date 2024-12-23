@@ -40,7 +40,7 @@ export class MyDiagnostic {
 			MyDiagnostic.allErrors.set(fileIndex, fileErrors);
 		}
 
-		const hash = Utils.GetHashcode(token.length, token.start)
+		const hash = Utils.GetHashcode(token.line, token.start, token.length)
 		fileErrors.set(hash, { word: token, msg });
 	}
 	//#endregion 添加错误
