@@ -94,7 +94,8 @@ export class MyDiagnostic {
 			MyDiagnostic.allWarning.set(fileIndex, fileWarnings);
 		}
 
-		fileWarnings.set(token.line, { word: token, msg });
+		const hash = Utils.GetHashcode(token.line, token.start, token.length)
+		fileWarnings.set(hash, { word: token, msg });
 	}
 	//#endregion 添加警告
 

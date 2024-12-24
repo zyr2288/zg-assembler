@@ -1,6 +1,7 @@
 import { CompileOption } from "../Base/CompileOption";
 import { Config } from "../Base/Config";
 import { Enviroment } from "../Base/Enviroment";
+import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { Command } from "../Command/Command";
 import { Include } from "../Command/Include";
 import { RepeatCommand } from "../Command/RepeatCommand";
@@ -24,6 +25,7 @@ export class Compiler {
 	 * @param env 修改环境是编辑模式还是编译模式
 	 */
 	static ChangeEnviroment(env: "edit" | "compile") {
+		MyDiagnostic.ClearAll();
 		switch (env) {
 			case "edit":
 				Compiler.enviroment = Compiler.editEnv;
