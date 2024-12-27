@@ -304,7 +304,7 @@ export class AsmSPC700 implements IAsmPlatform {
 
 	private TwoOperands(option: CompileOption) {
 		const line = option.GetCurrent<InstructionLine>();
-		const tempValue1 = ExpressionUtils.GetValue(line.expressions[1].parts, option);
+		const tempValue1 = ExpressionUtils.GetValue(line.expressions[0].parts, option);
 		const tempValue2 = ExpressionUtils.GetValue(line.expressions[1].parts, option);
 		line.lineResult.result.length = 3;
 		if (!tempValue1.success || !tempValue2.success)
@@ -312,14 +312,14 @@ export class AsmSPC700 implements IAsmPlatform {
 
 		line.lineResult.SetResult(line.addressMode.opCode[2]!, 0, 1);
 
-		let setValue = line.lineResult.SetResult(tempValue1.value, 1, 1);
+		let setValue = line.lineResult.SetResult(tempValue1.value, 2, 1);
 		if (setValue.overflow) {
 			const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", tempValue1.value, setValue.result);
 			const token = ExpressionUtils.CombineExpressionPart(line.expressions[0].parts);
 			MyDiagnostic.PushWarning(token, errorMsg);
 		}
 
-		setValue = line.lineResult.SetResult(tempValue1.value, 1, 1);
+		setValue = line.lineResult.SetResult(tempValue2.value, 1, 1);
 		if (setValue.overflow) {
 			const errorMsg = Localization.GetMessage("Expression result is {0}, but compile result is {1}", tempValue2.value, setValue.result);
 			const token = ExpressionUtils.CombineExpressionPart(line.expressions[1].parts);
