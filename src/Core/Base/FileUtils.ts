@@ -98,6 +98,8 @@ export class FileUtils {
 			const part = paths[pathIndex].split(/[\\\/]/g);
 			for (let partIndex = 0; partIndex < part.length; ++partIndex) {
 				switch (part[partIndex]) {
+					case "":
+						break;
 					case "..":
 						result.pop();
 						break;

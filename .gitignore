@@ -1,4 +1,5 @@
 node_modules
 dist/*
+dist-core/*
 *.vsix
 test/test.nes
