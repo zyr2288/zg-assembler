@@ -12,6 +12,6 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 doc/**
-dist/core/**
+dist-core/**
 test/**
 **.vsix

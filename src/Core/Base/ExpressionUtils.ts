@@ -696,6 +696,7 @@ export class ExpressionUtils {
 					if (label?.value === undefined) {
 						noError = false;
 						if (!tryValue) {
+							Compiler.stopCompiling = true;
 							const errorMsg = Localization.GetMessage("Label {0} not found", part.token.text);
 							MyDiagnostic.PushException(part.token, errorMsg);
 						}
