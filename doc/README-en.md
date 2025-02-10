@@ -45,6 +45,29 @@
 
 * In the editor under `.asm` file, right click on the mouse and the compile menu will appear.
 
+---
+
+### Fixed Addressing Length
+
+Normally, the compiler will automatically optimize the addressing method, using ``6502`` as an example:
+
+```
+    ORG $0
+	LDA $00F0,X
+```
+
+Due to the compiler's automatic optimization, the compilation result here is `B5 F0`, but in some cases the addressing length needs to be 2, and the addressing length needs to be fixed, then it can be changed to the following form:
+
+```
+    .ORG 0
+    LDA.2 $00F0,X ; Fixed addressing length to 2 bytes
+```
+
+At this time the result of compilation is ``BD F0 00``.
+
+Translated with DeepL.com (free version)
+
+---
 
 ### Label
 
@@ -52,15 +75,19 @@
 * Press vscode's Find Definition shortcut key (default F12) to find the label definition location directly.
 * All `xx = yy` is used as a variable, the compiler will not check for duplicate definitions. To define constants, use the `.DEF` command.
 
+---
+
 ### Local label
 
 * If a label is starting with "." (dot), then the label is valid only for this file.
 
+---
 
 ### Folding
 
 * The folding function starts with `;+` and ends with `;-`.
 
+---
 
 ### Nameless label
 
@@ -77,19 +104,27 @@
         ; AD 02 20 10 FB A5 00 F0 05 10 06 4C 00 90 4C 00 80 4C 00 A0 
 ```
 
+---
+
 ### Operator
+
 > Note: operators are base Javascript operator. Exp: ~$A -> -11
+
 ```
 	+ - * / & | ~ ^
 	>> << && || !
 	== != >= <=
 ```
 
+---
+
 ### Special Operator
 
 1. `>` and `<` have special meanings, for example `>$1234` takes the high ($12) and `<$1234` takes the low ($34).
 2. `*` has a special meaning when not used as a multiplication sign, it means currect line original address. e.g. `.ORG *`.
 3. `$` has a special meaning when not used as hex sign, it means currect line base address.
+
+---
 
 ### String
 
