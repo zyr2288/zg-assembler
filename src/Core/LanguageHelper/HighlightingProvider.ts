@@ -131,7 +131,8 @@ export class HighlightingProvider {
 
 		let tag;
 		HighlightingProvider.GetLabel(line.label, option.result);
-		switch (line.command.text) {
+		const command = line.command.text.toUpperCase();
+		switch (command) {
 			case ".DEF":
 				tag = option.GetCurrent<CommandLine>()!.tag as DefTag;
 				if (tag.exp)

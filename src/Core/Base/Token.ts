@@ -22,7 +22,7 @@ export class Token {
 
 	//#region 拷贝
 	Copy() {
-		let token = new Token(this.text, { start: this.start, line: this.line });
+		const token = new Token(this.text, { start: this.start, line: this.line });
 		return token;
 	}
 	//#endregion 拷贝
@@ -80,7 +80,7 @@ export class Token {
 		else
 			end = index + length;
 
-		let word = this.Copy();
+		const word = this.Copy();
 		word.text = word.text.substring(index, end);
 		word.start = this.start + index;
 

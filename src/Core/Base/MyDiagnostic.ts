@@ -68,7 +68,7 @@ export class MyDiagnostic {
 			}
 		} else {
 			MyDiagnostic.allErrors.forEach((errorMap, fileIndex) => {
-				errorMap.forEach((errorMsg, lineNumber) => {
+				errorMap.forEach((errorMsg) => {
 					errors.push({
 						filePath: Compiler.enviroment.GetFilePath(fileIndex),
 						line: errorMsg.word.line,
@@ -104,10 +104,10 @@ export class MyDiagnostic {
 	static GetWarnings() {
 		const warnings: OutDiagnosticMsg[] = [];
 		MyDiagnostic.allWarning.forEach((warningMap, fileIndex) => {
-			warningMap.forEach((warningMsg, line) => {
+			warningMap.forEach((warningMsg) => {
 				warnings.push({
 					filePath: Compiler.enviroment.GetFilePath(fileIndex),
-					line: line,
+					line: warningMsg.word.line,
 					start: warningMsg.word.start,
 					length: warningMsg.word.text.length,
 					message: warningMsg.msg

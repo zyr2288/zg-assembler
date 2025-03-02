@@ -145,6 +145,20 @@ export class HelperUtils {
 					result.token = match.content!.pre.Trim();
 				}
 				break;
+			case "variable":
+				if (HelperUtils.CurrentInToken(current, match.content!.pre)) {
+					result.type = "label";
+					result.token = match.content!.pre;
+					return result;
+				} else if (current > match.content!.rest.start && !match.content!.rest.isEmpty) {
+					const line = Compiler.enviroment.allLine.get(fileIndex)?.[lineNumber] as VariableLine;
+					if (temp = HelperUtils.CurrentInExpression({ fileIndex, current }, line.expression)) {
+						result.type = temp.type;
+						result.token = temp.token;
+						return result;
+					}
+				}
+				break;
 			case "unknow":
 				const line = Compiler.enviroment.allLine.get(fileIndex)?.[lineNumber] as LabelLine;
 				if (!line)
@@ -340,9 +354,14 @@ export class HelperUtils {
 							result.expIndex = i;
 							result.token = part.token;
 							if (part.type === PriorityType.Level_0_Sure) {
-								const label = LabelUtils.FindLabel(result.token, option);
-								if (label)
-									result.type = "label";
+								const temp = ExpressionUtils.GetNumber(result.token.text);
+								if (temp.success) {
+									result.type = "number";
+								} else {
+									const label = LabelUtils.FindLabel(result.token, option);
+									if (label)
+										result.type = "label";
+								}
 							} else {
 								result.type = part.type === PriorityType.Level_1_Label ? "label" : "number";
 							}
