@@ -107,6 +107,7 @@ export class Analyser {
 					main: lineText.Substring(temp.text.length, 1),
 					rest: lineText.Substring(temp.text.length + 1)
 				}
+				match.content.pre = match.content.pre.Trim();
 			}
 		}
 		return match;

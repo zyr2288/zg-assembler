@@ -79,7 +79,7 @@ export class DataCommand {
 			if (!temp.success) {
 				line.lineType = LineType.None;
 				line.lineResult.result.length += temp.values.length * dataLength;
-				index += line.lineResult.result.length;
+				index += temp.values.length * dataLength;
 			} else {
 				for (let j = 0; j < temp.values.length; j++) {
 					const temp2 = line.lineResult.SetResult(temp.values[j], index, dataLength);
