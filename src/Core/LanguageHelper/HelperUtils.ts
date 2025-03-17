@@ -83,7 +83,7 @@ export class HelperUtils {
 		switch (range?.type) {
 			case "macro":
 				macro = Compiler.enviroment.allMacro.get(range.key);
-				break
+				break;
 			case "enum":
 				if (HelperUtils.MatchEnum(range, result, fileIndex, lineText, lineNumber, current))
 					return result;

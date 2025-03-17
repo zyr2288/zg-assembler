@@ -36,6 +36,7 @@ export class DefinitionProvider {
 					}
 
 				}
+				break;
 			case "macro":
 				const tempMacro = Compiler.enviroment.allMacro.get(match.token!.text);
 				if (tempMacro) {

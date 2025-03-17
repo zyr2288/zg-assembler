@@ -21,7 +21,7 @@ export class Definition {
 		const temp = await LSPUtils.assembler.languageHelper.definition.GetDefinitionPosition(
 			document.uri.fsPath, lineText, position.line, position.character);
 
-		if (!temp)
+		if (!temp || !temp.filePath)
 			return result;
 
 		const fileUri = vscode.Uri.file(temp.filePath);
