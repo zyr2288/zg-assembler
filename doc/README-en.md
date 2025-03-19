@@ -53,7 +53,7 @@ Normally, the compiler will automatically optimize the addressing method, using 
 
 ```
     ORG $0
-	LDA $00F0,X
+    LDA $00F0,X
 ```
 
 Due to the compiler's automatic optimization, the compilation result here is `B5 F0`, but in some cases the addressing length needs to be 2, and the addressing length needs to be fixed, then it can be changed to the following form:
@@ -111,9 +111,9 @@ Translated with DeepL.com (free version)
 > Note: operators are base Javascript operator. Exp: ~$A -> -11
 
 ```
-	+ - * / & | ~ ^
-	>> << && || !
-	== != >= <=
+    + - * / & | ~ ^
+    >> << && || !
+    == != >= <=
 ```
 
 ---
@@ -146,6 +146,17 @@ Unicode type:
 * Comments of `;+` `;-` are collapsed to make it easier to collapse parts of the code.
 
 ---
+
+## About Smart Suggestions
+The plugin disables word-based suggestions by default, to enable this feature, add it to vscode's settings.
+```json
+{
+    "[zg-assembly]": {
+        "editor.wordBasedSuggestions": "matchingDocuments"
+    }
+}
+```
+
 
 ## Compiler commands (example of 6502)
 

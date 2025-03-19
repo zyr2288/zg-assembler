@@ -61,7 +61,7 @@
 
 ```
     .ORG $0
-	LDA $00F0,X
+    LDA $00F0,X
 ```
 
 由于编译器的自动优化，这里的编译结果是 `B5 F0`，但是在某些情况下需要寻址长度为2，需要固定寻址长度，此时可以改成以下形式：
@@ -111,9 +111,9 @@
 ### 运算符
 > 注意：由于内核使用的是JS，所有运算符是以JS的运算符计算方法进行计算。例如： ~$A -> -11
 ```
-	+ - * / & | ~ ^
-	>> << && || !
-	== != >= <=
+    + - * / & | ~ ^
+    >> << && || !
+    == != >= <=
 ```
 
 ---
@@ -152,8 +152,8 @@ Unicode形式
 ```json
 {
     "[zg-assembly]": {
-		"editor.wordBasedSuggestions": "matchingDocuments"
-	}
+        "editor.wordBasedSuggestions": "matchingDocuments"
+    }
 }
 ````
 
