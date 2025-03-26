@@ -40,11 +40,18 @@ export class UpdateFile {
 
 	//#region 更新错误
 	/**更新错误 */
-	static UpdateDiagnostic() {
+	static UpdateDiagnostic(files?: string[]) {
 		let errors = LSPUtils.assembler.diagnostic.GetExceptions();
-		UpdateFile.errorCollection.clear();
-		let result = new Map<string, vscode.Diagnostic[]>();
+		if (!files) {
+			UpdateFile.errorCollection.clear();
+		} else {
+			for (let i = 0; i < files.length; i++) {
+				const uri = vscode.Uri.file(files[i]);
+				UpdateFile.errorCollection.delete(uri);
+			}
+		}
 
+		const result = new Map<string, vscode.Diagnostic[]>();
 		for (let i = 0; i < errors.length; ++i) {
 			const error = errors[i];
 			let diagnostics = result.get(error.filePath);
@@ -56,7 +63,7 @@ export class UpdateFile {
 			if (error.line < 0)
 				continue;
 
-			let range = new vscode.Range(error.line, error.start, error.line, error.start + error.length);
+			const range = new vscode.Range(error.line, error.start, error.line, error.start + error.length);
 			diagnostics.push(new vscode.Diagnostic(range, error.message));
 		}
 
@@ -73,14 +80,14 @@ export class UpdateFile {
 				if (warning.line < 0)
 					continue;
 
-				let range = new vscode.Range(warning.line, warning.start, warning.line, warning.start + warning.length);
+				const range = new vscode.Range(warning.line, warning.start, warning.line, warning.start + warning.length);
 				diagnostic.push(new vscode.Diagnostic(range, warning.message, vscode.DiagnosticSeverity.Warning));
 			}
 		}
 
 		result.forEach((value, key, map) => {
-			let uri = vscode.Uri.file(key);
-			this.errorCollection.set(uri, value);
+			const uri = vscode.Uri.file(key);
+			UpdateFile.errorCollection.set(uri, value);
 		});
 	}
 	//#endregion 更新错误
@@ -173,7 +180,7 @@ export class UpdateFile {
 				files.push({ text, filePath });
 			});
 			await LSPUtils.assembler.ParseText(files);
-			UpdateFile.UpdateDiagnostic();
+			UpdateFile.UpdateDiagnostic(files.map(v => v.filePath));
 			UpdateFile.updateFiles.clear();
 			LSPUtils.fileUpdateFinished = true;
 		}, FreshTime);
