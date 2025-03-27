@@ -516,12 +516,14 @@ For example:
 
 ```
     .ORG $8000
+
     .DEF test1, 10
     .DEF test2, 11
+
     .MSG "test {0}, ${1}, @{0}", test1, test2
 
-	.IF test1 == 10
-    .ERROR "This is test1: {0}", test1
+    .IF test1 == 10
+        .ERROR "This is test1: {0}", test1
     .ENDIF
 ```
 

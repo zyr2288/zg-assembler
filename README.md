@@ -513,12 +513,14 @@ Unicode 形式
 
 ```
     .ORG $8000
+
     .DEF test1, 10
     .DEF test2, 11
+
     .MSG "测试案例 {0}, ${1}, @{0}", test1, test2
 
     .IF test1 == 10
-    .ERROR "这里的 test1: {0}", test1
+        .ERROR "这里的 test1: {0}", test1
     .ENDIF
 ```
 
