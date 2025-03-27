@@ -4,7 +4,7 @@
 
 A simple assembler for 6502 / 65c816 / z80-gb / SPC700
 
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](../LICENSE.md)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/zyr2288/zg-assembler)
 
 > Note: Only support `*.asm` files, not `*.65s` files.

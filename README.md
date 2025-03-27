@@ -4,7 +4,7 @@
 
 一个 VSCode 的编译器插件，可以编译 6502 / 65c816 / z80-gb / SPC700
 
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/zyr2288/zg-assembler)
 
 > 注意：编译器只监视 `*.asm` 文件，并不是 `*.65s` 文件
