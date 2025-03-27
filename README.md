@@ -7,6 +7,12 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/zyr2288/zg-assembler)
 
+测试项目文件：
+
+[![Test Files](https://img.shields.io/badge/github-black?logo=github)](https://github.com/zyr2288/zg-assembler-test)
+[![Test Files](https://img.shields.io/badge/gitee-red?logo=gitee)](https://gitee.com/zeng_ge/zgassembler-test)
+
+
 > 注意：编译器只监视 `*.asm` 文件，并不是 `*.65s` 文件
 
 ## 所有编译器命令
