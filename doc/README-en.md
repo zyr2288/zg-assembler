@@ -2,9 +2,15 @@
 
 [简体中文](../README.md)
 
+A simple assembler for 6502 / 65c816 / z80-gb / SPC700
+
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![GitHub package.json version](https://img.shields.io/github/package-json/v/zyr2288/zg-assembler)
+
 > Note: Only support `*.asm` files, not `*.65s` files.
 
 ## All assembly commands
+
 1. [.BASE](#base)
 2. [.ORG](#org)
 3. [.DEF](#def)
@@ -19,23 +25,23 @@
 12. [.REPEAT .ENDR](#repeat-endr)
 13. [.MSG .ERROR](#msg-error)
 
-* [ZG Assembler in Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZENG-GE.zg-assembler)
-* An extensible compiler for [VSCode](https://code.visualstudio.com/), supporting `6502` `65c816` (Special thanks Thirteen) `z80-gb`.
-* When the assembly file is opened, a `project-settings.json` file is created in project directory.
-* If you want to use core, use `npm run build-core` to build core source.
+-   [ZG Assembler in Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZENG-GE.zg-assembler)
+-   An extensible compiler for [VSCode](https://code.visualstudio.com/), supporting `6502` `65c816` (Special thanks Thirteen) `z80-gb`.
+-   When the assembly file is opened, a `project-settings.json` file is created in project directory.
+-   If you want to use core, use `npm run build-core` to build core source.
 
 ```json
 {
-    "platform": "6502",            // Target Platform
-    "intellisense": true,
-    "outOfRangeWarning": true,     // Compile result out-of-bounds warning
-    "entry": "main.asm",
-    "compileTimes": 2,
-    "outputEntryFile": "",
-    "outputSingleFile": "",
-    "copyToClipboard": true,       // Copy result bytes to the clipboard
-    "includes": ["**/*.asm"],
-    "excludes": []
+	"platform": "6502", // Target Platform
+	"intellisense": true,
+	"outOfRangeWarning": true, // Compile result out-of-bounds warning
+	"entry": "main.asm",
+	"compileTimes": 2,
+	"outputEntryFile": "",
+	"outputSingleFile": "",
+	"copyToClipboard": true, // Copy result bytes to the clipboard
+	"includes": ["**/*.asm"],
+	"excludes": []
 }
 ```
 
@@ -43,13 +49,13 @@
 
 ### Compile
 
-* In the editor under `.asm` file, right click on the mouse and the compile menu will appear.
+-   In the editor under `.asm` file, right click on the mouse and the compile menu will appear.
 
 ---
 
 ### Fixed Addressing Length
 
-Normally, the compiler will automatically optimize the addressing method, using ``6502`` as an example:
+Normally, the compiler will automatically optimize the addressing method, using `6502` as an example:
 
 ```
     ORG $0
@@ -63,7 +69,7 @@ Due to the compiler's automatic optimization, the compilation result here is `B5
     LDA.2 $00F0,X ; Fixed addressing length to 2 bytes
 ```
 
-At this time the result of compilation is ``BD F0 00``.
+At this time the result of compilation is `BD F0 00`.
 
 Translated with DeepL.com (free version)
 
@@ -71,27 +77,28 @@ Translated with DeepL.com (free version)
 
 ### Label
 
-* You can use sub labels, such as `player.x` `player.y`.
-* Press vscode's Find Definition shortcut key (default F12) to find the label definition location directly.
-* All `xx = yy` is used as a variable, the compiler will not check for duplicate definitions. To define constants, use the `.DEF` command.
+-   You can use sub labels, such as `player.x` `player.y`.
+-   Press vscode's Find Definition shortcut key (default F12) to find the label definition location directly.
+-   All `xx = yy` is used as a variable, the compiler will not check for duplicate definitions. To define constants, use the `.DEF` command.
 
 ---
 
 ### Local label
 
-* If a label is starting with "." (dot), then the label is valid only for this file.
+-   If a label is starting with "." (dot), then the label is valid only for this file.
 
 ---
 
 ### Folding
 
-* The folding function starts with `;+` and ends with `;-`.
+-   The folding function starts with `;+` and ends with `;-`.
 
 ---
 
 ### Nameless label
 
-* Labels are one or more '+' or '-' characters are nameless labels.
+-   Labels are one or more '+' or '-' characters are nameless labels.
+
 ```
 --      LDA $2002
         BPL --
@@ -101,7 +108,7 @@ Translated with DeepL.com (free version)
         JMP $9000
 +       JMP $8000
 ++      JMP $A000
-        ; AD 02 20 10 FB A5 00 F0 05 10 06 4C 00 90 4C 00 80 4C 00 A0 
+        ; AD 02 20 10 FB A5 00 F0 05 10 06 4C 00 90 4C 00 80 4C 00 A0
 ```
 
 ---
@@ -142,21 +149,22 @@ Unicode type:
 
 ### Comments and folding
 
-* When a `;` character is included, everything after `;` on the line is a comment.
-* Comments of `;+` `;-` are collapsed to make it easier to collapse parts of the code.
+-   When a `;` character is included, everything after `;` on the line is a comment.
+-   Comments of `;+` `;-` are collapsed to make it easier to collapse parts of the code.
 
 ---
 
 ## About Smart Suggestions
+
 The plugin disables word-based suggestions by default, to enable this feature, add it to vscode's settings.
+
 ```json
 {
-    "[zg-assembly]": {
-        "editor.wordBasedSuggestions": "matchingDocuments"
-    }
+	"[zg-assembly]": {
+		"editor.wordBasedSuggestions": "matchingDocuments"
+	}
 }
 ```
-
 
 ## Compiler commands (example of 6502)
 
@@ -169,10 +177,11 @@ The plugin disables word-based suggestions by default, to enable this feature, a
     .BASE baseAddress
 ```
 
-* Set the generated file address, the default is `.BASE 0`, it is not same as `.ORG`.
-* For example, if `.BASE $10`, the generated file will be written from `$10`, and the previous `$F` address will be `0`.
+-   Set the generated file address, the default is `.BASE 0`, it is not same as `.ORG`.
+-   For example, if `.BASE $10`, the generated file will be written from `$10`, and the previous `$F` address will be `0`.
 
-> Note: 
+> Note:
+>
 > 1. Compile top-down, some variables need to be assigned for the first compile, if the first compile is unknown then compile is not successful.
 > 2. If you use the `.BASE` command, after `.ORG`, otherwise it compiles incorrectly.
 
@@ -189,8 +198,8 @@ The plugin disables word-based suggestions by default, to enable this feature, a
     .ORG originalAddress
 ```
 
-* Set the start compile address, e.g. `.ORG $8000`, then the compile will start at $8000.
-* You can also use `.ORG *`, which means compilation will start from the current address. But the current address has to be known, otherwise the compiler reports an error.
+-   Set the start compile address, e.g. `.ORG $8000`, then the compile will start at $8000.
+-   You can also use `.ORG *`, which means compilation will start from the current address. But the current address has to be known, otherwise the compiler reports an error.
 
 > Note: If you use the `.BASE` command, after `.ORG`, otherwise it compiles with an error.
 
@@ -207,7 +216,7 @@ The plugin disables word-based suggestions by default, to enable this feature, a
     .DEF name, expression
 ```
 
-* Define a constant, for example: `.DEF idefined, $12`
+-   Define a constant, for example: `.DEF idefined, $12`
 
 > Note: `temp = $12` can also be defined, but `temp` can be re-value.
 
@@ -227,8 +236,8 @@ The plugin disables word-based suggestions by default, to enable this feature, a
     .ENDE
 ```
 
-* Reassign PC and suppress assembly output. Useful for defining variables in RAM. 
-* Example：
+-   Reassign PC and suppress assembly output. Useful for defining variables in RAM.
+-   Example：
 
 ```
    .ENUM $300
@@ -253,7 +262,7 @@ The plugin disables word-based suggestions by default, to enable this feature, a
     .DL data1 [, data2, data3...]     ;4 bytes
 ```
 
-* A series of bytes data
+-   A series of bytes data
 
 </details>
 
@@ -264,9 +273,10 @@ The plugin disables word-based suggestions by default, to enable this feature, a
 
 ### `.DBG` `.DWG` `.DLG` `.ENDD`
 
-* Data group, get the data index.
+-   Data group, get the data index.
 
 For example:
+
 ```
     .DWG data
 
@@ -292,9 +302,10 @@ For example:
     .HEX hexString
 ```
 
-* A hexadecimal string, can be separated by spaces.
+-   A hexadecimal string, can be separated by spaces.
 
 For example:
+
 ```
     .HEX 12 34567 89     ;Result(Hex) 12 34 56 07 89
 ```
@@ -308,11 +319,12 @@ For example:
 
 ### `.IF` `.ELSEIF` `.ELSE` `.ENDIF`
 
-* Process a block of code if an expression is true.
+-   Process a block of code if an expression is true.
 
 > Note: Must know the parameters value.
 
 For example:
+
 ```
     .IF a == 5
      .....
@@ -342,7 +354,7 @@ For example:
     .ENDIF
 ```
 
-* Process a block of code if a label has been defined / not defined.
+-   Process a block of code if a label has been defined / not defined.
 
 </details>
 
@@ -357,9 +369,10 @@ For example:
     .INCBIN filePath[, fileStartPosition, readLength]
 ```
 
-* You can read the binary content of the reference file. Please fill in the relative path of the file in the double quotes.
+-   You can read the binary content of the reference file. Please fill in the relative path of the file in the double quotes.
 
 For example:
+
 ```
     .INCBIN "Folder\file.bin", 0, 100
 ```
@@ -377,7 +390,7 @@ For example:
     .INCLUDE filePath
 ```
 
-* You can quote the file, please fill in the relative path of the file in double quotes. If there are also reference files in the reference file, please fill in relative to the main compilation file path. E.g:
+-   You can quote the file, please fill in the relative path of the file in double quotes. If there are also reference files in the reference file, please fill in relative to the main compilation file path. E.g:
 
 ```
     .INCLUDE "Folder\file.asm"
@@ -398,7 +411,7 @@ For example:
     .ENDM
 ```
 
-* Define a macro. Macro arguments are comma separated.
+-   Define a macro. Macro arguments are comma separated.
 
 > Note: Arguments shoud get the value at first compilation.
 
@@ -407,7 +420,7 @@ For example:
 For example:
 
 ```
-    .MACRO name, param1, param2, param3... 
+    .MACRO name, param1, param2, param3...
     ...
     .ENDM
 ```
@@ -422,9 +435,11 @@ Example 1:
 
     TXY
 ```
-* The compilation result:`8A A8`
+
+-   The compilation result:`8A A8`
 
 Example 2:
+
 ```
     .MACRO test, a, b
     .IF 3 == a
@@ -445,7 +460,7 @@ Example 2:
     test 5,5
 ```
 
-* The compilation result:`A5 03 A6 04 A5 06 85 06 A4 05`
+-   The compilation result:`A5 03 A6 04 A5 06 85 06 A4 05`
 
 </details>
 
@@ -462,9 +477,10 @@ Example 2:
     .ENDR
 ```
 
-* Repeat a block of code a specified number of times.
+-   Repeat a block of code a specified number of times.
 
 For example:
+
 ```
     .REPEAT 2
     NOP
@@ -473,7 +489,8 @@ For example:
     .ENDR
     .ENDR
 ```
-* The compilation result is same as:`NOP ASL ASL ASL NOP ASL ASL ASL`
+
+-   The compilation result is same as:`NOP ASL ASL ASL NOP ASL ASL ASL`
 
 </details>
 
@@ -489,8 +506,8 @@ For example:
     .ERROR message[, arg1, arg2...]
 ```
 
-* `MSG` - Out put a message.
-* `ERROR` - Out put a message and stop compile
+-   `MSG` - Out put a message.
+-   `ERROR` - Out put a message and stop compile
 
 ```
     .ORG $8000
@@ -503,7 +520,7 @@ For example:
     .ENDIF
 ```
 
-* The message is：
+-   The message is：
 
 > test 10, $B, @0000 1010
 >
