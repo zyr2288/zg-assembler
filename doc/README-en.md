@@ -37,16 +37,16 @@ Testing files:
 
 ```json
 {
-	"platform": "6502", // Target Platform
-	"intellisense": true,
-	"outOfRangeWarning": true, // Compile result out-of-bounds warning
-	"entry": "main.asm",
-	"compileTimes": 2,
-	"outputEntryFile": "",
-	"outputSingleFile": "",
-	"copyToClipboard": true, // Copy result bytes to the clipboard
-	"includes": ["**/*.asm"],
-	"excludes": []
+    "platform": "6502",         // Target Platform
+    "intellisense": true,
+    "outOfRangeWarning": true,  // Compile result out-of-bounds warning
+    "entry": "main.asm",
+    "compileTimes": 2,
+    "outputEntryFile": "",
+    "outputSingleFile": "",
+    "copyToClipboard": true,    // Copy result bytes to the clipboard
+    "includes": ["**/*.asm"],
+    "excludes": []
 }
 ```
 
@@ -165,9 +165,9 @@ The plugin disables word-based suggestions by default, to enable this feature, a
 
 ```json
 {
-	"[zg-assembly]": {
-		"editor.wordBasedSuggestions": "matchingDocuments"
-	}
+    "[zg-assembly]": {
+        "editor.wordBasedSuggestions": "matchingDocuments"
+    }
 }
 ```
 

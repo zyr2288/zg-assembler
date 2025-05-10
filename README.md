@@ -44,16 +44,16 @@
 
 ```json
 {
-	"platform": "6502", // 选择平台
-	"intellisense": true, // 是否开启智能提示
-	"outOfRangeWarning": true, // 编译结果越界警告
-	"entry": "main.asm", // 入口文件
-	"compileTimes": 2, // 编译次数，至少两次，否则会出错
-	"outputEntryFile": "", // 输出入口文件，不写则不输出
-	"outputSingleFile": "", // 单个文件输出，不写则不输出
-	"copyToClipboard": true, // 结果是否复制到剪贴板
-	"includes": ["**/*.asm"], // 项目包含的文件
-	"excludes": [] // 项目排除的文件
+    "platform": "6502",          // 选择平台
+    "intellisense": true,        // 是否开启智能提示
+    "outOfRangeWarning": true,   // 编译结果越界警告
+    "entry": "main.asm",         // 入口文件
+    "compileTimes": 2,           // 编译次数，至少两次，否则会出错
+    "outputEntryFile": "",       // 输出入口文件，不写则不输出
+    "outputSingleFile": "",      // 单个文件输出，不写则不输出
+    "copyToClipboard": true,     // 结果是否复制到剪贴板
+    "includes": ["**/*.asm"],    // 项目包含的文件
+    "excludes": []               // 项目排除的文件
 }
 ```
 
@@ -165,9 +165,9 @@ Unicode 形式
 
 ```json
 {
-	"[zg-assembly]": {
-		"editor.wordBasedSuggestions": "matchingDocuments"
-	}
+    "[zg-assembly]": {
+        "editor.wordBasedSuggestions": "matchingDocuments"
+    }
 }
 ```
 
@@ -292,9 +292,9 @@ Unicode 形式
 
     .ENDD
 
-    LDA data:.data1     ;0
-    LDA data:.data3     ;2
-    LDA data:.data1:1   ;3
+    LDA 标签:.data1     ;0
+    LDA 标签:.data3     ;2
+    LDA 标签:.data1:1   ;3
 ```
 
 </details>
