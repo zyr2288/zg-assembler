@@ -13,6 +13,7 @@ import { Rename } from "./Rename";
 import { ZGAssemblerDebugAdapter } from "./DebugAdapter/ZGAssemblerDebugAdapter";
 import { ReferencesProvider } from "./ReferencesProvider";
 import { TextDecoration } from "./TextDecoration";
+import { LabelTreeProvider } from "./LabelTreeProvider";
 
 export class LanguageServer {
 
@@ -37,7 +38,7 @@ export class LanguageServer {
 		ReferencesProvider.Initialize(context);
 		Intellisense.Initialize(context);
 		TextDecoration.Initialize(context);
-		// LabelTreeViewer.Initialize(context);
+		LabelTreeProvider.Initialize(context);
 
 		HoverProvider.Initialize(context);
 		AssCommands.Initialize(context);

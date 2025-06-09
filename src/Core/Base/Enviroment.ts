@@ -132,7 +132,7 @@ export class Enviroment {
 	 * 获取文件的Index
 	 * @param filePath 文件路径
 	 * @param save 是否保存，默认保存
-	 * @returns 文件的Index
+	 * @returns 文件的Index，如果没有，返回-1
 	 */
 	GetFileIndex(filePath: string, save = true) {
 		filePath = FileUtils.ArrangePath(filePath);

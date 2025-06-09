@@ -2,5 +2,7 @@
 	"Get Label Trees": "获取所有标签关系",
 	"Compile This File": "编译本文件",
 	"Compile Entry File": "编译入口文件",
-	"Reload Rom": "热重载ROM"
+	"Reload Rom": "热重载ROM",
+	"Label Tree": "标签树",
+	"Label Tree Reload": "重新载入标签树"
 }

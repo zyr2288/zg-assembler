@@ -48,6 +48,11 @@
 					"light": "syntaxes/file-reload.svg",
 					"dark": "syntaxes/file-reload.svg"
 				}
+			},
+			{
+				"command": "zg-assembler.labelTreeRefresh",
+				"title": "%Label Tree Reload%",
+				"icon": "syntaxes/file-reload.svg"
 			}
 		],
 		"languages": [
@@ -88,6 +93,13 @@
 				{
 					"command": "zg-assembly.reloadRom",
 					"when": "debugType == ZG-Assembler"
+				}
+			],
+			"view/title": [
+				{
+					"command": "zg-assembler.labelTreeRefresh",
+					"when": "view == labelTreeProvider",
+					"group": "navigation"
 				}
 			]
 		},
@@ -159,7 +171,15 @@
 					}
 				}
 			}
-		]
+		],
+		"views": {
+			"explorer": [
+				{
+					"id": "labelTreeProvider",
+					"name": "%Label Tree%"
+				}
+			]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run package",

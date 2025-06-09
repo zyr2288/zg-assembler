@@ -2,5 +2,7 @@
 	"Get Label Trees": "Get Labels Trees",
 	"Compile This File": "Compile This File",
 	"Compile Entry File": "Compile Entry File",
-	"Reload Rom": "Hot Reload"
+	"Reload Rom": "Hot Reload",
+	"Label Tree": "Label Tree",
+	"Label Tree Reload": "Label Tree Reload"
 }
