@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { LSPUtils } from "./LSPUtils";
 
 export class LabelTreeProvider implements vscode.TreeDataProvider<any> {
 
@@ -15,11 +16,27 @@ export class LabelTreeProvider implements vscode.TreeDataProvider<any> {
 
 	onDidChangeTreeData?: vscode.Event<any> | undefined;
 
-	getTreeItem(element: any): vscode.TreeItem | Thenable<vscode.TreeItem> {
+	getTreeItem(element: LabelTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
+		switch (element.type) {
+			case "global":
+				const msg = LSPUtils.assembler.localization.GetMessage("Global labels");
+				const global = new LabelTreeGlobalItem(msg);
+				global.
+				return global;
+		}
+		console.log(element);
 		throw new Error("get Tree Item");
 	}
 
-	getChildren(element?: any): vscode.ProviderResult<any[]> {
+	getChildren(element?: any): vscode.ProviderResult<LabelTreeItem[]> {
+		if (!element) {
+			const result: LabelTreeItem[] = [];
+			const msg = LSPUtils.assembler.localization.GetMessage("Global labels");
+			const global = new LabelTreeGlobalItem(msg);
+			result.push(global);
+			return result;
+		}
+		console.log(element);
 		throw new Error("getChildren");
 	}
 
@@ -33,6 +50,19 @@ export class LabelTreeProvider implements vscode.TreeDataProvider<any> {
 
 }
 
-class LabelTreeItem extends vscode.TreeItem {
+type LabelTreeItem = LabelTreeGlobalItem | LabelTreeFileItem | LabelTreeLabelItem;
 
+class LabelTreeGlobalItem extends vscode.TreeItem {
+	type: "global" = "global";
+}
+
+class LabelTreeFileItem extends vscode.TreeItem {
+	type: "file" = "file";
+	path = "";
+}
+
+class LabelTreeLabelItem extends vscode.TreeItem {
+	type: "label" = "label";
+	name = "";
+	line = 0;
 }

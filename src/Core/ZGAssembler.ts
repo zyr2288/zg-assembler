@@ -15,6 +15,7 @@ import { DefinitionProvider } from "./LanguageHelper/DefinitionProvider";
 import { RenameAndReferences } from "./LanguageHelper/RenameAndReferences";
 import { HoverProvider } from "./LanguageHelper/HoverProvider";
 import { DebugProvider } from "./LanguageHelper/DebugProvider";
+import { LabelTree } from "./LanguageHelper/LabelTree";
 
 export class ZGAssembler {
 
@@ -31,6 +32,7 @@ export class ZGAssembler {
 		renameAndReferences: RenameAndReferences,
 		hover: HoverProvider,
 		debug: DebugProvider,
+		labelTree: LabelTree
 	};
 
 	constructor() {

@@ -47,6 +47,9 @@ export const English = {
 	"Cannot find rom file {0}": "Cannot find rom file {0}",
 	"Cannot find program path {0}": "Cannot find program path {0}",
 	"Hot Reload Success": "Hot reload success",
+
+	"Global labels":"Global labels",
+	"Local labels": "Local labels",
 }
 
 export const CommandTip_English = {

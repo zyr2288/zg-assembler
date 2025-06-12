@@ -50,6 +50,9 @@ export const Chinese: LocalizationMsg = {
 	"Cannot find rom file {0}": "找不到 rom {0}",
 	"Cannot find program path {0}": "找不到启动程序 {0}",
 	"Hot Reload Success": "热重载成功",
+
+	"Global labels": "全局标签",
+	"Local labels": "局部标签",
 }
 
 export const CommandTip_Chinese: LocalizationTip = {
