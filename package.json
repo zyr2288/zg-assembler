@@ -2,7 +2,7 @@
 	"name": "zg-assembler",
 	"displayName": "ZG Assembler",
 	"description": "A simple assembler for 6502 / 65c816 / z80-gb / SPC700",
-	"version": "0.3.45",
+	"version": "0.3.46",
 	"engines": {
 		"vscode": "^1.85.0"
 	},
@@ -53,6 +53,21 @@
 				"command": "zg-assembler.labelTreeRefresh",
 				"title": "%Label Tree Reload%",
 				"icon": "syntaxes/file-reload.svg"
+			},
+			{
+				"command": "zg-assembler.outputLabels-2",
+				"title": "%Export labels - 2%",
+				"icon": "syntaxes/export.svg"
+			},
+			{
+				"command": "zg-assembler.outputLabels-10",
+				"title": "%Export labels - 10%",
+				"icon": "syntaxes/export.svg"
+			},
+			{
+				"command": "zg-assembler.outputLabels-16",
+				"title": "%Export labels - 16%",
+				"icon": "syntaxes/export.svg"
 			}
 		],
 		"languages": [
@@ -100,6 +115,20 @@
 					"command": "zg-assembler.labelTreeRefresh",
 					"when": "view == labelTreeProvider",
 					"group": "navigation"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "zg-assembler.outputLabels-2",
+					"when": "viewItem == zg-assembler.outputLabels"
+				},
+				{
+					"command": "zg-assembler.outputLabels-10",
+					"when": "viewItem == zg-assembler.outputLabels"
+				},
+				{
+					"command": "zg-assembler.outputLabels-16",
+					"when": "viewItem == zg-assembler.outputLabels"
 				}
 			]
 		},
@@ -176,7 +205,8 @@
 			"explorer": [
 				{
 					"id": "labelTreeProvider",
-					"name": "%Label Tree%"
+					"name": "%Label Tree%",
+					"icon": "syntaxes/label"
 				}
 			]
 		}

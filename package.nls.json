@@ -4,5 +4,8 @@
 	"Compile Entry File": "Compile Entry File",
 	"Reload Rom": "Hot Reload",
 	"Label Tree": "Label Tree",
-	"Label Tree Reload": "Label Tree Reload"
+	"Label Tree Reload": "Label Tree Reload",
+	"Export labels - 2": "Export labels with binary",
+	"Export labels - 10": "Export labels with decimal",
+	"Export labels - 16": "Export labels with hex"
 }

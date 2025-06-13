@@ -21,7 +21,9 @@ export class CommandLine {
 	/**
 	 * 创建一个命令行
 	 * @param org 原始行内容
-	 * @param content 分割好的内容
+	 * @param content.pre 命令前缀
+	 * @param content.main 命令
+	 * @param content.rest 命令后缀
 	 * @param comment 注释
 	 * @returns 
 	 */

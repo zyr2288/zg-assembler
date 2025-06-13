@@ -20,6 +20,8 @@ export class MsgCommand implements ICommand {
 		if (Compiler.FirstCompile())
 			this.AnalyseFirst(option);
 
+		const line = option.GetCurrent<CommandLine>();
+		Message.SetAddress(line);
 		if (Compiler.enviroment.compileTime < Config.ProjectSetting.compileTimes - 1)
 			return;
 
@@ -37,6 +39,7 @@ export class ErrorCommand implements ICommand {
 			this.AnalyseFirst(option);
 
 		const line = option.GetCurrent<CommandLine>();
+		Message.SetAddress(line);
 		Message.Compile(option);
 		line.lineType = LineType.Error;
 
@@ -49,6 +52,7 @@ export class ErrorCommand implements ICommand {
 export interface MsgTag {
 	message: Token;
 	expressions: Expression[];
+	address: { base: number; org: number };
 }
 
 class Message {
@@ -63,7 +67,7 @@ class Message {
 			return;
 		}
 
-		const tag: MsgTag = { message: str.Substring(1, str.length - 2), expressions: [] };
+		const tag: MsgTag = { message: str.Substring(1, str.length - 2), expressions: [], address: { base: -1, org: -1 } };
 		for (let i = 1; i < line.arguments.length; i++) {
 			const temp = ExpressionUtils.SplitAndSort(line.arguments[i]);
 			if (!temp) {
@@ -102,7 +106,7 @@ class Message {
 		let start = 0;
 		let text = tag.message.text;
 		while (match = regex.exec(tag.message.text)) {
-			let index = parseInt(match.groups!["index"]);
+			const index = parseInt(match.groups!["index"]);
 			if (!values[index]) {
 				const errorMsg = Localization.GetMessage("Command arguments error");
 				const token = tag.message.Substring(match.index!, match[0].length);
@@ -132,6 +136,17 @@ class Message {
 		const filePath = Compiler.enviroment.GetFilePath(Compiler.enviroment.fileIndex);
 		const message = Localization.GetMessage("out put message File{0}, Line{1}, Message{2}", filePath, line.command.line + 1, result);
 		FileUtils.ShowMessage?.(message);
+	}
+
+	static SetAddress(line: CommandLine) {
+		const tag: MsgTag = line.tag;
+		if (tag.address.org < 0) {
+			tag.address.org = Compiler.enviroment.address.org;
+			tag.address.base = Compiler.enviroment.address.base;
+		} else {
+			Compiler.enviroment.address.org = tag.address.org;
+			Compiler.enviroment.address.base = tag.address.base;
+		}
 	}
 
 }

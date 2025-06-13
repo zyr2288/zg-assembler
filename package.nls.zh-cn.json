@@ -4,5 +4,8 @@
 	"Compile Entry File": "编译入口文件",
 	"Reload Rom": "热重载ROM",
 	"Label Tree": "标签树",
-	"Label Tree Reload": "重新载入标签树"
+	"Label Tree Reload": "重新载入标签树",
+	"Export labels - 2": "以2进制值导出标签",
+	"Export labels - 10": "以10进制值导出标签",
+	"Export labels - 16": "以16进制值导出标签"
 }
