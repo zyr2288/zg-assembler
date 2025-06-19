@@ -34,6 +34,7 @@ export const Chinese: LocalizationMsg = {
 	"compile error": "编译错误",
 	"plugin loading": "编译器插件载入中",
 	"plugin loaded": "编译器插件载入完成",
+	"finished": "完成",
 
 	"empty addressing mode": "空",
 	"example": "例子：",

@@ -26,11 +26,12 @@ export const English = {
 	"rename error": "Can not rename",
 	"format error": "Can not format",
 
-	"compiling": "compiling",
-	"compile finished": "compile finished",
-	"compile error": "compile error",
-	"plugin loading": "plugin loading",
-	"plugin loaded": "plugin loaded",
+	"compiling": "Compiling",
+	"compile finished": "Compile finished",
+	"compile error": "Compile error",
+	"plugin loading": "Plugin loading",
+	"plugin loaded": "Plugin loaded",
+	"finished": "Finished",
 
 	"empty addressing mode": "(Empty)",
 	"example": "Example:",

@@ -1,14 +1,18 @@
 import * as vscode from "vscode";
 import { LSPUtils } from "./LSPUtils";
 import { Definition } from "./Definition";
-import { Localization } from "../Core/I18n/Localization";
 
 export class LabelTreeProvider implements vscode.TreeDataProvider<any> {
+
+	private static LabelTreeRefresh: () => void;
+
+	private _onDidChangeTreeData: vscode.EventEmitter<LabelTreeItem | undefined | null | void> = new vscode.EventEmitter<LabelTreeItem | undefined | null | void>();
+	readonly onDidChangeTreeData: vscode.Event<LabelTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
 	static Initialize(context: vscode.ExtensionContext) {
 		context.subscriptions.push(
 			vscode.commands.registerCommand("zg-assembler.labelTreeRefresh", () => {
-				console.log("refresh");
+				LabelTreeProvider.LabelTreeRefresh();
 			})
 		);
 		context.subscriptions.push(
@@ -22,32 +26,21 @@ export class LabelTreeProvider implements vscode.TreeDataProvider<any> {
 		);
 	}
 
+	/**导出所有标签 */
 	static async ExportLabels(item: LabelTreeItem, radix: number) {
 		let result: string[] = [], index = 0;
 		switch (item.type) {
 			case "global":
-				LSPUtils.assembler.compiler.enviroment.allLabel.global.forEach((label, name, map) => {
-					result[index] = label.token.text;
-					if (label.value !== undefined) {
-						const value = LSPUtils.ConvertValue(label.value);
-						switch (radix) {
-							case 2:
-								result[index] += " = @" + value.bin;
-								break;
-							case 10:
-								result[index] += " = " + value.dec;
-								break;
-							case 16:
-								result[index] += " = $" + value.hex;
-								break;
-						}
-					}
-					index++;
-				});
+				result = LSPUtils.assembler.languageHelper.labelTree.OutputVariableInfo("", radix);
+				break;
+			case "file":
+				result = LSPUtils.assembler.languageHelper.labelTree.OutputVariableInfo(item.path, radix);
 				break;
 		}
 		result.sort((a, b) => a.localeCompare(b));
 		await vscode.env.clipboard.writeText(result.join("\n"));
+		const msg = LSPUtils.assembler.localization.GetMessage("finished");
+		LSPUtils.StatueBarShowText(msg);
 		return result;
 	}
 
@@ -58,39 +51,63 @@ export class LabelTreeProvider implements vscode.TreeDataProvider<any> {
 	getChildren(element?: LabelTreeItem): vscode.ProviderResult<LabelTreeItem[]> {
 		const result: LabelTreeItem[] = [];
 		if (!element) {
+			if (!LabelTreeProvider.LabelTreeRefresh) {
+				LabelTreeProvider.LabelTreeRefresh = () => this._onDidChangeTreeData.fire();
+			}
+
+			// 添加全局的变量树
 			const msg = LSPUtils.assembler.localization.GetMessage("Global labels");
 			const global = new LabelTreeGlobalItem(msg);
 			global.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 			global.contextValue = "zg-assembler.outputLabels";
 			result.push(global);
 
+			// 添加所有局部的变量树
 			LSPUtils.assembler.compiler.enviroment.allLabel.local.forEach((labelMap, fileIndex, map1) => {
-				const filePath = LSPUtils.assembler.compiler.enviroment.GetFilePath(fileIndex);
+				let filePath = LSPUtils.assembler.compiler.enviroment.GetFilePath(fileIndex);
 				if (!filePath)
 					return;
 
-				const localItem = new LabelTreeFileItem(filePath);
+				const localItem = new LabelTreeFileItem("");
 				localItem.path = filePath;
+				filePath = vscode.workspace.asRelativePath(filePath, true);
+				filePath = filePath.substring(vscode.workspace.name!.length + 1);
+
+				localItem.label = filePath;
 				localItem.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+				localItem.contextValue = "zg-assembler.outputLabels";
 				result.push(localItem);
 			});
 			return result;
 		}
 
+		// 获取变量
+		let items;
 		switch (element.type) {
 			case "global":
-				LSPUtils.assembler.compiler.enviroment.allLabel.global.forEach((label, name, map) => {
-					const item = new LabelTreeLabelItem(name);
-					item.line = label.token.line;
-					item.filePath = LSPUtils.assembler.compiler.enviroment.GetFilePath(label.fileIndex);
-					item.start = label.token.start;
-					item.length = label.token.length;
-					item.description = label.comment;
-					result.push(item);
-				});
-				result.sort((a, b) => (a.label as string).localeCompare(b.label as string));
+				items = LSPUtils.assembler.languageHelper.labelTree.GetVariableInfo("");
+				break;
+			case "file":
+				items = LSPUtils.assembler.languageHelper.labelTree.GetVariableInfo(element.path);
 				break;
 		}
+		if (items) {
+			items.forEach((label) => {
+				const filePath = LSPUtils.assembler.compiler.enviroment.GetFilePath(label.fileIndex);
+				if (!filePath)
+					return;
+
+				const item = new LabelTreeLabelItem(label.name);
+				item.line = label.line;
+				item.filePath = filePath;
+				item.start = label.start;
+				item.length = label.length;
+				item.description = label.description;
+				result.push(item);
+			});
+			result.sort((a, b) => (a.label as string).localeCompare(b.label as string));
+		}
+
 		return result;
 	}
 
