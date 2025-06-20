@@ -96,7 +96,7 @@ export class Analyser {
 	 * @returns 匹配模式
 	 */
 	static MatchLineCommon(lineText: Token) {
-		let match = Analyser.MatchLine(lineText, true, ["instruction", Platform.instructions], ["command", Command.commandParam]);
+		const match = Analyser.MatchLine(lineText, true, ["instruction", Platform.instructions], ["command", Command.commandParam]);
 		if (match.key === "unknow") {
 			const temp = Analyser.SplitWithChar(lineText.start, lineText.text, Analyser.equal);
 			if (temp.text.length !== lineText.text.length) {

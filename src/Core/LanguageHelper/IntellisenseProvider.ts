@@ -117,11 +117,11 @@ export class IntellisenseProvider {
 	//#region 基础智能提示
 	/**
 	 * 基础智能提示
-	 * @param filePath 文件路径
-	 * @param lineNumber 行号
-	 * @param lineText 行文本
-	 * @param current 当前光标位置
-	 * @param trigger 触发字符
+	 * @param option.filePath 文件路径
+	 * @param option.lineNumber 行号
+	 * @param option.lineText 行文本
+	 * @param option.current 当前光标位置
+	 * @param option.trigger 触发字符
 	 * @returns 
 	 */
 	static async Intellisense(option: { filePath: string, lineNumber: number, lineText: string, current: number, trigger?: string }): Promise<Completion[]> {
@@ -167,7 +167,10 @@ export class IntellisenseProvider {
 		const match = HelperUtils.MatchLine(orgToken.content);
 		switch (match.key) {
 			case "unknow":
-				return IntellisenseProvider.GetEmptyLineHelper(fileIndex, rangeType, option.trigger, macro);
+				return IntellisenseProvider.GetEmptyLineHelper(
+					fileIndex,
+					{ range: rangeType, trigger: option.trigger, currect: option.current, preText: match.org }
+				);
 			case "instruction":
 				return IntellisenseProvider.ProcessInstruction(match.content!, fileIndex, option.current, macro, option.trigger);
 			case "command":
@@ -372,15 +375,36 @@ export class IntellisenseProvider {
 	//#region 获取空行帮助
 	/**
 	 * 获取空行帮助
-	 * @param trigger 触发字符串
+	 * @param fileIndex 文件编号
+	 * @param option.range 高亮区间
+	 * @param option.trigger 触发字符串
 	 */
-	private static GetEmptyLineHelper(fileIndex: number, range?: HighlightRange, trigger?: string, macro?: Macro): Completion[] {
-		switch (trigger) {
+	private static GetEmptyLineHelper(fileIndex: number, option: { range?: HighlightRange, trigger?: string, currect: number, preText: Token }): Completion[] {
+		switch (option?.trigger) {
 			case " ":
 			case ":":
 				return [];
 			case ".":
-				switch (range?.type) {
+				const words = HelperUtils.GetWord(option.preText.text, option.currect, option.preText.start);
+				if (words.leftText.endsWith(".")) {
+					const temp = words.leftText.substring(0, words.leftText.length - 1).toUpperCase();
+					if (Platform.instructions.has(temp)) {
+						const completions: Completion[] = [];
+						const filterInstruction = IntellisenseProvider.instructionCompletions.filter(v => v.showText !== temp && v.showText.startsWith(temp));
+						filterInstruction.forEach(ins => {
+							const com = new Completion({
+								showText: ins.showText,
+								index: CompletionIndex.Instruction,
+								type: CompletionType.Instruction,
+								insertText: ins.showText.substring(temp.length + 1)
+							});
+							completions.push(com);
+						});
+						return completions;
+					}
+				}
+
+				switch (option.range?.type) {
 					case "macro":
 						return IntellisenseProvider.commandNotInMacroCompletions;
 					case "dataGroup":
@@ -389,25 +413,29 @@ export class IntellisenseProvider {
 						return IntellisenseProvider.commandCompletions;
 				}
 			default:
-				if (range?.type === "dataGroup") {
+				if (option?.range?.type === "dataGroup") {
 					return IntellisenseProvider.GetLabel(fileIndex, "");
 				} else {
 					const completions: Completion[] = [];
-					completions.push(...IntellisenseProvider.instructionCompletions);
-					Compiler.enviroment.allMacro.forEach((macro) => {
-						const com = new Completion({
-							showText: macro.name.text,
-							index: CompletionIndex.Macro,
-							type: CompletionType.Macro,
-							insertText: IntellisenseProvider.ReplaceMacro(macro),
-							comment: HelperUtils.FormatComment({ macro })
-						});
-
-						completions.push(com);
-					});
+					completions.push(...IntellisenseProvider.instructionCompletions, ...IntellisenseProvider.AddAllMacros());
 					return completions;
 				}
 		}
+	}
+
+	private static AddAllMacros() {
+		const completions: Completion[] = [];
+		Compiler.enviroment.allMacro.forEach((macro) => {
+			const com = new Completion({
+				showText: macro.name.text,
+				index: CompletionIndex.Macro,
+				type: CompletionType.Macro,
+				insertText: IntellisenseProvider.ReplaceMacro(macro),
+				comment: HelperUtils.FormatComment({ macro })
+			});
+			completions.push(com);
+		});
+		return completions;
 	}
 	//#endregion 获取空行帮助
 
