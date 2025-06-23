@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { LSPUtils } from "./LSPUtils";
 import { Definition } from "./Definition";
 
-export class LabelTreeProvider implements vscode.TreeDataProvider<any> {
+export class LabelTreeProvider implements vscode.TreeDataProvider<LabelTreeItem> {
 
 	private static LabelTreeRefresh: () => void;
 
@@ -10,20 +10,24 @@ export class LabelTreeProvider implements vscode.TreeDataProvider<any> {
 	readonly onDidChangeTreeData: vscode.Event<LabelTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
 	static Initialize(context: vscode.ExtensionContext) {
+		const labelTree = new LabelTreeProvider();
+		context.subscriptions.push(
+			vscode.window.registerTreeDataProvider("labelTreeProvider", labelTree)
+		);
+
 		context.subscriptions.push(
 			vscode.commands.registerCommand("zg-assembler.labelTreeRefresh", () => {
 				LabelTreeProvider.LabelTreeRefresh();
 			})
 		);
+
 		context.subscriptions.push(
 			vscode.commands.registerCommand("zg-assembler.outputLabels-2", (item: LabelTreeItem) => LabelTreeProvider.ExportLabels(item, 2)),
 			vscode.commands.registerCommand("zg-assembler.outputLabels-10", (item: LabelTreeItem) => LabelTreeProvider.ExportLabels(item, 10)),
 			vscode.commands.registerCommand("zg-assembler.outputLabels-16", (item: LabelTreeItem) => LabelTreeProvider.ExportLabels(item, 16)),
 		);
 
-		context.subscriptions.push(
-			vscode.window.registerTreeDataProvider("labelTreeProvider", new LabelTreeProvider())
-		);
+		// vscode.commands.executeCommand('setContext', 'zg-assembler.labelTreeProvider.visible', true);
 	}
 
 	/**导出所有标签 */

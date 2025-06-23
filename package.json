@@ -27,6 +27,7 @@
 		"assembly"
 	],
 	"activationEvents": [
+		"onView:zg-assembly.labelTreeProvider",
 		"onDebugResolve:zg-assembly"
 	],
 	"icon": "syntaxes/chip.png",
@@ -201,11 +202,28 @@
 				}
 			}
 		],
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "zg-assembly-views",
+					"title": "test",
+					"icon": "syntaxes/export.svg"
+				}
+			],
+			"panel": [
+				{
+					"id": "zg-assembly-views",
+					"title": "test",
+					"icon": "syntaxes/export.svg"
+				}
+			]
+		},
 		"views": {
-			"explorer": [
+			"zg-assembly-views": [
 				{
 					"id": "labelTreeProvider",
 					"name": "%Label Tree%",
+					"when": "true",
 					"icon": "syntaxes/label"
 				}
 			]
