@@ -223,7 +223,7 @@
 				{
 					"id": "labelTreeProvider",
 					"name": "%Label Tree%",
-					"when": "true",
+					"when": "zg-assembler.labelTreeProvider.visible",
 					"icon": "syntaxes/label"
 				}
 			]

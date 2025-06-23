@@ -27,7 +27,7 @@ export class LabelTreeProvider implements vscode.TreeDataProvider<LabelTreeItem>
 			vscode.commands.registerCommand("zg-assembler.outputLabels-16", (item: LabelTreeItem) => LabelTreeProvider.ExportLabels(item, 16)),
 		);
 
-		// vscode.commands.executeCommand('setContext', 'zg-assembler.labelTreeProvider.visible', true);
+		vscode.commands.executeCommand("setContext", "zg-assembler.labelTreeProvider.visible", true);
 	}
 
 	/**导出所有标签 */

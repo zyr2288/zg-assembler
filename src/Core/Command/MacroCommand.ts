@@ -130,8 +130,10 @@ export class MacroCommand implements ICommand {
 			return;
 
 		await this.AnalyseFirst(option);
-
 		const line = option.GetCurrent<CommandLine>();
+		if (line.lineType === LineType.Error)
+			return;
+
 		const macro = line.tag as Macro;
 
 		for (let i = 0; i < macro.lines.length; i++) {
