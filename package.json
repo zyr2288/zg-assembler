@@ -2,7 +2,7 @@
 	"name": "zg-assembler",
 	"displayName": "ZG Assembler",
 	"description": "A simple assembler for 6502 / 65c816 / z80-gb / SPC700",
-	"version": "0.3.47",
+	"version": "0.3.49",
 	"engines": {
 		"vscode": "^1.85.0"
 	},
@@ -202,24 +202,8 @@
 				}
 			}
 		],
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "zg-assembly-views",
-					"title": "test",
-					"icon": "syntaxes/export.svg"
-				}
-			],
-			"panel": [
-				{
-					"id": "zg-assembly-views",
-					"title": "test",
-					"icon": "syntaxes/export.svg"
-				}
-			]
-		},
 		"views": {
-			"zg-assembly-views": [
+			"explorer": [
 				{
 					"id": "labelTreeProvider",
 					"name": "%Label Tree%",

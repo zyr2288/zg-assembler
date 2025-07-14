@@ -62,23 +62,41 @@ export class ZGAssembler {
 			Analyser.AnalyseText(files[i].text, files[i].filePath);
 		}
 
-		for (const key of fileIndexes) {
-			Compiler.enviroment.fileIndex = key;
-			option.allLines = Compiler.enviroment.allLine.get(key)!;
+		for (let i = 0; i < fileIndexes.length; i++) {
+			Compiler.enviroment.fileIndex = fileIndexes[i];
+			option.allLines = Compiler.enviroment.allLine.get(Compiler.enviroment.fileIndex)!;
 			await Analyser.AnalyseFirst(option);
 		}
 
-		for (const key of fileIndexes) {
-			Compiler.enviroment.fileIndex = key;
-			option.allLines = Compiler.enviroment.allLine.get(key)!;
+		// for (const key of fileIndexes) {
+		// 	Compiler.enviroment.fileIndex = key;
+		// 	option.allLines = Compiler.enviroment.allLine.get(key)!;
+		// 	await Analyser.AnalyseFirst(option);
+		// }
+
+		for (let i = 0; i < fileIndexes.length; i++) {
+			Compiler.enviroment.fileIndex = fileIndexes[i];
+			option.allLines = Compiler.enviroment.allLine.get(Compiler.enviroment.fileIndex)!;
 			await Analyser.AnalyseSecond(option);
 		}
 
-		for (const key of fileIndexes) {
-			Compiler.enviroment.fileIndex = key;
-			option.allLines = Compiler.enviroment.allLine.get(key)!;
+		// for (const key of fileIndexes) {
+		// 	Compiler.enviroment.fileIndex = key;
+		// 	option.allLines = Compiler.enviroment.allLine.get(key)!;
+		// 	await Analyser.AnalyseSecond(option);
+		// }
+
+		for (let i = 0; i < fileIndexes.length; i++) {
+			Compiler.enviroment.fileIndex = fileIndexes[i];
+			option.allLines = Compiler.enviroment.allLine.get(Compiler.enviroment.fileIndex)!;
 			await Analyser.AnalyseThird(option);
 		}
+
+		// for (const key of fileIndexes) {
+		// 	Compiler.enviroment.fileIndex = key;
+		// 	option.allLines = Compiler.enviroment.allLine.get(key)!;
+		// 	await Analyser.AnalyseThird(option);
+		// }
 
 		Compiler.isCompiling = false;
 	}
