@@ -622,7 +622,7 @@ export class ExpressionUtils {
 						if (!top)
 							break;
 
-						if (part.type >= top.type && top.type !== PriorityType.Level_4_Brackets) {
+						if (part.type >= top.type && top.type !== PriorityType.Level_4_Brackets && top.type !== PriorityType.Level_5) {
 							result.parts.push(top);
 							continue;
 						}
