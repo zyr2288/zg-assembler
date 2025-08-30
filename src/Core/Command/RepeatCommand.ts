@@ -64,7 +64,7 @@ export class RepeatCommand implements ICommand {
 
 			for (let i = 0; i < line.tag.orgLines.length; i++) {
 				if (line.tag.orgLines[i])
-					line.tag.orgLines[i].lineType = LineType.Finished;
+					line.tag.orgLines[i].lineType = LineType.Ignore;
 			}
 
 			line.tag.compileLines = lines;
@@ -92,8 +92,8 @@ export class RepeatCommand implements ICommand {
 		const endLineIndex = option.matchIndex![0];
 
 		tag.orgLines = option.allLines.slice(option.index + 1, endLineIndex);
-
 		option.allLines[endLineIndex].lineType = LineType.Ignore;
+
 		line.tag = tag;
 		return tag;
 	}

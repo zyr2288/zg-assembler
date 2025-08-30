@@ -32,7 +32,8 @@ export class Enviroment {
 	fileLabel = {
 		/**Key1是filehash */
 		global: new Map<number, Set<string>>()
-	}
+	};
+
 	/**用于记忆文件内macro */
 	fileMacros = new Map<number, Set<string>>();
 
@@ -42,7 +43,7 @@ export class Enviroment {
 		global: new Map<string, ILabelTree>(),
 		/**局部，Key1是文件hash, Key2是标签名称 */
 		local: new Map<number, Map<string, ILabelTree>>()
-	}
+	};
 
 	address = { base: 0, org: -1, offset: 0 };
 
