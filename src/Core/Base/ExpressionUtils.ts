@@ -341,6 +341,24 @@ export class ExpressionUtils {
 	}
 	//#endregion 拼合ExpressionPart成Token
 
+	//#region 获取数字
+	/**获取数字 */
+	static GetNumber(number: string) {
+		const match = /(^(?<hex>\$[0-9a-fA-F]+)$)|(^(?<decimal>\-?[0-9]+(\.[0-9]+)?)$)|(^(?<bin>\@[01]+)$)/.exec(number);
+		const result = { success: !!match, value: 0 };
+		if (match?.groups?.hex) {
+			number = number.substring(1);
+			result.value = parseInt(number, 16);
+		} else if (match?.groups?.decimal) {
+			result.value = Number(number);
+		} else if (match?.groups?.bin) {
+			number = number.substring(1);
+			result.value = parseInt(number, 2);
+		}
+		return result;
+	}
+	//#endregion 获取数字
+
 	/***** private *****/
 
 	//#region 分割表达式
@@ -729,24 +747,6 @@ export class ExpressionUtils {
 		return result;
 	}
 	//#endregion 检查所有小节并获取值，简化计算量
-
-	//#region 获取数字
-	/**获取数字 */
-	static GetNumber(number: string) {
-		const match = /(^(?<hex>\$[0-9a-fA-F]+)$)|(^(?<decimal>\-?[0-9]+(\.[0-9]+)?)$)|(^(?<bin>\@[01]+)$)/.exec(number);
-		const result = { success: !!match, value: 0 };
-		if (match?.groups?.hex) {
-			number = number.substring(1);
-			result.value = parseInt(number, 16);
-		} else if (match?.groups?.decimal) {
-			result.value = Number(number);
-		} else if (match?.groups?.bin) {
-			number = number.substring(1);
-			result.value = parseInt(number, 2);
-		}
-		return result;
-	}
-	//#endregion 获取数字
 
 	//#region 检查在 Macro 里的参数
 	private static CheckExpressionMacro(expression: Expression, macro: Macro) {
