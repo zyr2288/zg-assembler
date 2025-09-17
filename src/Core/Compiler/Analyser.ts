@@ -23,6 +23,8 @@ interface MatchResult {
 	}
 }
 
+const CommentRegex = /;(?=(?:[^"]*"[^"]*")*[^"]*$)/;
+
 export class Analyser {
 
 	private static space = new Set<string>([" ", "\t"]);
@@ -227,7 +229,7 @@ export class Analyser {
 					line.AnalyseFirst(option);
 					break;
 			}
-			
+
 			i = option.index;
 		}
 	}
@@ -308,15 +310,19 @@ export class Analyser {
 	 * @returns 内容以及注释
 	 */
 	static GetContent(token: Token): { content: Token, comment: string | undefined } {
-		let index = token.text.indexOf(";");
-		if (index < 0)
-			return { content: token.Copy(), comment: undefined };
+		const match = CommentRegex.exec(token.text);
+		let comment: string | undefined = undefined, content: Token;
+		if (match !== null) {
+			content = token.Substring(0, match.index);
+			comment = token.text.substring(match.index + 1);
+		} else {
+			content = token.Copy();
+		}
 
-		let comment = token.text.substring(index + 1);
-		if (comment[0] === "+" || comment[0] === "-")
-			comment = token.text.substring(index + 2);
+		if (comment && (comment[0] === "+" || comment[0] === "-"))
+			comment = comment.substring(1);
 
-		return { content: token.Substring(0, index), comment };
+		return { content, comment };
 	}
 	//#endregion 获取一行内容以及注释
 

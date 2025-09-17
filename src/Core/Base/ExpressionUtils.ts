@@ -402,6 +402,12 @@ export class ExpressionUtils {
 						continue;
 					} else {
 						part.token = expression.Substring(stringStart - expression.start + 1, part.token.start - stringStart - 1);
+						if (part.token.length === 0) {
+							const error = Localization.GetMessage("Expression error");
+							MyDiagnostic.PushException(part.token, error);
+							result.success = false;
+							break forLoop;
+						}
 						const temp = ExpressionUtils.ProcessString(part.token);
 						if (temp) {
 							part.token.text = temp;
