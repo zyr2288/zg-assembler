@@ -23,7 +23,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		console.error(e);
 		throw e;
 	}
-
 }
 
 // This method is called when your extension is deactivated

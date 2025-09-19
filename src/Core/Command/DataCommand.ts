@@ -44,7 +44,6 @@ export class DataCommand {
 	static AnalyseFirst(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
 		const tag: DataCommandTag = [];
-
 		for (let i = 0; i < line.arguments.length; i++) {
 			const part = ExpressionUtils.SplitAndSort(line.arguments[i]);
 			if (!part) {

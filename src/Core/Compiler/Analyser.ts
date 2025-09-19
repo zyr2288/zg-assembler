@@ -10,6 +10,8 @@ import { VariableLine } from "../Lines/VariableLine";
 import { CompileOption } from "../Base/CompileOption";
 import { MacroLine } from "../Lines/MacroLine";
 import { Config } from "../Base/Config";
+import { MyDiagnostic } from "../Base/MyDiagnostic";
+import { Localization } from "../I18n/Localization";
 
 type MatchKey = "unknow" | "instruction" | "command" | "variable" | "macro";
 
@@ -310,11 +312,31 @@ export class Analyser {
 	 * @returns 内容以及注释
 	 */
 	static GetContent(token: Token): { content: Token, comment: string | undefined } {
-		const match = CommentRegex.exec(token.text);
-		let comment: string | undefined = undefined, content: Token;
-		if (match !== null) {
-			content = token.Substring(0, match.index);
-			comment = token.text.substring(match.index + 1);
+		let inString = false, index = -1, comment: string | undefined = undefined, content: Token;
+		for (let i = 0; i < token.text.length; i++) {
+			const char = token.text[i];
+			if (char === ";" && !inString) {
+				index = i;
+				break;
+			}
+
+			if (char === "\"") {
+				if (inString && token.text[i - 1] === "\\")
+					continue;
+
+				inString = !inString;
+			}
+		}
+
+		if (inString) {
+			const error = Localization.GetMessage("Expression error");
+			MyDiagnostic.PushException(token, error);
+			return { content: new Token(""), comment };
+		}
+
+		if (index !== -1) {
+			content = token.Substring(0, index);
+			comment = token.text.substring(index + 1);
 		} else {
 			content = token.Copy();
 		}
