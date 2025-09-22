@@ -127,7 +127,7 @@ export class HighlightingProvider {
 	}
 
 	private static GetCommandHighlighting(option: HighlightOption) {
-		const line = option.lines[option.index] as CommandLine;
+		const line = option.GetCurrent<CommandLine>()!;
 
 		let tag;
 		HighlightingProvider.GetLabel(line.label, option.result);

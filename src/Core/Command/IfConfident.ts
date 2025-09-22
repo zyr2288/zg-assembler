@@ -88,12 +88,11 @@ export class IfConfident implements ICommand {
 
 		const result = option.matchIndex!;
 		let index = 0;
-		const commands = [".ELSEIF", ".ELSE", ".ENDIF"];
 
 		let exp = ExpressionUtils.SplitAndSort(line.arguments[0]);
-
 		const tag: IfConfidentTag = { exp, lines: [{ offsetFirstLine: 0, confident: false, exp }] };
 
+		const commands = [".ELSEIF", ".ELSE", ".ENDIF"];
 		const startLindeIndex = option.index;
 		for (let i = 0; i < result.length; i++) {
 			const lineIndex = result[i];
