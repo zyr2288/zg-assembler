@@ -9,7 +9,7 @@ export class TextDecoration {
 	static Initialize(context: vscode.ExtensionContext) {
 		const myColor = new vscode.ThemeColor("disabledForeground");
 		TextDecoration.decoration = vscode.window.createTextEditorDecorationType({
-			after: { margin: "0 0 0 10rem", color: myColor },
+			after: { margin: "0 0 0 5rem", color: myColor },
 			rangeBehavior: vscode.DecorationRangeBehavior.OpenOpen
 		});
 
@@ -24,7 +24,6 @@ export class TextDecoration {
 			return;
 
 		const line = editor.selection.active.line;
-
 		const result = LSPUtils.assembler.languageHelper.debug.GetDebugLineWithFile(editor.document.fileName, line);
 		if (!result) {
 			editor.setDecorations(TextDecoration.decoration, []);

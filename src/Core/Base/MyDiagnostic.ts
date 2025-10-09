@@ -22,6 +22,9 @@ export class MyDiagnostic {
 	/**key1是 fileIndex key2是word的start */
 	private static allErrors = new Map<number, Map<number, DiagnosticMsg>>();
 	private static allWarning = new Map<number, Map<number, DiagnosticMsg>>();
+	private static allUnusedLine = new Map<number, Set<number>>();
+
+	/***** 错误处理 *****/
 
 	//#region 添加错误
 	/**
@@ -83,6 +86,8 @@ export class MyDiagnostic {
 	}
 	//#endregion 获取错误
 
+	/***** 警告处理 *****/
+
 	//#region 添加警告
 	static PushWarning(token: Token, msg: string, fileIndex?: number) {
 		if (fileIndex === undefined)
@@ -117,6 +122,29 @@ export class MyDiagnostic {
 		return warnings;
 	}
 	//#endregion 获取警告
+
+	/***** 未使用行处理 *****/
+
+	//#region 添加未使用行
+	static AddUnusedLine(lineNumber: number, fileIndex?: number) {
+		if (fileIndex === undefined)
+			fileIndex = Compiler.enviroment.fileIndex;
+
+		let unused = MyDiagnostic.allUnusedLine.get(fileIndex);
+		if (!unused) {
+			unused = new Set();
+			MyDiagnostic.allUnusedLine.set(fileIndex, unused);
+		}
+
+		unused.add(lineNumber);
+	}
+	//#endregion 添加未使用行
+
+	//#region 获取未使用行
+	static GetUnusedLine(fileIndex: number) {
+		return MyDiagnostic.allUnusedLine.get(fileIndex);
+	}
+	//#endregion 获取未使用行
 
 	static ClearFileExceptions(fileIndex: number) {
 		MyDiagnostic.allErrors.set(fileIndex, new Map());

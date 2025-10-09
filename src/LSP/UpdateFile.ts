@@ -41,7 +41,6 @@ export class UpdateFile {
 	//#region 更新错误
 	/**更新错误 */
 	static UpdateDiagnostic(files?: string[]) {
-		let errors = LSPUtils.assembler.diagnostic.GetExceptions();
 		if (!files) {
 			UpdateFile.errorCollection.clear();
 		} else {
@@ -52,6 +51,7 @@ export class UpdateFile {
 		}
 
 		const result = new Map<string, vscode.Diagnostic[]>();
+		let errors = LSPUtils.assembler.diagnostic.GetExceptions();
 		for (let i = 0; i < errors.length; ++i) {
 			const error = errors[i];
 			let diagnostics = result.get(error.filePath);

@@ -24,7 +24,7 @@ export class Highlighting {
 		await LSPUtils.WaitingCompileFinished();
 		
 		const tokenBuilder = new vscode.SemanticTokensBuilder(Highlighting.leagend);
-		let highlightingTokens = LSPUtils.assembler.languageHelper.highlighting.HighlightDocument(document.uri.fsPath);
+		const highlightingTokens = LSPUtils.assembler.languageHelper.highlighting.HighlightDocument(document.uri.fsPath);
 		for (let i = 0; i < highlightingTokens.length; ++i) {
 			const token = highlightingTokens[i];
 			tokenBuilder.push(token.line, token.start, token.length, token.type);
@@ -32,6 +32,5 @@ export class Highlighting {
 
 		return tokenBuilder.build();
 	}
-
-
+	
 }
