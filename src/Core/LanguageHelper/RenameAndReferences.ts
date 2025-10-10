@@ -4,6 +4,7 @@ import { Macro } from "../Base/Macro";
 import { Token } from "../Base/Token";
 import { CommandTagBase } from "../Command/Command";
 import { DataCommandTag } from "../Command/DataCommand";
+import { DefTag } from "../Command/DefinedCommand";
 import { EnumTag } from "../Command/EnumCommand";
 import { MacroLineTag } from "../Command/MacroCommand";
 import { Compiler } from "../Compiler/Compiler";
@@ -325,6 +326,11 @@ export class RenameAndReferences {
 				tag = line.tag as DataCommandTag;
 				RenameAndReferences.FindMatchInExpression(matchText, resultToken, ...tag);
 				break;
+			case ".DEF":
+				tag = line.tag as DefTag;
+				if (tag.exp)
+					RenameAndReferences.FindMatchInExpression(matchText, resultToken, tag.exp);
+				break;
 			case ".ORG": case ".BASE":
 			case ".IF": case ".ELSEIF":
 				tag = line.tag as CommandTagBase;
@@ -359,7 +365,8 @@ export class RenameAndReferences {
 		for (let i = 0; i < expressions.length; i++) {
 			for (let j = 0; j < expressions[i].parts.length; j++) {
 				const part = expressions[i].parts[j];
-				if (part.type !== PriorityType.Level_1_Label || part.token.text !== matchText)
+				if ((part.type !== PriorityType.Level_0_Sure && part.type !== PriorityType.Level_1_Label) ||
+					part.token.text !== matchText)
 					continue;
 
 				result.push(part.token);
