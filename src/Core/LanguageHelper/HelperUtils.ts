@@ -530,10 +530,18 @@ export class HelperUtils {
 	 */
 	private static MatchEnum(range: HighlightRange, matchResult: MatchResult, fileIndex: number, lineText: string, lineNumber: number, current: number) {
 		const tempLine = Compiler.enviroment.allLine.get(fileIndex)?.[range.startLine] as CommandLine;
-		if (!tempLine || lineNumber === range.startLine || lineNumber === range.endLine)
+		if (!tempLine || lineNumber === range.endLine)
 			return false;
 
 		const tag: EnumTag = tempLine.tag;
+		if (lineNumber === range.startLine && tempLine.arguments[0]) {
+			const temp = HelperUtils.GetWord(tempLine.arguments[0].text, current, tempLine.arguments[0].start);
+			const token = new Token(temp.leftText + temp.rightText, { start: temp.start, line: lineNumber });
+			matchResult.token = token;
+			matchResult.type = "label";
+			return true;
+		}
+
 		for (let i = 0; i < tag.lines.length; i++) {
 			const line = tag.lines[i];
 			if (!line || line.labelToken.line !== lineNumber)
@@ -561,7 +569,7 @@ export class HelperUtils {
 	 * @param matchResult 匹配的结果
 	 */
 	private static MatchLabelOrNumber(lineText: string, current: number, matchResult: MatchResult) {
-		let temp = HelperUtils.GetWord(lineText, current);
+		const temp = HelperUtils.GetWord(lineText, current);
 		const text = temp.leftText + temp.rightText;
 		const tempNumber = ExpressionUtils.GetNumber(text);
 		if (tempNumber.success) {
