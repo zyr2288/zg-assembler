@@ -57,6 +57,7 @@ export class AsmSM83_GBC implements IAsmPlatform {
 		this.AddInstructionSeries2("DEC", ["C", "E", "L", "A"], 0x0D, 0, 0x10);
 
 		// JR
+		this.AddInstructionSeries2("JR", ["NZ,e", "NC,e"], 0x20, 0, 0x10);
 		this.AddInstructionSeries2("JR", ["e", "Z,e", "C,e"], 0x18, 0, 0x10);
 
 		instruction = ["ADD", "ADC", "SUB", "SBC", "AND", "XOR", "OR", "CP"];
@@ -73,7 +74,7 @@ export class AsmSM83_GBC implements IAsmPlatform {
 		this.AddInstructionSeries2("ADD", ["HL,BC", "HL,DE", "HL,HL", "HL,SP"], 0x09, 0, 0x10);
 		Platform.AddInstruction("ADD", { addressingMode: "SP,e", opCode: [0xE8] });
 
-		// ===== ADD =====
+		// ===== 散装运算符 =====
 		Platform.AddInstruction("ADD", { addressingMode: "[exp]", opCode: [, 0xC6] });
 		Platform.AddInstruction("SUB", { addressingMode: "[exp]", opCode: [, 0xD6] });
 		Platform.AddInstruction("AND", { addressingMode: "[exp]", opCode: [, 0xE6] });
