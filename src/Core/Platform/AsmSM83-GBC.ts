@@ -95,8 +95,8 @@ export class AsmSM83_GBC implements IAsmPlatform {
 
 		// ===== JP =====
 		Platform.AddInstruction("JP", { addressingMode: "HL", opCode: [0xE9] });
-		this.AddInstructionSeries2("JP", ["Z,[exp]", "C,[exp]"], 0xCA, 2, 0x10);
 		this.AddInstructionSeries2("JP", ["NZ,([exp])", "NC,([exp])"], 0xC2, 2, 0x10);
+		this.AddInstructionSeries2("JP", ["Z,[exp]", "C,[exp]"], 0xCA, 2, 0x10);
 		Platform.AddInstruction("JP", { addressingMode: "[exp]", opCode: [, , 0xC3] });
 
 		// ===== CALL =====
