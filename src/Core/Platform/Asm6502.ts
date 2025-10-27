@@ -132,7 +132,7 @@ export class Asm6502 implements IAsmPlatform {
 	}
 
 	private AddInstruction(instruction: string, addressingMode: AddInstructionOption) {
-		Platform.AddInstructionWithLength(instruction, addressingMode);
+		Platform.AddInstruction(instruction, addressingMode);
 	}
 
 }

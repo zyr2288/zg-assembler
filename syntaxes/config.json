@@ -4,7 +4,7 @@
 	"description": "汇编器配置文件",
 	"title": "Assembler configuration",
 	"properties": {
-		"platform": { "enum": ["6502", "65c816", "z80-gb", "SPC700"], "description": "编译平台" },
+		"platform": { "enum": ["6502", "65c816", "z80-gb", "SPC700", "SM83-gbc"], "description": "编译平台" },
 		"intellisense": { "type": "boolean", "default": true, "description": "是否开启智能提示" },
 		"outOfRangeWarning": { "type": "boolean", "default": true, "description": "是否开启编译字节越界警告" },
 		"entry": { "type": "string", "default": "main.asm", "description": "编译的入口文件" },

@@ -6,6 +6,7 @@ import { Localization } from "../I18n/Localization";
 import { IntellisenseProvider } from "../LanguageHelper/IntellisenseProvider";
 import { Asm6502 } from "./Asm6502";
 import { Asm65C816 } from "./Asm65C816";
+import { AsmSM83_GBC } from "./AsmSM83-GBC";
 import { AsmSPC700 } from "./AsmSPC700";
 import { AsmZ80_GB } from "./AsmZ80-GB";
 import { IAsmPlatform } from "./IAsmPlatform";
@@ -61,6 +62,9 @@ export class Platform {
 			case "z80-gb":
 				constructor = AsmZ80_GB;
 				break;
+			case "SM83-gbc":
+				constructor = AsmSM83_GBC;
+				break;
 			default:
 				let errorMsg = Localization.GetMessage("Unsupport platform {0}", platform);
 				throw new Error(errorMsg);
@@ -70,68 +74,6 @@ export class Platform {
 	}
 	//#endregion 切换平台
 
-	//#region 添加基础指令
-	/**
-	 * 添加基础指令
-	 * @param operation 汇编指令，例如：LDA
-	 * @param option 
-	 */
-	static AddInstruction(operation: string, option: AddInstructionOption) {
-		operation = operation.toUpperCase();
-		let index = Platform.instructions.get(operation);
-		if (!index) {
-			index = [];
-			Platform.instructions.set(operation, index);
-		}
-
-		let type: IAddressingMode = { addressingMode: option.addressingMode, addressType: [] as string[], opCode: [], opCodeLength: [] };
-		if (option.addressingMode) {
-			let match;
-			let start = 0;
-			let temp: string;
-
-			let stringMatch: string[] = [];
-			let regex = /\[exp\]/g;
-			while (match = regex.exec(option.addressingMode)) {
-				temp = option.addressingMode.substring(start, match.index).trim();
-				if (temp)
-					stringMatch.push(Utils.TransformRegex(temp));
-
-				stringMatch.push("");
-				start = match.index + match[0].length;
-			}
-
-			temp = option.addressingMode.substring(start).trim();
-			if (temp) 
-				stringMatch.push(Utils.TransformRegex(temp));
-
-			if (stringMatch.length !== 1)
-				stringMatch[0] = "^" + stringMatch[0];
-
-			stringMatch[stringMatch.length - 1] = stringMatch[stringMatch.length - 1] + "$";
-
-			type.addressType = stringMatch;
-		}
-
-		type.opCode = option.opCode;
-		type.spProcess = option.spProcess;
-
-		if (!option.opCodeLength) {
-			for (let i = 0; i < type.opCode.length; ++i) {
-				if (type.opCode[i] === undefined)
-					continue;
-
-				type.opCodeLength[i] = Utils.GetNumberByteLength(type.opCode[i]!);
-			}
-		} else {
-			type.opCodeLength = option.opCodeLength;
-		}
-
-
-		index.push(type);
-	}
-	//#endregion 添加基础指令
-
 	//#region 添加额外定长汇编指令
 	/**
 	 * 添加额外定长汇编指令
@@ -139,8 +81,8 @@ export class Platform {
 	 * @param addressingMode 地址模式
 	 * @returns 
 	 */
-	static AddInstructionWithLength(instruction: string, addressingMode: AddInstructionOption) {
-		Platform.AddInstruction(instruction, addressingMode);
+	static AddInstruction(instruction: string, addressingMode: AddInstructionOption) {
+		Platform.AddInstructionBase(instruction, addressingMode);
 		let count = addressingMode.opCode.filter(v => v !== undefined);
 		if (count.length < 2)
 			return;
@@ -153,7 +95,7 @@ export class Platform {
 			let tempCodes = [];
 			tempCodes.length = j + 1;
 			tempCodes[j] = opcode;
-			Platform.AddInstruction(`${instruction}.${j}`, { addressingMode: addressingMode.addressingMode, opCode: tempCodes });
+			Platform.AddInstructionBase(`${instruction}.${j}`, { addressingMode: addressingMode.addressingMode, opCode: tempCodes });
 		}
 	}
 	//#endregion 添加额外定长汇编指令
@@ -278,5 +220,69 @@ export class Platform {
 		}
 	}
 	//#endregion 判断输入内容是否在忽略内容内
+
+	/***** private *****/
+
+	//#region 添加基础指令
+	/**
+	 * 添加基础指令
+	 * @param operation 汇编指令，例如：LDA
+	 * @param option 添加寻址方式选项
+	 */
+	private static AddInstructionBase(operation: string, option: AddInstructionOption) {
+		operation = operation.toUpperCase();
+		let index = Platform.instructions.get(operation);
+		if (!index) {
+			index = [];
+			Platform.instructions.set(operation, index);
+		}
+
+		let type: IAddressingMode = { addressingMode: option.addressingMode, addressType: [] as string[], opCode: [], opCodeLength: [] };
+		if (option.addressingMode) {
+			let match;
+			let start = 0;
+			let temp: string;
+
+			let stringMatch: string[] = [];
+			let regex = /\[exp\]/g;
+			while (match = regex.exec(option.addressingMode)) {
+				temp = option.addressingMode.substring(start, match.index).trim();
+				if (temp)
+					stringMatch.push(Utils.TransformRegex(temp));
+
+				stringMatch.push("");
+				start = match.index + match[0].length;
+			}
+
+			temp = option.addressingMode.substring(start).trim();
+			if (temp) 
+				stringMatch.push(Utils.TransformRegex(temp));
+
+			if (stringMatch.length !== 1)
+				stringMatch[0] = "^" + stringMatch[0];
+
+			stringMatch[stringMatch.length - 1] = stringMatch[stringMatch.length - 1] + "$";
+
+			type.addressType = stringMatch;
+		}
+
+		type.opCode = option.opCode;
+		type.spProcess = option.spProcess;
+
+		if (!option.opCodeLength) {
+			for (let i = 0; i < type.opCode.length; ++i) {
+				if (type.opCode[i] === undefined)
+					continue;
+
+				type.opCodeLength[i] = Utils.GetNumberByteLength(type.opCode[i]!);
+			}
+		} else {
+			type.opCodeLength = option.opCodeLength;
+		}
+
+
+		index.push(type);
+	}
+	//#endregion 添加基础指令
 
 }

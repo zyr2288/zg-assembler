@@ -201,7 +201,7 @@ export class Asm65C816 implements IAsmPlatform {
 	}
 
 	private AddInstruction(instruction: string, addressingMode: AddInstructionOption) {
-		Platform.AddInstructionWithLength(instruction, addressingMode);
+		Platform.AddInstruction(instruction, addressingMode);
 	}
 
 	private Condition(option: CompileOption) {

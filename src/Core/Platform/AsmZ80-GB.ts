@@ -190,7 +190,7 @@ export class AsmZ80_GB implements IAsmPlatform {
 	}
 
 	private AddInstruction(instruction: string, addressingMode: AddInstructionOption) {
-		Platform.AddInstructionWithLength(instruction, addressingMode);
+		Platform.AddInstruction(instruction, addressingMode);
 	}
 
 }

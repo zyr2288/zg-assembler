@@ -424,6 +424,6 @@ export class AsmSPC700 implements IAsmPlatform {
 	}
 
 	private Add(instruction: string, addressingMode: AddInstructionOption) {
-		Platform.AddInstructionWithLength(instruction, addressingMode);
+		Platform.AddInstruction(instruction, addressingMode);
 	}
 }
