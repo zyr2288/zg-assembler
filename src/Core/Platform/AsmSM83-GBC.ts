@@ -113,7 +113,15 @@ export class AsmSM83_GBC implements IAsmPlatform {
 		this.AddInstructionSeries2("RST", ["0x08", "0x18", "0x28", "0x38"], 0xCF, 0, 0x10);
 
 		// ===== CB op =====
-		
+		instruction = ["RLC", "RRC"];
+		addrType = ["B", "C", "D", "E", "H", "L", "(HL)", "A"];
+		opCode = 0x00;
+		for (let i = 0; i < instruction.length; i++) {
+			for (let j = 0; j < addrType.length; j++) {
+				Platform.AddInstruction("CB", { addressingMode: `${instruction[i]} ${addrType[j]}`, opCode: [0xCB + opCode * 0x100], opCodeLength: [2] });
+				opCode++;
+			}
+		}
 	}
 	private AddInstructionSeries1(insAndOpCode: Record<string, number>) {
 		for (const key in insAndOpCode)
