@@ -51,14 +51,14 @@ export class AsmSM83_GBC implements IAsmPlatform {
 		this.AddInstructionSeries2("INC", ["B", "D", "H", "(HL)"], 0x04, 0, 0x10);
 		this.AddInstructionSeries2("INC", ["C", "E", "L", "A"], 0x0C, 0, 0x10);
 
-		// ==== DEC
+		// ==== DEC =====
 		this.AddInstructionSeries2("DEC", ["B", "D", "H", "(HL)"], 0x05, 0, 0x10);
 		this.AddInstructionSeries2("DEC", ["BC", "DE", "HL", "SP"], 0x0B, 0, 0x10);
 		this.AddInstructionSeries2("DEC", ["C", "E", "L", "A"], 0x0D, 0, 0x10);
 
-		// JR
+		// ===== JR =====
 		this.AddInstructionSeries2("JR", ["NZ,[exp]", "NC,[exp]"], 0x20, 0, 0x10);
-		this.AddInstructionSeries2("JR", ["[exp]", "Z,[exp]", "C,[exp]"], 0x18, 0, 0x10);
+		this.AddInstructionSeries2("JR", ["C,[exp]", "Z,[exp]", "[exp]"], 0x38, 0, -0x10);
 
 		instruction = ["ADD", "ADC", "SUB", "SBC", "AND", "XOR", "OR", "CP"];
 		addrType = ["B", "C", "D", "E", "H", "L", "(HL)", "A"];
@@ -113,13 +113,23 @@ export class AsmSM83_GBC implements IAsmPlatform {
 		this.AddInstructionSeries2("RST", ["0x08", "0x18", "0x28", "0x38"], 0xCF, 0, 0x10);
 
 		// ===== CB op =====
-		instruction = ["RLC", "RRC"];
+		instruction = ["RLC", "RRC", "RL", "RR", "SLA", "SRA", "SWAP", "SRL"];
 		addrType = ["B", "C", "D", "E", "H", "L", "(HL)", "A"];
 		opCode = 0x00;
 		for (let i = 0; i < instruction.length; i++) {
 			for (let j = 0; j < addrType.length; j++) {
-				Platform.AddInstruction("CB", { addressingMode: `${instruction[i]} ${addrType[j]}`, opCode: [0xCB + opCode * 0x100], opCodeLength: [2] });
+				Platform.AddInstruction(instruction[i], { addressingMode: addrType[j], opCode: [0xCB + (opCode << 8)], opCodeLength: [2] });
 				opCode++;
+			}
+		}
+		opCode = 0x40;
+		instruction = ["BIT", "RES", "SET"];
+		for (let i = 0; i < instruction.length; i++) {
+			for (let j = 0; j < 8; j++) {
+				for (let k = 0; k < addrType.length; k++) {
+					Platform.AddInstruction(instruction[i], { addressingMode: `${j},${addrType[k]}`, opCode: [0xCB + (opCode << 8)], opCodeLength: [2] });
+					opCode++;
+				}
 			}
 		}
 	}
@@ -136,5 +146,15 @@ export class AsmSM83_GBC implements IAsmPlatform {
 			Platform.AddInstruction(instruction, { addressingMode: addrTypes[i], opCode });
 			startOpCode += step;
 		}
+	}
+
+	private AddCBInstructions(instruction: string, addrTypes: string[], startOpCode: number) {
+		for (let i = 0; i < 8; i++) {
+			for (let j = 0; j < addrTypes.length; j++) {
+				Platform.AddInstruction(instruction, { addressingMode: `${i},${addrTypes[j]}`, opCode: [0xCB + (startOpCode << 8)] });
+				startOpCode++;
+			}
+		}
+		return startOpCode;
 	}
 }
