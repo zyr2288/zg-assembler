@@ -147,14 +147,4 @@ export class AsmSM83_GBC implements IAsmPlatform {
 			startOpCode += step;
 		}
 	}
-
-	private AddCBInstructions(instruction: string, addrTypes: string[], startOpCode: number) {
-		for (let i = 0; i < 8; i++) {
-			for (let j = 0; j < addrTypes.length; j++) {
-				Platform.AddInstruction(instruction, { addressingMode: `${i},${addrTypes[j]}`, opCode: [0xCB + (startOpCode << 8)] });
-				startOpCode++;
-			}
-		}
-		return startOpCode;
-	}
 }
