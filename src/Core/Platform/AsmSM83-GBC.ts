@@ -73,6 +73,7 @@ export class AsmSM83_GBC implements IAsmPlatform {
 		// ===== ADD =====
 		this.AddInstructionSeries2("ADD", ["HL,BC", "HL,DE", "HL,HL", "HL,SP"], 0x09, 0, 0x10);
 		Platform.AddInstruction("ADD", { addressingMode: "SP,[exp]", opCode: [0xE8] });
+		Platform.AddInstruction("ADD", { addressingMode: "A,[exp]", opCode: [, 0xC6] });
 
 		// ===== 散装运算符 =====
 		Platform.AddInstruction("ADD", { addressingMode: "[exp]", opCode: [, 0xC6] });

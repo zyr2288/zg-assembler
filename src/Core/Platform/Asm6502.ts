@@ -95,6 +95,7 @@ export class Asm6502 implements IAsmPlatform {
 		]
 		for (let i = 0; i < instructions.length; ++i) {
 			this.AddInstruction(instructions[i], { opCode: opCode3[i][0] });
+			this.AddInstruction(instructions[i], { addressingMode: "A", opCode: opCode3[i][0] });
 			this.AddInstruction(instructions[i], { addressingMode: "[exp],X", opCode: opCode3[i][1] });
 			this.AddInstruction(instructions[i], { addressingMode: "[exp]", opCode: opCode3[i][2] });
 		}
@@ -121,7 +122,7 @@ export class Asm6502 implements IAsmPlatform {
 		const temp = tempValue.value - line.lineResult.address.org - 2;
 		if (temp > 127 || temp < -128) {
 			line.lineType = LineType.Error;
-			const errorMsg = Localization.GetMessage("Argument out of range")
+			const errorMsg = Localization.GetMessage("Argument out of range");
 			MyDiagnostic.PushException(line.instruction, errorMsg);
 			return;
 		}
