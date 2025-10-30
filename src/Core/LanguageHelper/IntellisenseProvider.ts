@@ -287,197 +287,6 @@ export class IntellisenseProvider {
 	}
 	//#endregion 更新所有编译器命令
 
-	/***** private *****/
-
-	//#region 获取Label
-	/**
-	 * 获取Label
-	 * @param fileIndex 文件Hash
-	 * @param prefix 前缀
-	 * @param macro 自定义函数
-	 * @returns 
-	 */
-	private static GetLabel(fileIndex: number, prefix: string, macro?: Macro): Completion[] {
-		const result: Completion[] = [];
-		if (macro && !prefix.endsWith(".")) {
-			macro.labels.forEach((value) => {
-				const com = new Completion({
-					showText: value.token.text,
-					index: CompletionIndex.Label
-				});
-				result.push(com);
-			});
-			macro.params.forEach((param) => {
-				const com = new Completion({
-					showText: param.label.token.text,
-					index: CompletionIndex.Parameter,
-					type: CompletionType.MacroParamter
-				});
-				result.push(com);
-			});
-		}
-
-		const labelScope = prefix.startsWith(".") ? LabelScope.Local : LabelScope.Global;
-		let index = prefix.lastIndexOf(".");
-		let labelTree: Map<string, ILabelTree> | undefined;
-		let labels: Map<string, ILabelCommon> | undefined;
-
-		if (index > 0) {
-			prefix = prefix.substring(0, index);
-		} else {
-			prefix = "";
-		}
-
-		if (labelScope === LabelScope.Global) {
-			labelTree = Compiler.enviroment.labelTree.global;
-			labels = Compiler.enviroment.allLabel.global;
-		} else {
-			labelTree = Compiler.enviroment.labelTree.local.get(fileIndex);
-			labels = Compiler.enviroment.allLabel.local.get(fileIndex);
-		}
-
-		labelTree?.forEach((tree, key) => {
-			if (tree.parent !== prefix)
-				return;
-
-			const label = labels?.get(key);
-			if (!label)
-				return;
-
-			const showText = label.token.text.substring(index + 1);
-			const item = new Completion({ showText });
-			switch (label.type) {
-				case LabelType.Defined:
-					item.type = CompletionType.Defined;
-					item.index = CompletionIndex.Defined;
-					break;
-				case LabelType.Label:
-					item.type = CompletionType.Label;
-					item.index = CompletionIndex.Label;
-					break;
-				case LabelType.None:
-					item.type = CompletionType.UnknowLabel;
-					item.index = CompletionIndex.UnknowLabel;
-					break;
-				case LabelType.Variable:
-					item.type = CompletionType.Variable;
-					item.index = CompletionIndex.Variable;
-					break;
-			}
-			item.comment = HelperUtils.FormatComment(label);
-			result.push(item);
-		});
-
-		return result;
-	}
-	//#endregion 获取Label
-
-	//#region 获取空行帮助
-	/**
-	 * 获取空行帮助
-	 * @param fileIndex 文件编号
-	 * @param option.range 高亮区间
-	 * @param option.trigger 触发字符串
-	 */
-	private static GetEmptyLineHelper(fileIndex: number, option: { range?: HighlightRange, trigger?: string, currect: number, preText: Token }): Completion[] {
-		switch (option?.trigger) {
-			case " ":
-			case ":":
-				return [];
-			case ".":
-				const words = HelperUtils.GetWord(option.preText.text, option.currect, option.preText.start);
-				if (words.leftText.endsWith(".")) {
-					const temp = words.leftText.substring(0, words.leftText.length - 1).toUpperCase();
-					if (Platform.instructions.has(temp)) {
-						const completions: Completion[] = [];
-						const filterInstruction = IntellisenseProvider.instructionCompletions.filter(v => v.showText !== temp && v.showText.startsWith(temp));
-						filterInstruction.forEach(ins => {
-							const com = new Completion({
-								showText: ins.showText,
-								index: CompletionIndex.Instruction,
-								type: CompletionType.Instruction,
-								insertText: ins.showText.substring(temp.length + 1)
-							});
-							completions.push(com);
-						});
-						return completions;
-					}
-				}
-
-				switch (option.range?.type) {
-					case "macro":
-						return IntellisenseProvider.commandNotInMacroCompletions;
-					case "dataGroup":
-						return IntellisenseProvider.GetLabel(fileIndex, "");
-					default:
-						return IntellisenseProvider.commandCompletions;
-				}
-			default:
-				if (option?.range?.type === "dataGroup") {
-					return IntellisenseProvider.GetLabel(fileIndex, "");
-				} else {
-					const completions: Completion[] = [];
-					completions.push(...IntellisenseProvider.instructionCompletions, ...IntellisenseProvider.AddAllMacros());
-					return completions;
-				}
-		}
-	}
-
-	private static AddAllMacros() {
-		const completions: Completion[] = [];
-		Compiler.enviroment.allMacro.forEach((macro) => {
-			const com = new Completion({
-				showText: macro.name.text,
-				index: CompletionIndex.Macro,
-				type: CompletionType.Macro,
-				insertText: IntellisenseProvider.ReplaceMacro(macro),
-				comment: HelperUtils.FormatComment({ macro })
-			});
-			completions.push(com);
-		});
-		return completions;
-	}
-	//#endregion 获取空行帮助
-
-	//#region 处理插入Macro
-	private static ReplaceMacro(macro: Macro) {
-		let result = macro.name.text;
-		if (macro.params.size === 0)
-			return result;
-
-		result += " ";
-		let index = 1;
-		macro.params.forEach(v => {
-			if (index === macro.params.size)
-				index = 0;
-
-			result += `\${${index}:${v.label.token.text}}, `;
-			index++;
-		});
-		result = result.substring(0, result.length - 2);
-		return result;
-	}
-	//#endregion 处理插入Macro
-
-	//#region 处理汇编指令提示插入的内容
-	private static ReplaceCommon(text: string) {
-		let result = "";
-		let match;
-
-		const regx = /\[exp\]/g;
-		let start = 0;
-		let index = 0;
-		while (match = regx.exec(text)) {
-			result += text.substring(start, match.index) + `$${index}`;
-			start = match.index + match[0].length;
-			index++;
-		}
-
-		result += text.substring(start);
-		return result;
-	}
-	//#endregion 处理汇编指令提示插入的内容
-
 	/***** 关于汇编 *****/
 
 	//#region 更新所有汇编指令
@@ -670,5 +479,196 @@ export class IntellisenseProvider {
 		return result;
 	}
 	//#endregion 处理数据组
+
+	/***** private *****/
+
+	//#region 获取Label
+	/**
+	 * 获取Label
+	 * @param fileIndex 文件Hash
+	 * @param prefix 前缀
+	 * @param macro 自定义函数
+	 * @returns 
+	 */
+	private static GetLabel(fileIndex: number, prefix: string, macro?: Macro): Completion[] {
+		const result: Completion[] = [];
+		if (macro && !prefix.endsWith(".")) {
+			macro.labels.forEach((value) => {
+				const com = new Completion({
+					showText: value.token.text,
+					index: CompletionIndex.Label
+				});
+				result.push(com);
+			});
+			macro.params.forEach((param) => {
+				const com = new Completion({
+					showText: param.label.token.text,
+					index: CompletionIndex.Parameter,
+					type: CompletionType.MacroParamter
+				});
+				result.push(com);
+			});
+		}
+
+		const labelScope = prefix.startsWith(".") ? LabelScope.Local : LabelScope.Global;
+		let index = prefix.lastIndexOf(".");
+		let labelTree: Map<string, ILabelTree> | undefined;
+		let labels: Map<string, ILabelCommon> | undefined;
+
+		if (index > 0) {
+			prefix = prefix.substring(0, index);
+		} else {
+			prefix = "";
+		}
+
+		if (labelScope === LabelScope.Global) {
+			labelTree = Compiler.enviroment.labelTree.global;
+			labels = Compiler.enviroment.allLabel.global;
+		} else {
+			labelTree = Compiler.enviroment.labelTree.local.get(fileIndex);
+			labels = Compiler.enviroment.allLabel.local.get(fileIndex);
+		}
+
+		labelTree?.forEach((tree, key) => {
+			if (tree.parent !== prefix)
+				return;
+
+			const label = labels?.get(key);
+			if (!label)
+				return;
+
+			const showText = label.token.text.substring(index + 1);
+			const item = new Completion({ showText });
+			switch (label.type) {
+				case LabelType.Defined:
+					item.type = CompletionType.Defined;
+					item.index = CompletionIndex.Defined;
+					break;
+				case LabelType.Label:
+					item.type = CompletionType.Label;
+					item.index = CompletionIndex.Label;
+					break;
+				case LabelType.None:
+					item.type = CompletionType.UnknowLabel;
+					item.index = CompletionIndex.UnknowLabel;
+					break;
+				case LabelType.Variable:
+					item.type = CompletionType.Variable;
+					item.index = CompletionIndex.Variable;
+					break;
+			}
+			item.comment = HelperUtils.FormatComment(label);
+			result.push(item);
+		});
+
+		return result;
+	}
+	//#endregion 获取Label
+
+	//#region 获取空行帮助
+	/**
+	 * 获取空行帮助
+	 * @param fileIndex 文件编号
+	 * @param option.range 高亮区间
+	 * @param option.trigger 触发字符串
+	 */
+	private static GetEmptyLineHelper(fileIndex: number, option: { range?: HighlightRange, trigger?: string, currect: number, preText: Token }): Completion[] {
+		switch (option?.trigger) {
+			case " ":
+			case ":":
+				return [];
+			case ".":
+				const words = HelperUtils.GetWord(option.preText.text, option.currect, option.preText.start);
+				if (words.leftText.endsWith(".")) {
+					const temp = words.leftText.substring(0, words.leftText.length - 1).toUpperCase();
+					if (Platform.instructions.has(temp)) {
+						const completions: Completion[] = [];
+						const filterInstruction = IntellisenseProvider.instructionCompletions.filter(v => v.showText !== temp && v.showText.startsWith(temp));
+						filterInstruction.forEach(ins => {
+							const com = new Completion({
+								showText: ins.showText,
+								index: CompletionIndex.Instruction,
+								type: CompletionType.Instruction,
+								insertText: ins.showText.substring(temp.length + 1)
+							});
+							completions.push(com);
+						});
+						return completions;
+					}
+				}
+
+				switch (option.range?.type) {
+					case "macro":
+						return IntellisenseProvider.commandNotInMacroCompletions;
+					case "dataGroup":
+						return IntellisenseProvider.GetLabel(fileIndex, "");
+					default:
+						return IntellisenseProvider.commandCompletions;
+				}
+			default:
+				if (option?.range?.type === "dataGroup") {
+					return IntellisenseProvider.GetLabel(fileIndex, "");
+				} else {
+					const completions: Completion[] = [];
+					completions.push(...IntellisenseProvider.instructionCompletions, ...IntellisenseProvider.AddAllMacros());
+					return completions;
+				}
+		}
+	}
+
+	private static AddAllMacros() {
+		const completions: Completion[] = [];
+		Compiler.enviroment.allMacro.forEach((macro) => {
+			const com = new Completion({
+				showText: macro.name.text,
+				index: CompletionIndex.Macro,
+				type: CompletionType.Macro,
+				insertText: IntellisenseProvider.ReplaceMacro(macro),
+				comment: HelperUtils.FormatComment({ macro })
+			});
+			completions.push(com);
+		});
+		return completions;
+	}
+	//#endregion 获取空行帮助
+
+	//#region 处理插入Macro
+	private static ReplaceMacro(macro: Macro) {
+		let result = macro.name.text;
+		if (macro.params.size === 0)
+			return result;
+
+		result += " ";
+		let index = 1;
+		macro.params.forEach(v => {
+			if (index === macro.params.size)
+				index = 0;
+
+			result += `\${${index}:${v.label.token.text}}, `;
+			index++;
+		});
+		result = result.substring(0, result.length - 2);
+		return result;
+	}
+	//#endregion 处理插入Macro
+
+	//#region 处理汇编指令提示插入的内容
+	private static ReplaceCommon(text: string) {
+		let result = "";
+		let match;
+
+		const regx = /\[exp\]/g;
+		let start = 0;
+		let index = 0;
+		while (match = regx.exec(text)) {
+			result += text.substring(start, match.index) + `$${index}`;
+			start = match.index + match[0].length;
+			index++;
+		}
+
+		result += text.substring(start);
+		return result;
+	}
+	//#endregion 处理汇编指令提示插入的内容
 
 }
