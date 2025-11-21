@@ -99,6 +99,7 @@ class DataGroupUtils {
 				label.type = LabelType.Label;
 				label.comment = line.comment;
 				Compiler.enviroment.allDataGroup.set(tag.name.text, tag.dataGroup);
+				tag.dataGroup.label = label as ILabelNormal;
 			}
 		}
 

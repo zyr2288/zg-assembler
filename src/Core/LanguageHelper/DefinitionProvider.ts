@@ -1,4 +1,4 @@
-import { LabelUtils } from "../Base/Label";
+import { ILabelDataGroup, LabelType, LabelUtils } from "../Base/Label";
 import { Token } from "../Base/Token";
 import { Compiler } from "../Compiler/Compiler";
 import { HelperUtils } from "./HelperUtils";
@@ -28,14 +28,22 @@ export class DefinitionProvider {
 
 		switch (match.type) {
 			case "label":
-				if (match.token) {
-					const label = LabelUtils.FindLabel(match.token, { fileIndex });
-					if (label) {
-						DefinitionProvider.SetTokenToResult(label.token, result);
-						result.filePath = Compiler.enviroment.GetFilePath(label.fileIndex);
-					}
+				if (!match.token)
+					break;
 
+				const label = LabelUtils.FindLabel(match.token, { fileIndex });
+				if (!label)
+					break;
+
+				if (label.type === LabelType.DataGroup) {
+					const temp = label as ILabelDataGroup;
+					DefinitionProvider.SetTokenToResult(temp.label, result);
+					result.filePath = Compiler.enviroment.GetFilePath(temp.fileIndex);
+					break;
 				}
+
+				DefinitionProvider.SetTokenToResult(label.token, result);
+				result.filePath = Compiler.enviroment.GetFilePath(label.fileIndex);
 				break;
 			case "macro":
 				const tempMacro = Compiler.enviroment.allMacro.get(match.token!.text);
@@ -55,6 +63,11 @@ export class DefinitionProvider {
 
 	/***** private *****/
 
+	/**
+	 * 保存Token到结果
+	 * @param token 要保存的Token
+	 * @param result 保存的结果
+	 */
 	private static SetTokenToResult(token: Token, result: { filePath: string, line: number, start: number, length: number }) {
 		result.start = token.start;
 		result.line = token.line;

@@ -31,7 +31,7 @@ export interface ILabelTree {
 	child: Set<string>;
 }
 
-export type ILabelCommon = ILabelNormal | ILabelNameless;
+export type ILabelCommon = ILabelNormal | ILabelDataGroup | ILabelNameless;
 
 /**常规标签 */
 export interface ILabelNormal {
@@ -39,6 +39,16 @@ export interface ILabelNormal {
 	fileIndex: number;
 	scope: LabelScope.Global | LabelScope.Local;
 	token: Token;
+	value?: number;
+	comment?: string;
+}
+
+export interface ILabelDataGroup {
+	type: LabelType.DataGroup;
+	fileIndex: number;
+	scope: LabelScope.Global;
+	token: Token;
+	label: Token;
 	value?: number;
 	comment?: string;
 }
@@ -185,7 +195,14 @@ export class LabelUtils {
 			if (!data)
 				return;
 
-			const label: ILabelNormal = { token: data.token, type: LabelType.DataGroup, value: data.index, scope: LabelScope.Global, fileIndex: 0 };
+			const label: ILabelDataGroup = {
+				type: LabelType.DataGroup,
+				value: data.index,
+				scope: LabelScope.Global,
+				token: tokens[0],
+				label: data.token,
+				fileIndex: datagroup.label.fileIndex
+			};
 			return label;
 		}
 		//#endregion 数据组
