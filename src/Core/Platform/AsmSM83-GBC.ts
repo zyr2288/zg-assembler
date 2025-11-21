@@ -103,7 +103,7 @@ export class AsmSM83_GBC implements IAsmPlatform {
 		// ===== CALL =====
 		this.AddInstructionSeries2("CALL", ["NZ,[exp]", "NC,[exp]"], 0xC4, 1, 0x10);
 		this.AddInstructionSeries2("CALL", ["Z,[exp]", "C,[exp]"], 0xC4, 2, 0x10);
-		Platform.AddInstruction("CALL", { addressingMode: "[exp]", opCode: [0xCD] });
+		Platform.AddInstruction("CALL", { addressingMode: "[exp]", opCode: [, 0xCD] });
 
 		// ===== PUSH POP =====
 		this.AddInstructionSeries2("POP", ["BC", "DE", "HL", "AF"], 0xC1, 0, 0x10);

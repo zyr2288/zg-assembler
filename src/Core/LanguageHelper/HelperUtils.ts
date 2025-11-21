@@ -251,7 +251,7 @@ export class HelperUtils {
 	static FormatComment(option: { macro?: Macro, comment?: string, value?: number, commadTip?: string }) {
 		let result = "";
 		if (option.comment !== undefined) {
-			result += HelperUtils.useMarkDown ? option.comment.replace(/\n/g, "\n\n") : option.comment;
+			result += HelperUtils.useMarkDown ? option.comment.replace(/\n/g, "  \n") : option.comment;
 		}
 
 		if (option.macro) {
