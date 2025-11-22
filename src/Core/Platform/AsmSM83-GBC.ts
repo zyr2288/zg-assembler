@@ -43,8 +43,8 @@ export class AsmSM83_GBC implements IAsmPlatform {
 		Platform.AddInstruction("LD", { addressingMode: "([exp]),SP", opCode: [, , 0x08] });
 		this.AddInstructionSeries2("LD", ["BC,[exp]", "DE,[exp]", "HL,[exp]", "SP,[exp]"], 0x01, 2, 0x10);
 		this.AddInstructionSeries2("LD", ["B,[exp]", "D,[exp]", "H,[exp]", "(HL),[exp]"], 0x06, 1, 0x10);
-		this.AddInstructionSeries2("LD", ["C,[exp]", "E,[exp]", "L,[exp]", "A,[exp]"], 0x0E, 1, 0x10);
 		this.AddInstructionSeries2("LD", ["([exp]),A", "A,([exp])"], 0xEA, 2, 0x10);
+		this.AddInstructionSeries2("LD", ["C,[exp]", "E,[exp]", "L,[exp]", "A,[exp]"], 0x0E, 1, 0x10);
 
 		// ===== INC =====
 		this.AddInstructionSeries2("INC", ["BC", "DE", "HL", "SP"], 0x03, 0, 0x10);
