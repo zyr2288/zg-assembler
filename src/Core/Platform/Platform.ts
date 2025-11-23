@@ -91,11 +91,9 @@ export class Platform {
 		let type: IAddressingMode = { addressingMode: option.addressingMode, addressType: [] as string[], opCode: [], opCodeLength: [] };
 		if (option.addressingMode) {
 			let match;
-			let start = 0;
-			let temp: string;
+			let start = 0, temp: string, stringMatch: string[] = [], findExp = false;
+			const regex = /\[exp\]/g;
 
-			let stringMatch: string[] = [];
-			let regex = /\[exp\]/g;
 			while (match = regex.exec(option.addressingMode)) {
 				temp = option.addressingMode.substring(start, match.index).trim();
 				if (temp)
@@ -103,13 +101,14 @@ export class Platform {
 
 				stringMatch.push("");
 				start = match.index + match[0].length;
+				findExp = true;
 			}
 
 			temp = option.addressingMode.substring(start).trim();
-			if (temp) 
+			if (temp)
 				stringMatch.push(Utils.TransformRegex(temp));
 
-			if (stringMatch.length !== 1)
+			if (stringMatch.length !== 1 || !findExp)
 				stringMatch[0] = "^" + stringMatch[0];
 
 			stringMatch[stringMatch.length - 1] = stringMatch[stringMatch.length - 1] + "$";
@@ -170,16 +169,15 @@ export class Platform {
 	 * @returns 
 	 */
 	static MatchAddressingMode(instruction: Token, expression: Token) {
-		let addressTypes = Platform.instructions.get(instruction.text.toUpperCase());
+		const addressTypes = Platform.instructions.get(instruction.text.toUpperCase());
 		if (!addressTypes) {
 			let errorMsg = Localization.GetMessage("Unknow instruction {0}", instruction.text);
 			MyDiagnostic.PushException(instruction, errorMsg);
 			return;
 		}
 
-		let result = { addressingMode: {} as IAddressingMode, exprs: [] as Token[] }
-		let start = 0;
-		let foundAddressType = false;
+		const result = { addressingMode: {} as IAddressingMode, exprs: [] as Token[] }
+		let start = 0, foundAddressType = false;
 
 		// 每个类型都判断一次
 		for (let i = 0; i < addressTypes.length; ++i) {

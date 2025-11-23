@@ -1,4 +1,10 @@
 // gbc的汇编指令
+import { CompileOption } from "../Base/CompileOption";
+import { ExpressionUtils } from "../Base/ExpressionUtils";
+import { MyDiagnostic } from "../Base/MyDiagnostic";
+import { Localization } from "../I18n/Localization";
+import { LineType } from "../Lines/CommonLine";
+import { InstructionLine } from "../Lines/InstructionLine";
 import { IAsmPlatform } from "./IAsmPlatform";
 import { AddInstructionOption, Platform } from "./Platform";
 
@@ -57,8 +63,11 @@ export class AsmSM83_GBC implements IAsmPlatform {
 		this.AddInstructionSeries2("DEC", ["C", "E", "L", "A"], 0x0D, 0, 0x10);
 
 		// ===== JR =====
-		this.AddInstructionSeries2("JR", ["NZ,[exp]", "NC,[exp]"], 0x20, 0, 0x10);
-		this.AddInstructionSeries2("JR", ["C,[exp]", "Z,[exp]", "[exp]"], 0x38, 0, -0x10);
+		this.AddInstructionSeries2("JR", ["NZ,[exp]", "NC,[exp]"], 0x20, 0, 0x10, this.SpecialJR);
+		this.AddInstructionSeries2("JR", ["C,[exp]", "Z,[exp]", "[exp]"], 0x38, 1, -0x10, this.SpecialJR);
+
+		// 这个必须放这里，否则解析有误
+		this.AddInstructionSeries2("ADD", ["HL,BC", "HL,DE", "HL,HL", "HL,SP"], 0x09, 0, 0x10);
 
 		instruction = ["ADD", "ADC", "SUB", "SBC", "AND", "XOR", "OR", "CP"];
 		addrType = ["B", "C", "D", "E", "H", "L", "(HL)", "A"];
@@ -71,7 +80,6 @@ export class AsmSM83_GBC implements IAsmPlatform {
 		}
 
 		// ===== ADD =====
-		this.AddInstructionSeries2("ADD", ["HL,BC", "HL,DE", "HL,HL", "HL,SP"], 0x09, 0, 0x10);
 		Platform.AddInstruction("ADD", { addressingMode: "SP,[exp]", opCode: [0xE8] });
 		Platform.AddInstruction("ADD", { addressingMode: "A,[exp]", opCode: [, 0xC6] });
 
@@ -103,7 +111,7 @@ export class AsmSM83_GBC implements IAsmPlatform {
 		// ===== CALL =====
 		this.AddInstructionSeries2("CALL", ["NZ,[exp]", "NC,[exp]"], 0xC4, 1, 0x10);
 		this.AddInstructionSeries2("CALL", ["Z,[exp]", "C,[exp]"], 0xC4, 2, 0x10);
-		Platform.AddInstruction("CALL", { addressingMode: "[exp]", opCode: [, 0xCD] });
+		Platform.AddInstruction("CALL", { addressingMode: "[exp]", opCode: [, , 0xCD] });
 
 		// ===== PUSH POP =====
 		this.AddInstructionSeries2("POP", ["BC", "DE", "HL", "AF"], 0xC1, 0, 0x10);
@@ -139,13 +147,34 @@ export class AsmSM83_GBC implements IAsmPlatform {
 			Platform.AddInstruction(key, { opCode: [insAndOpCode[key]] });
 	}
 
-	private AddInstructionSeries2(instruction: string, addrTypes: string[], startOpCode: number, opCodeLength: number, step: number) {
+	private AddInstructionSeries2(instruction: string, addrTypes: string[], startOpCode: number, opCodeLength: number, step: number, spProcess?: AddInstructionOption["spProcess"]) {
 		let opCode: number[];
 		for (let i = 0; i < addrTypes.length; i++) {
 			opCode = [];
 			opCode[opCodeLength] = startOpCode;
-			Platform.AddInstruction(instruction, { addressingMode: addrTypes[i], opCode });
+			Platform.AddInstruction(instruction, { addressingMode: addrTypes[i], opCode, spProcess });
 			startOpCode += step;
 		}
+	}
+
+	private SpecialJR(option: CompileOption) {
+		const line = option.GetCurrent<InstructionLine>();
+		const tempValue = ExpressionUtils.GetValue(line.expressions[0].parts, option);
+		if (!tempValue.success) {
+			line.lineResult.result.length = 2;
+			return;
+		}
+
+		const temp = tempValue.value - line.lineResult.address.org - 2;
+		if (temp > 127 || temp < -128) {
+			line.lineType = LineType.Error;
+			const errorMsg = Localization.GetMessage("Argument out of range");
+			MyDiagnostic.PushException(line.instruction, errorMsg);
+			return;
+		}
+
+		line.lineResult.SetResult(line.addressMode.opCode[1]!, 0, 1);
+		line.lineResult.SetResult(temp & 0xFF, 1, 1);
+		line.lineType = LineType.Finished;
 	}
 }
