@@ -30,7 +30,6 @@ export class IfConfident implements ICommand {
 		{ name: ".ELSE", min: 0, max: 0 }
 	];
 	end = ".ENDIF";
-	sameEnd = [".IFDEF", ".IFNDEF"];
 	allowLabel = false;
 
 	AnalyseFirst(option: CompileOption) {
@@ -138,7 +137,6 @@ export class IfDefConfident implements ICommand {
 		{ name: ".ELSE", min: 0, max: 0 }
 	];
 	end = ".ENDIF";
-	sameEnd = [".IF", ".IFNDEF"];
 	allowLabel = false;
 
 	AnalyseFirst(option: CompileOption) {
@@ -157,7 +155,6 @@ export class IfNDefConfident implements ICommand {
 		{ name: ".ELSE", min: 0, max: 0 }
 	];
 	end = ".ENDIF";
-	sameEnd = [".IF", ".IFDEF"];
 	allowLabel = false;
 
 	AnalyseFirst(option: CompileOption) {

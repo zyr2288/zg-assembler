@@ -1,5 +1,5 @@
 import { CompileOption } from "../Base/CompileOption";
-import { ILabelNormal, LabelScope, LabelType, LabelUtils } from "../Base/Label";
+import { LabelUtils } from "../Base/Label";
 import { Macro } from "../Base/Macro";
 import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { Utils } from "../Base/Utils";
@@ -60,25 +60,26 @@ export class MacroCommand implements ICommand {
 		macro.fileIndex = Compiler.enviroment.fileIndex;
 		macro.comment = line.comment;
 
-		const last = line.arguments.length - 1;
-		for (let i = 1; i < line.arguments.length; i++) {
-			const token = line.arguments[i].Trim();
-			if (i === last && token.text.startsWith("...")) {
-				const copy = token.Copy().Substring(3);
-				macro.indParams = { name: copy, values: [] };
-				break;
-			}
+		// 这里是不定参数，还不知道需不需要
+		// const last = line.arguments.length - 1;
+		// for (let i = 1; i < line.arguments.length; i++) {
+		// 	const token = line.arguments[i].Trim();
+		// 	if (i === last && token.text.startsWith("...")) {
+		// 		const copy = token.Copy().Substring(3);
+		// 		macro.indParams = { name: copy, values: [] };
+		// 		break;
+		// 	}
 
-			if (!LabelUtils.CheckIllegal(token.text, false)) {
-				const error = Localization.GetMessage("Label {0} illegal", token.text);
-				MyDiagnostic.PushException(token, error);
-				line.lineType = LineType.Error;
-				continue;
-			}
+		// 	if (!LabelUtils.CheckIllegal(token.text, false)) {
+		// 		const error = Localization.GetMessage("Label {0} illegal", token.text);
+		// 		MyDiagnostic.PushException(token, error);
+		// 		line.lineType = LineType.Error;
+		// 		continue;
+		// 	}
 
-			const label: ILabelNormal = { token, type: LabelType.Parameter, scope: LabelScope.Global, fileIndex: 0 };
-			macro.params.set(token.text, { label, values: [] });
-		}
+		// 	const label: ILabelNormal = { token, type: LabelType.Parameter, scope: LabelScope.Global, fileIndex: 0 };
+		// 	macro.params.set(token.text, { label, values: [] });
+		// }
 
 		macro.lines = Utils.DeepClone(option.allLines.slice(option.index + 1, matchEnd));
 		macro.lineOffset = option.index + 1;

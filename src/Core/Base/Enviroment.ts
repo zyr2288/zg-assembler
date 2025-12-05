@@ -1,8 +1,8 @@
 import { DataGroup } from "../Command/DataGroup";
-import { CommonLine, HighlightRange, LineResult } from "../Lines/CommonLine";
+import { CommonLine, HighlightRange } from "../Lines/CommonLine";
 import { FileUtils } from "./FileUtils";
 import { ILabelNamelessCollection, ILabelNormal, ILabelTree, LabelType, } from "./Label";
-import { Macro } from "./Macro";
+import { IMacro } from "./Macro";
 import { CompileResult } from "../Compiler/CompileResult";
 
 export interface FileLineInfo {
@@ -26,7 +26,7 @@ export class Enviroment {
 		nameless: new Map<number, ILabelNamelessCollection>()
 	}
 
-	allMacro = new Map<string, Macro>();
+	allMacro = new Map<string, IMacro>();
 	allDataGroup = new Map<string, DataGroup>();
 
 	fileLabel = {
@@ -62,7 +62,7 @@ export class Enviroment {
 	private highlightRanges = new Map<number, HighlightRange[]>();
 
 	//#region 添加Macro
-	AddMacro(macro: Macro) {
+	AddMacro(macro: IMacro) {
 		this.allMacro.set(macro.name.text, macro);
 		const macroNames = this.fileMacros.get(macro.fileIndex) ?? new Set();
 		macroNames.add(macro.name.text);

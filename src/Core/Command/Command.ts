@@ -16,13 +16,16 @@ import { Base, Original } from "./OrgAndBase";
 import { RepeatCommand } from "./RepeatCommand";
 import { EnumCommand } from "./EnumCommand";
 import { Expression } from "../Base/ExpressionUtils";
-import { FileUtils } from "../Base/FileUtils";
 import { DBGCommand, DWGCommand } from "./DataGroup";
 
 interface FindMatchOption {
+	/**命令名称 */
 	start: string;
+	/**区间命令中间还可能拥有的名称，比如 `.IF` 中间会有`.ELSEIF` `.ELSE` */
 	rest?: string[];
+	/**区间命令的结尾 */
 	end: string;
+	/**拥有同样结尾的命令的名称，比如start是 `.IF`，sameEnd是 `.IFDEF` `.IFNDEF` */
 	sameEnd?: string[]
 }
 
@@ -153,7 +156,7 @@ export class Command {
 	 * @param matchOption.start 起始匹配命令
 	 * @returns 
 	 */
-	static FindNextMatch(option: CompileOption, matchOption: { start: string, rest?: string[], end: string, sameEnd?: string[] }) {
+	static FindNextMatch(option: CompileOption, matchOption: FindMatchOption) {
 		const matchIndex: number[] = [];
 
 		let deep = 0;
@@ -266,6 +269,7 @@ export class Command {
 	//#region 添加命令
 	/**添加命令 */
 	private static AddCommand(...coms: (new () => ICommand)[]) {
+		const sameEndTemp = new Map<string, string[]>();
 		for (let i = 0; i < coms.length; i++) {
 			const com = new coms[i]();
 			Command.commandParam.set(com.start.name, { min: com.start.min, max: com.start.max });
@@ -280,14 +284,29 @@ export class Command {
 				});
 			}
 
-			if (com.sameEnd) {
-				matchOption.sameEnd = com.sameEnd;
-			}
+			// if (com.sameEnd) {
+			// 	matchOption.sameEnd = com.sameEnd;
+			// }
 
 			if (com.end) {
 				Command.commandParam.set(com.end, { min: 0, max: 0 });
 				matchOption.start = com.start.name;
 				matchOption.end = com.end;
+				let sameEnd = sameEndTemp.get(com.end);
+				if (!sameEnd) {
+					sameEnd = [com.start.name];
+				} else {
+					sameEnd.push(com.start.name);
+				}
+				sameEndTemp.set(com.end, sameEnd);
+
+				if (sameEnd.length > 1) {
+					for (const [name, option] of Command.commandMatchOption) {
+						if (option.end === com.end)
+							option.sameEnd = sameEnd;
+					}
+					matchOption.sameEnd = sameEnd;
+				}
 				Command.commandMatchOption.set(com.start.name, matchOption);
 			}
 
@@ -310,7 +329,7 @@ export interface ICommand {
 	/**结尾 */
 	end?: string;
 	/**以同样结尾的命令 */
-	sameEnd?: string[];
+	// sameEnd?: string[];
 	/**命令前是否允许标签，默认允许(true) */
 	allowLabel?: boolean;
 
@@ -328,7 +347,10 @@ export interface ICommand {
 }
 
 export interface ICommandName {
+	/**命令的名称，例如 .ORG */
 	name: string;
+	/**命令参数的最少个数 */
 	min: number;
+	/**命令参数的最多个数 */
 	max?: number;
 }

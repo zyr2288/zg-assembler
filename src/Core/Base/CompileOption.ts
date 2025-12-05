@@ -1,10 +1,10 @@
 import { CommonLine } from "../Lines/CommonLine";
-import { Macro } from "./Macro";
+import { IMacro } from "./Macro";
 
 /**编译选项 */
 export class CompileOption {
 	index: number = 0;
-	macro?: Macro;
+	macro?: IMacro;
 	matchIndex?: number[];
 	allLines!: CommonLine[];
 

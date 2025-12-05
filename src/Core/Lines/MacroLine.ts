@@ -34,13 +34,13 @@ export class MacroLine {
 
 		// 不定参数不存在的时候，如果参数数量不匹配
 		// 或者不定参数存在的时候，参数数量小于已定义的参数数量
-		if (!macro.indParams && macro.params.size !== tokens.length ||
-			macro.indParams && tokens.length < macro.params.size) {
-			const error = Localization.GetMessage("Macro arguments count is {0}, but got {1}", macro.params.size, tokens.length);
-			MyDiagnostic.PushException(content.main, error);
-			line.lineType = LineType.Error;
-			return;
-		}
+		// if (!macro.indParams && macro.params.size !== tokens.length ||
+		// 	macro.indParams && tokens.length < macro.params.size) {
+		// 	const error = Localization.GetMessage("Macro arguments count is {0}, but got {1}", macro.params.size, tokens.length);
+		// 	MyDiagnostic.PushException(content.main, error);
+		// 	line.lineType = LineType.Error;
+		// 	return;
+		// }
 
 		for (let i = 0; i < tokens.length; i++) {
 			const exp = ExpressionUtils.SplitAndSort(tokens[i]);
@@ -114,18 +114,19 @@ export class MacroLine {
 				param.label.value = temp.values[0];
 		}
 
-		if (this.macro.indParams) {
-			let tempIndex = 0;
-			for (let i = index; i < this.expressions.length; i++) {
-				const exp = this.expressions[index];
-				const temp = ExpressionUtils.GetStringValue(exp, { macro: option.macro });
-				if (temp.success) {
-					this.macro.indParams.values[tempIndex] = temp.values;
-				}
+		// 移除不定参数
+		// if (this.macro.indParams) {
+		// 	let tempIndex = 0;
+		// 	for (let i = index; i < this.expressions.length; i++) {
+		// 		const exp = this.expressions[index];
+		// 		const temp = ExpressionUtils.GetStringValue(exp, { macro: option.macro });
+		// 		if (temp.success) {
+		// 			this.macro.indParams.values[tempIndex] = temp.values;
+		// 		}
 
-				tempIndex++;
-			}
-		}
+		// 		tempIndex++;
+		// 	}
+		// }
 
 
 		const macroOp = new CompileOption();
