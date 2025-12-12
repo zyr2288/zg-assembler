@@ -7,7 +7,7 @@
 		{ "include": "#asmCommand" },
 		{ "include": "#defined" },
 		{ "include": "#dataGroup" },
-		{ "include": "#function" },
+		{ "include": "#macro" },
 		{ "include": "#number" },
 		{ "include": "#variable" }
 	],
@@ -39,7 +39,7 @@
 			"end": "(?=;)|$",
 			"patterns": [{ "name": "entity.name.class", "match": "[^;]+" }]
 		},
-		"function": {
+		"macro": {
 			"name": "keyword.other.zg-assembly.commands",
 			"begin": "(?i)(^|\\s+)\\.MACRO\\s+",
 			"end": "(?=[,;])|$",

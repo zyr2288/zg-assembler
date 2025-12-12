@@ -153,9 +153,15 @@ export class FileUtils {
 	//#region 整理路径成统一格式
 	/**整理路径成统一格式 */
 	static ArrangePath(path: string) {
-		// 将文件名小写，避免 vscode 的 Uri 解析路径小写问题
-		let parts = path.toLocaleLowerCase().split(/[\\\/]/g);
-		return parts.join(Config.CommonSplit);
+		const parts = path.split(/[\\\/]/g);
+		const result: string[] = [];
+		for (let i = 0; i < parts.length; i++) {
+			if (i === 0 && parts[i] === "")
+				continue;
+
+			result.push(parts[i]);
+		}
+		return result.join(Config.CommonSplit);
 	}
 	//#endregion 整理路径成统一格式
 

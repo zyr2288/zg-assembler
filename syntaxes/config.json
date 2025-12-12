@@ -1,5 +1,5 @@
 {
-	"$schema": "https://json-schema.org/schema",
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"type": "object",
 	"description": "汇编器配置文件",
 	"title": "Assembler configuration",

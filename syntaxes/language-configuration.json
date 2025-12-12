@@ -30,7 +30,7 @@
 		["'", "'"]
 	],
 	"folding": {
-		"offSide": true,
+		"offSide": false,
 		"markers": { "start": ";\\+", "end": ";\\-" }
 	},
 	//查找单词边界，即按Ctrl + Left或Ctrl + Right的时候跳到下一个词
