@@ -40,7 +40,7 @@ export class LabelLine {
 		if (this.lineType === LineType.Finished)
 			return;
 
-		let label = LabelUtils.FindLabel(this.labelToken, option);
+		const label = LabelUtils.FindLabel(this.labelToken, option);
 		if (!label)
 			return;
 

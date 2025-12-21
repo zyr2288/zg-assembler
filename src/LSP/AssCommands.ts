@@ -42,16 +42,19 @@ export class AssCommands {
 
 		const text = vscode.window.activeTextEditor.document.getText();
 		const filePath = vscode.window.activeTextEditor.document.uri.fsPath;
+		let fileName = await LSPUtils.assembler.fileUtils.GetFileName(filePath);
+		const index = fileName.lastIndexOf(".");
+		if (index > 0)
+			fileName = fileName.substring(0, index);
 
 		await ConfigUtils.ReadConfig();
 
 		const result = await LSPUtils.assembler.CompileText(text, filePath);
 		UpdateFile.UpdateDiagnostic();
 		if (result) {
-			await LSPUtils.OutputResult(result, {
-				toFile: LSPUtils.assembler.config.ProjectSetting.outputSingleFile,
-				toClipboard: LSPUtils.assembler.config.ProjectSetting.copyToClipboard
-			});
+			let toFile = LSPUtils.assembler.config.ProjectSetting.outputSingleFile;
+			toFile = toFile.replace(/\[name\]/g, fileName);
+			await LSPUtils.OutputResult(result, { toFile, toClipboard: LSPUtils.assembler.config.ProjectSetting.copyToClipboard });
 		}
 
 		const showText = LSPUtils.assembler.diagnostic.hasError ?
@@ -70,13 +73,13 @@ export class AssCommands {
 		await LSPUtils.WaitingCompileFinished();
 		await ConfigUtils.ReadConfig();
 
-		let filePath = LSPUtils.assembler.fileUtils.Combine(
+		const filePath = LSPUtils.assembler.fileUtils.Combine(
 			vscode.workspace.workspaceFolders[0].uri.fsPath,
 			LSPUtils.assembler.config.ProjectSetting.entry
 		);
 
 		if (await LSPUtils.assembler.fileUtils.PathType(filePath) !== "file") {
-			let errorMsg = LSPUtils.assembler.localization.GetMessage("File {0} is not exist", filePath);
+			const errorMsg = LSPUtils.assembler.localization.GetMessage("File {0} is not exist", filePath);
 			vscode.window.showErrorMessage(errorMsg);
 			LSPUtils.StatueBarShowText(` $(alert) ${LSPUtils.assembler.localization.GetMessage("compile error")}`, 3000);
 			return;
@@ -84,8 +87,8 @@ export class AssCommands {
 
 		await vscode.workspace.saveAll(false);
 
-		let data = await LSPUtils.assembler.fileUtils.ReadFile(filePath);
-		let text = LSPUtils.assembler.fileUtils.BytesToString(data);
+		const data = await LSPUtils.assembler.fileUtils.ReadFile(filePath);
+		const text = LSPUtils.assembler.fileUtils.BytesToString(data);
 
 		const result = await LSPUtils.assembler.CompileText(text, filePath);
 		UpdateFile.UpdateDiagnostic();
@@ -96,8 +99,8 @@ export class AssCommands {
 				toClipboard: LSPUtils.assembler.config.ProjectSetting.copyToClipboard
 			});
 		}
-		
-		let showText = LSPUtils.assembler.diagnostic.hasError ?
+
+		const showText = LSPUtils.assembler.diagnostic.hasError ?
 			` $(alert) ${LSPUtils.assembler.localization.GetMessage("compile error")}` :
 			` $(check) ${LSPUtils.assembler.localization.GetMessage("compile finished")}`;
 		LSPUtils.StatueBarShowText(showText, 3000);

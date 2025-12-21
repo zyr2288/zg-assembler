@@ -141,11 +141,11 @@ export class FileUtils {
 	 * @returns 获取的路径
 	 */
 	static async GetFileName(path: string) {
-		let type = await FileUtils.PathType(path);
+		const type = await FileUtils.PathType(path);
 		if (type !== "file")
 			return "";
 
-		let parts = path.split(/[\\\/]/g);
+		const parts = path.split(/[\\\/]/g);
 		return parts[parts.length - 1];
 	}
 	//#endregion 获取路径文件的文件名

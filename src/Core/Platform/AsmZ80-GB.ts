@@ -10,13 +10,10 @@ export class AsmZ80_GB implements IAsmPlatform {
 	}
 
 	private Initialize() {
-		const addressingMode1 = "BCDEHL";
-		const opCode1 = [0x06, 0x0E, 0x16, 0x1E, 0x26, 0x2E];
-		for (let i = 0; i < addressingMode1.length; ++i)
-			this.AddInstruction("LD", { addressingMode: `${addressingMode1[i]},[exp]`, opCode: [, opCode1[i]] });
+		let addresssingMode, opCode;
 
-		const addressingMode2 = ["A", "B", "C", "D", "E", "H", "L", "(HL)"];
-		const LDOpcodes1 = [
+		addresssingMode = ["A", "B", "C", "D", "E", "H", "L", "(HL)"];
+		opCode = [
 			// A    B     C     D     E     H     L    (HL)
 			[0x7F, 0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E],		//A
 			[0x47, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46],		//B
@@ -26,12 +23,17 @@ export class AsmZ80_GB implements IAsmPlatform {
 			[0x67, 0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66],		//H
 			[0x6F, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E],		//L
 		];
-		for (let i = 0; i < addressingMode2.length - 1; ++i) {
-			for (let j = 0; j < addressingMode2.length; ++j) {
-				let mode = `${addressingMode2[i]},${addressingMode2[j]}`;
-				this.AddInstruction("LD", { addressingMode: mode, opCode: [LDOpcodes1[i][j]] });
+		for (let i = 0; i < addresssingMode.length - 1; ++i) {
+			for (let j = 0; j < addresssingMode.length; ++j) {
+				let mode = `${addresssingMode[i]},${addresssingMode[j]}`;
+				this.AddInstruction("LD", { addressingMode: mode, opCode: [opCode[i][j]] });
 			}
 		}
+
+		addresssingMode = "BCDEHL";
+		opCode = [0x06, 0x0E, 0x16, 0x1E, 0x26, 0x2E];
+		for (let i = 0; i < addresssingMode.length; ++i)
+			this.AddInstruction("LD", { addressingMode: `${addresssingMode[i]},[exp]`, opCode: [, opCode[i]] });
 
 		this.A_AddressingMode(["(BC)", "(DE)", "(HL)", "(C)"], [0x0A, 0x1A, 0x7E, 0xF2], [0x02, 0x12, 0x77, 0xE2]);
 		this.A_AddressingMode(["(HLD)", "(HL-)"], [0x3A, 0x3A], [0x32, 0x32]);

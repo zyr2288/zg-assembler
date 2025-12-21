@@ -62,12 +62,12 @@ export class LSPUtils {
 			if (!vscode.workspace.workspaceFolders)
 				return;
 
-			let buffer = new Uint8Array(result.length);
+			const buffer = new Uint8Array(result.length);
 
 			for (let i = 0; i < buffer.length; ++i)
 				buffer[i] = result[i] < 0 ? 0 : result[i];
 
-			let filePath = LSPUtils.assembler.fileUtils.Combine(vscode.workspace.workspaceFolders[0].uri.fsPath, option.toFile);
+			const filePath = LSPUtils.assembler.fileUtils.Combine(vscode.workspace.workspaceFolders[0].uri.fsPath, option.toFile);
 			await LSPUtils.assembler.fileUtils.SaveFile(filePath, buffer);
 		}
 
