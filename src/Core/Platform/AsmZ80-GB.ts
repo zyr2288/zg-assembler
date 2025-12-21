@@ -74,6 +74,7 @@ export class AsmZ80_GB implements IAsmPlatform {
 		this.StartToA("SBC", 0x98, 0xDE);
 
 		this.OpCodeOneIncrement("AND", 0xA0, 0xE6);
+
 		this.OpCodeOneIncrement("OR", 0xB0, 0xF6);
 		this.OpCodeOneIncrement("XOR", 0xA8, 0xEE);
 		this.OpCodeOneIncrement("CP", 0xB8, 0xFE);
@@ -84,7 +85,7 @@ export class AsmZ80_GB implements IAsmPlatform {
 		this.Single("DEC", ["BC", "DE", "HL", "SP"], [0x0B, 0x1B, 0x2B, 0x3B]);
 
 		this.Combine("ADD", "HL", ["BC", "DE", "HL", "SP"], [0x09, 0x19, 0x29, 0x39]);
-		this.AddInstruction("ADD", { addressingMode: "SP,#[exp]", opCode: [, 0xE8] });
+		this.AddInstruction("ADD", { addressingMode: "SP,[exp]", opCode: [, 0xE8] });
 
 		this.Single("SWAP", ["B", "C", "D", "E", "H", "L", "(HL)", "A"], [0x30CB, 0x31CB, 0x32CB, 0x33CB, 0x34CB, 0x35CB, 0x36CB, 0x37CB]);
 
@@ -142,22 +143,22 @@ export class AsmZ80_GB implements IAsmPlatform {
 	}
 
 	private StartToA(ins: string, start: number, last?: number) {
-		const modes = ["B", "C", "D", "E", "H", "L", "(HL)", "A", "#[exp]"];
+		const modes = ["B", "C", "D", "E", "H", "L", "(HL)", "A", "[exp]"];
 		for (let i = 0; i < modes.length; ++i) {
 			if (i !== modes.length - 1)
 				this.AddInstruction(ins, { addressingMode: `A,${modes[i]}`, opCode: [start++] });
 			else if (last !== undefined)
-				this.AddInstruction(ins, { addressingMode: "A,#[exp]", opCode: [, last] });
+				this.AddInstruction(ins, { addressingMode: "A,[exp]", opCode: [, last] });
 		}
 	}
 
 	private OpCodeOneIncrement(ins: string, start: number, last?: number) {
-		const modes = ["B", "C", "D", "E", "H", "L", "(HL)", "A", "#[exp]"];
+		const modes = ["B", "C", "D", "E", "H", "L", "(HL)", "A", "[exp]"];
 		for (let i = 0; i < modes.length; ++i) {
 			if (i !== modes.length - 1)
 				this.AddInstruction(ins, { addressingMode: modes[i], opCode: [start++] });
 			else if (last !== undefined)
-				this.AddInstruction(ins, { addressingMode: "#[exp]", opCode: [, last] });
+				this.AddInstruction(ins, { addressingMode: "[exp]", opCode: [, last] });
 		}
 	}
 
