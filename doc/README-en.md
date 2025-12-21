@@ -50,6 +50,8 @@ Testing files:
 }
 ```
 
+> Note: The `outputSingleFile` option supports the `[name]` placeholder. For example: `“outputSingleFile”: “output-[name].bin”`. If the compiled source file is named `test1.asm`, the generated file will be `output-test1.bin`.
+
 ## Features
 
 ### Compile

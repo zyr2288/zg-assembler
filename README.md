@@ -56,6 +56,8 @@
 }
 ```
 
+> 注：`outputSingleFile` 选项可以使用 `[name]` 作为替换符，例如：`"outputSingleFile": "output-[name].bin"`，当编译的本文件文件名为 `test1.asm`，则生成文件为 `output-test1.bin`
+
 ---
 
 ## 功能介绍
