@@ -8,6 +8,9 @@ import { InstructionLine } from "../Lines/InstructionLine";
 import { IAsmPlatform } from "./IAsmPlatform";
 import { AddInstructionOption, Platform } from "./Platform";
 
+/**
+ * SM83-GBC汇编
+ */
 export class AsmSM83_GBC implements IAsmPlatform {
 	platformName: string = "SM83-gbc";
 
@@ -173,7 +176,7 @@ export class AsmSM83_GBC implements IAsmPlatform {
 			return;
 		}
 
-		line.lineResult.SetResult(line.addressMode.opCode[1]!, 0, 1);
+		line.lineResult.SetResult(line.addressMode.opCode[0]!, 0, 1);
 		line.lineResult.SetResult(temp & 0xFF, 1, 1);
 		line.lineType = LineType.Finished;
 	}
