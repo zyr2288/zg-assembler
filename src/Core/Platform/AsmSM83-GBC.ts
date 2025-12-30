@@ -10,6 +10,8 @@ import { AddInstructionOption, Platform } from "./Platform";
 
 /**
  * SM83-GBC汇编
+ * 
+ * https://gbdev.io/pandocs/CPU_Registers_and_Flags.html
  */
 export class AsmSM83_GBC implements IAsmPlatform {
 	platformName: string = "SM83-gbc";

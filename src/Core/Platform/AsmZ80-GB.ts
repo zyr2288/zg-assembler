@@ -4,7 +4,7 @@ import { AddInstructionOption, Platform } from "./Platform";
 /**
  * z80-gb的指令表
  * 
- * https://gbdev.io/pandocs/CPU_Registers_and_Flags.html
+ * https://rgbds.gbdev.io/docs/v1.0.0/gbz80.7
  */
 export class AsmZ80_GB implements IAsmPlatform {
 
