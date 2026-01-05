@@ -11,6 +11,8 @@ import { Platform } from "./Platform";
  * z80-gba的指令表
  * 
  * https://github.com/kolen/z80-opcode-table/blob/master/table_ref.txt
+ * 
+ * https://sndream.github.io/PanDocs/#cpucomparisionwithz80
  */
 export class AsmZ80_GB implements IAsmPlatform {
 
@@ -44,12 +46,14 @@ export class AsmZ80_GB implements IAsmPlatform {
 
 		Platform.AddInstruction("LD", { addressingMode: "(BC),A", opCode: [0x02] });
 		Platform.AddInstruction("LD", { addressingMode: "(DE),A", opCode: [0x12] });
-		Platform.AddInstruction("LD", { addressingMode: "([exp]),HL", opCode: [0x22] });
-		Platform.AddInstruction("LD", { addressingMode: "([exp]),A", opCode: [0x32] });
+
 
 		this.AddSerialsAddMode("LD", ["B", "C", "D", "E", "H", "L", "(HL)", "A"], 0x06, 1, 8);
 		Platform.AddInstruction("LD", { addressingMode: "SP,HL", opCode: [0xF9] });
 		this.AddSerialsAddMode("LD", ["BC", "DE", "HL", "SP"], 0x01, 2, 0x10)
+
+		Platform.AddInstruction("LD", { addressingMode: "([exp]),HL", opCode: [0x22] });
+		Platform.AddInstruction("LD", { addressingMode: "([exp]),A", opCode: [0x32] });
 
 		// ********** ADD ADC SUB SBC AND XOR OR CP **********
 		this.StartToA("ADD", 0x80, 0xC6);
@@ -146,7 +150,20 @@ export class AsmZ80_GB implements IAsmPlatform {
 		}
 
 		// ********** DD FD **********
-
+		this.AddDDAndFD("ADD", "IX,BC", 0x09, 0);			// 0x09
+		this.AddDDAndFD("ADD", "IX,DE", 0x19, 0);			// 0x19
+		this.AddDDAndFD("LD", "IX,[exp]", 0x20, 2);			// 0x20
+		this.AddDDAndFD("LD", "([exp]),IX", 0x21, 2);		// 0x21
+		this.AddDDAndFD("INC", "IX", 0x22, 0);
+		this.AddDDAndFD("INC", "IXh", 0x23, 0);
+		this.AddDDAndFD("DEC", "IXh", 0x24, 0);
+		this.AddDDAndFD("LD", "IXh,[exp]", 0x24, 1);
+		this.AddDDAndFD("ADD", "IX,IX", 0x28, 0);
+		this.AddDDAndFD("LD", "IX,([exp])", 0x29, 2);
+		this.AddDDAndFD("DEC", "IX", 0x2A, 0);
+		this.AddDDAndFD("INC", "IXI", 0x2B, 0);
+		this.AddDDAndFD("DEC", "IXI", 0x2C, 0);
+		this.AddDDAndFD("LD", "IXI,[exp]", 0x2D, 0);
 	}
 
 	private StartToA(ins: string, start: number, last: number) {
@@ -160,10 +177,10 @@ export class AsmZ80_GB implements IAsmPlatform {
 		}
 	}
 
-	private AddSerialsAddMode(ins: string, addrs: string[], start: number, index: number, offset: number) {
+	private AddSerialsAddMode(ins: string, addrs: string[], start: number, addrLength: number, offset: number) {
 		for (let i = 0; i < addrs.length; i++) {
 			const temp: number[] = [];
-			temp[index] = start;
+			temp[addrLength] = start;
 			Platform.AddInstruction(ins, { addressingMode: addrs[i], opCode: temp });
 			start += offset;
 		}
@@ -188,5 +205,16 @@ export class AsmZ80_GB implements IAsmPlatform {
 		line.lineResult.SetResult(line.addressMode.opCode[0]!, 0, 1);
 		line.lineResult.SetResult(temp & 0xFF, 1, 1);
 		line.lineType = LineType.Finished;
+	}
+
+	private AddDDAndFD(ins: string, addr: string, opCodeLow: number, addrLength: number) {
+		let temp: number[] = [];
+		temp[addrLength] = 0xDD + (opCodeLow << 8);
+		Platform.AddInstruction(ins, { addressingMode: addr, opCode: temp, });
+		addr = addr.replace(/IX/g, "IY");
+
+		temp = [];
+		temp[addrLength] = 0xFD + (opCodeLow << 8);
+		Platform.AddInstruction(ins, { addressingMode: addr, opCode: temp, });
 	}
 }
