@@ -6,9 +6,9 @@ import { Localization } from "../I18n/Localization";
 import { IntellisenseProvider } from "../LanguageHelper/IntellisenseProvider";
 import { Asm6502 } from "./Asm6502";
 import { Asm65C816 } from "./Asm65C816";
-import { AsmSM83_GBC } from "./AsmSM83-GBC";
+import { AsmSM83_GBC } from "./AsmSM83-GB";
 import { AsmSPC700 } from "./AsmSPC700";
-import { AsmZ80_GB } from "./AsmZ80-GB";
+import { AsmZ80_GB } from "./AsmZ80-GBA";
 import { IAsmPlatform } from "./IAsmPlatform";
 
 export interface IAddressingMode {
@@ -29,7 +29,11 @@ export interface AddInstructionOption {
 	spProcess?: (option: CompileOption) => void;
 	/**寻址模式，可用正则表达式 或例如：([exp]),Y */
 	addressingMode?: string,
-	/**操作码，后续寻址模式长度为 index，例如 LDA #nn，寻址长度为 1byte，所以 0xA9 的下标为1 */
+	/**
+	 * 操作码，后续寻址模式长度为 index，例如 LDA #nn，寻址长度为 1byte，所以 0xA9 的下标为1
+	 * 
+	 * 如果操作码是多个字节，请使用先低位后高位的数值进行输入，否则输出结果会相反
+	 */
 	opCode: Array<number | undefined>;
 	/**操作码长度，不输入则系统自动判断 */
 	opCodeLength?: Array<number | undefined>;
@@ -59,81 +63,20 @@ export class Platform {
 			case "65c816":
 				constructor = Asm65C816;
 				break;
-			case "z80-gb":
+			case "z80-gba":
 				constructor = AsmZ80_GB;
 				break;
-			case "SM83-gbc":
+			case "SM83-gb":
 				constructor = AsmSM83_GBC;
 				break;
 			default:
-				let errorMsg = Localization.GetMessage("Unsupport platform {0}", platform);
+				const errorMsg = Localization.GetMessage("Unsupport platform {0}", platform);
 				throw new Error(errorMsg);
 		}
 		Platform.asmPlatform = new constructor();
 		IntellisenseProvider.UpdateInstruction();
 	}
 	//#endregion 切换平台
-
-	//#region 添加基础指令
-	/**
-	 * 添加基础指令
-	 * @param operation 汇编指令，例如：LDA
-	 * @param option 添加寻址方式选项
-	 */
-	static AddInstructionBase(operation: string, option: AddInstructionOption) {
-		operation = operation.toUpperCase();
-		let index = Platform.instructions.get(operation);
-		if (!index) {
-			index = [];
-			Platform.instructions.set(operation, index);
-		}
-
-		let type: IAddressingMode = { addressingMode: option.addressingMode, addressType: [] as string[], opCode: [], opCodeLength: [] };
-		if (option.addressingMode) {
-			let match;
-			let start = 0, temp: string, stringMatch: string[] = [], findExp = false;
-			const regex = /\[exp\]/g;
-
-			while (match = regex.exec(option.addressingMode)) {
-				temp = option.addressingMode.substring(start, match.index).trim();
-				if (temp)
-					stringMatch.push(Utils.TransformRegex(temp));
-
-				stringMatch.push("");
-				start = match.index + match[0].length;
-				findExp = true;
-			}
-
-			temp = option.addressingMode.substring(start).trim();
-			if (temp)
-				stringMatch.push(Utils.TransformRegex(temp));
-
-			if (stringMatch.length !== 1 || !findExp)
-				stringMatch[0] = "^" + stringMatch[0];
-
-			stringMatch[stringMatch.length - 1] = stringMatch[stringMatch.length - 1] + "$";
-
-			type.addressType = stringMatch;
-		}
-
-		type.opCode = option.opCode;
-		type.spProcess = option.spProcess;
-
-		if (!option.opCodeLength) {
-			for (let i = 0; i < type.opCode.length; ++i) {
-				if (type.opCode[i] === undefined)
-					continue;
-
-				type.opCodeLength[i] = Utils.GetNumberByteLength(type.opCode[i]!);
-			}
-		} else {
-			type.opCodeLength = option.opCodeLength;
-		}
-
-
-		index.push(type);
-	}
-	//#endregion 添加基础指令
 
 	//#region 添加额外定长汇编指令
 	/**
@@ -144,16 +87,16 @@ export class Platform {
 	 */
 	static AddInstruction(instruction: string, addressingMode: AddInstructionOption) {
 		Platform.AddInstructionBase(instruction, addressingMode);
-		let count = addressingMode.opCode.filter(v => v !== undefined);
+		const count = addressingMode.opCode.filter(v => v !== undefined);
 		if (count.length < 2)
 			return;
 
 		for (let j = 1; j < addressingMode.opCode.length; j++) {
-			let opcode = addressingMode.opCode[j];
+			const opcode = addressingMode.opCode[j];
 			if (opcode === undefined)
 				continue;
 
-			let tempCodes = [];
+			const tempCodes = [];
 			tempCodes.length = j + 1;
 			tempCodes[j] = opcode;
 			Platform.AddInstructionBase(`${instruction}.${j}`, { addressingMode: addressingMode.addressingMode, opCode: tempCodes });
@@ -282,5 +225,67 @@ export class Platform {
 	//#endregion 判断输入内容是否在忽略内容内
 
 	/***** private *****/
+
+	//#region 添加基础指令
+	/**
+	 * 添加基础指令
+	 * @param operation 汇编指令，例如：LDA
+	 * @param option 添加寻址方式选项
+	 */
+	private static AddInstructionBase(operation: string, option: AddInstructionOption) {
+		operation = operation.toUpperCase();
+		let index = Platform.instructions.get(operation);
+		if (!index) {
+			index = [];
+			Platform.instructions.set(operation, index);
+		}
+
+		const type: IAddressingMode = { addressingMode: option.addressingMode, addressType: [] as string[], opCode: [], opCodeLength: [] };
+		if (option.addressingMode) {
+			let match;
+			let start = 0, temp: string, stringMatch: string[] = [], findExp = false;
+			const regex = /\[exp\]/g;
+
+			while (match = regex.exec(option.addressingMode)) {
+				temp = option.addressingMode.substring(start, match.index).trim();
+				if (temp)
+					stringMatch.push(Utils.TransformRegex(temp));
+
+				stringMatch.push("");
+				start = match.index + match[0].length;
+				findExp = true;
+			}
+
+			temp = option.addressingMode.substring(start).trim();
+			if (temp)
+				stringMatch.push(Utils.TransformRegex(temp));
+
+			if (stringMatch.length !== 1 || !findExp)
+				stringMatch[0] = "^" + stringMatch[0];
+
+			stringMatch[stringMatch.length - 1] = stringMatch[stringMatch.length - 1] + "$";
+
+			type.addressType = stringMatch;
+		}
+
+		type.opCode = option.opCode;
+		type.spProcess = option.spProcess;
+
+		if (!option.opCodeLength) {
+			for (let i = 0; i < type.opCode.length; ++i) {
+				if (type.opCode[i] === undefined)
+					continue;
+
+				type.opCodeLength[i] = Utils.GetNumberByteLength(type.opCode[i]!);
+			}
+		} else {
+			type.opCodeLength = option.opCodeLength;
+		}
+
+
+		index.push(type);
+	}
+	//#endregion 添加基础指令
+
 
 }

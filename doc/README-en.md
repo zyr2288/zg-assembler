@@ -2,7 +2,7 @@
 
 [简体中文](../README.md)
 
-A simple assembler for 6502 / 65c816 / z80-gb / SM83-gbc / SPC700
+A simple assembler for 6502 / 65c816 / z80-gba / SM83-gb / SPC700
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](../LICENSE.md)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/zyr2288/zg-assembler)

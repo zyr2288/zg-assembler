@@ -2,7 +2,7 @@
 
 [English](./doc/README-en.md)
 
-一个 VSCode 的编译器插件，可以编译 6502 / 65c816 / z80-gb / SM83-gbc / SPC700
+一个 VSCode 的编译器插件，可以编译 6502 / 65c816 / z80-gba / SM83-gb / SPC700
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/zyr2288/zg-assembler)

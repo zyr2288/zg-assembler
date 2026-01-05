@@ -9,7 +9,7 @@ import { IAsmPlatform } from "./IAsmPlatform";
 import { AddInstructionOption, Platform } from "./Platform";
 
 /**
- * SM83-GBC汇编
+ * SM83-GB汇编
  * 
  * https://gbdev.io/pandocs/CPU_Registers_and_Flags.html
  */

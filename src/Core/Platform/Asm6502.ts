@@ -15,14 +15,15 @@ export class Asm6502 implements IAsmPlatform {
 	}
 
 	private Initialize() {
-		let instructions = [
+		let instructions, opCodes, addressingMode;
+		instructions = [
 			"TAY", "TAX", "TSX", "TYA", "TXA", "TXS",
 			"PHA", "PHP", "PLA", "PLP",
 			"INX", "INY", "DEX", "DEY",
 			"RTI", "RTS", "BRK", "NOP",
 			"CLC", "CLI", "CLD", "CLV", "SEC", "SEI", "SED"
 		];
-		const opCode1 = [
+		opCodes = [
 			0xA8, 0xAA, 0xBA, 0x98, 0x8A, 0x9A,
 			0x48, 0x08, 0x68, 0x28,
 			0xE8, 0xC8, 0xCA, 0x88,
@@ -31,7 +32,7 @@ export class Asm6502 implements IAsmPlatform {
 		];
 
 		for (let i = 0; i < instructions.length; ++i)
-			Platform.AddInstruction(instructions[i], { opCode: [opCode1[i]] });
+			Platform.AddInstruction(instructions[i], { opCode: [opCodes[i]] });
 
 		instructions = [
 			"LDA", "LDX", "LDY", "STA", "STX", "STY",
@@ -40,11 +41,11 @@ export class Asm6502 implements IAsmPlatform {
 			"INC", "DEC"
 		];
 
-		let addressingMode = [
+		addressingMode = [
 			"#[exp]", "([exp],X)", "([exp]),Y", "[exp],X", "[exp],Y", "[exp]"
 		];
 
-		const opCode2 = [
+		opCodes = [
 			//"#[exp]",    "([exp],X)",   "([exp]),Y",   "[exp],X",      "[exp],Y",      "[exp]"                
 			[[0xA9], [0xA1], [0xB1], [0xB5, 0xBD], [-1, 0xB9], [0xA5, 0xAD]],             //LDA
 			[[0xA2], null, null, null, [0xB6, 0xBE], [0xA6, 0xAE]],             //LDX
@@ -69,11 +70,11 @@ export class Asm6502 implements IAsmPlatform {
 			const instruction = instructions[i];
 			for (let j = 0; j < addressingMode.length; ++j) {
 				const adMode = addressingMode[j];
-				const opCode = opCode2[i][j];
+				const opCode = opCodes[i][j];
 				if (opCode === null)
 					continue;
 
-				let code: number[] = [];
+				const code: number[] = [];
 				for (let k = 0; k < opCode.length; ++k) {
 					if (opCode[k] === -1)
 						continue;
@@ -86,7 +87,7 @@ export class Asm6502 implements IAsmPlatform {
 		}
 
 		instructions = ["ASL", "LSR", "ROL", "ROR"];
-		const opCode3 = [
+		opCodes = [
 			//Empty  [exp],X         [exp]
 			[[0x0A], [, 0x16, 0x1E], [, 0x06, 0x0E]],
 			[[0x4A], [, 0x56, 0x5E], [, 0x46, 0x4E]],
@@ -94,10 +95,10 @@ export class Asm6502 implements IAsmPlatform {
 			[[0x6A], [, 0x76, 0x7E], [, 0x66, 0x6E]],
 		]
 		for (let i = 0; i < instructions.length; ++i) {
-			Platform.AddInstruction(instructions[i], { opCode: opCode3[i][0] });
-			Platform.AddInstruction(instructions[i], { addressingMode: "A", opCode: opCode3[i][0] });
-			Platform.AddInstruction(instructions[i], { addressingMode: "[exp],X", opCode: opCode3[i][1] });
-			Platform.AddInstruction(instructions[i], { addressingMode: "[exp]", opCode: opCode3[i][2] });
+			Platform.AddInstruction(instructions[i], { opCode: opCodes[i][0] });
+			Platform.AddInstruction(instructions[i], { addressingMode: "A", opCode: opCodes[i][0] });
+			Platform.AddInstruction(instructions[i], { addressingMode: "[exp],X", opCode: opCodes[i][1] });
+			Platform.AddInstruction(instructions[i], { addressingMode: "[exp]", opCode: opCodes[i][2] });
 		}
 
 		Platform.AddInstruction("JMP", { addressingMode: "([exp])", opCode: [, , 0x6C] });
@@ -105,9 +106,9 @@ export class Asm6502 implements IAsmPlatform {
 		Platform.AddInstruction("JSR", { addressingMode: "[exp]", opCode: [, , 0x20] });
 
 		instructions = ["BPL", "BMI", "BVC", "BVS", "BCC", "BCS", "BNE", "BEQ"];
-		const opcode4 = [0x10, 0x30, 0x50, 0x70, 0x90, 0xB0, 0xD0, 0xF0];
+		opCodes = [0x10, 0x30, 0x50, 0x70, 0x90, 0xB0, 0xD0, 0xF0];
 		for (let i = 0; i < instructions.length; ++i)
-			Platform.AddInstruction(instructions[i], { addressingMode: "[exp]", opCode: [, opcode4[i]], spProcess: this.ConditionBranch });
+			Platform.AddInstruction(instructions[i], { addressingMode: "[exp]", opCode: [, opCodes[i]], spProcess: this.ConditionBranch });
 
 	}
 

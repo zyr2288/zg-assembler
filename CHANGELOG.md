@@ -1,12 +1,17 @@
 # Change Log
 
+### 2025-01-05 v0.3.66
+
+-   更正部分平台名称 `z80-gba` `SM83-gb`
+-   `z80-gba` 汇编指令补充
+
+<details>
+<summary>之前版本更新记录</summary>
+
 ### 2025-12-22 v0.3.65
 
 -   修复 `z80-gb` 汇编的部分错误
 -   添加功能输出单文件的时候，例如：`"outputSingleFile": "output-[name].bin"`，可使用 `[name]` 替换成所编译的本文件的文件名
-
-<details>
-<summary>之前版本更新记录</summary>
 
 ### 2025-11-23 v0.3.61
 

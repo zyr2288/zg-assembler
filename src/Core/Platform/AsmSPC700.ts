@@ -16,290 +16,290 @@ export class AsmSPC700 implements IAsmPlatform {
 	}
 
 	private Initialize() {
-		this.Add("ADC", { addressingMode: "(X),(Y)", opCode: [0x99] });
-		this.Add("ADC", { addressingMode: "(X)", opCode: [0x86] });
-		this.Add("ADC", { addressingMode: "[[exp],X]", opCode: [, 0x87] });
-		this.Add("ADC", { addressingMode: "[[exp]],Y", opCode: [, 0x97] });
-		this.Add("ADC", { addressingMode: "[exp],X", opCode: [, 0x94, 0x95] });
-		this.Add("ADC", { addressingMode: "[exp],Y", opCode: [, , 0x96] });
-		this.Add("ADC", { addressingMode: "[exp],#[exp]", opCode: [, , 0x98], spProcess: this.TwoOperands });
-		this.Add("ADC", { addressingMode: "[exp],[exp]", opCode: [, , 0x89], spProcess: this.TwoOperands });
-		this.Add("ADC", { addressingMode: "#[exp]", opCode: [, 0x88] });
-		this.Add("ADC", { addressingMode: "[exp]", opCode: [, 0x84, 0x85] });
+		Platform.AddInstruction("ADC", { addressingMode: "(X),(Y)", opCode: [0x99] });
+		Platform.AddInstruction("ADC", { addressingMode: "(X)", opCode: [0x86] });
+		Platform.AddInstruction("ADC", { addressingMode: "[[exp],X]", opCode: [, 0x87] });
+		Platform.AddInstruction("ADC", { addressingMode: "[[exp]],Y", opCode: [, 0x97] });
+		Platform.AddInstruction("ADC", { addressingMode: "[exp],X", opCode: [, 0x94, 0x95] });
+		Platform.AddInstruction("ADC", { addressingMode: "[exp],Y", opCode: [, , 0x96] });
+		Platform.AddInstruction("ADC", { addressingMode: "[exp],#[exp]", opCode: [, , 0x98], spProcess: this.TwoOperands });
+		Platform.AddInstruction("ADC", { addressingMode: "[exp],[exp]", opCode: [, , 0x89], spProcess: this.TwoOperands });
+		Platform.AddInstruction("ADC", { addressingMode: "#[exp]", opCode: [, 0x88] });
+		Platform.AddInstruction("ADC", { addressingMode: "[exp]", opCode: [, 0x84, 0x85] });
 
-		this.Add("ADW", { addressingMode: "[exp]", opCode: [, 0x7A] });
+		Platform.AddInstruction("ADW", { addressingMode: "[exp]", opCode: [, 0x7A] });
 
-		this.Add("AND", { addressingMode: "(X),(Y)", opCode: [0x39] });
-		this.Add("AND", { addressingMode: "(X)", opCode: [0x26] });
-		this.Add("AND", { addressingMode: "[[exp],X]", opCode: [, 0x27] });
-		this.Add("AND", { addressingMode: "[[exp]],Y", opCode: [, 0x37] });
-		this.Add("AND", { addressingMode: "[exp],X", opCode: [, 0x34, 0x35] });
-		this.Add("AND", { addressingMode: "[exp],Y", opCode: [, , 0x36] });
-		this.Add("AND", { addressingMode: "[exp],#[exp]", opCode: [, , 0x38], spProcess: this.TwoOperands });
-		this.Add("AND", { addressingMode: "[exp],[exp]", opCode: [, , 0x29], spProcess: this.TwoOperands });
-		this.Add("AND", { addressingMode: "#[exp]", opCode: [, 0x28] });
-		this.Add("AND", { addressingMode: "[exp]", opCode: [, 0x24, 25] });
+		Platform.AddInstruction("AND", { addressingMode: "(X),(Y)", opCode: [0x39] });
+		Platform.AddInstruction("AND", { addressingMode: "(X)", opCode: [0x26] });
+		Platform.AddInstruction("AND", { addressingMode: "[[exp],X]", opCode: [, 0x27] });
+		Platform.AddInstruction("AND", { addressingMode: "[[exp]],Y", opCode: [, 0x37] });
+		Platform.AddInstruction("AND", { addressingMode: "[exp],X", opCode: [, 0x34, 0x35] });
+		Platform.AddInstruction("AND", { addressingMode: "[exp],Y", opCode: [, , 0x36] });
+		Platform.AddInstruction("AND", { addressingMode: "[exp],#[exp]", opCode: [, , 0x38], spProcess: this.TwoOperands });
+		Platform.AddInstruction("AND", { addressingMode: "[exp],[exp]", opCode: [, , 0x29], spProcess: this.TwoOperands });
+		Platform.AddInstruction("AND", { addressingMode: "#[exp]", opCode: [, 0x28] });
+		Platform.AddInstruction("AND", { addressingMode: "[exp]", opCode: [, 0x24, 25] });
 
 
-		this.Add("ANDC", { addressingMode: "/[exp].[exp]", opCode: [, , 0x6A], spProcess: this.Bit_15_3 });
-		this.Add("ANDC", { addressingMode: "[exp].[exp]", opCode: [, , 0x4A], spProcess: this.Bit_15_3 });
+		Platform.AddInstruction("ANDC", { addressingMode: "/[exp].[exp]", opCode: [, , 0x6A], spProcess: this.Bit_15_3 });
+		Platform.AddInstruction("ANDC", { addressingMode: "[exp].[exp]", opCode: [, , 0x4A], spProcess: this.Bit_15_3 });
 
-		this.Add("ASL", { addressingMode: "A", opCode: [0x1C] });
-		this.Add("ASL", { addressingMode: "[exp],X", opCode: [, 0x1B] });
-		this.Add("ASL", { addressingMode: "[exp]", opCode: [, 0x0B, 0x0C] });
-		this.Add("ASL", { addressingMode: "", opCode: [0x1C] });
+		Platform.AddInstruction("ASL", { addressingMode: "A", opCode: [0x1C] });
+		Platform.AddInstruction("ASL", { addressingMode: "[exp],X", opCode: [, 0x1B] });
+		Platform.AddInstruction("ASL", { addressingMode: "[exp]", opCode: [, 0x0B, 0x0C] });
+		Platform.AddInstruction("ASL", { opCode: [0x1C] });
 
-		this.Add("BBC", { addressingMode: "[exp].0,[exp]", opCode: [, , 0x13], spProcess: this.Branch2 });
-		this.Add("BBC", { addressingMode: "[exp].1,[exp]", opCode: [, , 0x33], spProcess: this.Branch2 });
-		this.Add("BBC", { addressingMode: "[exp].2,[exp]", opCode: [, , 0x53], spProcess: this.Branch2 });
-		this.Add("BBC", { addressingMode: "[exp].3,[exp]", opCode: [, , 0x73], spProcess: this.Branch2 });
-		this.Add("BBC", { addressingMode: "[exp].4,[exp]", opCode: [, , 0x93], spProcess: this.Branch2 });
-		this.Add("BBC", { addressingMode: "[exp].5,[exp]", opCode: [, , 0xB3], spProcess: this.Branch2 });
-		this.Add("BBC", { addressingMode: "[exp].6,[exp]", opCode: [, , 0xD3], spProcess: this.Branch2 });
-		this.Add("BBC", { addressingMode: "[exp].7,[exp]", opCode: [, , 0xF3], spProcess: this.Branch2 });
+		Platform.AddInstruction("BBC", { addressingMode: "[exp].0,[exp]", opCode: [, , 0x13], spProcess: this.Branch2 });
+		Platform.AddInstruction("BBC", { addressingMode: "[exp].1,[exp]", opCode: [, , 0x33], spProcess: this.Branch2 });
+		Platform.AddInstruction("BBC", { addressingMode: "[exp].2,[exp]", opCode: [, , 0x53], spProcess: this.Branch2 });
+		Platform.AddInstruction("BBC", { addressingMode: "[exp].3,[exp]", opCode: [, , 0x73], spProcess: this.Branch2 });
+		Platform.AddInstruction("BBC", { addressingMode: "[exp].4,[exp]", opCode: [, , 0x93], spProcess: this.Branch2 });
+		Platform.AddInstruction("BBC", { addressingMode: "[exp].5,[exp]", opCode: [, , 0xB3], spProcess: this.Branch2 });
+		Platform.AddInstruction("BBC", { addressingMode: "[exp].6,[exp]", opCode: [, , 0xD3], spProcess: this.Branch2 });
+		Platform.AddInstruction("BBC", { addressingMode: "[exp].7,[exp]", opCode: [, , 0xF3], spProcess: this.Branch2 });
 
-		this.Add("BBS", { addressingMode: "[exp].0,[exp]", opCode: [, , 0x03], spProcess: this.Branch2 });
-		this.Add("BBS", { addressingMode: "[exp].1,[exp]", opCode: [, , 0x23], spProcess: this.Branch2 });
-		this.Add("BBS", { addressingMode: "[exp].2,[exp]", opCode: [, , 0x43], spProcess: this.Branch2 });
-		this.Add("BBS", { addressingMode: "[exp].3,[exp]", opCode: [, , 0x63], spProcess: this.Branch2 });
-		this.Add("BBS", { addressingMode: "[exp].4,[exp]", opCode: [, , 0x83], spProcess: this.Branch2 });
-		this.Add("BBS", { addressingMode: "[exp].5,[exp]", opCode: [, , 0xA3], spProcess: this.Branch2 });
-		this.Add("BBS", { addressingMode: "[exp].6,[exp]", opCode: [, , 0xC3], spProcess: this.Branch2 });
-		this.Add("BBS", { addressingMode: "[exp].7,[exp]", opCode: [, , 0xE3], spProcess: this.Branch2 });
+		Platform.AddInstruction("BBS", { addressingMode: "[exp].0,[exp]", opCode: [, , 0x03], spProcess: this.Branch2 });
+		Platform.AddInstruction("BBS", { addressingMode: "[exp].1,[exp]", opCode: [, , 0x23], spProcess: this.Branch2 });
+		Platform.AddInstruction("BBS", { addressingMode: "[exp].2,[exp]", opCode: [, , 0x43], spProcess: this.Branch2 });
+		Platform.AddInstruction("BBS", { addressingMode: "[exp].3,[exp]", opCode: [, , 0x63], spProcess: this.Branch2 });
+		Platform.AddInstruction("BBS", { addressingMode: "[exp].4,[exp]", opCode: [, , 0x83], spProcess: this.Branch2 });
+		Platform.AddInstruction("BBS", { addressingMode: "[exp].5,[exp]", opCode: [, , 0xA3], spProcess: this.Branch2 });
+		Platform.AddInstruction("BBS", { addressingMode: "[exp].6,[exp]", opCode: [, , 0xC3], spProcess: this.Branch2 });
+		Platform.AddInstruction("BBS", { addressingMode: "[exp].7,[exp]", opCode: [, , 0xE3], spProcess: this.Branch2 });
 
-		this.Add("BCC", { addressingMode: "[exp]", opCode: [, 0x90], spProcess: this.Branch1 });
-		this.Add("BCS", { addressingMode: "[exp]", opCode: [, 0xB0], spProcess: this.Branch1 });
-		this.Add("BEQ", { addressingMode: "[exp]", opCode: [, 0xF0], spProcess: this.Branch1 });
-		this.Add("BMI", { addressingMode: "[exp]", opCode: [, 0x30], spProcess: this.Branch1 });
-		this.Add("BNE", { addressingMode: "[exp]", opCode: [, 0xD0], spProcess: this.Branch1 });
-		this.Add("BPL", { addressingMode: "[exp]", opCode: [, 0x10], spProcess: this.Branch1 });
-		this.Add("BVC", { addressingMode: "[exp]", opCode: [, 0x50], spProcess: this.Branch1 });
-		this.Add("BVS", { addressingMode: "[exp]", opCode: [, 0x70], spProcess: this.Branch1 });
-		this.Add("BRA", { addressingMode: "[exp]", opCode: [, 0x2F], spProcess: this.Branch1 });
+		Platform.AddInstruction("BCC", { addressingMode: "[exp]", opCode: [, 0x90], spProcess: this.Branch1 });
+		Platform.AddInstruction("BCS", { addressingMode: "[exp]", opCode: [, 0xB0], spProcess: this.Branch1 });
+		Platform.AddInstruction("BEQ", { addressingMode: "[exp]", opCode: [, 0xF0], spProcess: this.Branch1 });
+		Platform.AddInstruction("BMI", { addressingMode: "[exp]", opCode: [, 0x30], spProcess: this.Branch1 });
+		Platform.AddInstruction("BNE", { addressingMode: "[exp]", opCode: [, 0xD0], spProcess: this.Branch1 });
+		Platform.AddInstruction("BPL", { addressingMode: "[exp]", opCode: [, 0x10], spProcess: this.Branch1 });
+		Platform.AddInstruction("BVC", { addressingMode: "[exp]", opCode: [, 0x50], spProcess: this.Branch1 });
+		Platform.AddInstruction("BVS", { addressingMode: "[exp]", opCode: [, 0x70], spProcess: this.Branch1 });
+		Platform.AddInstruction("BRA", { addressingMode: "[exp]", opCode: [, 0x2F], spProcess: this.Branch1 });
 
-		this.Add("CBNE", { addressingMode: "[exp],X,[exp]", opCode: [, , 0xDE], spProcess: this.Branch2 });
-		this.Add("CBNE", { addressingMode: "[exp],[exp]", opCode: [, , 0x2E], spProcess: this.Branch2 });
+		Platform.AddInstruction("CBNE", { addressingMode: "[exp],X,[exp]", opCode: [, , 0xDE], spProcess: this.Branch2 });
+		Platform.AddInstruction("CBNE", { addressingMode: "[exp],[exp]", opCode: [, , 0x2E], spProcess: this.Branch2 });
 
-		this.Add("JMP", { addressingMode: "[[exp],X]", opCode: [, , 0x1F] });
-		this.Add("JMP", { addressingMode: "[exp]", opCode: [, , 0x5F] });
-		this.Add("JSP", { addressingMode: "[exp]", opCode: [, 0x4F], spProcess: this.JSP });
-		this.Add("JSR", { addressingMode: "[exp]", opCode: [, , 0x3F] });
+		Platform.AddInstruction("JMP", { addressingMode: "[[exp],X]", opCode: [, , 0x1F] });
+		Platform.AddInstruction("JMP", { addressingMode: "[exp]", opCode: [, , 0x5F] });
+		Platform.AddInstruction("JSP", { addressingMode: "[exp]", opCode: [, 0x4F], spProcess: this.JSP });
+		Platform.AddInstruction("JSR", { addressingMode: "[exp]", opCode: [, , 0x3F] });
 
-		this.Add("CLR1", { addressingMode: "[exp].0", opCode: [, 0x12] });
-		this.Add("CLR1", { addressingMode: "[exp].1", opCode: [, 0x32] });
-		this.Add("CLR1", { addressingMode: "[exp].2", opCode: [, 0x52] });
-		this.Add("CLR1", { addressingMode: "[exp].3", opCode: [, 0x72] });
-		this.Add("CLR1", { addressingMode: "[exp].4", opCode: [, 0x92] });
-		this.Add("CLR1", { addressingMode: "[exp].5", opCode: [, 0xB2] });
-		this.Add("CLR1", { addressingMode: "[exp].6", opCode: [, 0xD2] });
-		this.Add("CLR1", { addressingMode: "[exp].7", opCode: [, 0xF2] });
-		this.Add("CLR1", { addressingMode: "[exp]", opCode: [, , 0x4E] });
+		Platform.AddInstruction("CLR1", { addressingMode: "[exp].0", opCode: [, 0x12] });
+		Platform.AddInstruction("CLR1", { addressingMode: "[exp].1", opCode: [, 0x32] });
+		Platform.AddInstruction("CLR1", { addressingMode: "[exp].2", opCode: [, 0x52] });
+		Platform.AddInstruction("CLR1", { addressingMode: "[exp].3", opCode: [, 0x72] });
+		Platform.AddInstruction("CLR1", { addressingMode: "[exp].4", opCode: [, 0x92] });
+		Platform.AddInstruction("CLR1", { addressingMode: "[exp].5", opCode: [, 0xB2] });
+		Platform.AddInstruction("CLR1", { addressingMode: "[exp].6", opCode: [, 0xD2] });
+		Platform.AddInstruction("CLR1", { addressingMode: "[exp].7", opCode: [, 0xF2] });
+		Platform.AddInstruction("CLR1", { addressingMode: "[exp]", opCode: [, , 0x4E] });
 
-		this.Add("SET1", { addressingMode: "[exp].0", opCode: [, 0x02] });
-		this.Add("SET1", { addressingMode: "[exp].1", opCode: [, 0x22] });
-		this.Add("SET1", { addressingMode: "[exp].2", opCode: [, 0x42] });
-		this.Add("SET1", { addressingMode: "[exp].3", opCode: [, 0x62] });
-		this.Add("SET1", { addressingMode: "[exp].4", opCode: [, 0x82] });
-		this.Add("SET1", { addressingMode: "[exp].5", opCode: [, 0xA2] });
-		this.Add("SET1", { addressingMode: "[exp].6", opCode: [, 0xC2] });
-		this.Add("SET1", { addressingMode: "[exp].7", opCode: [, 0xE2] });
-		this.Add("SET1", { addressingMode: "[exp]", opCode: [, , 0x0E] });
+		Platform.AddInstruction("SET1", { addressingMode: "[exp].0", opCode: [, 0x02] });
+		Platform.AddInstruction("SET1", { addressingMode: "[exp].1", opCode: [, 0x22] });
+		Platform.AddInstruction("SET1", { addressingMode: "[exp].2", opCode: [, 0x42] });
+		Platform.AddInstruction("SET1", { addressingMode: "[exp].3", opCode: [, 0x62] });
+		Platform.AddInstruction("SET1", { addressingMode: "[exp].4", opCode: [, 0x82] });
+		Platform.AddInstruction("SET1", { addressingMode: "[exp].5", opCode: [, 0xA2] });
+		Platform.AddInstruction("SET1", { addressingMode: "[exp].6", opCode: [, 0xC2] });
+		Platform.AddInstruction("SET1", { addressingMode: "[exp].7", opCode: [, 0xE2] });
+		Platform.AddInstruction("SET1", { addressingMode: "[exp]", opCode: [, , 0x0E] });
 
-		this.Add("CMP", { addressingMode: "(X),(Y)", opCode: [0x79] });
-		this.Add("CMP", { addressingMode: "(X)", opCode: [0x66] });
-		this.Add("CMP", { addressingMode: "[[exp],X]", opCode: [, 0x67] });
-		this.Add("CMP", { addressingMode: "[[exp]],Y", opCode: [, 0x77] });
-		this.Add("CMP", { addressingMode: "[exp],X", opCode: [, 0x74, 0x75] });
-		this.Add("CMP", { addressingMode: "[exp],Y", opCode: [, , 0x76] });
-		this.Add("CMP", { addressingMode: "[exp],#[exp]", opCode: [, , 0x78], spProcess: this.TwoOperands });
-		this.Add("CMP", { addressingMode: "[exp],[exp]", opCode: [, , 0x69], spProcess: this.TwoOperands });
-		this.Add("CMP", { addressingMode: "#[exp]", opCode: [, 0x68] });
-		this.Add("CMP", { addressingMode: "[exp]", opCode: [, 0x64, 0x65] });
+		Platform.AddInstruction("CMP", { addressingMode: "(X),(Y)", opCode: [0x79] });
+		Platform.AddInstruction("CMP", { addressingMode: "(X)", opCode: [0x66] });
+		Platform.AddInstruction("CMP", { addressingMode: "[[exp],X]", opCode: [, 0x67] });
+		Platform.AddInstruction("CMP", { addressingMode: "[[exp]],Y", opCode: [, 0x77] });
+		Platform.AddInstruction("CMP", { addressingMode: "[exp],X", opCode: [, 0x74, 0x75] });
+		Platform.AddInstruction("CMP", { addressingMode: "[exp],Y", opCode: [, , 0x76] });
+		Platform.AddInstruction("CMP", { addressingMode: "[exp],#[exp]", opCode: [, , 0x78], spProcess: this.TwoOperands });
+		Platform.AddInstruction("CMP", { addressingMode: "[exp],[exp]", opCode: [, , 0x69], spProcess: this.TwoOperands });
+		Platform.AddInstruction("CMP", { addressingMode: "#[exp]", opCode: [, 0x68] });
+		Platform.AddInstruction("CMP", { addressingMode: "[exp]", opCode: [, 0x64, 0x65] });
 
-		this.Add("CPW", { addressingMode: "[exp]", opCode: [, 0x5a] });
+		Platform.AddInstruction("CPW", { addressingMode: "[exp]", opCode: [, 0x5a] });
 
-		this.Add("CPX", { addressingMode: "#[exp]", opCode: [, 0xC8] });
-		this.Add("CPX", { addressingMode: "[exp]", opCode: [, 0x3e, 0x1E] });
+		Platform.AddInstruction("CPX", { addressingMode: "#[exp]", opCode: [, 0xC8] });
+		Platform.AddInstruction("CPX", { addressingMode: "[exp]", opCode: [, 0x3e, 0x1E] });
 
-		this.Add("CPY", { addressingMode: "#[exp]", opCode: [, 0xAD] });
-		this.Add("CPY", { addressingMode: "[exp]", opCode: [, 0x7E, 0x5E] });
+		Platform.AddInstruction("CPY", { addressingMode: "#[exp]", opCode: [, 0xAD] });
+		Platform.AddInstruction("CPY", { addressingMode: "[exp]", opCode: [, 0x7E, 0x5E] });
 
-		this.Add("DBNZ", { addressingMode: "Y,[exp]", opCode: [, 0xFE], spProcess: this.Branch1 });
-		this.Add("DBNZ", { addressingMode: "[exp],[exp]", opCode: [, , 0x6E], spProcess: this.Branch2 });
+		Platform.AddInstruction("DBNZ", { addressingMode: "Y,[exp]", opCode: [, 0xFE], spProcess: this.Branch1 });
+		Platform.AddInstruction("DBNZ", { addressingMode: "[exp],[exp]", opCode: [, , 0x6E], spProcess: this.Branch2 });
 
-		this.Add("DEC", { addressingMode: "A", opCode: [0x9C] });
-		this.Add("DEC", { addressingMode: "[exp],X", opCode: [, 0x9B] });
-		this.Add("DEC", { addressingMode: "[exp]", opCode: [, 0x8B, 0x8C] });
-		this.Add("DEC", { addressingMode: "", opCode: [0x9C] });
+		Platform.AddInstruction("DEC", { addressingMode: "A", opCode: [0x9C] });
+		Platform.AddInstruction("DEC", { addressingMode: "[exp],X", opCode: [, 0x9B] });
+		Platform.AddInstruction("DEC", { addressingMode: "[exp]", opCode: [, 0x8B, 0x8C] });
+		Platform.AddInstruction("DEC", { opCode: [0x9C] });
 
-		this.Add("DEW", { addressingMode: "[exp]", opCode: [, 0x1A] });
+		Platform.AddInstruction("DEW", { addressingMode: "[exp]", opCode: [, 0x1A] });
 
-		this.Add("EOR", { addressingMode: "(X),(Y)", opCode: [0x59] });
-		this.Add("EOR", { addressingMode: "(X)", opCode: [0x46] });
-		this.Add("EOR", { addressingMode: "[[exp],X]", opCode: [, 0x47] });
-		this.Add("EOR", { addressingMode: "[[exp]],Y", opCode: [, 0x57] });
-		this.Add("EOR", { addressingMode: "[exp],X", opCode: [, 0x54, 0x55] });
-		this.Add("EOR", { addressingMode: "[exp],Y", opCode: [, , 0x56] });
-		this.Add("EOR", { addressingMode: "[exp],#[exp]", opCode: [, , 0x58], spProcess: this.TwoOperands });
-		this.Add("EOR", { addressingMode: "[exp],[exp]", opCode: [, , 0x49], spProcess: this.TwoOperands });
-		this.Add("EOR", { addressingMode: "#[exp]", opCode: [, 0x48] });
-		this.Add("EOR", { addressingMode: "[exp]", opCode: [, 0x44, 0x45] });
+		Platform.AddInstruction("EOR", { addressingMode: "(X),(Y)", opCode: [0x59] });
+		Platform.AddInstruction("EOR", { addressingMode: "(X)", opCode: [0x46] });
+		Platform.AddInstruction("EOR", { addressingMode: "[[exp],X]", opCode: [, 0x47] });
+		Platform.AddInstruction("EOR", { addressingMode: "[[exp]],Y", opCode: [, 0x57] });
+		Platform.AddInstruction("EOR", { addressingMode: "[exp],X", opCode: [, 0x54, 0x55] });
+		Platform.AddInstruction("EOR", { addressingMode: "[exp],Y", opCode: [, , 0x56] });
+		Platform.AddInstruction("EOR", { addressingMode: "[exp],#[exp]", opCode: [, , 0x58], spProcess: this.TwoOperands });
+		Platform.AddInstruction("EOR", { addressingMode: "[exp],[exp]", opCode: [, , 0x49], spProcess: this.TwoOperands });
+		Platform.AddInstruction("EOR", { addressingMode: "#[exp]", opCode: [, 0x48] });
+		Platform.AddInstruction("EOR", { addressingMode: "[exp]", opCode: [, 0x44, 0x45] });
 
-		this.Add("EORC", { addressingMode: "[exp].[exp]", opCode: [, , 0x8A], spProcess: this.Bit_15_3 });
+		Platform.AddInstruction("EORC", { addressingMode: "[exp].[exp]", opCode: [, , 0x8A], spProcess: this.Bit_15_3 });
 
-		this.Add("INC", { addressingMode: "A", opCode: [0xBC] });
-		this.Add("INC", { addressingMode: "[exp],X", opCode: [, 0xBB] });
-		this.Add("INC", { addressingMode: "[exp]", opCode: [, 0xAB, 0xAC] });
-		this.Add("INC", { addressingMode: "", opCode: [0xBC] });
+		Platform.AddInstruction("INC", { addressingMode: "A", opCode: [0xBC] });
+		Platform.AddInstruction("INC", { addressingMode: "[exp],X", opCode: [, 0xBB] });
+		Platform.AddInstruction("INC", { addressingMode: "[exp]", opCode: [, 0xAB, 0xAC] });
+		Platform.AddInstruction("INC", { opCode: [0xBC] });
 
-		this.Add("INW", { addressingMode: "[exp]", opCode: [, 0x3A] });
+		Platform.AddInstruction("INW", { addressingMode: "[exp]", opCode: [, 0x3A] });
 
-		this.Add("LDA", { addressingMode: "(X)+", opCode: [0xBF] });
-		this.Add("LDA", { addressingMode: "(X)", opCode: [0xE6] });
-		this.Add("LDA", { addressingMode: "[[exp],X]", opCode: [, 0xE7] });
-		this.Add("LDA", { addressingMode: "[[exp]],Y", opCode: [, 0xF7] });
-		this.Add("LDA", { addressingMode: "[exp],X", opCode: [, 0xF4, 0xF5] });
-		this.Add("LDA", { addressingMode: "[exp],Y", opCode: [, , 0xF6] });
-		this.Add("LDA", { addressingMode: "#[exp]", opCode: [, 0xE8] });
-		this.Add("LDA", { addressingMode: "[exp]", opCode: [, 0xE4, 0xE5] });
+		Platform.AddInstruction("LDA", { addressingMode: "(X)+", opCode: [0xBF] });
+		Platform.AddInstruction("LDA", { addressingMode: "(X)", opCode: [0xE6] });
+		Platform.AddInstruction("LDA", { addressingMode: "[[exp],X]", opCode: [, 0xE7] });
+		Platform.AddInstruction("LDA", { addressingMode: "[[exp]],Y", opCode: [, 0xF7] });
+		Platform.AddInstruction("LDA", { addressingMode: "[exp],X", opCode: [, 0xF4, 0xF5] });
+		Platform.AddInstruction("LDA", { addressingMode: "[exp],Y", opCode: [, , 0xF6] });
+		Platform.AddInstruction("LDA", { addressingMode: "#[exp]", opCode: [, 0xE8] });
+		Platform.AddInstruction("LDA", { addressingMode: "[exp]", opCode: [, 0xE4, 0xE5] });
 
-		this.Add("LDC", { addressingMode: "[exp].[exp]", opCode: [, , 0xAA], spProcess: this.Bit_15_3 });
+		Platform.AddInstruction("LDC", { addressingMode: "[exp].[exp]", opCode: [, , 0xAA], spProcess: this.Bit_15_3 });
 
-		this.Add("LDW", { addressingMode: "[exp]", opCode: [, 0xBA] });
+		Platform.AddInstruction("LDW", { addressingMode: "[exp]", opCode: [, 0xBA] });
 
-		this.Add("LDX", { addressingMode: "[exp],Y", opCode: [, 0xF9] });
-		this.Add("LDX", { addressingMode: "#[exp]", opCode: [, 0xCD] });
-		this.Add("LDX", { addressingMode: "[exp]", opCode: [, 0xF8, 0xE9] });
+		Platform.AddInstruction("LDX", { addressingMode: "[exp],Y", opCode: [, 0xF9] });
+		Platform.AddInstruction("LDX", { addressingMode: "#[exp]", opCode: [, 0xCD] });
+		Platform.AddInstruction("LDX", { addressingMode: "[exp]", opCode: [, 0xF8, 0xE9] });
 
-		this.Add("LDY", { addressingMode: "[exp],X", opCode: [, 0xFB] });
-		this.Add("LDY", { addressingMode: "#[exp]", opCode: [, 0x8D] });
-		this.Add("LDY", { addressingMode: "[exp]", opCode: [, 0xEB, 0xEC] });
+		Platform.AddInstruction("LDY", { addressingMode: "[exp],X", opCode: [, 0xFB] });
+		Platform.AddInstruction("LDY", { addressingMode: "#[exp]", opCode: [, 0x8D] });
+		Platform.AddInstruction("LDY", { addressingMode: "[exp]", opCode: [, 0xEB, 0xEC] });
 
-		this.Add("LSR", { addressingMode: "A", opCode: [0x5C] });
-		this.Add("LSR", { addressingMode: "[exp],X", opCode: [, 0x5B] });
-		this.Add("LSR", { addressingMode: "[exp]", opCode: [, 0x4B, 0x4C] });
-		this.Add("LSR", { addressingMode: "", opCode: [0x5C] });
+		Platform.AddInstruction("LSR", { addressingMode: "A", opCode: [0x5C] });
+		Platform.AddInstruction("LSR", { addressingMode: "[exp],X", opCode: [, 0x5B] });
+		Platform.AddInstruction("LSR", { addressingMode: "[exp]", opCode: [, 0x4B, 0x4C] });
+		Platform.AddInstruction("LSR", { opCode: [0x5C] });
 
-		this.Add("MOV", { addressingMode: "[exp],#[exp]", opCode: [, , 0x8F], spProcess: this.TwoOperands });
-		this.Add("MOV", { addressingMode: "[exp],[exp]", opCode: [, , 0xFA], spProcess: this.TwoOperands });
+		Platform.AddInstruction("MOV", { addressingMode: "[exp],#[exp]", opCode: [, , 0x8F], spProcess: this.TwoOperands });
+		Platform.AddInstruction("MOV", { addressingMode: "[exp],[exp]", opCode: [, , 0xFA], spProcess: this.TwoOperands });
 
-		this.Add("NOT", { addressingMode: "[exp].[exp]", opCode: [, , 0xEA], spProcess: this.Bit_15_3 });
+		Platform.AddInstruction("NOT", { addressingMode: "[exp].[exp]", opCode: [, , 0xEA], spProcess: this.Bit_15_3 });
 
-		this.Add("OR", { addressingMode: "[exp],#[exp]", opCode: [, , 0x18], spProcess: this.TwoOperands });
-		this.Add("OR", { addressingMode: "[exp],[exp]", opCode: [, , 0x09], spProcess: this.TwoOperands });
-		this.Add("OR", { addressingMode: "(X),(Y)", opCode: [0x19] });
+		Platform.AddInstruction("OR", { addressingMode: "[exp],#[exp]", opCode: [, , 0x18], spProcess: this.TwoOperands });
+		Platform.AddInstruction("OR", { addressingMode: "[exp],[exp]", opCode: [, , 0x09], spProcess: this.TwoOperands });
+		Platform.AddInstruction("OR", { addressingMode: "(X),(Y)", opCode: [0x19] });
 
-		this.Add("ORA", { addressingMode: "(X),(Y)", opCode: [0x19] });
-		this.Add("ORA", { addressingMode: "(X)", opCode: [0x06] });
-		this.Add("ORA", { addressingMode: "[[exp],X]", opCode: [, 0x07] });
-		this.Add("ORA", { addressingMode: "[[exp]],Y", opCode: [, 0x17] });
-		this.Add("ORA", { addressingMode: "[exp],X", opCode: [, 0x14, 0x15] });
-		this.Add("ORA", { addressingMode: "[exp],Y", opCode: [, , 0x16] });
-		this.Add("ORA", { addressingMode: "#[exp]", opCode: [, 0x08] });
-		this.Add("ORA", { addressingMode: "[exp]", opCode: [, 0x04, 0x05] });
+		Platform.AddInstruction("ORA", { addressingMode: "(X),(Y)", opCode: [0x19] });
+		Platform.AddInstruction("ORA", { addressingMode: "(X)", opCode: [0x06] });
+		Platform.AddInstruction("ORA", { addressingMode: "[[exp],X]", opCode: [, 0x07] });
+		Platform.AddInstruction("ORA", { addressingMode: "[[exp]],Y", opCode: [, 0x17] });
+		Platform.AddInstruction("ORA", { addressingMode: "[exp],X", opCode: [, 0x14, 0x15] });
+		Platform.AddInstruction("ORA", { addressingMode: "[exp],Y", opCode: [, , 0x16] });
+		Platform.AddInstruction("ORA", { addressingMode: "#[exp]", opCode: [, 0x08] });
+		Platform.AddInstruction("ORA", { addressingMode: "[exp]", opCode: [, 0x04, 0x05] });
 
-		this.Add("ORC", { addressingMode: "/[exp].[exp]", opCode: [, , 0x2A], spProcess: this.Bit_15_3 });
-		this.Add("ORC", { addressingMode: "[exp].[exp]", opCode: [, , 0x0A], spProcess: this.Bit_15_3 });
+		Platform.AddInstruction("ORC", { addressingMode: "/[exp].[exp]", opCode: [, , 0x2A], spProcess: this.Bit_15_3 });
+		Platform.AddInstruction("ORC", { addressingMode: "[exp].[exp]", opCode: [, , 0x0A], spProcess: this.Bit_15_3 });
 
-		this.Add("ROL", { addressingMode: "A", opCode: [0x3C] });
-		this.Add("ROL", { addressingMode: "[exp],X", opCode: [, 0x3B] });
-		this.Add("ROL", { addressingMode: "[exp]", opCode: [, 0x2B, 0x2C] });
-		this.Add("ROL", { addressingMode: "", opCode: [0x3C] });
+		Platform.AddInstruction("ROL", { addressingMode: "A", opCode: [0x3C] });
+		Platform.AddInstruction("ROL", { addressingMode: "[exp],X", opCode: [, 0x3B] });
+		Platform.AddInstruction("ROL", { addressingMode: "[exp]", opCode: [, 0x2B, 0x2C] });
+		Platform.AddInstruction("ROL", { opCode: [0x3C] });
 
-		this.Add("ROR", { addressingMode: "A", opCode: [0x7C] });
-		this.Add("ROR", { addressingMode: "[exp],X", opCode: [, 0x7B] });
-		this.Add("ROR", { addressingMode: "[exp]", opCode: [, 0x6B, 0x6C] });
-		this.Add("ROR", { addressingMode: "", opCode: [0x7C] });
+		Platform.AddInstruction("ROR", { addressingMode: "A", opCode: [0x7C] });
+		Platform.AddInstruction("ROR", { addressingMode: "[exp],X", opCode: [, 0x7B] });
+		Platform.AddInstruction("ROR", { addressingMode: "[exp]", opCode: [, 0x6B, 0x6C] });
+		Platform.AddInstruction("ROR", { opCode: [0x7C] });
 
-		this.Add("SBC", { addressingMode: "(X),(Y)", opCode: [0xB9] });
-		this.Add("SBC", { addressingMode: "(X)", opCode: [0xA6] });
-		this.Add("SBC", { addressingMode: "[[exp],X]", opCode: [, 0xA7] });
-		this.Add("SBC", { addressingMode: "[[exp]],Y", opCode: [, 0xB7] });
-		this.Add("SBC", { addressingMode: "[exp],X", opCode: [, 0xB4, 0xB5] });
-		this.Add("SBC", { addressingMode: "[exp],Y", opCode: [, , 0xB6] });
-		this.Add("SBC", { addressingMode: "[exp],#[exp]", opCode: [, , 0xB8], spProcess: this.TwoOperands });
-		this.Add("SBC", { addressingMode: "[exp],[exp]", opCode: [, , 0xA9], spProcess: this.TwoOperands });
-		this.Add("SBC", { addressingMode: "#[exp]", opCode: [, 0xA8] });
-		this.Add("SBC", { addressingMode: "[exp]", opCode: [, 0xA4, 0xA5] });
+		Platform.AddInstruction("SBC", { addressingMode: "(X),(Y)", opCode: [0xB9] });
+		Platform.AddInstruction("SBC", { addressingMode: "(X)", opCode: [0xA6] });
+		Platform.AddInstruction("SBC", { addressingMode: "[[exp],X]", opCode: [, 0xA7] });
+		Platform.AddInstruction("SBC", { addressingMode: "[[exp]],Y", opCode: [, 0xB7] });
+		Platform.AddInstruction("SBC", { addressingMode: "[exp],X", opCode: [, 0xB4, 0xB5] });
+		Platform.AddInstruction("SBC", { addressingMode: "[exp],Y", opCode: [, , 0xB6] });
+		Platform.AddInstruction("SBC", { addressingMode: "[exp],#[exp]", opCode: [, , 0xB8], spProcess: this.TwoOperands });
+		Platform.AddInstruction("SBC", { addressingMode: "[exp],[exp]", opCode: [, , 0xA9], spProcess: this.TwoOperands });
+		Platform.AddInstruction("SBC", { addressingMode: "#[exp]", opCode: [, 0xA8] });
+		Platform.AddInstruction("SBC", { addressingMode: "[exp]", opCode: [, 0xA4, 0xA5] });
 
-		this.Add("SBW", { addressingMode: "[exp]", opCode: [, 0x9A] });
+		Platform.AddInstruction("SBW", { addressingMode: "[exp]", opCode: [, 0x9A] });
 
-		this.Add("STA", { addressingMode: "(X)+", opCode: [0xAF] });
-		this.Add("STA", { addressingMode: "(X)", opCode: [0xC6] });
-		this.Add("STA", { addressingMode: "[[exp],X]", opCode: [, 0xC7] });
-		this.Add("STA", { addressingMode: "[[exp]],Y", opCode: [, 0xD7] });
-		this.Add("STA", { addressingMode: "[exp],X", opCode: [, 0xD4, 0xD5] });
-		this.Add("STA", { addressingMode: "[exp],Y", opCode: [, , 0xD6] });
-		this.Add("STA", { addressingMode: "[exp]", opCode: [, 0xC4, 0xC5] });
+		Platform.AddInstruction("STA", { addressingMode: "(X)+", opCode: [0xAF] });
+		Platform.AddInstruction("STA", { addressingMode: "(X)", opCode: [0xC6] });
+		Platform.AddInstruction("STA", { addressingMode: "[[exp],X]", opCode: [, 0xC7] });
+		Platform.AddInstruction("STA", { addressingMode: "[[exp]],Y", opCode: [, 0xD7] });
+		Platform.AddInstruction("STA", { addressingMode: "[exp],X", opCode: [, 0xD4, 0xD5] });
+		Platform.AddInstruction("STA", { addressingMode: "[exp],Y", opCode: [, , 0xD6] });
+		Platform.AddInstruction("STA", { addressingMode: "[exp]", opCode: [, 0xC4, 0xC5] });
 
-		this.Add("STC", { addressingMode: "[exp].[exp]", opCode: [, , 0xCA], spProcess: this.Bit_15_3 });
+		Platform.AddInstruction("STC", { addressingMode: "[exp].[exp]", opCode: [, , 0xCA], spProcess: this.Bit_15_3 });
 
-		this.Add("STW", { addressingMode: "[exp]", opCode: [, 0xDA] });
+		Platform.AddInstruction("STW", { addressingMode: "[exp]", opCode: [, 0xDA] });
 
-		this.Add("STX", { addressingMode: "[exp],Y", opCode: [, 0xD9] });
-		this.Add("STX", { addressingMode: "[exp]", opCode: [, 0xD8, 0xC9] });
+		Platform.AddInstruction("STX", { addressingMode: "[exp],Y", opCode: [, 0xD9] });
+		Platform.AddInstruction("STX", { addressingMode: "[exp]", opCode: [, 0xD8, 0xC9] });
 
-		this.Add("STY", { addressingMode: "[exp],X", opCode: [, 0xDB] });
-		this.Add("STY", { addressingMode: "[exp]", opCode: [, 0xCB, 0xCC] });
+		Platform.AddInstruction("STY", { addressingMode: "[exp],X", opCode: [, 0xDB] });
+		Platform.AddInstruction("STY", { addressingMode: "[exp]", opCode: [, 0xCB, 0xCC] });
 
-		this.Add("NOP", { addressingMode: "", opCode: [0X00] });
-		this.Add("PHA", { addressingMode: "", opCode: [0X2D] });
-		this.Add("PHP", { addressingMode: "", opCode: [0X0D] });
-		this.Add("PHX", { addressingMode: "", opCode: [0X4D] });
-		this.Add("PHY", { addressingMode: "", opCode: [0X6D] });
-		this.Add("PLA", { addressingMode: "", opCode: [0XAE] });
-		this.Add("PLP", { addressingMode: "", opCode: [0X8E] });
-		this.Add("PLX", { addressingMode: "", opCode: [0XCE] });
-		this.Add("PLY", { addressingMode: "", opCode: [0XEE] });
-		this.Add("RTI", { addressingMode: "", opCode: [0X7F] });
-		this.Add("RTS", { addressingMode: "", opCode: [0X6F] });
-		this.Add("SEC", { addressingMode: "", opCode: [0X80] });
-		this.Add("SEI", { addressingMode: "", opCode: [0XC0] });
-		this.Add("SEI", { addressingMode: "", opCode: [0XC0] });
-		this.Add("SEP", { addressingMode: "", opCode: [0X40] });
-		this.Add("CLC", { addressingMode: "", opCode: [0X60] });
-		this.Add("CLI", { addressingMode: "", opCode: [0XA0] });
-		this.Add("CLP", { addressingMode: "", opCode: [0X20] });
-		this.Add("CLV", { addressingMode: "", opCode: [0XE0] });
-		this.Add("TAX", { addressingMode: "", opCode: [0X5D] });
-		this.Add("TAY", { addressingMode: "", opCode: [0XFD] });
-		this.Add("TSX", { addressingMode: "", opCode: [0X9D] });
-		this.Add("TXA", { addressingMode: "", opCode: [0X7D] });
-		this.Add("TXS", { addressingMode: "", opCode: [0XBD] });
-		this.Add("TYA", { addressingMode: "", opCode: [0XDD] });
-		this.Add("WAI", { addressingMode: "", opCode: [0XEF] });
-		this.Add("XCN", { addressingMode: "A", opCode: [0X9F] });
-		this.Add("XCN", { addressingMode: "", opCode: [0X9F] });
-		this.Add("DAA", { addressingMode: "A", opCode: [0XDF] });
-		this.Add("DAA", { addressingMode: "", opCode: [0XDF] });
-		this.Add("DAS", { addressingMode: "A", opCode: [0XBE] });
-		this.Add("DAS", { addressingMode: "", opCode: [0XBE] });
-		this.Add("STP", { addressingMode: "", opCode: [0XFF] });
-		this.Add("DEX", { addressingMode: "", opCode: [0X1D] });
-		this.Add("DEY", { addressingMode: "", opCode: [0XDC] });
-		this.Add("INX", { addressingMode: "", opCode: [0X3D] });
-		this.Add("INY", { addressingMode: "", opCode: [0XFC] });
-		this.Add("DIV", { addressingMode: "YA,X", opCode: [0X9E] });
-		this.Add("DIV", { addressingMode: "", opCode: [0X9E] });
-		this.Add("MUL", { addressingMode: "YA", opCode: [0XCF] });
-		this.Add("MUL", { addressingMode: "", opCode: [0XCF] });
-		this.Add("JST0", { addressingMode: "", opCode: [0X01] });
-		this.Add("JST1", { addressingMode: "", opCode: [0X11] });
-		this.Add("JST2", { addressingMode: "", opCode: [0X21] });
-		this.Add("JST3", { addressingMode: "", opCode: [0X31] });
-		this.Add("JST4", { addressingMode: "", opCode: [0X41] });
-		this.Add("JST5", { addressingMode: "", opCode: [0X51] });
-		this.Add("JST6", { addressingMode: "", opCode: [0X61] });
-		this.Add("JST7", { addressingMode: "", opCode: [0X71] });
-		this.Add("JST8", { addressingMode: "", opCode: [0X81] });
-		this.Add("JST9", { addressingMode: "", opCode: [0X91] });
-		this.Add("JSTA", { addressingMode: "", opCode: [0XA1] });
-		this.Add("JSTB", { addressingMode: "", opCode: [0XB1] });
-		this.Add("JSTC", { addressingMode: "", opCode: [0XC1] });
-		this.Add("JSTD", { addressingMode: "", opCode: [0XD1] });
-		this.Add("JSTE", { addressingMode: "", opCode: [0XE1] });
-		this.Add("JSTF", { addressingMode: "", opCode: [0XF1] });
-		this.Add("NOTC", { addressingMode: "", opCode: [0XED] });
+		Platform.AddInstruction("NOP", { opCode: [0X00] });
+		Platform.AddInstruction("PHA", { opCode: [0X2D] });
+		Platform.AddInstruction("PHP", { opCode: [0X0D] });
+		Platform.AddInstruction("PHX", { opCode: [0X4D] });
+		Platform.AddInstruction("PHY", { opCode: [0X6D] });
+		Platform.AddInstruction("PLA", { opCode: [0XAE] });
+		Platform.AddInstruction("PLP", { opCode: [0X8E] });
+		Platform.AddInstruction("PLX", { opCode: [0XCE] });
+		Platform.AddInstruction("PLY", { opCode: [0XEE] });
+		Platform.AddInstruction("RTI", { opCode: [0X7F] });
+		Platform.AddInstruction("RTS", { opCode: [0X6F] });
+		Platform.AddInstruction("SEC", { opCode: [0X80] });
+		Platform.AddInstruction("SEI", { opCode: [0XC0] });
+		Platform.AddInstruction("SEI", { opCode: [0XC0] });
+		Platform.AddInstruction("SEP", { opCode: [0X40] });
+		Platform.AddInstruction("CLC", { opCode: [0X60] });
+		Platform.AddInstruction("CLI", { opCode: [0XA0] });
+		Platform.AddInstruction("CLP", { opCode: [0X20] });
+		Platform.AddInstruction("CLV", { opCode: [0XE0] });
+		Platform.AddInstruction("TAX", { opCode: [0X5D] });
+		Platform.AddInstruction("TAY", { opCode: [0XFD] });
+		Platform.AddInstruction("TSX", { opCode: [0X9D] });
+		Platform.AddInstruction("TXA", { opCode: [0X7D] });
+		Platform.AddInstruction("TXS", { opCode: [0XBD] });
+		Platform.AddInstruction("TYA", { opCode: [0XDD] });
+		Platform.AddInstruction("WAI", { opCode: [0XEF] });
+		Platform.AddInstruction("XCN", { addressingMode: "A", opCode: [0X9F] });
+		Platform.AddInstruction("XCN", { opCode: [0X9F] });
+		Platform.AddInstruction("DAA", { addressingMode: "A", opCode: [0XDF] });
+		Platform.AddInstruction("DAA", { opCode: [0XDF] });
+		Platform.AddInstruction("DAS", { addressingMode: "A", opCode: [0XBE] });
+		Platform.AddInstruction("DAS", { opCode: [0XBE] });
+		Platform.AddInstruction("STP", { opCode: [0XFF] });
+		Platform.AddInstruction("DEX", { opCode: [0X1D] });
+		Platform.AddInstruction("DEY", { opCode: [0XDC] });
+		Platform.AddInstruction("INX", { opCode: [0X3D] });
+		Platform.AddInstruction("INY", { opCode: [0XFC] });
+		Platform.AddInstruction("DIV", { addressingMode: "YA,X", opCode: [0X9E] });
+		Platform.AddInstruction("DIV", { opCode: [0X9E] });
+		Platform.AddInstruction("MUL", { addressingMode: "YA", opCode: [0XCF] });
+		Platform.AddInstruction("MUL", { opCode: [0XCF] });
+		Platform.AddInstruction("JST0", { opCode: [0X01] });
+		Platform.AddInstruction("JST1", { opCode: [0X11] });
+		Platform.AddInstruction("JST2", { opCode: [0X21] });
+		Platform.AddInstruction("JST3", { opCode: [0X31] });
+		Platform.AddInstruction("JST4", { opCode: [0X41] });
+		Platform.AddInstruction("JST5", { opCode: [0X51] });
+		Platform.AddInstruction("JST6", { opCode: [0X61] });
+		Platform.AddInstruction("JST7", { opCode: [0X71] });
+		Platform.AddInstruction("JST8", { opCode: [0X81] });
+		Platform.AddInstruction("JST9", { opCode: [0X91] });
+		Platform.AddInstruction("JSTA", { opCode: [0XA1] });
+		Platform.AddInstruction("JSTB", { opCode: [0XB1] });
+		Platform.AddInstruction("JSTC", { opCode: [0XC1] });
+		Platform.AddInstruction("JSTD", { opCode: [0XD1] });
+		Platform.AddInstruction("JSTE", { opCode: [0XE1] });
+		Platform.AddInstruction("JSTF", { opCode: [0XF1] });
+		Platform.AddInstruction("NOTC", { opCode: [0XED] });
 	}
 
 	private TwoOperands(option: CompileOption) {
@@ -421,9 +421,5 @@ export class AsmSPC700 implements IAsmPlatform {
 		line.lineResult.SetResult(line.addressMode.opCode[1]!, 0, 1);
 		line.lineResult.SetResult(temp & 0xFF, 1, 1);
 		line.lineType = LineType.Finished;
-	}
-
-	private Add(instruction: string, addressingMode: AddInstructionOption) {
-		Platform.AddInstruction(instruction, addressingMode);
 	}
 }
