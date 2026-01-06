@@ -4,7 +4,7 @@ import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { Localization } from "../I18n/Localization";
 import { LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
-import { AddInstructionOption, Platform } from "./Platform";
+import { Platform } from "./Platform";
 
 export class Asm6502 {
 	static platformName = "6502";
