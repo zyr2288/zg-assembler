@@ -1,4 +1,3 @@
-// gbc的汇编指令
 import { CompileOption } from "../Base/CompileOption";
 import { ExpressionUtils } from "../Base/ExpressionUtils";
 import { MyDiagnostic } from "../Base/MyDiagnostic";
@@ -67,15 +66,15 @@ export class AsmSM83_GB {
 		this.AddInstructionSeries2("DEC", ["C", "E", "L", "A"], 0x0D, 0, 0x10);
 
 		// ===== JR =====
-		this.AddInstructionSeries2("JR", ["NZ,[exp]", "NC,[exp]"], 0x20, 0, 0x10, this.SpecialJR);
-		this.AddInstructionSeries2("JR", ["C,[exp]", "Z,[exp]", "[exp]"], 0x38, 1, -0x10, this.SpecialJR);
+		this.AddInstructionSeries2("JR", ["NZ,[exp]", "NC,[exp]"], 0x20, 0, 0x10, this.SpecialJR.bind(this));
+		this.AddInstructionSeries2("JR", ["C,[exp]", "Z,[exp]", "[exp]"], 0x38, 1, -0x10, this.SpecialJR.bind(this));
 
 		// 这个必须放这里，否则解析有误
 		this.AddInstructionSeries2("ADD", ["HL,BC", "HL,DE", "HL,HL", "HL,SP"], 0x09, 0, 0x10);
 
 		instruction = ["ADD", "ADC", "SUB", "SBC", "AND", "XOR", "OR", "CP"];
 		addrType = ["B", "C", "D", "E", "H", "L", "(HL)", "A"];
-		opCode = 0x80
+		opCode = 0x80;
 		for (let i = 0; i < instruction.length; i++) {
 			for (let j = 0; j < addrType.length; j++) {
 				Platform.AddInstruction(instruction[i], { addressingMode: addrType[j], opCode: [opCode] })
@@ -104,7 +103,7 @@ export class AsmSM83_GB {
 
 		// ===== LDH =====
 		this.AddInstructionSeries2("LDH", ["(C),A", "A,(C)"], 0xE2, 1, 0x10);
-		this.AddInstructionSeries2("LDH", ["([exp]),A", "A,([exp])"], 0xE0, 1, 0x10);
+		this.AddInstructionSeries2("LDH", ["([exp]),A", "A,([exp])"], 0xE0, 1, 0x10, this.SpecialLDH.bind(this));
 
 		// ===== JP =====
 		Platform.AddInstruction("JP", { addressingMode: "HL", opCode: [0xE9] });
@@ -179,6 +178,19 @@ export class AsmSM83_GB {
 
 		line.lineResult.SetResult(line.addressMode.opCode[0]!, 0, 1);
 		line.lineResult.SetResult(temp & 0xFF, 1, 1);
+		line.lineType = LineType.Finished;
+	}
+
+	private SpecialLDH(option: CompileOption) {
+		const line = option.GetCurrent<InstructionLine>();
+		const tempValue = ExpressionUtils.GetValue(line.expressions[0].parts, option);
+		if (!tempValue.success) {
+			line.lineResult.result.length = 2;
+			return;
+		}
+
+		line.lineResult.SetResult(line.addressMode.opCode[0]!, 0, 1);
+		line.lineResult.SetResult(tempValue.value & 0xFF, 1, 1);
 		line.lineType = LineType.Finished;
 	}
 }
