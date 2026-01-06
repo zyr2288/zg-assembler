@@ -4,12 +4,10 @@ import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { Localization } from "../I18n/Localization";
 import { LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
-import { IAsmPlatform } from "./IAsmPlatform";
 import { AddInstructionOption, Platform } from "./Platform";
 
-export class Asm65C816 implements IAsmPlatform {
-
-	platformName = "65c816";
+export class Asm65C816 {
+	static platformName = "65c816";
 
 	constructor() {
 		this.Initialize();

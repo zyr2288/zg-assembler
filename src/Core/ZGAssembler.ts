@@ -133,7 +133,7 @@ export class ZGAssembler {
 	}
 
 	SwitchPlatform(platform: string) {
-		if (platform === Platform.name)
+		if (platform === Platform.platformName)
 			return;
 
 		Platform.SwitchPlatform(platform);

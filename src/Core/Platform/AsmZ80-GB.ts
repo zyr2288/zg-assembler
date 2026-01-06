@@ -4,7 +4,6 @@ import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { Localization } from "../I18n/Localization";
 import { LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
-import { IAsmPlatform } from "./IAsmPlatform";
 import { Platform } from "./Platform";
 
 /**
@@ -14,9 +13,8 @@ import { Platform } from "./Platform";
  * 
  * https://sndream.github.io/PanDocs/#cpucomparisionwithz80
  */
-export class AsmZ80_GB implements IAsmPlatform {
-
-	platformName = "z80-gba";
+export class AsmZ80_GB {
+	static platformName = "z80-gb";
 
 	constructor() {
 		this.Initialize();

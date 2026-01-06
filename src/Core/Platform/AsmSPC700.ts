@@ -1,15 +1,13 @@
 import { ExpressionUtils } from "../Base/ExpressionUtils";
 import { Localization } from "../I18n/Localization";
 import { InstructionLine } from "../Lines/InstructionLine";
-import { IAsmPlatform } from "./IAsmPlatform";
 import { CompileOption } from "../Base/CompileOption";
 import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { LineType } from "../Lines/CommonLine";
-import { AddInstructionOption, Platform } from "./Platform";
+import { Platform } from "./Platform";
 
-export class AsmSPC700 implements IAsmPlatform {
-
-	platformName = "SPC700";
+export class AsmSPC700 {
+	static platformName = "SPC700";
 
 	constructor() {
 		this.Initialize();

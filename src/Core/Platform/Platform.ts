@@ -6,10 +6,9 @@ import { Localization } from "../I18n/Localization";
 import { IntellisenseProvider } from "../LanguageHelper/IntellisenseProvider";
 import { Asm6502 } from "./Asm6502";
 import { Asm65C816 } from "./Asm65C816";
-import { AsmSM83_GBC } from "./AsmSM83-GB";
+import { AsmSM83_GB } from "./AsmSM83-GB";
 import { AsmSPC700 } from "./AsmSPC700";
-import { AsmZ80_GB } from "./AsmZ80-GBA";
-import { IAsmPlatform } from "./IAsmPlatform";
+import { AsmZ80_GB } from "./AsmZ80-GB";
 
 export interface IAddressingMode {
 	/**寻址正则表达式的分割 */
@@ -42,38 +41,39 @@ export interface AddInstructionOption {
 /**平台 */
 export class Platform {
 
-	get name() { return Platform.asmPlatform.platformName }
+	static platformName = "";
 
 	/**Key为 Instruction，例如：LDA */
 	static instructions: Map<string, IAddressingMode[]> = new Map();
 
-	private static asmPlatform: IAsmPlatform;
+	// private static asmPlatform: Asm6502 | AsmSPC700 | Asm65C816 | AsmZ80_GB | AsmSM83_GB;
 
 	//#region 切换平台
 	static SwitchPlatform(platform: string) {
 		Platform.instructions.clear();
 		let constructor;
 		switch (platform) {
-			case "6502":
+			case Asm6502.platformName:
 				constructor = Asm6502;
 				break;
-			case "SPC700":
+			case AsmSPC700.platformName:
 				constructor = AsmSPC700;
 				break;
-			case "65c816":
+			case Asm65C816.platformName:
 				constructor = Asm65C816;
 				break;
-			case "z80-gba":
+			case AsmZ80_GB.platformName:
 				constructor = AsmZ80_GB;
 				break;
-			case "SM83-gb":
-				constructor = AsmSM83_GBC;
+			case AsmSM83_GB.platformName:
+				constructor = AsmSM83_GB;
 				break;
 			default:
 				const errorMsg = Localization.GetMessage("Unsupport platform {0}", platform);
 				throw new Error(errorMsg);
 		}
-		Platform.asmPlatform = new constructor();
+		new constructor();
+		Platform.platformName = constructor.platformName;
 		IntellisenseProvider.UpdateInstruction();
 	}
 	//#endregion 切换平台
