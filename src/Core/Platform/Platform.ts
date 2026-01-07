@@ -53,21 +53,11 @@ export class Platform {
 		Platform.instructions.clear();
 		let constructor;
 		switch (platform) {
-			case Asm6502.platformName:
-				constructor = Asm6502;
-				break;
-			case AsmSPC700.platformName:
-				constructor = AsmSPC700;
-				break;
-			case Asm65C816.platformName:
-				constructor = Asm65C816;
-				break;
-			case AsmZ80_GB.platformName:
-				constructor = AsmZ80_GB;
-				break;
-			case AsmSM83_GB.platformName:
-				constructor = AsmSM83_GB;
-				break;
+			case Asm6502.platformName: constructor = Asm6502; break;
+			case AsmSPC700.platformName: constructor = AsmSPC700; break;
+			case Asm65C816.platformName: constructor = Asm65C816; break;
+			case AsmZ80_GB.platformName: constructor = AsmZ80_GB; break;
+			case AsmSM83_GB.platformName: constructor = AsmSM83_GB; break;
 			default:
 				const errorMsg = Localization.GetMessage("Unsupport platform {0}", platform);
 				throw new Error(errorMsg);
@@ -240,7 +230,7 @@ export class Platform {
 			Platform.instructions.set(operation, index);
 		}
 
-		const type: IAddressingMode = { addressingMode: option.addressingMode, addressType: [] as string[], opCode: [], opCodeLength: [] };
+		const type: IAddressingMode = { addressingMode: option.addressingMode, addressType: [], opCode: [], opCodeLength: [] };
 		if (option.addressingMode) {
 			let match;
 			let start = 0, temp: string, stringMatch: string[] = [], findExp = false;
@@ -273,19 +263,18 @@ export class Platform {
 
 		if (!option.opCodeLength) {
 			for (let i = 0; i < type.opCode.length; ++i) {
-				if (type.opCode[i] === undefined)
+				const opCode = type.opCode[i];
+				if (opCode === undefined)
 					continue;
 
-				type.opCodeLength[i] = Utils.GetNumberByteLength(type.opCode[i]!);
+				type.opCodeLength[i] = Utils.GetNumberByteLength(opCode);
 			}
 		} else {
 			type.opCodeLength = option.opCodeLength;
 		}
 
-
 		index.push(type);
 	}
 	//#endregion 添加基础指令
-
 
 }

@@ -23,7 +23,7 @@ export class AsmSM83_GB {
 
 		// ===== 单指令操作 =====
 		this.AddInstructionSeries1({
-			NOP: 0x00, STOP: 0x10, HALT: 0x76, DI: 0xF3, EI: 0xFB,
+			NOP: 0x00, HALT: 0x76, DI: 0xF3, EI: 0xFB,
 			RLCA: 0x07, RLA: 0x17, DAA: 0x27, SCF: 0x37,
 			RRCA: 0x0F, RRA: 0x1F, CPL: 0x2F, CCF: 0x3F,
 			RET: 0xC9, RETI: 0xD9,
@@ -31,15 +31,14 @@ export class AsmSM83_GB {
 
 		// ===== LD =====
 		addrType = ["B", "C", "D", "E", "H", "L", "(HL)", "A"];
-		opCode = 0x40;
+		opCode = 0x3F;
 		for (let i = 0; i < addrType.length; i++) {
 			for (let j = 0; j < addrType.length; j++) {
-
+				opCode++;
 				if (addrType[i] === "(HL)" && addrType[j] === "(HL)")
 					continue;
 
 				Platform.AddInstruction("LD", { addressingMode: `${addrType[i]},${addrType[j]}`, opCode: [opCode] });
-				opCode++;
 			}
 		}
 
@@ -96,6 +95,7 @@ export class AsmSM83_GB {
 		Platform.AddInstruction("SBC", { addressingMode: "[exp]", opCode: [, 0xDE] });
 		Platform.AddInstruction("XOR", { addressingMode: "[exp]", opCode: [, 0xEE] });
 		Platform.AddInstruction("CP", { addressingMode: "[exp]", opCode: [, 0xFE] });
+		Platform.AddInstruction("STOP", { addressingMode: "[exp]", opCode: [, 0x10] });
 
 		// ===== RET =====
 		this.AddInstructionSeries2("RET", ["NZ", "NC"], 0xC0, 0, 0x10);
