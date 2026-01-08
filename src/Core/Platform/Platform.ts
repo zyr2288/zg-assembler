@@ -56,7 +56,7 @@ export class Platform {
 			case Asm6502.platformName: constructor = Asm6502; break;
 			case AsmSPC700.platformName: constructor = AsmSPC700; break;
 			case Asm65C816.platformName: constructor = Asm65C816; break;
-			case AsmZ80_GB.platformName: constructor = AsmZ80_GB; break;
+			// case AsmZ80_GB.platformName: constructor = AsmZ80_GB; break;
 			case AsmSM83_GB.platformName: constructor = AsmSM83_GB; break;
 			default:
 				const errorMsg = Localization.GetMessage("Unsupport platform {0}", platform);

@@ -9,7 +9,7 @@ import { AddInstructionOption, Platform } from "./Platform";
 /**
  * SM83-GB汇编
  * 
- * https://gbdev.io/pandocs/CPU_Registers_and_Flags.html
+ * https://gbdev.io/gb-opcodes/optables/
  */
 export class AsmSM83_GB {
 	static platformName = "SM83-gb";
@@ -42,7 +42,10 @@ export class AsmSM83_GB {
 			}
 		}
 
-		Platform.AddInstruction("LD", { addressingMode: "HL,SP+e", opCode: [0xF8] });
+		Platform.AddInstruction("LD", { addressingMode: "($FF00+C),A", opCode: [0xE2] });
+		Platform.AddInstruction("LD", { addressingMode: "A,($FF00+C)", opCode: [0xF2] });
+
+		Platform.AddInstruction("LD", { addressingMode: "HL,SP+[exp]", opCode: [, 0xF8] });
 		Platform.AddInstruction("LD", { addressingMode: "SP,HL", opCode: [0xf9] });
 
 		this.AddInstructionSeries2("LD", ["(BC),A", "(DE),A", "(HL+),A", "(HL-),A"], 0x02, 0, 0x10);
@@ -53,6 +56,10 @@ export class AsmSM83_GB {
 		this.AddInstructionSeries2("LD", ["B,[exp]", "D,[exp]", "H,[exp]", "(HL),[exp]"], 0x06, 1, 0x10);
 		this.AddInstructionSeries2("LD", ["([exp]),A", "A,([exp])"], 0xEA, 2, 0x10);
 		this.AddInstructionSeries2("LD", ["C,[exp]", "E,[exp]", "L,[exp]", "A,[exp]"], 0x0E, 1, 0x10);
+
+		// ===== LDH =====
+		this.AddInstructionSeries2("LDH", ["(C),A", "A,(C)"], 0xE2, 1, 0x10);
+		this.AddInstructionSeries2("LDH", ["([exp]),A", "A,([exp])"], 0xE0, 1, 0x10, this.SpecialLDH.bind(this));
 
 		// ===== INC =====
 		this.AddInstructionSeries2("INC", ["BC", "DE", "HL", "SP"], 0x03, 0, 0x10);
@@ -81,8 +88,9 @@ export class AsmSM83_GB {
 			}
 		}
 
+
 		// ===== ADD =====
-		Platform.AddInstruction("ADD", { addressingMode: "SP,[exp]", opCode: [0xE8] });
+		Platform.AddInstruction("ADD", { addressingMode: "SP,[exp]", opCode: [, 0xE8] });
 		Platform.AddInstruction("ADD", { addressingMode: "A,[exp]", opCode: [, 0xC6] });
 
 		// ===== 散装运算符 =====
@@ -100,10 +108,6 @@ export class AsmSM83_GB {
 		// ===== RET =====
 		this.AddInstructionSeries2("RET", ["NZ", "NC"], 0xC0, 0, 0x10);
 		this.AddInstructionSeries2("RET", ["Z", "C"], 0xC8, 0, 0x10);
-
-		// ===== LDH =====
-		this.AddInstructionSeries2("LDH", ["(C),A", "A,(C)"], 0xE2, 1, 0x10);
-		this.AddInstructionSeries2("LDH", ["([exp]),A", "A,([exp])"], 0xE0, 1, 0x10, this.SpecialLDH.bind(this));
 
 		// ===== JP =====
 		Platform.AddInstruction("JP", { addressingMode: "HL", opCode: [0xE9] });

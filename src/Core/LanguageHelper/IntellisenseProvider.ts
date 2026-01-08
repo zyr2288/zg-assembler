@@ -333,7 +333,7 @@ export class IntellisenseProvider {
 			} else {
 				com.index = CompletionIndex.EmptyAddressing;
 				com.showText = modes[j].addressingMode!;
-				com.insertText = IntellisenseProvider.ReplaceCommon(modes[j].addressingMode!);
+				com.insertText = IntellisenseProvider.ReplaceCommon(modes[j].addressingMode!.replaceAll("$", "\\$"));
 			}
 			completions.push(com);
 		}

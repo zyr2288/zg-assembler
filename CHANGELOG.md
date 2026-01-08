@@ -1,16 +1,17 @@
 # Change Log
 
-### 2025-01-07 v0.3.66
+### 2025-01-07 v0.3.67
 
 -   更正部分平台名称 `SM83-gb`
 -   修复部分 `SM83-gb` 汇编指令
+-   修复智能提示中如果出现 `$` 则无法插入正确的选项问题
 
 <details>
 <summary>之前版本更新记录</summary>
 
 ### 2025-12-22 v0.3.65
 
--   修复 `z80-gb` 汇编的部分错误
+-   ~~修复 `z80-gb` 汇编的部分错误~~
 -   添加功能输出单文件的时候，例如：`"outputSingleFile": "output-[name].bin"`，可使用 `[name]` 替换成所编译的本文件的文件名
 
 ### 2025-11-23 v0.3.61
@@ -274,7 +275,7 @@ saveAddress = *
 
 -   **破坏性更新，所有编译器命令格式都修改为 `Command arg1, arg2...` 具体请参考 README**
 -   重新编写内核
--   添加 **z80-gb** 汇编
+-   ~~添加 **z80-gb** 汇编~~
 -   取消配置 `argumentOutOfRangeError`，添加 `outOfRangeWarning`
 -   更新平台名称
 
