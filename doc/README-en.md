@@ -31,7 +31,7 @@ Testing files:
 13. [.MSG .ERROR](#msg-error)
 
 -   [ZG Assembler in Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZENG-GE.zg-assembler)
--   An extensible compiler for [VSCode](https://code.visualstudio.com/), supporting `6502` `65c816` (Special thanks Thirteen) `z80-gb`.
+-   An extensible compiler for [VSCode](https://code.visualstudio.com/).
 -   When the assembly file is opened, a `project-settings.json` file is created in project directory.
 -   If you want to use core, use `npm run build-core` to build core source.
 
