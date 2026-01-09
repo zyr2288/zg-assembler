@@ -59,7 +59,7 @@ export class AsmSM83_GB {
 
 		// ===== LDH =====
 		this.AddInstructionSeries2("LDH", ["(C),A", "A,(C)"], 0xE2, 1, 0x10);
-		this.AddInstructionSeries2("LDH", ["([exp]),A", "A,([exp])"], 0xE0, 1, 0x10, this.SpecialLDH.bind(this));
+		this.AddInstructionSeries2("LDH", ["([exp]),A", "A,([exp])"], 0xE0, 0, 0x10, this.SpecialLDH.bind(this));
 
 		// ===== INC =====
 		this.AddInstructionSeries2("INC", ["BC", "DE", "HL", "SP"], 0x03, 0, 0x10);
@@ -73,7 +73,7 @@ export class AsmSM83_GB {
 
 		// ===== JR =====
 		this.AddInstructionSeries2("JR", ["NZ,[exp]", "NC,[exp]"], 0x20, 0, 0x10, this.SpecialJR.bind(this));
-		this.AddInstructionSeries2("JR", ["C,[exp]", "Z,[exp]", "[exp]"], 0x38, 1, -0x10, this.SpecialJR.bind(this));
+		this.AddInstructionSeries2("JR", ["C,[exp]", "Z,[exp]", "[exp]"], 0x38, 0, -0x10, this.SpecialJR.bind(this));
 
 		// 这个必须放这里，否则解析有误
 		this.AddInstructionSeries2("ADD", ["HL,BC", "HL,DE", "HL,HL", "HL,SP"], 0x09, 0, 0x10);
