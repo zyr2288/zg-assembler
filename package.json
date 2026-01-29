@@ -1,8 +1,8 @@
 {
 	"name": "zg-assembler",
 	"displayName": "ZG Assembler",
-	"description": "A simple assembler for 6502 / 65c816 / z80-gba / SM83-gb / SPC700",
-	"version": "0.3.68",
+	"description": "A simple assembler for 6502 / 65c816 / SM83-gb / SPC700",
+	"version": "0.3.69",
 	"engines": {
 		"vscode": "^1.85.0"
 	},

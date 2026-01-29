@@ -83,7 +83,7 @@ export class AsmSM83_GB {
 		opCode = 0x80;
 		for (let i = 0; i < instruction.length; i++) {
 			for (let j = 0; j < addrType.length; j++) {
-				Platform.AddInstruction(instruction[i], { addressingMode: addrType[j], opCode: [opCode] })
+				Platform.AddInstruction(instruction[i], { addressingMode: `A,${addrType[j]}`, opCode: [opCode] })
 				opCode++;
 			}
 		}
@@ -91,18 +91,34 @@ export class AsmSM83_GB {
 
 		// ===== ADD =====
 		Platform.AddInstruction("ADD", { addressingMode: "SP,[exp]", opCode: [, 0xE8] });
-		Platform.AddInstruction("ADD", { addressingMode: "A,[exp]", opCode: [, 0xC6] });
+		Platform.AddInstruction("SBC", { addressingMode: "A,[exp]", opCode: [, 0xDE] });
+		Platform.AddInstruction("SBC", { addressingMode: "[exp]", opCode: [, 0xDE] });
 
 		// ===== 散装运算符 =====
+		Platform.AddInstruction("ADD", { addressingMode: "A,[exp]", opCode: [, 0xC6] });
 		Platform.AddInstruction("ADD", { addressingMode: "[exp]", opCode: [, 0xC6] });
+
+		Platform.AddInstruction("ADC", { addressingMode: "A,[exp]", opCode: [, 0xCE] });
+		Platform.AddInstruction("ADC", { addressingMode: "[exp]", opCode: [, 0xCE] });
+
+		Platform.AddInstruction("SUB", { addressingMode: "A,[exp]", opCode: [, 0xD6] });
 		Platform.AddInstruction("SUB", { addressingMode: "[exp]", opCode: [, 0xD6] });
+
+		Platform.AddInstruction("SBC", { addressingMode: "A,[exp]", opCode: [, 0xDE] });
+		Platform.AddInstruction("SBC", { addressingMode: "[exp]", opCode: [, 0xDE] });
+
+		Platform.AddInstruction("AND", { addressingMode: "A,[exp]", opCode: [, 0xE6] });
 		Platform.AddInstruction("AND", { addressingMode: "[exp]", opCode: [, 0xE6] });
+
+		Platform.AddInstruction("XOR", { addressingMode: "A,[exp]", opCode: [, 0xEE] });
+		Platform.AddInstruction("XOR", { addressingMode: "[exp]", opCode: [, 0xEE] });
+
+		Platform.AddInstruction("OR", { addressingMode: "A,[exp]", opCode: [, 0xF6] });
 		Platform.AddInstruction("OR", { addressingMode: "[exp]", opCode: [, 0xF6] });
 
-		Platform.AddInstruction("ADC", { addressingMode: "[exp]", opCode: [, 0xCE] });
-		Platform.AddInstruction("SBC", { addressingMode: "[exp]", opCode: [, 0xDE] });
-		Platform.AddInstruction("XOR", { addressingMode: "[exp]", opCode: [, 0xEE] });
+		Platform.AddInstruction("CP", { addressingMode: "A,[exp]", opCode: [, 0xFE] });
 		Platform.AddInstruction("CP", { addressingMode: "[exp]", opCode: [, 0xFE] });
+
 		Platform.AddInstruction("STOP", { addressingMode: "[exp]", opCode: [, 0x10] });
 
 		// ===== RET =====
