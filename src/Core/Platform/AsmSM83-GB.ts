@@ -83,16 +83,13 @@ export class AsmSM83_GB {
 		opCode = 0x80;
 		for (let i = 0; i < instruction.length; i++) {
 			for (let j = 0; j < addrType.length; j++) {
-				Platform.AddInstruction(instruction[i], { addressingMode: `A,${addrType[j]}`, opCode: [opCode] })
+				Platform.AddInstruction(instruction[i], { addressingMode: `A,${addrType[j]}`, opCode: [opCode] });
 				opCode++;
 			}
 		}
 
-
 		// ===== ADD =====
 		Platform.AddInstruction("ADD", { addressingMode: "SP,[exp]", opCode: [, 0xE8] });
-		Platform.AddInstruction("SBC", { addressingMode: "A,[exp]", opCode: [, 0xDE] });
-		Platform.AddInstruction("SBC", { addressingMode: "[exp]", opCode: [, 0xDE] });
 
 		// ===== 散装运算符 =====
 		Platform.AddInstruction("ADD", { addressingMode: "A,[exp]", opCode: [, 0xC6] });
