@@ -129,7 +129,7 @@ export class UpdateFile {
 		if (fileName !== LSPUtils.assembler.config.ConfigFile)
 			return;
 
-		await ConfigUtils.ReadConfig();
+		await ConfigUtils.ReadConfig(e);
 	}
 
 	/**文件创建 */
