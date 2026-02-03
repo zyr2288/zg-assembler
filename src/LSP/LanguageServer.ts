@@ -27,7 +27,13 @@ export class LanguageServer {
 		LSPUtils.StatueBarShowText(` $(sync~spin) ${LSPUtils.assembler.localization.GetMessage("plugin loading")}...`);
 
 		IOImplementation.Initialize();
-		await ConfigUtils.ReadConfig();
+
+		if (!vscode.window.activeTextEditor){
+			LSPUtils.StatueBarShowText(`${LSPUtils.assembler.localization.GetMessage("plugin load error")}`);
+			return;
+		}
+
+		await ConfigUtils.ReadConfig(vscode.window.activeTextEditor!.document.uri);
 		this.assembler.SwitchLanguage(vscode.env.language);
 
 		// 怕看不懂，直接改成这个形式，顺序不能变动

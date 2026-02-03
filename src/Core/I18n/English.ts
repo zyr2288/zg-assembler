@@ -31,6 +31,7 @@ export const English = {
 	"compile error": "Compile error",
 	"plugin loading": "Plugin loading",
 	"plugin loaded": "Plugin loaded",
+	"plugin load error": "Plugin loading failed",
 	"finished": "Finished",
 
 	"empty addressing mode": "(Empty)",

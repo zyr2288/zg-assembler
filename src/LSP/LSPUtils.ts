@@ -59,7 +59,7 @@ export class LSPUtils {
 	//#region 结果值输出
 	static async OutputResult(result: Int16Array, option: { toFile?: string, toClipboard?: boolean }) {
 		if (option.toFile) {
-			if (!vscode.workspace.workspaceFolders)
+			if (!vscode.workspace.workspaceFolders || !vscode.window.activeTextEditor)
 				return;
 
 			const buffer = new Uint8Array(result.length);
@@ -67,7 +67,8 @@ export class LSPUtils {
 			for (let i = 0; i < buffer.length; ++i)
 				buffer[i] = result[i] < 0 ? 0 : result[i];
 
-			const filePath = LSPUtils.assembler.fileUtils.Combine(vscode.workspace.workspaceFolders[0].uri.fsPath, option.toFile);
+			let filePath = vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri)!.uri.fsPath;
+			filePath = LSPUtils.assembler.fileUtils.Combine(filePath, option.toFile);
 			await LSPUtils.assembler.fileUtils.SaveFile(filePath, buffer);
 		}
 

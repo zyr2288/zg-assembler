@@ -4,9 +4,13 @@ import { LSPUtils } from "./LSPUtils";
 export class ConfigUtils {
 
 	//#region 读取配置文件
-	static async ReadConfig() {
+	static async ReadConfig(asmFileUri: vscode.Uri) {
+		const workspace = vscode.workspace.getWorkspaceFolder(asmFileUri);
+		if (!workspace)
+			return;
+
 		const settingFile = LSPUtils.assembler.fileUtils.Combine(
-			vscode.workspace.workspaceFolders![0].uri.fsPath,
+			workspace.uri.fsPath,
 			"project-settings.json"
 		);
 

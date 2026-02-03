@@ -47,7 +47,7 @@ export class AssCommands {
 		if (index > 0)
 			fileName = fileName.substring(0, index);
 
-		await ConfigUtils.ReadConfig();
+		await ConfigUtils.ReadConfig(vscode.window.activeTextEditor.document.uri);
 
 		const result = await LSPUtils.assembler.CompileText(text, filePath);
 		UpdateFile.UpdateDiagnostic();
@@ -65,13 +65,13 @@ export class AssCommands {
 
 	/**编译入口文件 */
 	static async CompileEntryFile() {
-		if (!vscode.workspace.workspaceFolders)
+		if (!vscode.workspace.workspaceFolders || !vscode.window.activeTextEditor)
 			return;
 
 		LSPUtils.StatueBarShowText(` $(sync~spin) ${LSPUtils.assembler.localization.GetMessage("compiling")}...`, 0);
 
 		await LSPUtils.WaitingCompileFinished();
-		await ConfigUtils.ReadConfig();
+		await ConfigUtils.ReadConfig(vscode.window.activeTextEditor.document.uri);
 
 		const filePath = LSPUtils.assembler.fileUtils.Combine(
 			vscode.workspace.workspaceFolders[0].uri.fsPath,
