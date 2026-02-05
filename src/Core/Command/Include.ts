@@ -103,14 +103,14 @@ export class Incbin implements ICommand {
 
 		let start = 0;
 		if (tag.exps[0]) {
-			const result = ExpressionUtils.GetValue(tag.exps[0].parts, { tryValue: false });
+			const result = ExpressionUtils.GetValue(tag.exps[0].parts, { tryValue: false, macro: option.macro });
 			if (result.success)
 				start = result.value;
 		}
 
 		let length = temp.length;
 		if (tag.exps[1]) {
-			const result = ExpressionUtils.GetValue(tag.exps[1].parts, { tryValue: false });
+			const result = ExpressionUtils.GetValue(tag.exps[1].parts, { tryValue: false, macro: option.macro });
 			if (result.success)
 				length = result.value;
 		}
