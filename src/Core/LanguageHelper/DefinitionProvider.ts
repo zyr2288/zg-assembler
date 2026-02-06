@@ -17,7 +17,6 @@ export class DefinitionProvider {
 	 * @returns 
 	 */
 	static GetDefinitionPosition(filePath: string, text: string, line: number, current: number) {
-		Compiler.ChangeEnviroment("edit");
 
 		const result = { filePath: "", line: 0, start: 0, length: 0 };
 		const fileIndex = Compiler.enviroment.GetFileIndex(filePath, false);

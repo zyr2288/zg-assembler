@@ -5,7 +5,9 @@ import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { Command } from "../Command/Command";
 import { Include } from "../Command/Include";
 import { RepeatCommand } from "../Command/RepeatCommand";
+import { CommandLine } from "../Lines/CommandLine";
 import { CommonLine, LineType } from "../Lines/CommonLine";
+import { InstructionLine } from "../Lines/InstructionLine";
 import { LabelLine } from "../Lines/LabelLine";
 import { MacroLine } from "../Lines/MacroLine";
 import { Analyser } from "./Analyser";
@@ -119,20 +121,27 @@ export class Compiler {
 						case ".REPEAT":
 							RepeatCommand.GetResult(option, result);
 							break switchLoop;
+						case ".HEX":
+							const fileIndex = Compiler.enviroment.fileIndex;
+							Compiler.enviroment.compileResult.SetLine({
+								baseAddress: line.lineResult.address.base,
+								fileIndex,
+								lineNumber: line.org.line,
+								line: line as CommandLine,
+							});
+							break;
 					}
 				case "instruction":
 					if (line.lineResult.address.org < 0 || line.lineResult.resultLength === 0)
 						continue;
 
-					if (line.key === "instruction") {
-						const fileIndex = Compiler.enviroment.fileIndex;
-						Compiler.enviroment.compileResult.SetLine({
-							baseAddress: line.lineResult.address.base,
-							fileIndex,
-							lineNumber: line.org.line,
-							line,
-						});
-					}
+					const fileIndex = Compiler.enviroment.fileIndex;
+					Compiler.enviroment.compileResult.SetLine({
+						baseAddress: line.lineResult.address.base,
+						fileIndex,
+						lineNumber: line.org.line,
+						line: line as InstructionLine,
+					});
 
 					for (let i = 0; i < line.lineResult.result.length; i++)
 						result[line.lineResult.address.base + i] = line.lineResult.result[i];

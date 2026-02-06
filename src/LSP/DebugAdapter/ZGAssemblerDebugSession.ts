@@ -20,7 +20,7 @@ export class ZGAssemblerDebugSession extends DebugSession {
 
 	debugClient: DebugClient;
 	config: ZGAssemblerDebugConfig;
-	
+
 	private hitStack: StackFrame | undefined;
 	private CompileDebug = LSPUtils.assembler.languageHelper.debug;
 
@@ -35,9 +35,8 @@ export class ZGAssemblerDebugSession extends DebugSession {
 
 		this.debugClient = new DebugClient({ host: this.config.host, port: this.config.port, tryReconnect: true });
 
-		this.debugClient.BreakPointHitHandle = async (data) => {
-			// @ts-ignore
-			let temp = parseInt(data.baseAddress) + this.config.romOffset;
+		this.debugClient.BreakPointHitHandle = async (data: any) => {
+			const temp = parseInt(data.baseAddress) + this.config.romOffset;
 			const line = this.CompileDebug.GetDebugLine(temp);
 			if (!line) {
 				this.hitStack = new StackFrame(SessionThreadID, "line");

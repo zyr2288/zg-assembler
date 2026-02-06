@@ -1,3 +1,4 @@
+import { CommandLine } from "../Lines/CommandLine";
 import { InstructionLine } from "../Lines/InstructionLine"
 import { Compiler } from "./Compiler";
 
@@ -6,13 +7,13 @@ import { Compiler } from "./Compiler";
  */
 export class CompileResult {
 	/**key是BaseAddress */
-	baseAddLines = new Map<number, { fileIndex: number, lineNumber: number, line: InstructionLine }>();
+	baseAddLines = new Map<number, { fileIndex: number, lineNumber: number, line: InstructionLine | CommandLine }>();
 	/**key1是fileIndex，key2是lineNumber */
-	fileLines = new Map<number, Map<number, { baseAddress: number, line: InstructionLine }>>();
+	fileLines = new Map<number, Map<number, { baseAddress: number, line: InstructionLine | CommandLine }>>();
 
 	finished = false;
 
-	SetLine(option: { baseAddress: number, fileIndex: number, lineNumber: number, line: InstructionLine }) {
+	SetLine(option: { baseAddress: number, fileIndex: number, lineNumber: number, line: InstructionLine | CommandLine }) {
 		this.baseAddLines.set(
 			option.baseAddress,
 			{ fileIndex: option.fileIndex, lineNumber: option.lineNumber, line: option.line }
