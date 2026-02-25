@@ -308,7 +308,7 @@ export class Analyser {
 	//#region 获取一行内容以及注释
 	/**
 	 * 获取一行内容以及注释
-	 * @param lineText 一行文本
+	 * @param token 一行文本
 	 * @returns 内容以及注释
 	 */
 	static GetContent(token: Token): { content: Token, comment: string | undefined } {
