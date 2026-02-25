@@ -6,16 +6,18 @@ import { FileUtils } from "./Base/FileUtils";
 import { MyDiagnostic } from "./Base/MyDiagnostic";
 import { Command } from "./Command/Command";
 import { Localization } from "./I18n/Localization";
+import { Platform } from "./Platform/Platform";
+import { Analyser } from "./Compiler/Analyser";
+
 import { DocumentChangeProvider } from "./LanguageHelper/DocumentChangeProvider";
 import { HighlightingProvider } from "./LanguageHelper/HighlightingProvider";
 import { IntellisenseProvider } from "./LanguageHelper/IntellisenseProvider";
-import { Platform } from "./Platform/Platform";
-import { Analyser } from "./Compiler/Analyser";
 import { DefinitionProvider } from "./LanguageHelper/DefinitionProvider";
 import { RenameAndReferences } from "./LanguageHelper/RenameAndReferences";
 import { HoverProvider } from "./LanguageHelper/HoverProvider";
 import { DebugProvider } from "./LanguageHelper/DebugProvider";
 import { LabelTreeProvider } from "./LanguageHelper/LabelTree";
+import { FormatHelper } from "./LanguageHelper/FormatHelper";
 
 export class ZGAssembler {
 
@@ -32,7 +34,8 @@ export class ZGAssembler {
 		renameAndReferences: RenameAndReferences,
 		hover: HoverProvider,
 		debug: DebugProvider,
-		labelTree: LabelTreeProvider
+		labelTree: LabelTreeProvider,
+		formatter: FormatHelper,
 	};
 
 	constructor() {

@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { CommandName } from "./AssCommands";
 import { LSPUtils } from "./LSPUtils";
-import { IntellisenseProvider } from "../Core/LanguageHelper/IntellisenseProvider";
 
 enum TriggerSuggestType {
 	None, AllAsm, AllFile
@@ -15,12 +14,6 @@ export interface TriggerSuggestTag {
 interface FileHelperData {
 	path: string;
 	exclude: string;
-}
-
-type InstructionCom = string;
-
-enum CompletionType {
-	Instruction, AddressingType, Command, Macro, Defined, Label, Variable, UnknowLabel, MacroParamter, Folder, File
 }
 
 export class Intellisense {
