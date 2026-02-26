@@ -14,10 +14,15 @@ interface FormatOption {
 	tabFormat: string;
 }
 
+interface InsertLine {
+	curLine: string;
+	newLine?: string;
+}
+
 export class FormatHelper {
 
 	static Format(filePath: string, options: { insertSpaces: boolean, tabSize: number }) {
-		const lines: string[] = [];
+		const lines = new Map<number, InsertLine>();
 
 		const fileIndex = Compiler.enviroment.GetFileIndex(filePath, false);
 		const allLine = Compiler.enviroment.allLine.get(fileIndex);
@@ -50,7 +55,7 @@ export class FormatHelper {
 					lines[i] = FormatHelper.FormatVariable(line, tabOption);
 					break;
 				case "label":
-					lines[i] = FormatHelper.GetDeepFormat(tabOption, false) + line.labelToken.text;
+					lines[i] = { curLine: FormatHelper.GetDeepFormat(tabOption, false) + line.labelToken.text };
 					break;
 				case "unknow":
 					break;
@@ -60,96 +65,114 @@ export class FormatHelper {
 		return lines;
 	}
 
+	//#region 格式化指令行
+	/**
+	 * 格式化指令行
+	 * @param line 指令行
+	 * @param option 格式化选项
+	 * @returns 
+	 */
 	private static FormatInstructionLine(line: InstructionLine, option: FormatOption) {
-		let result = FormatHelper.GetDeepFormat(option, false);
+		const result: InsertLine = {
+			curLine: FormatHelper.GetDeepFormat(option, false),
+			newLine: undefined
+		};
 
 		if (line.label) {
+			// 标签长度小于tabSize时，使用空白填充
 			if (line.label.labelToken.length < option.tabSize) {
 				if (option.insertSpaces) {
-					result += line.label.labelToken.text + " ".repeat(option.tabSize - line.label.labelToken.length);
+					result.curLine += line.label.labelToken.text + " ".repeat(option.tabSize - line.label.labelToken.length);
 				} else {
-					result += line.label.labelToken.text + "\t";
+					result.curLine += line.label.labelToken.text + "\t";
 				}
 			} else {
-				result += line.label.labelToken.text;
-				result += "\n" + FormatHelper.GetDeepFormat(option, true);
+				result.curLine += line.label.labelToken.text;
+				result.newLine = FormatHelper.GetDeepFormat(option, true);
 			}
 		} else {
-			result += option.tabFormat;
+			result.curLine += option.tabFormat;
 		}
 
-		result += line.instruction.text.toUpperCase();
+		let temp = line.instruction.text.toUpperCase();
 
 		if (line.expressions && line.expressions.length > 0) {
-			result += " ";
+			temp += " ";
 			for (let i = 0; i < line.expressions.length; i++) {
 				const exp = line.expressions[i];
-				result += line.addressMode.addressingMode?.replace("[exp]", FormatHelper.FormatExpression(exp));
+				temp += line.addressMode.addressingMode?.replace("[exp]", FormatHelper.FormatExpression(exp));
 			}
 		}
 
+		if (result.newLine) {
+			result.newLine += temp;
+		} else {
+			result.curLine += temp;
+		}
+
 		return result;
 	}
+	//#endregion 格式化指令行
 
+	//#region 格式化变量行
+	/**
+	 * 格式化变量行
+	 * @param line 变量行
+	 * @param option 格式化选项
+	 * @returns 
+	 */
 	private static FormatVariable(line: VariableLine, option: FormatOption) {
-		let result = "";
-
-		const comment = FormatHelper.GetComment(line.org.text);
-
-		result += FormatHelper.GetDeepFormat(option, false);
-		result += line.labelToken.text + " = ";
-
-		result += FormatHelper.FormatExpression(line.expression);
-		if (comment)
-			result += comment;
-
+		const result: InsertLine = { curLine: FormatHelper.GetDeepFormat(option, false), newLine: undefined };
+		result.curLine += line.labelToken.text + " = ";
+		result.curLine += FormatHelper.FormatExpression(line.expression);
 		return result;
 	}
+	//#endregion 格式化变量行
 
+	//#region 格式化命令行
 	private static FormatCommand(line: CommandLine, option: FormatOption) {
-		let result = "", tag;
-		let comment = FormatHelper.GetComment(line.org.text);
+		let result: InsertLine | undefined = undefined;
 		const command = line.command.text.toUpperCase();
+
+		let tag;
 		switch (command) {
 			case ".ORG":
 			case ".BASE":
-				result += FormatHelper.GetDeepFormat(option, true);
-				result += command;
+				result = FormatHelper.CreateInsertLine(option, true);
+				result.curLine += command;
 				tag = line.tag as CommandTagBase;
 				if (tag.exp)
-					result += " " + FormatHelper.FormatExpression(tag.exp);
+					result.curLine += " " + FormatHelper.FormatExpression(tag.exp);
 
 				break;
 			case ".IF":
-				result += FormatHelper.GetDeepFormat(option, true);
-				result += command;
+				result = FormatHelper.CreateInsertLine(option, true);
+				result.curLine += command;
 				option.deepSize++;
 				break;
 			case ".IFDEF":
 			case ".IFNDEF":
-				result += FormatHelper.GetDeepFormat(option, true);
-				result += command + " ";
-				result += line.org.text.substring(line.command.start + line.command.text.length).trim();
+				result = FormatHelper.CreateInsertLine(option, true);
+				result.curLine += command + " ";
+				result.curLine += line.org.text.substring(line.command.start + line.command.text.length).trim();
 				option.deepSize++;
 				break;
 			case ".ENUM":
-				result += FormatHelper.GetDeepFormat(option, true);
-				result += command + "";
+				result = FormatHelper.CreateInsertLine(option, true);
+				result.curLine += command + "";
 				tag = line.tag as EnumTag;
 				if (tag.exp)
-					result += " " + FormatHelper.FormatExpression(tag.exp);
-
-				if (comment) {
-					result += comment;
-					comment = "";
-				}
+					result.curLine += " " + FormatHelper.FormatExpression(tag.exp);
 
 				for (let i = 0; i < tag.lines.length; i++) {
 					const line = tag.lines[i];
-					result += "\n" + FormatHelper.GetDeepFormat(option, true);
-					result += enumItem.token.text;
-					if (enumItem.exp)
-						result += " " + FormatHelper.FormatExpression(enumItem.exp);
+					if (!line)
+						continue;
+
+					result.curLine += "\n" + FormatHelper.GetDeepFormat(option, true);
+					result.curLine += line.labelToken.text;
+					if (line.expression)
+						result.curLine += " " + FormatHelper.FormatExpression(line.expression);
 				}
 
 				break;
@@ -159,8 +182,8 @@ export class FormatHelper {
 			case ".ENDM":
 			case ".ENDE":
 			case ".ENDD":
-				result += FormatHelper.GetDeepFormat(option, false);
-				result += command;
+				result = FormatHelper.CreateInsertLine(option);
+				result.curLine += command;
 				option.deepSize--;
 				break;
 		}
@@ -172,12 +195,21 @@ export class FormatHelper {
 		// 		result += FormatHelper.FormatExpression(exp);
 		// 	}
 		// }
-		if (comment)
-			result += comment;
 
 		return result;
 	}
+	//#endregion 格式化命令行
 
+	/***** 辅助函数 *****/
+
+	//#region 获取缩进格式
+	/**
+	 * 获取缩进格式
+	 * @param option.deepSize 缩进深度
+	 * @param option.tabFormat tab格式
+	 * @param insertTab 是否插入tab
+	 * @returns 
+	 */
 	private static GetDeepFormat(option: { deepSize: number, tabFormat: string }, insertTab: boolean) {
 		let result = option.tabFormat.repeat(option.deepSize);
 		if (insertTab)
@@ -185,8 +217,14 @@ export class FormatHelper {
 
 		return result;
 	}
+	//#endregion 获取缩进格式
 
 	//#region 格式化表达式
+	/**
+	 * 格式化表达式
+	 * @param exp 表达式
+	 * @returns 格式化好的字符串
+	 */
 	private static FormatExpression(exp: Expression) {
 		let result = "";
 
@@ -217,41 +255,10 @@ export class FormatHelper {
 	}
 	//#endregion 格式化表达式
 
-	//#region 检查行是否有注释
-	/**
-	 * 检查行是否有注释
-	 * @param line 要检查的行
-	 * @returns 注释的开始位置
-	 */
-	private static GetComment(line: string) {
-		let result: string = "", inString = false;
-		for (let i = 0; i < line.length; i++) {
-			const char = line[i];
-			if (char === "\"") {
-				inString = !inString;
-				continue;
-			}
-
-			if (inString)
-				continue;
-
-			switch (char) {
-				case ";":
-					break;
-				case " ":
-				case "\t":
-					result += char;
-					continue;
-				default:
-					result = "";
-					continue;
-			}
-
-			result += line.substring(i);
-			break;
-		}
-		return result.trimEnd();
+	//#region 创建一个空白的InsertLine
+	private static CreateInsertLine(option: FormatOption, insertTab = false) {
+		return { curLine: FormatHelper.GetDeepFormat(option, insertTab), newLine: undefined }
 	}
-	//#endregion 检查行是否有注释
+	//#endregion 创建一个空白的InsertLine
 
 }
