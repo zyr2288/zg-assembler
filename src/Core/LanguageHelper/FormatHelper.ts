@@ -1,6 +1,7 @@
 import { Expression, PriorityType } from "../Base/ExpressionUtils";
 import { CommandTagBase } from "../Command/Command";
 import { EnumTag } from "../Command/EnumCommand";
+import { IfConfidentTag } from "../Command/IfConfident";
 import { Compiler } from "../Compiler/Compiler";
 import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
@@ -39,7 +40,7 @@ export class FormatHelper {
 		let temp = undefined;
 		for (let i = 0; i < allLine.length; i++) {
 			const line = allLine[i];
-			if (!line || line.lineType === LineType.Error) {
+			if (!line || line.lineType === LineType.Error || line.lineType === LineType.Ignore) {
 				continue;
 			}
 
@@ -84,21 +85,7 @@ export class FormatHelper {
 			newLine: undefined
 		};
 
-		if (line.label) {
-			// 标签长度小于tabSize时，使用空白填充
-			if (line.label.labelToken.length < option.tabSize) {
-				if (option.insertSpaces) {
-					result.curLine += line.label.labelToken.text + " ".repeat(option.tabSize - line.label.labelToken.length);
-				} else {
-					result.curLine += line.label.labelToken.text + "\t";
-				}
-			} else {
-				result.curLine += line.label.labelToken.text;
-				 result.newLine = FormatHelper.GetDeepFormat(option, true);
-			}
-		} else {
-			result.curLine += option.tabFormat;
-		}
+		FormatHelper.CheckLineHasLabel(line, result, option);
 
 		let temp = line.instruction.text.toUpperCase();
 
@@ -137,7 +124,7 @@ export class FormatHelper {
 
 	//#region 格式化命令行
 	private static FormatCommand(line: CommandLine, option: FormatOption) {
-		let result: InsertLine | undefined = undefined;
+		let result: InsertLine | undefined = FormatHelper.CreateInsertLine(option);
 		const command = line.command.text.toUpperCase();
 
 		let tag;
@@ -152,8 +139,15 @@ export class FormatHelper {
 
 				break;
 			case ".IF":
+				tag = line.tag as IfConfidentTag;
+				if (!tag.exp) {
+					result = undefined;
+					break;
+				}
+
 				result = FormatHelper.CreateInsertLine(option, true);
-				result.curLine += command;
+				result.curLine += command + " ";
+				result.curLine += FormatHelper.FormatExpression(tag.exp);
 				option.deepSize++;
 				break;
 			case ".IFDEF":
@@ -170,17 +164,28 @@ export class FormatHelper {
 				if (tag.exp)
 					result.curLine += " " + FormatHelper.FormatExpression(tag.exp);
 
+				let maxTabLength = 0;
+				const lines = new Map<number, { label: string, exp: string }>();
 				for (let i = 0; i < tag.lines.length; i++) {
 					const line = tag.lines[i];
-					if (!line)
+					if (!line) {
 						continue;
+					}
 
-					result.curLine += "\n" + FormatHelper.GetDeepFormat(option, true);
-					result.curLine += line.labelToken.text;
-					if (line.expression)
-						result.curLine += " " + FormatHelper.FormatExpression(line.expression);
+					if (line.labelToken.text.length > maxTabLength)
+						maxTabLength = line.labelToken.text.length;
+
+					lines.set(line.labelToken.line, {
+						label: line.labelToken.text,
+						exp: FormatHelper.FormatExpression(line.expression)
+					});
 				}
 
+				for(const [lineNum, line] of lines) {
+					result.curLine += FormatHelper.FormatLabel(line.label, maxTabLength, option);
+					result.curLine += line.exp;
+					result.newLine += line.exp;
+				}
 				break;
 			case ".ENDIF":
 			case ".ELSE":
@@ -191,6 +196,9 @@ export class FormatHelper {
 				result = FormatHelper.CreateInsertLine(option);
 				result.curLine += command;
 				option.deepSize--;
+				break;
+			default:
+				result = undefined;
 				break;
 		}
 
@@ -266,5 +274,56 @@ export class FormatHelper {
 		return { curLine: FormatHelper.GetDeepFormat(option, insertTab), newLine: undefined }
 	}
 	//#endregion 创建一个空白的InsertLine
+
+	//#region 检查命令行或指令行是否有标签
+	/**
+	 * 检查命令行或指令行是否有标签
+	 * @param line 命令行或指令行
+	 * @param result 插入行
+	 * @param option 格式化选项
+	 */
+	private static CheckLineHasLabel(line: CommandLine | InstructionLine, result: InsertLine, option: FormatOption) {
+		if (line.label) {
+			// 标签长度小于tabSize时，使用空白填充
+			if (line.label.labelToken.length < option.tabSize) {
+				if (option.insertSpaces) {
+					result.curLine += line.label.labelToken.text + " ".repeat(option.tabSize - line.label.labelToken.length);
+				} else {
+					result.curLine += line.label.labelToken.text + "\t";
+				}
+			} else {
+				result.curLine += line.label.labelToken.text;
+				result.newLine = FormatHelper.GetDeepFormat(option, true);
+			}
+		} else {
+			result.curLine += option.tabFormat;
+		}
+	}
+	//#endregion 检查命令行或指令行是否有标签
+
+	//#region 计算需要多少Tab来对齐长度
+	private static FillTabLength(label: string, exp: string, labelMaxLength: number, option: FormatOption) {
+		const fillLength = labelMaxLength - label.length;
+
+		if (fillLength <= 0) {
+			if (option.insertSpaces)
+				return `${label}, ${exp}`;
+			else
+				return `${label},\t${exp}`;
+		}
+
+		let result = label;
+		if (option.insertSpaces) {
+			// 使用空格填充
+			result += " ".repeat(fillLength);
+			return `${result}, ${exp}`;
+		} else {
+			// 使用制表符填充
+			const tabCount = Math.ceil(fillLength / option.tabSize);
+			result += "\t".repeat(tabCount);
+			return `${result},\t${exp}`;
+		}
+	}
+	//#endregion 计算需要多少Tab来对齐长度
 
 }
