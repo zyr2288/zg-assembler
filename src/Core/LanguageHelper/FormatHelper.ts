@@ -36,6 +36,7 @@ export class FormatHelper {
 			tabFormat: options.insertSpaces ? " ".repeat(options.tabSize) : "\t"
 		};
 
+		let temp = undefined;
 		for (let i = 0; i < allLine.length; i++) {
 			const line = allLine[i];
 			if (!line || line.lineType === LineType.Error) {
@@ -44,21 +45,26 @@ export class FormatHelper {
 
 			switch (line.key) {
 				case "instruction":
-					lines[i] = FormatHelper.FormatInstructionLine(line, tabOption);
+					temp = FormatHelper.FormatInstructionLine(line, tabOption);
 					break;
 				case "command":
-					lines[i] = FormatHelper.FormatCommand(line, tabOption);
+					temp = FormatHelper.FormatCommand(line, tabOption);
 					break;
 				case "macro":
 					break;
 				case "variable":
-					lines[i] = FormatHelper.FormatVariable(line, tabOption);
+					temp = FormatHelper.FormatVariable(line, tabOption);
 					break;
 				case "label":
-					lines[i] = { curLine: FormatHelper.GetDeepFormat(tabOption, false) + line.labelToken.text };
+					temp = { curLine: FormatHelper.GetDeepFormat(tabOption, false) + line.labelToken.text };
 					break;
 				case "unknow":
 					break;
+			}
+
+			if (temp) {
+				lines.set(i, temp);
+				temp = undefined;
 			}
 		}
 
@@ -88,7 +94,7 @@ export class FormatHelper {
 				}
 			} else {
 				result.curLine += line.label.labelToken.text;
-				result.newLine = FormatHelper.GetDeepFormat(option, true);
+				 result.newLine = FormatHelper.GetDeepFormat(option, true);
 			}
 		} else {
 			result.curLine += option.tabFormat;

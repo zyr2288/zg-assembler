@@ -17,22 +17,18 @@ export class FormatProvider {
 		const result: vscode.TextEdit[] = [];
 
 		const lines = LSPUtils.assembler.languageHelper.formatter.Format(document.uri.fsPath, options);
-		let docLineNum = -1;
-		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i];
-			docLineNum++;
-			if (!line)
-				continue;
-
-			const docLine = document.lineAt(docLineNum);
+		for (const [lineNumber, line] of lines) {
+			const docLine = document.lineAt(lineNumber);
 			let commentIndex = FormatProvider.GetCommentIndex(docLine.text);
 			if (commentIndex < 0)
 				commentIndex = docLine.text.length;
 
-			result.push(new vscode.TextEdit(new vscode.Range(docLineNum, 0, docLineNum, commentIndex), line.curLine));
+			if (docLine.text === line.curLine)
+				continue;
+
+			result.push(new vscode.TextEdit(new vscode.Range(lineNumber, 0, lineNumber, commentIndex), line.curLine));
 			if (line.newLine)
-				result.push(new vscode.TextEdit(new vscode.Range(docLineNum, docLine.text.length, docLineNum, docLine.text.length), line.newLine));
-			
+				result.push(new vscode.TextEdit(new vscode.Range(lineNumber, docLine.text.length, lineNumber, docLine.text.length), "\n" + line.newLine));
 		}
 
 		return result;
