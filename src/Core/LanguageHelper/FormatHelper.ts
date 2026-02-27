@@ -37,7 +37,6 @@ export class FormatHelper {
 			result: new Map<number, InsertLine>(),
 		};
 
-		let temp = undefined;
 		for (let i = 0; i < allLine.length; i++) {
 			const line = allLine[i];
 			if (!line || line.lineType === LineType.Error) {
@@ -45,30 +44,27 @@ export class FormatHelper {
 			}
 
 			if (line.lineType === LineType.Ignore && line.key === "command") {
+				FormatHelper.FormatEndCommand(line, tabOption);
+				continue;
 			}
 
 			switch (line.key) {
 				case "instruction":
-					temp = FormatHelper.FormatInstructionLine(line, tabOption);
+					FormatHelper.FormatInstructionLine(line, tabOption);
 					break;
 				case "command":
-					temp = FormatHelper.FormatCommand(line, tabOption);
+					FormatHelper.FormatCommand(line, tabOption);
 					break;
 				case "macro":
 					break;
 				case "variable":
-					temp = FormatHelper.FormatVariable(line, tabOption);
+					FormatHelper.FormatVariable(line, tabOption);
 					break;
 				case "label":
-					temp = { curLine: FormatHelper.GetDeepFormat(tabOption, false) + line.labelToken.text };
+					tabOption.result.set(line.labelToken.line, { curLine: FormatHelper.GetDeepFormat(tabOption, false) + line.labelToken.text });
 					break;
 				case "unknow":
 					break;
-			}
-
-			if (temp) {
-				tabOption.result.set(i, temp);
-				temp = undefined;
 			}
 		}
 
@@ -106,7 +102,7 @@ export class FormatHelper {
 			result.curLine += temp;
 		}
 
-		return result;
+		option.result.set(line.org.line, result);
 	}
 	//#endregion 格式化指令行
 
@@ -121,7 +117,7 @@ export class FormatHelper {
 		const result: InsertLine = { curLine: FormatHelper.GetDeepFormat(option, false), newLine: undefined };
 		result.curLine += line.labelToken.text + " = ";
 		result.curLine += FormatHelper.FormatExpression(line.expression);
-		return result;
+		option.result.set(line.org.line, result);
 	}
 	//#endregion 格式化变量行
 
@@ -224,15 +220,22 @@ export class FormatHelper {
 			tempResult.newLine += curLine;
 		}
 
-		return tempResult;
+		if (tempResult)
+			option.result.set(line.org.line, tempResult);
+
+		return option.result;
 	}
 	//#endregion 格式化命令行
 
 	//#region 格式化结束的命令行
 	private static FormatEndCommand(line: CommandLine, option: FormatOption) {
 		const command = line.command.text.toUpperCase();
-		switch(command) {
+		const result = FormatHelper.CreateInsertLine(option, true);
+		switch (command) {
 			case ".ENDE":
+				result.curLine += command;
+				option.result.set(line.org.line, result);
+				option.deepSize--;
 				break;
 		}
 	}
