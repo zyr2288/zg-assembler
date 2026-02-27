@@ -11,15 +11,18 @@ export class LSPUtils {
 
 	//#region 获取工作目录下所筛选出的文件
 	static async GetWorkspaceFilterFile() {
-		let includes = `{${LSPUtils.assembler.config.ProjectSetting.includes.join(",")}}`;
+		const includes = `{${LSPUtils.assembler.config.ProjectSetting.includes.join(",")}}`;
 		let excludes: string | null = null;
 		if (LSPUtils.assembler.config.ProjectSetting.excludes.length !== 0)
 			excludes = `{${LSPUtils.assembler.config.ProjectSetting.excludes.join(",")}}`;
 
-		let tempFiles = await vscode.workspace.findFiles(includes, excludes);
-		let result: string[] = [];
-		for (let i = 0; i < tempFiles.length; i++)
-			result.push(tempFiles[i].fsPath);
+		const tempFiles = await vscode.workspace.findFiles(includes, excludes);
+		const result: string[] = [];
+		let temp;
+		for (let i = 0; i < tempFiles.length; i++) {
+			temp = LSPUtils.assembler.fileUtils.ArrangePath(tempFiles[i].fsPath);
+			result.push(temp);
+		}
 
 		return result;
 	}
