@@ -17,6 +17,9 @@ export class FormatProvider {
 		const result: vscode.TextEdit[] = [];
 
 		const lines = LSPUtils.assembler.languageHelper.formatter.Format(document.uri.fsPath, options);
+		if (!lines)
+			return result;
+		
 		for (const [lineNumber, line] of lines) {
 			const docLine = document.lineAt(lineNumber);
 			let commentIndex = FormatProvider.GetCommentIndex(docLine.text);

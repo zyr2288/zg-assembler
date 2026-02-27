@@ -137,6 +137,8 @@ export class Enviroment {
 	 */
 	GetFileIndex(filePath: string, save = true) {
 		filePath = FileUtils.ArrangePath(filePath);
+		filePath = filePath.toLowerCase();
+
 		let index = this.allFiles.fileToIndex.get(filePath);
 		if (index === undefined) {
 			index = -1;

@@ -154,14 +154,14 @@ export class UpdateFile {
 		for (let i = 0; i < event.contentChanges.length; ++i) {
 			const value = event.contentChanges[i];
 			if (value.text.match(/\r\n|\r|\n/)) {
-				let lineNumber = value.range.start.line;
-				let content = event.document.lineAt(lineNumber).text;
-				let match = LSPUtils.assembler.languageHelper.documentChange.AutoUpperCase(content);
+				const lineNumber = value.range.start.line;
+				const content = event.document.lineAt(lineNumber).text;
+				const match = LSPUtils.assembler.languageHelper.documentChange.AutoUpperCase(content);
 				if (!match)
 					continue;
 
-				let range = new vscode.Range(lineNumber, match.index, lineNumber, match.index + match.length);
-				let editor = vscode.window.activeTextEditor!;
+				const range = new vscode.Range(lineNumber, match.index, lineNumber, match.index + match.length);
+				const editor = vscode.window.activeTextEditor!;
 				editor.edit((ee) => {
 					ee.replace(range, match!.text);
 				});
@@ -175,7 +175,7 @@ export class UpdateFile {
 
 		// @ts-ignore
 		UpdateFile.fileUpdateThreadId = setTimeout(async () => {
-			let files: { text: string, filePath: string }[] = [];
+			const files: { text: string, filePath: string }[] = [];
 			UpdateFile.updateFiles.forEach((text, filePath) => {
 				files.push({ text, filePath });
 			});
