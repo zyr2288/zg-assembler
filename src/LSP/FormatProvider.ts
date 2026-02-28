@@ -1,84 +1,84 @@
-import * as vscode from "vscode";
-import { LSPUtils } from "./LSPUtils";
+// import * as vscode from "vscode";
+// import { LSPUtils } from "./LSPUtils";
 
-export class FormatProvider {
+// export class FormatProvider {
 
-	/**初始化 */
-	static Initialize(context: vscode.ExtensionContext) {
-		context.subscriptions.push(
-			vscode.languages.registerDocumentFormattingEditProvider(LSPUtils.assembler.config.FileExtension.language, {
-				provideDocumentFormattingEdits: FormatProvider.FormatDocument
-			})
-		);
-	}
+// 	/**初始化 */
+// 	static Initialize(context: vscode.ExtensionContext) {
+// 		context.subscriptions.push(
+// 			vscode.languages.registerDocumentFormattingEditProvider(LSPUtils.assembler.config.FileExtension.language, {
+// 				provideDocumentFormattingEdits: FormatProvider.FormatDocument
+// 			})
+// 		);
+// 	}
 
 
-	private static FormatDocument(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken) {
-		const result: vscode.TextEdit[] = [];
+// 	private static FormatDocument(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken) {
+// 		const result: vscode.TextEdit[] = [];
 
-		const lines = LSPUtils.assembler.languageHelper.formatter.Format(document.uri.fsPath, options);
-		if (!lines)
-			return result;
+// 		const lines = LSPUtils.assembler.languageHelper.formatter.Format(document.uri.fsPath, options);
+// 		if (!lines)
+// 			return result;
 		
-		for (const [lineNumber, line] of lines) {
-			const docLine = document.lineAt(lineNumber);
-			let commentIndex = FormatProvider.GetCommentIndex(docLine.text);
-			if (commentIndex < 0)
-				commentIndex = docLine.text.length;
+// 		for (const [lineNumber, line] of lines) {
+// 			const docLine = document.lineAt(lineNumber);
+// 			let commentIndex = FormatProvider.GetCommentIndex(docLine.text);
+// 			if (commentIndex < 0)
+// 				commentIndex = docLine.text.length;
 
-			if (docLine.text === line.curLine)
-				continue;
+// 			if (docLine.text === line.curLine)
+// 				continue;
 
-			result.push(new vscode.TextEdit(new vscode.Range(lineNumber, 0, lineNumber, commentIndex), line.curLine));
-			if (line.newLine)
-				result.push(new vscode.TextEdit(new vscode.Range(lineNumber, docLine.text.length, lineNumber, docLine.text.length), "\n" + line.newLine));
-		}
+// 			result.push(new vscode.TextEdit(new vscode.Range(lineNumber, 0, lineNumber, commentIndex), line.curLine));
+// 			if (line.newLine)
+// 				result.push(new vscode.TextEdit(new vscode.Range(lineNumber, docLine.text.length, lineNumber, docLine.text.length), "\n" + line.newLine));
+// 		}
 
-		return result;
-	}
+// 		return result;
+// 	}
 
-	//#region 获取行的注释，包括注释前的空白
-	/**
-	 * 获取行的注释，包括注释前的空白
-	 * @param line 要检查的行
-	 * @returns 注释的开始位置
-	 */
-	private static GetCommentIndex(line: string) {
-		let index = -1, findComment = false, inString = false;
-		for (let i = 0; i < line.length; i++) {
-			const char = line[i];
-			if (char === "\"") {
-				inString = !inString;
-				index = -1;
-				continue;
-			}
+// 	//#region 获取行的注释，包括注释前的空白
+// 	/**
+// 	 * 获取行的注释，包括注释前的空白
+// 	 * @param line 要检查的行
+// 	 * @returns 注释的开始位置
+// 	 */
+// 	private static GetCommentIndex(line: string) {
+// 		let index = -1, findComment = false, inString = false;
+// 		for (let i = 0; i < line.length; i++) {
+// 			const char = line[i];
+// 			if (char === "\"") {
+// 				inString = !inString;
+// 				index = -1;
+// 				continue;
+// 			}
 
-			if (inString) {
-				index = -1;
-				continue;
-			}
+// 			if (inString) {
+// 				index = -1;
+// 				continue;
+// 			}
 
-			switch (char) {
-				case ";":
-					findComment = true;
-					break;
-				case " ":
-				case "\t":
-					if (index === -1)
-						index = i;
+// 			switch (char) {
+// 				case ";":
+// 					findComment = true;
+// 					break;
+// 				case " ":
+// 				case "\t":
+// 					if (index === -1)
+// 						index = i;
 
-					continue;
-				default:
-					index = -1;
-					continue;
-			}
-			break;
-		}
-		if (!findComment)
-			index = -1;
+// 					continue;
+// 				default:
+// 					index = -1;
+// 					continue;
+// 			}
+// 			break;
+// 		}
+// 		if (!findComment)
+// 			index = -1;
 
-		return index;
-	}
-	//#endregion 获取行的注释，包括注释前的空白
+// 		return index;
+// 	}
+// 	//#endregion 获取行的注释，包括注释前的空白
 
-}
+// }

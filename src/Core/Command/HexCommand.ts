@@ -6,7 +6,7 @@ import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
 import { ICommand } from "./Command";
 
-type HexTag = Token[];
+export type HexTag = Token[];
 
 export class HexCommand implements ICommand {
 	start = { name: ".HEX", min: 1, max: 1 };

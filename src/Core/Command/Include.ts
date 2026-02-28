@@ -156,19 +156,20 @@ class IncludeUtils {
 			return result;
 		}
 
+		// 先检查绝对路径，再检查相对路径
 		const filePath = line.arguments[0].Substring(1, line.arguments[0].length - 2);
 		let type = await FileUtils.PathType(filePath.text);
 		if (type === "file") {
 			result.exsist = true;
 			result.path = filePath.text;
+		} else {
+			const nowFile = Compiler.enviroment.GetFilePath(Compiler.enviroment.fileIndex);
+			const folder = await FileUtils.GetPathFolder(nowFile);
+			result.path = FileUtils.Combine(folder, filePath.text);
+			type = await FileUtils.PathType(result.path);
+			result.exsist = type === "file";
 		}
 
-		const nowFile = Compiler.enviroment.GetFilePath(Compiler.enviroment.fileIndex);
-		const folder = await FileUtils.GetPathFolder(nowFile);
-		result.path = FileUtils.Combine(folder, filePath.text);
-
-		type = await FileUtils.PathType(result.path);
-		result.exsist = type === "file";
 		if (!result.exsist) {
 			const errorMsg = Localization.GetMessage("File {0} is not exist", filePath.text);
 			MyDiagnostic.PushException(filePath, errorMsg);

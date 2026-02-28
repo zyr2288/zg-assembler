@@ -1,10 +1,13 @@
 import { Expression, PriorityType } from "../Base/ExpressionUtils";
 import { Command, CommandTagBase } from "../Command/Command";
+import { DataCommandTag } from "../Command/DataCommand";
+import { DefTag } from "../Command/DefinedCommand";
 import { EnumTag } from "../Command/EnumCommand";
+import { HexTag } from "../Command/HexCommand";
 import { IfConfidentTag } from "../Command/IfConfident";
 import { Compiler } from "../Compiler/Compiler";
 import { CommandLine } from "../Lines/CommandLine";
-import { LineType } from "../Lines/CommonLine";
+import { CommonLine, LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
 import { VariableLine } from "../Lines/VariableLine";
 
@@ -18,6 +21,8 @@ interface FormatOption {
 	insertSpaces: boolean;
 	tabSize: number;
 	tabFormat: string;
+	nextLineIndex: number;
+	allLines: CommonLine[];
 	result: Map<number, InsertLine>;
 }
 
@@ -31,6 +36,8 @@ export class FormatHelper {
 
 		const tabOption: FormatOption = {
 			deepSize: 0,
+			nextLineIndex: -1,
+			allLines: allLine,
 			insertSpaces: options.insertSpaces,
 			tabSize: options.tabSize,
 			tabFormat: options.insertSpaces ? " ".repeat(options.tabSize) : "\t",
@@ -43,7 +50,7 @@ export class FormatHelper {
 				continue;
 			}
 
-			if (line.lineType === LineType.Ignore && line.key === "command") {
+			if ((line.lineType === LineType.Ignore || line.lineType === LineType.Finished) && line.key === "command") {
 				FormatHelper.FormatEndCommand(line, tabOption);
 				continue;
 			}
@@ -61,10 +68,18 @@ export class FormatHelper {
 					FormatHelper.FormatVariable(line, tabOption);
 					break;
 				case "label":
-					tabOption.result.set(line.labelToken.line, { curLine: FormatHelper.GetDeepFormat(tabOption, false) + line.labelToken.text });
+					tabOption.result.set(
+						line.labelToken.line,
+						{ curLine: FormatHelper.GetDeepFormat(tabOption, false) + line.labelToken.text }
+					);
 					break;
 				case "unknow":
 					break;
+			}
+
+			if (tabOption.nextLineIndex >= 0) {
+				i = tabOption.nextLineIndex;
+				tabOption.nextLineIndex = -1;
 			}
 		}
 
@@ -128,20 +143,30 @@ export class FormatHelper {
 		if (!cmd)
 			return;
 
-		let tag, tempResult, curLine;
-		if (cmd.allowLabel && line.label) {
-			tempResult = FormatHelper.CreateInsertLine(option, false);
+		let tempResult: InsertLine | undefined = FormatHelper.CreateInsertLine(option, false);
+		let tag, curLine;
+		if (cmd.allowLabel && line.label)
 			FormatHelper.CheckLineHasLabel(line, tempResult, option);
-		}
 
 		switch (command) {
 			case ".ORG":
 			case ".BASE":
-				curLine = command;
+				curLine = FormatHelper.GetDeepFormat(option, true) + command + " ";
 				tag = line.tag as CommandTagBase;
 				if (tag.exp)
 					curLine += " " + FormatHelper.FormatExpression(tag.exp);
 
+				break;
+			case ".DEF":
+				FormatHelper.FormatCommandDef(line, option);
+				break;
+			case ".HEX":
+				FormatHelper.FormatCommandHex(line, option);
+				break;
+			case ".DB":
+			case ".DW":
+			case ".DL":
+				FormatHelper.FormatCommandData(line, option);
 				break;
 			case ".IF":
 				tag = line.tag as IfConfidentTag;
@@ -150,7 +175,7 @@ export class FormatHelper {
 					break;
 				}
 
-				curLine = command + " ";
+				curLine = FormatHelper.GetDeepFormat(option, true) + command + " ";
 				curLine += FormatHelper.FormatExpression(tag.exp);
 				option.deepSize++;
 				break;
@@ -161,43 +186,7 @@ export class FormatHelper {
 				option.deepSize++;
 				break;
 			case ".ENUM":
-				tempResult = FormatHelper.CreateInsertLine(option, true);
-				tempResult.curLine += command + "";
-				option.deepSize++;
-				tag = line.tag as EnumTag;
-				if (tag.exp)
-					tempResult.curLine += " " + FormatHelper.FormatExpression(tag.exp);
-
-				let labelMaxLength = 0, startLine = 0;
-				const lines: { label: string, exp: string }[] = [];
-				if (tag.lines[0])
-					startLine = tag.lines[0].labelToken.line;
-
-				for (let i = 0; i < tag.lines.length; i++) {
-					const line = tag.lines[i];
-					if (!line)
-						continue;
-
-					if (line.labelToken.text.length > labelMaxLength)
-						labelMaxLength = line.labelToken.text.length;
-
-					lines[i] = {
-						label: line.labelToken.text,
-						exp: FormatHelper.FormatExpression(line.expression)
-					};
-				}
-
-				for (let i = 0; i < lines.length; i++) {
-					const line = lines[i];
-					if (!line)
-						continue;
-
-					const insertLine = {
-						curLine: FormatHelper.GetDeepFormat(option, true) + FormatHelper.FillTabLength(line.label, line.exp, labelMaxLength, option)
-					};
-					option.result.set(startLine + i, insertLine);
-				}
-				option.deepSize--;
+				FormatHelper.FormatCommandEnum(line, option);
 				break;
 			case ".ENDIF":
 			case ".ELSE":
@@ -206,7 +195,6 @@ export class FormatHelper {
 			case ".ENDD":
 				tempResult = FormatHelper.CreateInsertLine(option);
 				tempResult.curLine += command;
-				option.deepSize--;
 				break;
 			case ".ENDE":
 				console.error("出错了");
@@ -216,8 +204,11 @@ export class FormatHelper {
 				break;
 		}
 
-		if (tempResult?.newLine && curLine) {
-			tempResult.newLine += curLine;
+		if (tempResult && curLine) {
+			if (tempResult?.newLine)
+				tempResult.newLine += curLine;
+			else
+				tempResult.curLine += curLine;
 		}
 
 		if (tempResult)
@@ -225,21 +216,156 @@ export class FormatHelper {
 
 		return option.result;
 	}
+
 	//#endregion 格式化命令行
 
 	//#region 格式化结束的命令行
 	private static FormatEndCommand(line: CommandLine, option: FormatOption) {
 		const command = line.command.text.toUpperCase();
-		const result = FormatHelper.CreateInsertLine(option, true);
 		switch (command) {
 			case ".ENDE":
+			case ".ENDIF":
+			case ".ENDM":
+				option.deepSize--;
+				const result = FormatHelper.CreateInsertLine(option, true);
 				result.curLine += command;
 				option.result.set(line.org.line, result);
-				option.deepSize--;
 				break;
 		}
 	}
 	//#endregion 格式化结束的命令行
+
+	/***** 各种命令的格式化 *****/
+
+	//#region 格式化 DEF 命令行
+	private static FormatCommandDef(line: CommandLine, option: FormatOption) {
+		let tag = line.tag as DefTag;
+		if (!tag.label || !tag.exp)
+			return;
+
+		const lines: { label: string, exp: string }[] = [];
+		let maxLabelLength = tag.label.token.length;
+		for (let i = line.org.line; i < option.allLines.length; i++) {
+			const line = option.allLines[i];
+			if (!line)
+				continue;
+
+			if (line.key !== "command" || line.command.text.toUpperCase() !== ".DEF")
+				break;
+
+			tag = line.tag as DefTag;
+			if (!tag.label || !tag.exp)
+				continue;
+
+			maxLabelLength = Math.max(maxLabelLength, tag.label.token.length);
+			lines[i] = {
+				label: tag.label.token.text,
+				exp: FormatHelper.FormatExpression(tag.exp)
+			};
+		}
+
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+			if (!line)
+				continue;
+
+			const insertLine = {
+				curLine: `${FormatHelper.GetDeepFormat(option, true)}.DEF ${FormatHelper.FillTabLength(line.label, line.exp, maxLabelLength, 6, option)}`
+			};
+			option.result.set(i, insertLine);
+		}
+
+		option.nextLineIndex = lines.length - 1;
+		return option.result;
+	}
+	//#endregion 格式化 DEF 命令行
+
+	//#region 格式化 ENUM 命令行
+	private static FormatCommandEnum(line: CommandLine, option: FormatOption) {
+		let tempResult = FormatHelper.CreateInsertLine(option, true);
+		tempResult.curLine += ".ENUM ";
+		option.deepSize++;
+		const tag = line.tag as EnumTag;
+		if (tag.exp) {
+			tempResult.curLine += " " + FormatHelper.FormatExpression(tag.exp);
+			option.result.set(line.org.line, tempResult);
+		}
+
+		let labelMaxLength = 0, startLine = 0;
+		const lines: { label: string, exp: string }[] = [];
+		if (tag.lines[0])
+			startLine = tag.lines[0].labelToken.line;
+
+		for (let i = 0; i < tag.lines.length; i++) {
+			const line = tag.lines[i];
+			if (!line)
+				continue;
+
+			labelMaxLength = Math.max(labelMaxLength, line.labelToken.text.length);
+
+			lines[i] = {
+				label: line.labelToken.text,
+				exp: FormatHelper.FormatExpression(line.expression)
+			};
+		}
+
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+			if (!line)
+				continue;
+
+			// 因为Enum每一行最后都有一个逗号，所以需要在长度上加1
+			const insertLine = {
+				curLine: FormatHelper.GetDeepFormat(option, true) + FormatHelper.FillTabLength(line.label, line.exp, labelMaxLength, 1, option)
+			};
+			option.result.set(startLine + i, insertLine);
+		}
+	}
+	//#endregion 格式化 ENUM 命令行
+
+	//#region 格式化 HEX 命令
+	private static FormatCommandHex(line: CommandLine, option: FormatOption) {
+		const tempResult = FormatHelper.CreateInsertLine(option, true);
+		tempResult.curLine += ".HEX ";
+		const tag = line.tag as HexTag;
+
+		let result = "", temp;
+		for (let i = 0; i < tag.length; i++) {
+			const part = tag[i];
+			if (!/^[0-9a-fA-F]+$/.test(part.text))
+				return;
+
+			for (let i = 0; i < part.text.length; i += 2) {
+				temp = part.text.substring(i, i + 2);
+				if (temp.length === 2) {
+					result += temp + " ";
+				} else {
+					result += "0" + temp + " ";
+				}
+			}
+		}
+		tempResult.curLine += result.substring(0, result.length - 1);
+		option.result.set(line.org.line, tempResult);
+	}
+	//#endregion 格式化 HEX 命令
+
+	//#region 格式化 DB/DW/DL 命令行
+	private static FormatCommandData(line: CommandLine, option: FormatOption) {
+
+		const tempResult = FormatHelper.CreateInsertLine(option, true);
+		tempResult.curLine += line.command.text.toUpperCase() + " ";
+
+		const tag = line.tag as DataCommandTag;
+		for (let i = 0; i < tag.length; i++) {
+			const exp = tag[i];
+			if (!exp)
+				return;
+
+			tempResult.curLine += FormatHelper.FormatExpression(exp) + ", ";
+		}
+		option.result.set(line.org.line, tempResult);
+	}
+	//#endregion 格式化 IF 命令行
 
 	/***** 辅助函数 *****/
 
@@ -329,10 +455,19 @@ export class FormatHelper {
 	//#endregion 检查命令行或指令行是否有标签
 
 	//#region 计算需要多少Tab来对齐长度
-	private static FillTabLength(label: string, exp: string, labelMaxLength: number, option: FormatOption) {
-		const fillLength = labelMaxLength - label.length + 1;
+	private static FillTabLength(label: string, exp: string, labelMaxLength: number, exStrLength: number, option: FormatOption) {
+		// 标签长度必须是tabSize的整数倍，否则需要填充
+		if (!option.insertSpaces) {
+			labelMaxLength += exStrLength;
+			if (labelMaxLength % option.tabSize === 0) {
+				labelMaxLength += option.tabSize;
+			} else {
+				labelMaxLength += option.tabSize - labelMaxLength % option.tabSize;
+			}
+		}
 
-		if (fillLength <= 0) {
+		const restLength = labelMaxLength - (label.length + exStrLength);
+		if (restLength <= 0) {
 			if (option.insertSpaces)
 				return `${label}, ${exp}`;
 			else
@@ -342,11 +477,11 @@ export class FormatHelper {
 		let result = label;
 		if (option.insertSpaces) {
 			// 使用空格填充
-			result += "," + " ".repeat(fillLength);
+			result += "," + " ".repeat(restLength);
 			return result + exp;
 		} else {
 			// 使用制表符填充
-			const tabCount = Math.ceil(fillLength / option.tabSize);
+			const tabCount = Math.ceil(restLength / option.tabSize);
 			result += "," + "\t".repeat(tabCount);
 			return result + exp;
 		}
