@@ -8,13 +8,15 @@ export class FileUtils {
 		SaveFile?: typeof FileUtils.SaveFile,
 		GetFolderFiles?: typeof FileUtils.GetFolderFiles,
 		PathType?: typeof FileUtils.PathType,
-		ShowMessage?: typeof FileUtils.ShowMessage
+		ShowMessage?: typeof FileUtils.ShowMessage,
+		GetProjectFolder?: typeof FileUtils.GetProjectFolder,
 	}) {
 		if (option.ReadFile) FileUtils.ReadFile = option.ReadFile;
 		if (option.SaveFile) FileUtils.SaveFile = option.SaveFile;
 		if (option.GetFolderFiles) FileUtils.GetFolderFiles = option.GetFolderFiles;
 		if (option.PathType) FileUtils.PathType = option.PathType;
 		if (option.ShowMessage) FileUtils.ShowMessage = option.ShowMessage;
+		if (option.GetProjectFolder) FileUtils.GetProjectFolder = option.GetProjectFolder;
 	}
 	//#endregion 实现接口的方法
 
@@ -62,6 +64,13 @@ export class FileUtils {
 	 */
 	static ShowMessage: (message: string) => void;
 	//#endregion 显示消息
+
+	//#region 获取项目工程目录
+	/**
+	 * 获取项目工程目录（需要实现）
+	 */
+	static GetProjectFolder: () => string;
+	//#endregion 获取项目工程目录
 
 	/***** 已实现接口 *****/
 

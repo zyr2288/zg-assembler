@@ -158,7 +158,13 @@ class IncludeUtils {
 
 		// 先检查绝对路径，再检查相对路径
 		const filePath = line.arguments[0].Substring(1, line.arguments[0].length - 2);
+		if (filePath.text.startsWith("@")) {
+			result.path = filePath.text.substring(1);
+			result.path = FileUtils.Combine(result)
+		}
 		let type = await FileUtils.PathType(filePath.text);
+
+
 		if (type === "file") {
 			result.exsist = true;
 			result.path = filePath.text;
