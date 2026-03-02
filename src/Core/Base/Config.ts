@@ -47,6 +47,8 @@ export class Config {
 		excludes: [] as string[]
 	}
 
+	static ProjectDir = "";
+
 	//#region 读取配置文件
 	/**读取配置文件 */
 	static ReadConfigJson(json: string) {

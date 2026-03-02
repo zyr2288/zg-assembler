@@ -4,11 +4,17 @@ import { LSPUtils } from "./LSPUtils";
 export class ConfigUtils {
 
 	//#region 读取配置文件
+	/**
+	 * 读取配置文件
+	 * @param asmFileUri Asm文件的路径
+	 * @returns 
+	 */
 	static async ReadConfig(asmFileUri: vscode.Uri) {
 		const workspace = vscode.workspace.getWorkspaceFolder(asmFileUri);
 		if (!workspace)
 			return;
 
+		LSPUtils.assembler.config.ProjectDir = workspace.uri.fsPath;
 		const settingFile = LSPUtils.assembler.fileUtils.Combine(
 			workspace.uri.fsPath,
 			"project-settings.json"

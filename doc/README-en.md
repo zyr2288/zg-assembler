@@ -377,11 +377,12 @@ For example:
 ```
 
 -   You can read the binary content of the reference file. Please fill in the relative path of the file in the double quotes.
-
+-   If it starts with `@`, the path is relative to the project root.
 For example:
 
 ```
-    .INCBIN "Folder\file.bin", 0, 100
+    .INCBIN "Folder/file.bin", 0, 100
+    .INCBIN "@/folder/file.bin", 0, 200
 ```
 
 </details>
@@ -398,9 +399,11 @@ For example:
 ```
 
 -   You can quote the file, please fill in the relative path of the file in double quotes. If there are also reference files in the reference file, please fill in relative to the main compilation file path. E.g:
+-   If it starts with @, the path is relative to the project root.
 
 ```
-    .INCLUDE "Folder\file.asm"
+    .INCLUDE "Folder/file.asm"
+    .INCLUDE "@/folder/file.asm"    ; @ means project root
 ```
 
 </details>

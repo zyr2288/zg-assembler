@@ -1,4 +1,5 @@
 import { CompileOption } from "../Base/CompileOption";
+import { Config } from "../Base/Config";
 import { Expression, ExpressionUtils } from "../Base/ExpressionUtils";
 import { FileUtils } from "../Base/FileUtils";
 import { MyDiagnostic } from "../Base/MyDiagnostic";
@@ -160,15 +161,11 @@ class IncludeUtils {
 		const filePath = line.arguments[0].Substring(1, line.arguments[0].length - 2);
 		if (filePath.text.startsWith("@")) {
 			result.path = filePath.text.substring(1);
-			result.path = FileUtils.Combine(result)
+			result.path = FileUtils.Combine(Config.ProjectDir, result.path);
 		}
-		let type = await FileUtils.PathType(filePath.text);
-
-
-		if (type === "file") {
-			result.exsist = true;
-			result.path = filePath.text;
-		} else {
+		let type = await FileUtils.PathType(result.path);
+		result.exsist = type === "file";
+		if (!result.exsist) {
 			const nowFile = Compiler.enviroment.GetFilePath(Compiler.enviroment.fileIndex);
 			const folder = await FileUtils.GetPathFolder(nowFile);
 			result.path = FileUtils.Combine(folder, filePath.text);
