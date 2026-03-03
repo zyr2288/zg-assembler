@@ -9,9 +9,12 @@ import { Compiler } from "../Compiler/Compiler";
 import { CommandLine } from "../Lines/CommandLine";
 import { CommonLine, LineType } from "../Lines/CommonLine";
 import { InstructionLine } from "../Lines/InstructionLine";
+import { LabelLine } from "../Lines/LabelLine";
 import { VariableLine } from "../Lines/VariableLine";
 
 interface InsertLine {
+	/**行号，从0开始 */
+	lineNumber: number;
 	curLine: string;
 	newLine?: string;
 }
@@ -21,6 +24,9 @@ interface FormatOption {
 	insertSpaces: boolean;
 	tabSize: number;
 	tabFormat: string;
+}
+
+interface FormatParams {
 	nextLineIndex: number;
 	allLines: CommonLine[];
 	result: Map<number, InsertLine>;
@@ -37,13 +43,18 @@ export class FormatHelper {
 		const tabOption: FormatOption = {
 			deepSize: 0,
 			nextLineIndex: -1,
-			allLines: allLine,
 			insertSpaces: options.insertSpaces,
 			tabSize: options.tabSize,
 			tabFormat: options.insertSpaces ? " ".repeat(options.tabSize) : "\t",
+		};
+
+		const formatParams: FormatParams = {
+			nextLineIndex: -1,
+			allLines: allLine,
 			result: new Map<number, InsertLine>(),
 		};
 
+		let temp = undefined;
 		for (let i = 0; i < allLine.length; i++) {
 			const line = allLine[i];
 			if (!line || line.lineType === LineType.Error) {
@@ -57,33 +68,35 @@ export class FormatHelper {
 
 			switch (line.key) {
 				case "instruction":
-					FormatHelper.FormatInstructionLine(line, tabOption);
+					temp = FormatHelper.FormatInstructionLine(line, tabOption);
 					break;
 				case "command":
-					FormatHelper.FormatCommand(line, tabOption);
+					FormatHelper.FormatCommand(line, tabOption, formatParams);
 					break;
 				case "macro":
 					break;
 				case "variable":
-					FormatHelper.FormatVariable(line, tabOption);
+					temp = FormatHelper.FormatVariable(line, tabOption);
 					break;
 				case "label":
-					tabOption.result.set(
-						line.labelToken.line,
-						{ curLine: FormatHelper.GetDeepFormat(tabOption, false) + line.labelToken.text }
-					);
+					temp = FormatHelper.FormatLabel(line, tabOption);
 					break;
 				case "unknow":
 					break;
 			}
 
-			if (tabOption.nextLineIndex >= 0) {
-				i = tabOption.nextLineIndex;
-				tabOption.nextLineIndex = -1;
+			if (formatParams.nextLineIndex >= 0) {
+				i = formatParams.nextLineIndex;
+				formatParams.nextLineIndex = -1;
+			}
+
+			if (temp) {
+				formatParams.result.set(temp.lineNumber, temp);
+				temp = undefined;
 			}
 		}
 
-		return tabOption.result;
+		return formatParams.result;
 	}
 
 	//#region 格式化指令行
@@ -95,6 +108,7 @@ export class FormatHelper {
 	 */
 	private static FormatInstructionLine(line: InstructionLine, option: FormatOption) {
 		const result: InsertLine = {
+			lineNumber: line.org.line,
 			curLine: FormatHelper.GetDeepFormat(option, false),
 			newLine: undefined
 		};
@@ -117,7 +131,7 @@ export class FormatHelper {
 			result.curLine += temp;
 		}
 
-		option.result.set(line.org.line, result);
+		return result;
 	}
 	//#endregion 格式化指令行
 
@@ -129,15 +143,19 @@ export class FormatHelper {
 	 * @returns 
 	 */
 	private static FormatVariable(line: VariableLine, option: FormatOption) {
-		const result: InsertLine = { curLine: FormatHelper.GetDeepFormat(option, false), newLine: undefined };
+		const result: InsertLine = {
+			lineNumber: line.org.line,
+			curLine: FormatHelper.GetDeepFormat(option, false),
+			newLine: undefined
+		};
 		result.curLine += line.labelToken.text + " = ";
 		result.curLine += FormatHelper.FormatExpression(line.expression);
-		option.result.set(line.org.line, result);
+		return result;
 	}
 	//#endregion 格式化变量行
 
 	//#region 格式化命令行
-	private static FormatCommand(line: CommandLine, option: FormatOption) {
+	private static FormatCommand(line: CommandLine, option: FormatOption, formatParams: FormatParams) {
 		const command = line.command.text.toUpperCase();
 		const cmd = Command.commandMap.get(command);
 		if (!cmd)
@@ -158,7 +176,7 @@ export class FormatHelper {
 
 				break;
 			case ".DEF":
-				FormatHelper.FormatCommandDef(line, option);
+				FormatHelper.FormatCommandDef(line, option, formatParams);
 				break;
 			case ".HEX":
 				FormatHelper.FormatCommandHex(line, option);
@@ -235,18 +253,28 @@ export class FormatHelper {
 	}
 	//#endregion 格式化结束的命令行
 
+	//#region 格式化标签行
+	private static FormatLabel(line: LabelLine, option: FormatOption) {
+		const insertLine = {
+			lineNumber: line.labelToken.line,
+			curLine: FormatHelper.GetDeepFormat(option, false) + line.labelToken.text
+		}
+		return insertLine;
+	}
+	//#endregion 格式化标签行
+
 	/***** 各种命令的格式化 *****/
 
 	//#region 格式化 DEF 命令行
-	private static FormatCommandDef(line: CommandLine, option: FormatOption) {
+	private static FormatCommandDef(line: CommandLine, option: FormatOption, formatParams: FormatParams) {
 		let tag = line.tag as DefTag;
 		if (!tag.label || !tag.exp)
 			return;
 
 		const lines: { label: string, exp: string }[] = [];
 		let maxLabelLength = tag.label.token.length;
-		for (let i = line.org.line; i < option.allLines.length; i++) {
-			const line = option.allLines[i];
+		for (let i = line.org.line; i < formatParams.allLines.length; i++) {
+			const line = formatParams.allLines[i];
 			if (!line)
 				continue;
 
@@ -363,7 +391,7 @@ export class FormatHelper {
 
 			tempResult.curLine += FormatHelper.FormatExpression(exp) + ", ";
 		}
-		option.result.set(line.org.line, tempResult);
+		formatParams.result.set(line.org.line, tempResult);
 	}
 	//#endregion 格式化 IF 命令行
 
@@ -423,8 +451,12 @@ export class FormatHelper {
 	//#endregion 格式化表达式
 
 	//#region 创建一个空白的InsertLine
-	private static CreateInsertLine(option: FormatOption, insertTab = false) {
-		return { curLine: FormatHelper.GetDeepFormat(option, insertTab), newLine: undefined as string | undefined };
+	private static CreateInsertLine(option: FormatOption, insertTab = false): InsertLine {
+		return {
+			lineNumber: -1,
+			curLine: FormatHelper.GetDeepFormat(option, insertTab),
+			newLine: undefined as string | undefined
+		};
 	}
 	//#endregion 创建一个空白的InsertLine
 
