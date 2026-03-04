@@ -35,6 +35,7 @@ export class ZGAssembler {
 		hover: HoverProvider,
 		debug: DebugProvider,
 		labelTree: LabelTreeProvider,
+		formatter: FormatHelper,
 	};
 
 	constructor() {

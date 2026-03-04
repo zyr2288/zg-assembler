@@ -14,6 +14,7 @@ import { ZGAssemblerDebugAdapter } from "./DebugAdapter/ZGAssemblerDebugAdapter"
 import { ReferencesProvider } from "./ReferencesProvider";
 import { TextDecoration } from "./TextDecoration";
 import { LabelTreeProvider } from "./LabelTreeProvider";
+import { FormatProvider } from "./FormatProvider";
 
 export class LanguageServer {
 
@@ -45,6 +46,7 @@ export class LanguageServer {
 		Intellisense.Initialize(context);
 		TextDecoration.Initialize(context);
 		LabelTreeProvider.Initialize(context);
+		FormatProvider.Initialize(context);
 
 		HoverProvider.Initialize(context);
 		AssCommands.Initialize(context);
