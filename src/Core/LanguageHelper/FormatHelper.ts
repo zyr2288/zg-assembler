@@ -450,7 +450,7 @@ export class FormatHelper {
 	 * @param result 插入行
 	 * @param option 格式化选项
 	 */
-	private static CheckLineHasLabel(line: CommandLine | InstructionLine, option: FormatOption, insertLine: InsertLine) {
+	private static CheckLineHasLabel(line: CommandLine | InstructionLine, option: FormatOption) {
 		const insertLine = FormatHelper.CreateInsertLine(option, false);
 		if (line.label) {
 			// 标签长度小于tabSize时，使用空白填充
