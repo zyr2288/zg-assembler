@@ -124,7 +124,14 @@ export class IntellisenseProvider {
 	 * @param option.trigger 触发字符
 	 * @returns 
 	 */
-	static async Intellisense(option: { filePath: string, lineNumber: number, lineText: string, current: number, trigger?: string }): Promise<Completion[]> {
+	static async Intellisense(option: {
+		filePath: string,
+		projectDir: string,
+		lineNumber: number,
+		lineText: string,
+		current: number,
+		trigger?: string
+	}): Promise<Completion[]> {
 		if (!Config.ProjectSetting.intellisense)
 			return [];
 
@@ -174,7 +181,7 @@ export class IntellisenseProvider {
 			case "instruction":
 				return IntellisenseProvider.ProcessInstruction(match.content!, fileIndex, option.current, macro, option.trigger);
 			case "command":
-				return await IntellisenseProvider.ProcessCommand(match.content!, fileIndex, option.current, macro, option.trigger);
+				return await IntellisenseProvider.ProcessCommand(match.content!, option.projectDir, fileIndex, option.current, macro, option.trigger);
 			case "macro":
 			case "variable":
 				if (option.current < match.content!.main.start)
@@ -189,7 +196,14 @@ export class IntellisenseProvider {
 	//#endregion 基础智能提示
 
 	//#region 获取文件帮助
-	/**获取文件帮助 */
+	/**
+	 * 
+	 * @param topRoot 项目根目录
+	 * @param path 路径
+	 * @param fileFilter 文件类型
+	 * @param excludeFile 排除文件
+	 * @returns 
+	 */
 	static async GetFileHelper(topRoot: string, path: string, fileFilter: TriggerSuggestType, excludeFile: string) {
 
 		const completions: Completion[] = [];
@@ -384,7 +398,11 @@ export class IntellisenseProvider {
 	//#region 处理命令
 	private static async ProcessCommand(
 		content: { pre: Token, main: Token, rest: Token },
-		fileIndex: number, current: number, macro?: Macro, trigger?: string): Promise<Completion[]> {
+		projectDir: string,
+		fileIndex: number,
+		current: number,
+		macro?: Macro,
+		trigger?: string): Promise<Completion[]> {
 
 		let result: Completion[] = [];
 		let temp;
@@ -392,7 +410,14 @@ export class IntellisenseProvider {
 		switch (com) {
 			case ".INCLUDE":
 			case ".INCBIN":
-				temp = await IntellisenseProvider.ProcessInclude(com === ".INCBIN", trigger === "/", content.rest, current, fileIndex);
+				temp =
+					temp = await IntellisenseProvider.ProcessInclude(
+						com === ".INCBIN",
+						trigger === "/",
+						content.rest,
+						current,
+						projectDir,
+						fileIndex);
 				if (temp)
 					result = temp;
 
@@ -413,7 +438,7 @@ export class IntellisenseProvider {
 	//#endregion 处理命令
 
 	//#region .INCLUDE命令
-	private static async ProcessInclude(isIncbin: boolean, isTrigger: boolean, rest: Token, current: number, fileIndex: number) {
+	private static async ProcessInclude(isIncbin: boolean, isTrigger: boolean, rest: Token, current: number, projectDir: string, fileIndex: number) {
 		let tokens = Analyser.SplitComma(rest);
 		if (!tokens)
 			return;
@@ -433,13 +458,19 @@ export class IntellisenseProvider {
 				if (isTrigger) {
 					const type = isIncbin ? TriggerSuggestType.AllFile : TriggerSuggestType.AllAsm;
 					const currentFile = Compiler.enviroment.GetFilePath(fileIndex);
-					const root = await FileUtils.GetPathFolder(currentFile);
+					const currentFileRoot = await FileUtils.GetPathFolder(currentFile);
 					temp = temp[0].Substring(0, current - temp[0].start - 1);
-					temp = FileUtils.Combine(root, temp.text);
+					
+					if (temp.text.startsWith("@")) {
+						temp = FileUtils.Combine(projectDir, temp.text.substring(1));
+					} else {
+						temp = FileUtils.Combine(currentFileRoot, temp.text);
+					}
+
 					if (await FileUtils.PathType(temp) !== "path")
 						break;
 
-					return await IntellisenseProvider.GetFileHelper(root, temp, type, currentFile);
+					return await IntellisenseProvider.GetFileHelper(currentFileRoot, temp, type, currentFile);
 				}
 				break;
 			case 1:

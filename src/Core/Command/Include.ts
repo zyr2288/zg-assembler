@@ -17,6 +17,12 @@ export interface IncludeTag {
 	option: CompileOption;
 }
 
+export interface IncbinTag {
+	orgPath: Token;
+	path: string;
+	exps: Expression[];
+}
+
 /**
  * .INCLUDE 命令
  */
@@ -74,12 +80,6 @@ export class Include implements ICommand {
 		await Compiler.Compile(tag.option);
 		Compiler.enviroment.fileIndex = saveFileIndex;
 	}
-}
-
-export interface IncbinTag {
-	orgPath: Token;
-	path: string;
-	exps: Expression[];
 }
 
 /**
@@ -163,6 +163,8 @@ class IncludeUtils {
 			result.path = filePath.text.substring(1);
 			result.path = FileUtils.Combine(Config.ProjectDir, result.path);
 		}
+
+
 		let type = await FileUtils.PathType(result.path);
 		result.exsist = type === "file";
 		if (!result.exsist) {

@@ -65,8 +65,10 @@ export class Intellisense {
 			return result;
 		}
 
+		const workspace = vscode.workspace.getWorkspaceFolder(document.uri);
 		const completions = await LSPUtils.assembler.languageHelper.intellisense.Intellisense({
 			filePath: document.uri.fsPath,
+			projectDir: workspace?.uri.fsPath || "",
 			lineNumber: position.line,
 			lineText: document.lineAt(position.line).text,
 			current: position.character,
