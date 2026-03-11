@@ -205,7 +205,6 @@ export class IntellisenseProvider {
 	 * @returns 
 	 */
 	static async GetFileHelper(topRoot: string, path: string, fileFilter: TriggerSuggestType, excludeFile: string) {
-
 		const completions: Completion[] = [];
 		if (!FileUtils.ReadFile)
 			return [];
@@ -459,10 +458,16 @@ export class IntellisenseProvider {
 					const type = isIncbin ? TriggerSuggestType.AllFile : TriggerSuggestType.AllAsm;
 					const currentFile = Compiler.enviroment.GetFilePath(fileIndex);
 					const currentFileRoot = await FileUtils.GetPathFolder(currentFile);
+
+					// 这两行是原来的，保留
+					// temp = temp[0].Substring(0, current - temp[0].start - 1);
+					// temp = FileUtils.Combine(currentFileRoot, temp.text);
+
+					// 下面是新的
 					temp = temp[0].Substring(0, current - temp[0].start - 1);
-					
 					if (temp.text.startsWith("@")) {
 						temp = FileUtils.Combine(projectDir, temp.text.substring(1));
+						console.log("ceshi", temp);
 					} else {
 						temp = FileUtils.Combine(currentFileRoot, temp.text);
 					}

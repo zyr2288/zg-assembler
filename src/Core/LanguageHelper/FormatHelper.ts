@@ -19,37 +19,19 @@ interface FormatOption {
 	tabFormat: string;
 }
 
-class InsertLine {
-	curLine: string = "";
-	newLine?: string;
-
-	Append(text:string) {
-		if (this.newLine) {
-			this.newLine += text;
-		} else {
-			this.newLine = text;
-		}
-	}
-}
-
-class FormatParams {
-	nextLineIndex: number;
-	allLines: CommonLine[];
-	result: Map<number, InsertLine>;
-
-	constructor(allLines: CommonLine[]) {
-		this.nextLineIndex = -1;
-		this.allLines = allLines;
-		this.result = new Map<number, InsertLine>();
-	}
-
-	SetResult(lineNumber: number, line: InsertLine) {
-		this.result.set(lineNumber, line);
-	}
-}
-
 export class FormatHelper {
 
+	//#region 格式化文件
+	/**
+	 * 格式化文件
+	 * 
+	 * 格式化的每一个函数必须返回单个 `InsertLine` 或者 `Map<number, InsertLine>`
+	 * 
+	 * 其中 `Map<number, InsertLine>` 的 key 为行号，value 为格式化后的行
+	 * @param filePath 文件路径
+	 * @param options 格式化选项
+	 * @returns 
+	 */
 	static Format(filePath: string, options: { insertSpaces: boolean, tabSize: number }) {
 		const fileIndex = Compiler.enviroment.GetFileIndex(filePath, false);
 		const allLine = Compiler.enviroment.allLine.get(fileIndex);
@@ -64,6 +46,9 @@ export class FormatHelper {
 		};
 
 		const formatParams = new FormatParams(allLine);
+		const formatResult = new FormatResult();
+
+		let temp;
 		for (let i = 0; i < allLine.length; i++) {
 			const line = allLine[i];
 			if (!line || line.lineType === LineType.Error) {
@@ -71,24 +56,31 @@ export class FormatHelper {
 			}
 
 			if ((line.lineType === LineType.Ignore || line.lineType === LineType.Finished) && line.key === "command") {
-				FormatHelper.FormatEndCommand(line, tabOption, formatParams);
+				const result = FormatHelper.FormatEndCommand(line, tabOption);
+				if (result)
+					formatResult.SetResult({ lineNumber: line.org.line, line: result });
+
 				continue;
 			}
 
 			switch (line.key) {
 				case "instruction":
-					FormatHelper.FormatInstructionLine(line, tabOption, formatParams);
+					temp = FormatHelper.FormatInstructionLine(line, tabOption);
+					formatResult.SetResult({ lineNumber: line.org.line, line: temp });
 					break;
 				case "command":
-					FormatHelper.FormatCommand(line, tabOption, formatParams);
+					temp = FormatHelper.FormatCommand(line, tabOption, formatParams);
+					formatResult.SetResult(temp);
 					break;
 				case "macro":
 					break;
 				case "variable":
-					FormatHelper.FormatVariable(line, tabOption, formatParams);
+					temp = FormatHelper.FormatVariable(line, tabOption);
+					formatResult.SetResult({ lineNumber: line.org.line, line: temp });
 					break;
 				case "label":
-					FormatHelper.FormatLabel(line, tabOption, formatParams);
+					temp = FormatHelper.FormatLabel(line, tabOption);
+					formatResult.SetResult({ lineNumber: line.labelToken.line, line: temp });
 					break;
 				case "unknow":
 					break;
@@ -100,8 +92,11 @@ export class FormatHelper {
 			}
 		}
 
-		return formatParams.result;
+		return formatResult.result;
 	}
+	//#endregion 格式化文件
+
+	/***** 格式化行 *****/
 
 	//#region 格式化指令行
 	/**
@@ -110,29 +105,21 @@ export class FormatHelper {
 	 * @param option 格式化选项
 	 * @returns 
 	 */
-	private static FormatInstructionLine(line: InstructionLine, option: FormatOption, formatParams: FormatParams): void {
-		const result: InsertLine = {
-			curLine: FormatHelper.GetDeepFormat(option, false),
-			newLine: undefined
-		};
-
-		FormatHelper.CheckLineHasLabel(line, result, option);
+	private static FormatInstructionLine(line: InstructionLine, option: FormatOption): InsertLine {
+		const insertLine = new InsertLine();
+		FormatHelper.CheckLineHasLabel(line, option, insertLine);
 		let temp = line.instruction.text.toUpperCase();
 		if (line.expressions && line.expressions.length > 0) {
 			temp += " ";
 			for (let i = 0; i < line.expressions.length; i++) {
 				const exp = line.expressions[i];
-				temp += line.addressMode.addressingMode?.replace("[exp]", FormatHelper.FormatExpression(exp));
+				if (line.addressMode.addressingMode)
+					temp += line.addressMode.addressingMode.replace("[exp]", FormatHelper.FormatExpression(exp));
 			}
 		}
 
-		if (result.newLine) {
-			result.newLine += temp;
-		} else {
-			result.curLine += temp;
-		}
-
-		formatParams.SetResult(line.org.line, result);
+		insertLine.Append(temp);
+		return insertLine;
 	}
 	//#endregion 格式化指令行
 
@@ -143,91 +130,101 @@ export class FormatHelper {
 	 * @param option 格式化选项
 	 * @returns 
 	 */
-	private static FormatVariable(line: VariableLine, option: FormatOption, formatParams: FormatParams): void {
-		const result: InsertLine = {
-			curLine: FormatHelper.GetDeepFormat(option, false),
-			newLine: undefined
-		};
-		result.curLine += line.labelToken.text + " = ";
-		result.curLine += FormatHelper.FormatExpression(line.expression);
-		formatParams.SetResult(line.org.line, result);
+	private static FormatVariable(line: VariableLine, option: FormatOption): InsertLine {
+		const result = new InsertLine();
+		result.Append(FormatHelper.GetDeepFormat(option, false));
+		result.Append(line.labelToken.text + " = ");
+		result.Append(FormatHelper.FormatExpression(line.expression));
+		return result;
 	}
 	//#endregion 格式化变量行
 
 	//#region 格式化命令行
-	private static FormatCommand(line: CommandLine, option: FormatOption, formatParams: FormatParams) {
+	private static FormatCommand(line: CommandLine, option: FormatOption, formatParams: FormatParams): { lineNumber: number, line: InsertLine } | Map<number, InsertLine> | undefined {
 		const command = line.command.text.toUpperCase();
 		const cmd = Command.commandMap.get(command);
 		if (!cmd)
 			return;
 
-		let tag, curLine;
+		let tag;
+		let resultLine: { lineNumber: number, line: InsertLine } | undefined = { lineNumber: 0, line: new InsertLine() };
+		let resultMap: Map<number, InsertLine> | undefined;
 		if (cmd.allowLabel && line.label)
-			FormatHelper.CheckLineHasLabel(line, option, formatParams);
+			FormatHelper.CheckLineHasLabel(line, option, resultLine.line);
 
 		switch (command) {
 			case ".ORG":
 			case ".BASE":
-				curLine = FormatHelper.GetDeepFormat(option, true) + command + " ";
+				resultLine.line = resultLine.line ?? new InsertLine();
+				resultLine.line.Append(FormatHelper.GetDeepFormat(option, true) + command);
 				tag = line.tag as CommandTagBase;
 				if (tag.exp)
-					curLine += " " + FormatHelper.FormatExpression(tag.exp);
+					resultLine.line.Append(" " + FormatHelper.FormatExpression(tag.exp));
 
+				resultLine.lineNumber = line.org.line;
 				break;
 			case ".DEF":
-				FormatHelper.FormatCommandDef(line, option, formatParams);
+				resultMap = FormatHelper.FormatCommandDef(line, option, formatParams);
 				break;
 			case ".HEX":
-				FormatHelper.FormatCommandHex(line, option);
+				resultLine.line = resultLine.line ?? new InsertLine();
+				FormatHelper.FormatCommandHex(line, option, resultLine.line);
+				resultLine.lineNumber = line.org.line;
 				break;
 			case ".DB":
 			case ".DW":
 			case ".DL":
-				FormatHelper.FormatCommandData(line, option,formatParams);
+				resultLine.line = resultLine.line ?? new InsertLine();
+				FormatHelper.FormatCommandData(line, option, resultLine.line);
+				resultLine.lineNumber = line.org.line;
 				break;
 			case ".IF":
 				tag = line.tag as IfConfidentTag;
 				if (!tag.exp) {
-					tempResult = undefined;
+					resultLine = undefined;
 					break;
 				}
 
-				curLine = FormatHelper.GetDeepFormat(option, true) + command + " ";
-				curLine += FormatHelper.FormatExpression(tag.exp);
+				resultLine.line = new InsertLine();
+				resultLine.line.Append(FormatHelper.GetDeepFormat(option, true) + command + " ");
+				resultLine.line.Append(FormatHelper.FormatExpression(tag.exp));
 				option.deepSize++;
+				resultLine.lineNumber = line.org.line;
 				break;
 			case ".IFDEF":
 			case ".IFNDEF":
-				curLine = command + " ";
-				curLine += line.org.text.substring(line.command.start + line.command.text.length).trim();
+				resultLine.line = new InsertLine();
+				resultLine.line.Append(command + " ");
+				resultLine.line.Append(line.org.text.substring(line.command.start + line.command.text.length).trim());
 				option.deepSize++;
+				resultLine.lineNumber = line.org.line;
 				break;
 			case ".ENUM":
-				FormatHelper.FormatCommandEnum(line, option, formatParams);
+				resultMap = FormatHelper.FormatCommandEnum(line, option, formatParams);
 				break;
 			case ".ENDIF":
 			case ".ELSE":
 			case ".ENDR":
 			case ".ENDM":
 			case ".ENDD":
-				tempResult = FormatHelper.CreateInsertLine(option);
-				
+				resultLine.line = FormatHelper.CreateInsertLine(option);
+				resultLine.lineNumber = line.org.line;
 				break;
 			case ".ENDE":
 				console.error("出错了");
 				break;
 			default:
-				tempResult = undefined;
+				resultLine = undefined;
 				break;
 		}
 
-		return formatParams.result;
+		return resultMap ?? resultLine;
 	}
 
 	//#endregion 格式化命令行
 
 	//#region 格式化结束的命令行
-	private static FormatEndCommand(line: CommandLine, option: FormatOption, formatParams: FormatParams): void {
+	private static FormatEndCommand(line: CommandLine, option: FormatOption): InsertLine | undefined {
 		const result = new InsertLine();
 		result.Append(line.command.text.toUpperCase());
 		switch (result.curLine) {
@@ -235,18 +232,18 @@ export class FormatHelper {
 			case ".ENDIF":
 			case ".ENDM":
 				option.deepSize--;
-				formatParams.SetResult(line.org.line, result);
-				break;
+				return result;
 		}
+		return;
 	}
 	//#endregion 格式化结束的命令行
 
 	//#region 格式化标签行
-	private static FormatLabel(line: LabelLine, option: FormatOption, formatParams: FormatParams): void {
-		const insertLine: InsertLine = {
-			curLine: FormatHelper.GetDeepFormat(option, false) + line.labelToken.text
-		}
-		formatParams.SetResult(line.labelToken.line, insertLine);
+	private static FormatLabel(line: LabelLine, option: FormatOption): InsertLine {
+		const insertLine = new InsertLine();
+		insertLine.Append(FormatHelper.GetDeepFormat(option, false));
+		insertLine.Append(line.labelToken.text);
+		return insertLine;
 	}
 	//#endregion 格式化标签行
 
@@ -259,6 +256,7 @@ export class FormatHelper {
 			return;
 
 		const lines: { label: string, exp: string }[] = [];
+		const result = new Map<number, InsertLine>();
 		let maxLabelLength = tag.label.token.length;
 		for (let i = line.org.line; i < formatParams.allLines.length; i++) {
 			const line = formatParams.allLines[i];
@@ -284,25 +282,28 @@ export class FormatHelper {
 			if (!line)
 				continue;
 
-			const insertLine = {
-				curLine: `${FormatHelper.GetDeepFormat(option, true)}.DEF ${FormatHelper.FillTabLength(line.label, line.exp, maxLabelLength, 6, option)}`
-			};
-			formatParams.result.set(i, insertLine);
+			const insertLine = new InsertLine();
+			insertLine.Append(FormatHelper.GetDeepFormat(option, true));
+			insertLine.Append(".DEF ");
+			insertLine.Append(FormatHelper.FillTabLength(line.label, line.exp, maxLabelLength, 6, option));
+			result.set(i, insertLine);
 		}
-
 		formatParams.nextLineIndex = lines.length - 1;
+		return result;
 	}
 	//#endregion 格式化 DEF 命令行
 
 	//#region 格式化 ENUM 命令行
 	private static FormatCommandEnum(line: CommandLine, option: FormatOption, formatParams: FormatParams) {
-		const tempResult = FormatHelper.CreateInsertLine(option, true);
-		tempResult.curLine += ".ENUM ";
+		const insertLine = FormatHelper.CreateInsertLine(option, true);
+		insertLine.Append(".ENUM ");
 		option.deepSize++;
 		const tag = line.tag as EnumTag;
+
+		const result = new Map<number, InsertLine>();
 		if (tag.exp) {
-			tempResult.curLine += " " + FormatHelper.FormatExpression(tag.exp);
-			formatParams.result.set(line.org.line, tempResult);
+			insertLine.Append(" " + FormatHelper.FormatExpression(tag.exp));
+			result.set(line.org.line, insertLine);
 		}
 
 		let labelMaxLength = 0, startLine = 0;
@@ -329,18 +330,19 @@ export class FormatHelper {
 				continue;
 
 			// 因为Enum每一行最后都有一个逗号，所以需要在长度上加1
-			const insertLine = {
-				curLine: FormatHelper.GetDeepFormat(option, true) + FormatHelper.FillTabLength(line.label, line.exp, labelMaxLength, 1, option)
-			};
-			formatParams.result.set(startLine + i, insertLine);
+			const insertLine = new InsertLine();
+			insertLine.Append(FormatHelper.GetDeepFormat(option, true));
+			insertLine.Append(FormatHelper.FillTabLength(line.label, line.exp, labelMaxLength, 1, option));
+			result.set(startLine + i, insertLine);
 		}
+		return result;
 	}
 	//#endregion 格式化 ENUM 命令行
 
 	//#region 格式化 HEX 命令
-	private static FormatCommandHex(line: CommandLine, option: FormatOption) {
-		const tempResult = FormatHelper.CreateInsertLine(option, true);
-		tempResult.curLine += ".HEX ";
+	private static FormatCommandHex(line: CommandLine, option: FormatOption, insertLine: InsertLine): void {
+		insertLine.Append(FormatHelper.GetDeepFormat(option, true));
+		insertLine.Append(".HEX ");
 		const tag = line.tag as HexTag;
 
 		let result = "", temp;
@@ -358,15 +360,14 @@ export class FormatHelper {
 				}
 			}
 		}
-		tempResult.curLine += result.substring(0, result.length - 1);
-		return tempResult;
+		insertLine.Append(result.substring(0, result.length - 1));
 	}
 	//#endregion 格式化 HEX 命令
 
 	//#region 格式化 DB/DW/DL 命令行
-	private static FormatCommandData(line: CommandLine, option: FormatOption, formatParams: FormatParams) {
-		const tempResult = FormatHelper.CreateInsertLine(option, true);
-		tempResult.curLine += line.command.text.toUpperCase() + " ";
+	private static FormatCommandData(line: CommandLine, option: FormatOption, insertLine: InsertLine) {
+		insertLine.Append(FormatHelper.GetDeepFormat(option, true));
+		insertLine.Append(line.command.text.toUpperCase() + " ");
 
 		const tag = line.tag as DataCommandTag;
 		for (let i = 0; i < tag.length; i++) {
@@ -374,9 +375,10 @@ export class FormatHelper {
 			if (!exp)
 				return;
 
-			tempResult.curLine += FormatHelper.FormatExpression(exp) + ", ";
+			insertLine.Append(FormatHelper.FormatExpression(exp) + ", ");
 		}
-		return tempResult;
+
+		insertLine.RemoveFromEnd(2);
 	}
 	//#endregion 格式化 IF 命令行
 
@@ -419,6 +421,9 @@ export class FormatHelper {
 				case PriorityType.Level_5:
 				case PriorityType.Level_4_Brackets:
 					break;
+				case PriorityType.Level_3_CharArray:
+					temp[part.token.start] = "\"" + part.token.text + "\"";
+					break;
 				default:
 					temp[part.token.start] = " " + temp[part.token.start] + " ";
 					break;
@@ -450,8 +455,8 @@ export class FormatHelper {
 	 * @param result 插入行
 	 * @param option 格式化选项
 	 */
-	private static CheckLineHasLabel(line: CommandLine | InstructionLine, option: FormatOption) {
-		const insertLine = FormatHelper.CreateInsertLine(option, false);
+	private static CheckLineHasLabel(line: CommandLine | InstructionLine, option: FormatOption, insertLine: InsertLine) {
+		insertLine.Append(FormatHelper.GetDeepFormat(option, false));
 		if (line.label) {
 			// 标签长度小于tabSize时，使用空白填充
 			if (line.label.labelToken.length < option.tabSize) {
@@ -462,12 +467,11 @@ export class FormatHelper {
 				}
 			} else {
 				insertLine.curLine += line.label.labelToken.text;
-				insertLine.newLine = FormatHelper.GetDeepFormat(option, true);
+				insertLine.newLine = "";
 			}
 		} else {
 			insertLine.curLine += option.tabFormat;
 		}
-		return insertLine;
 	}
 	//#endregion 检查命令行或指令行是否有标签
 
@@ -505,4 +509,58 @@ export class FormatHelper {
 	}
 	//#endregion 计算需要多少Tab来对齐长度
 
+}
+
+class InsertLine {
+	curLine: string = "";
+	newLine?: string;
+
+	Append(text: string | InsertLine) {
+		if (text instanceof InsertLine) {
+			text = text.curLine;
+		}
+
+		if (this.newLine !== undefined) {
+			this.newLine += text;
+			return;
+		}
+
+		this.curLine += text;
+	}
+
+	RemoveFromEnd(length: number) {
+		if (this.newLine !== undefined) {
+			this.newLine = this.newLine.substring(0, this.newLine.length - length);
+			return;
+		}
+
+		this.curLine = this.curLine.substring(0, this.curLine.length - length);
+	}
+}
+
+class FormatParams {
+	nextLineIndex: number;
+	allLines: CommonLine[];
+
+	constructor(allLines: CommonLine[]) {
+		this.nextLineIndex = -1;
+		this.allLines = allLines;
+	}
+}
+
+class FormatResult {
+	result: Map<number, InsertLine> = new Map<number, InsertLine>();
+
+	SetResult(data: { lineNumber: number, line: InsertLine } | Map<number, InsertLine> | undefined) {
+		if (!data)
+			return;
+
+		if (data instanceof Map) {
+			for (const [lineNumber, line] of data) {
+				this.result.set(lineNumber, line);
+			}
+		} else {
+			this.result.set(data.lineNumber, data.line);
+		}
+	}
 }

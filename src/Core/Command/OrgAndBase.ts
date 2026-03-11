@@ -8,6 +8,7 @@ import { CommandTagBase, ICommand } from "./Command";
 export class Original implements ICommand {
 
 	start = { name: ".ORG", min: 1, max: 1 };
+	allowLabel = false;
 
 	AnalyseFirst(option:CompileOption) {
 		AddressUtils.Analyse(option);
@@ -44,6 +45,7 @@ export class Original implements ICommand {
 export class Base implements ICommand {
 
 	start = { name: ".BASE", min: 1, max: 1 };
+	allowLabel = false;
 
 	AnalyseFirst(option:CompileOption) {
 		AddressUtils.Analyse(option);
