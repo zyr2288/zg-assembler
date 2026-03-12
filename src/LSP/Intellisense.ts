@@ -3,7 +3,7 @@ import { CommandName } from "./AssCommands";
 import { LSPUtils } from "./LSPUtils";
 
 enum TriggerSuggestType {
-	None, AllAsm, AllFile
+	None, AllAsm, AllFile, Include, Incbin
 }
 
 export interface TriggerSuggestTag {
@@ -84,6 +84,10 @@ export class Intellisense {
 
 			// 不会再走这里
 			switch (com.triggerType) {
+				case TriggerSuggestType.Include:
+				case TriggerSuggestType.Incbin:
+					console.log("test");
+					break;
 				case TriggerSuggestType.AllAsm:
 				case TriggerSuggestType.AllFile:
 					const path = LSPUtils.assembler.fileUtils.ArrangePath(document.uri.fsPath);

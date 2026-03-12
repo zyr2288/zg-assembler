@@ -41,7 +41,7 @@ export enum CompletionIndex {
 }
 
 enum TriggerSuggestType {
-	None, AllAsm, AllFile
+	None, AllAsm, AllFile, Include, Incbin
 }
 
 //#region 提示项
@@ -205,7 +205,7 @@ export class IntellisenseProvider {
 	 * @param excludeFile 排除文件
 	 * @returns 
 	 */
-	static async GetFileHelper(projectRoot: string, currectFilePath: string, inputPath:string, fileFilter: TriggerSuggestType, excludeFile: string) {
+	static async GetFileHelper(projectRoot: string, currectFilePath: string, inputPath: string, fileFilter: TriggerSuggestType, excludeFile: string) {
 		const completions: Completion[] = [];
 		if (!FileUtils.ReadFile)
 			return [];
@@ -273,11 +273,11 @@ export class IntellisenseProvider {
 			switch (command) {
 				case ".INCLUDE":
 					completion.insertText = completion.insertText + " \"[exp]\"";
-					completion.triggerType = TriggerSuggestType.AllAsm;
+					completion.triggerType = TriggerSuggestType.Include;
 					break;
 				case ".INCBIN":
 					completion.insertText = completion.insertText + " \"[exp]\"";
-					completion.triggerType = TriggerSuggestType.AllFile;
+					completion.triggerType = TriggerSuggestType.Incbin;
 					break;
 				case ".MACRO":
 					completion.insertText = completion.insertText + " [exp]\n\n.ENDM";
@@ -415,14 +415,13 @@ export class IntellisenseProvider {
 		switch (com) {
 			case ".INCLUDE":
 			case ".INCBIN":
-				temp =
-					temp = await IntellisenseProvider.ProcessInclude(
-						com === ".INCBIN",
-						trigger === "/",
-						content.rest,
-						current,
-						projectDir,
-						fileIndex);
+				temp = await IntellisenseProvider.ProcessInclude(
+					com === ".INCBIN",
+					trigger === "/",
+					content.rest,
+					current,
+					projectDir,
+					fileIndex);
 				if (temp)
 					result = temp;
 
@@ -443,6 +442,16 @@ export class IntellisenseProvider {
 	//#endregion 处理命令
 
 	//#region .INCLUDE命令
+	/**
+	 * 
+	 * @param isIncbin 是否是 .INCBIN 命令
+	 * @param isTrigger 是否是触发命令
+	 * @param rest 命令参数
+	 * @param current 当前光标位置
+	 * @param projectDir 项目目录
+	 * @param fileIndex 文件索引
+	 * @returns 
+	 */
 	private static async ProcessInclude(isIncbin: boolean, isTrigger: boolean, rest: Token, current: number, projectDir: string, fileIndex: number) {
 		let tokens = Analyser.SplitComma(rest);
 		if (!tokens)
