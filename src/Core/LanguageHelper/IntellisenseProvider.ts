@@ -198,39 +198,46 @@ export class IntellisenseProvider {
 	//#region 获取文件帮助
 	/**
 	 * 
-	 * @param topRoot 项目根目录
-	 * @param path 路径
-	 * @param fileFilter 文件类型
+	 * @param projectRoot 项目根目录
+	 * @param currectFilePath 路径
+	 * @param inputPath 已输入的文件路径
+	 * @param fileFilter 触发建议的文件类型
 	 * @param excludeFile 排除文件
 	 * @returns 
 	 */
-	static async GetFileHelper(topRoot: string, path: string, fileFilter: TriggerSuggestType, excludeFile: string) {
+	static async GetFileHelper(projectRoot: string, currectFilePath: string, inputPath:string, fileFilter: TriggerSuggestType, excludeFile: string) {
 		const completions: Completion[] = [];
 		if (!FileUtils.ReadFile)
 			return [];
 
-		topRoot = FileUtils.ArrangePath(topRoot);
-		path = FileUtils.ArrangePath(path);
+		projectRoot = FileUtils.ArrangePath(projectRoot);
+		currectFilePath = FileUtils.ArrangePath(currectFilePath);
 
-		const folder = await FileUtils.GetPathFolder(path);
+		// 当前文件所在目录
+		const currectFileFolder = await FileUtils.GetPathFolder(currectFilePath);
 
+		// 要排除的文件名称
 		const exFileName = await FileUtils.GetFileName(excludeFile);
-		const sameFolder = (await FileUtils.GetPathFolder(excludeFile)) === folder;
 
-		if (topRoot !== folder) {
+		// 要排除的文件是否在当前文件夹
+		const sameFolder = (await FileUtils.GetPathFolder(excludeFile)) === currectFileFolder;
+
+		// 如果当前目录不在项目根目录下，添加返回上一级目录的提示
+		if (projectRoot !== currectFileFolder) {
 			const com = new Completion({ showText: "..", insertText: "..", index: 0 });
 			com.type = CompletionType.Folder;
 			completions.push(com);
 		}
 
-		const files = await FileUtils.GetFolderFiles(folder);
+		const files = await FileUtils.GetFolderFiles(currectFileFolder);
 		for (let i = 0; i < files.length; ++i) {
-			if ((sameFolder && files[i].name === exFileName) ||
-				(fileFilter === TriggerSuggestType.AllAsm && files[i].type === "file" && !files[i].name.endsWith(".asm")))
+			const file = files[i];
+			if ((sameFolder && file.name === exFileName) ||
+				(fileFilter === TriggerSuggestType.AllAsm && file.type === "file" && !file.name.endsWith(`.${Config.FileExtension.extension}`)))
 				continue;
 
 			const com = new Completion({ showText: "" });
-			switch (files[i].type) {
+			switch (file.type) {
 
 				case "folder":
 					com.index = CompletionIndex.Folder;
@@ -244,8 +251,8 @@ export class IntellisenseProvider {
 					break;
 
 			}
-			com.showText = files[i].name;
-			com.insertText = files[i].name;
+			com.showText = file.name;
+			com.insertText = file.name;
 			completions.push(com);
 		}
 
@@ -257,7 +264,7 @@ export class IntellisenseProvider {
 	/**更新所有编译器命令 */
 	static UpdateCommandCompletions() {
 		Command.commandMap.forEach((value, command) => {
-			let completion = new Completion({
+			const completion = new Completion({
 				showText: command,
 				insertText: command.substring(1),
 				type: CompletionType.Command
@@ -403,8 +410,7 @@ export class IntellisenseProvider {
 		macro?: Macro,
 		trigger?: string): Promise<Completion[]> {
 
-		let result: Completion[] = [];
-		let temp;
+		let temp, result: Completion[] = [];
 		const com = content.main.text.toUpperCase();
 		switch (com) {
 			case ".INCLUDE":
@@ -456,7 +462,11 @@ export class IntellisenseProvider {
 			case 0:
 				if (isTrigger) {
 					const type = isIncbin ? TriggerSuggestType.AllFile : TriggerSuggestType.AllAsm;
+
+					// 当前文件路径
 					const currentFile = Compiler.enviroment.GetFilePath(fileIndex);
+
+					// 当前文件所在目录
 					const currentFileRoot = await FileUtils.GetPathFolder(currentFile);
 
 					// 这两行是原来的，保留
@@ -467,7 +477,6 @@ export class IntellisenseProvider {
 					temp = temp[0].Substring(0, current - temp[0].start - 1);
 					if (temp.text.startsWith("@")) {
 						temp = FileUtils.Combine(projectDir, temp.text.substring(1));
-						console.log("ceshi", temp);
 					} else {
 						temp = FileUtils.Combine(currentFileRoot, temp.text);
 					}
@@ -475,7 +484,7 @@ export class IntellisenseProvider {
 					if (await FileUtils.PathType(temp) !== "path")
 						break;
 
-					return await IntellisenseProvider.GetFileHelper(currentFileRoot, temp, type, currentFile);
+					return await IntellisenseProvider.GetFileHelper(currentFileRoot, currentFile, temp, type, currentFile);
 				}
 				break;
 			case 1:

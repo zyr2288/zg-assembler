@@ -53,14 +53,10 @@ export class Intellisense {
 	 * @param context 
 	 * @returns 
 	 */
-	private static async ShowCompletion(document: vscode.TextDocument,
-		position: vscode.Position,
-		token: vscode.CancellationToken,
-		context: vscode.CompletionContext
-	) {
-
+	private static async ShowCompletion(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext) {
+		// 如果是已命令形式触发的智能提示，则处理智能提示
 		if (Intellisense.suggestData) {
-			let result = await Intellisense.ProcessSuggest();
+			const result = await Intellisense.ProcessSuggest();
 			delete (Intellisense.suggestData);
 			return result;
 		}
@@ -121,14 +117,18 @@ export class Intellisense {
 		switch (Intellisense.suggestData?.type) {
 			case TriggerSuggestType.AllAsm:
 			case TriggerSuggestType.AllFile:
-				if (!vscode.workspace.workspaceFolders)
+				if (!vscode.workspace.workspaceFolders || !vscode.window.activeTextEditor)
 					break;
 
-				const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-
+				const projectPath = vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri)!.uri.fsPath;
 				data = Intellisense.suggestData.data as FileHelperData;
+
 				const files = await LSPUtils.assembler.languageHelper.intellisense.GetFileHelper(
-					rootPath, data.path, Intellisense.suggestData.type, data.exclude);
+					projectPath,
+					vscode.window.activeTextEditor.document.uri.fsPath,
+					data.path,
+					Intellisense.suggestData.type,
+					data.exclude);
 
 				for (let i = 0; i < files.length; ++i) {
 					const file = files[i];
