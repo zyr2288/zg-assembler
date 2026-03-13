@@ -41,7 +41,7 @@ export enum CompletionIndex {
 }
 
 enum TriggerSuggestType {
-	None, AllAsm, AllFile, Include, Incbin
+	None, AllAsm, AllFile
 }
 
 //#region 提示项
@@ -101,6 +101,9 @@ export class Completion {
 }
 //#endregion 提示项
 
+/**
+ * 智能提示提供器
+ */
 export class IntellisenseProvider {
 
 	/**编译器命令提示 */
@@ -199,37 +202,36 @@ export class IntellisenseProvider {
 	/**
 	 * 
 	 * @param projectRoot 项目根目录
-	 * @param currectFilePath 路径
 	 * @param inputPath 已输入的文件路径
 	 * @param fileFilter 触发建议的文件类型
 	 * @param excludeFile 排除文件
 	 * @returns 
 	 */
-	static async GetFileHelper(projectRoot: string, currectFilePath: string, inputPath: string, fileFilter: TriggerSuggestType, excludeFile: string) {
+	static async GetFileHelper(projectRoot: string, inputPath: string, fileFilter: TriggerSuggestType, excludeFile: string) {
 		const completions: Completion[] = [];
 		if (!FileUtils.ReadFile)
 			return [];
 
 		projectRoot = FileUtils.ArrangePath(projectRoot);
-		currectFilePath = FileUtils.ArrangePath(currectFilePath);
+		inputPath = FileUtils.ArrangePath(inputPath);
 
 		// 当前文件所在目录
-		const currectFileFolder = await FileUtils.GetPathFolder(currectFilePath);
+		const inputPathFolder = await FileUtils.GetPathFolder(inputPath);
 
 		// 要排除的文件名称
 		const exFileName = await FileUtils.GetFileName(excludeFile);
 
 		// 要排除的文件是否在当前文件夹
-		const sameFolder = (await FileUtils.GetPathFolder(excludeFile)) === currectFileFolder;
+		const sameFolder = (await FileUtils.GetPathFolder(excludeFile)) === inputPathFolder;
 
 		// 如果当前目录不在项目根目录下，添加返回上一级目录的提示
-		if (projectRoot !== currectFileFolder) {
+		if (projectRoot !== inputPathFolder) {
 			const com = new Completion({ showText: "..", insertText: "..", index: 0 });
 			com.type = CompletionType.Folder;
 			completions.push(com);
 		}
 
-		const files = await FileUtils.GetFolderFiles(currectFileFolder);
+		const files = await FileUtils.GetFolderFiles(inputPath);
 		for (let i = 0; i < files.length; ++i) {
 			const file = files[i];
 			if ((sameFolder && file.name === exFileName) ||
@@ -273,11 +275,11 @@ export class IntellisenseProvider {
 			switch (command) {
 				case ".INCLUDE":
 					completion.insertText = completion.insertText + " \"[exp]\"";
-					completion.triggerType = TriggerSuggestType.Include;
+					completion.triggerType = TriggerSuggestType.AllAsm;
 					break;
 				case ".INCBIN":
 					completion.insertText = completion.insertText + " \"[exp]\"";
-					completion.triggerType = TriggerSuggestType.Incbin;
+					completion.triggerType = TriggerSuggestType.AllFile;
 					break;
 				case ".MACRO":
 					completion.insertText = completion.insertText + " [exp]\n\n.ENDM";
@@ -493,7 +495,7 @@ export class IntellisenseProvider {
 					if (await FileUtils.PathType(temp) !== "path")
 						break;
 
-					return await IntellisenseProvider.GetFileHelper(currentFileRoot, currentFile, temp, type, currentFile);
+					return await IntellisenseProvider.GetFileHelper(currentFileRoot, temp, type, currentFile);
 				}
 				break;
 			case 1:

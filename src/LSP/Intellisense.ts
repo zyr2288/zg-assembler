@@ -3,7 +3,7 @@ import { CommandName } from "./AssCommands";
 import { LSPUtils } from "./LSPUtils";
 
 enum TriggerSuggestType {
-	None, AllAsm, AllFile, Include, Incbin
+	None, AllAsm, AllFile
 }
 
 export interface TriggerSuggestTag {
@@ -16,6 +16,9 @@ interface FileHelperData {
 	exclude: string;
 }
 
+/**
+ * 智能提示服务
+ */
 export class Intellisense {
 
 	static suggestData?: TriggerSuggestTag;
@@ -84,10 +87,6 @@ export class Intellisense {
 
 			// 不会再走这里
 			switch (com.triggerType) {
-				case TriggerSuggestType.Include:
-				case TriggerSuggestType.Incbin:
-					console.log("test");
-					break;
 				case TriggerSuggestType.AllAsm:
 				case TriggerSuggestType.AllFile:
 					const path = LSPUtils.assembler.fileUtils.ArrangePath(document.uri.fsPath);
@@ -129,7 +128,6 @@ export class Intellisense {
 
 				const files = await LSPUtils.assembler.languageHelper.intellisense.GetFileHelper(
 					projectPath,
-					vscode.window.activeTextEditor.document.uri.fsPath,
 					data.path,
 					Intellisense.suggestData.type,
 					data.exclude);
