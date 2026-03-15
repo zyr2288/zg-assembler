@@ -164,7 +164,6 @@ class IncludeUtils {
 			result.path = FileUtils.Combine(Config.ProjectDir, result.path);
 		}
 
-
 		let type = await FileUtils.PathType(result.path);
 		result.exsist = type === "file";
 		if (!result.exsist) {
@@ -178,6 +177,14 @@ class IncludeUtils {
 		if (!result.exsist) {
 			const errorMsg = Localization.GetMessage("File {0} is not exist", filePath.text);
 			MyDiagnostic.PushException(filePath, errorMsg);
+			line.lineType = LineType.Error;
+		} else {
+			const index = Compiler.enviroment.GetFileIndex(result.path, false);
+			if (index === Compiler.enviroment.fileIndex) {
+				const errorMsg = Localization.GetMessage("File {0} is include itself", filePath.text);
+				MyDiagnostic.PushException(filePath, errorMsg);
+				line.lineType = LineType.Error;
+			}
 		}
 
 		line.tag = { orgPath: filePath, path: result.path } as IncbinTag | IncludeTag;

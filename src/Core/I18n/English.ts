@@ -16,6 +16,7 @@ export const English = {
 	"Command arguments error": "Command arguments error",
 	"Unknow original address": "Unknow original address",
 	"File {0} is not exist": "File \"{0}\" is not exist",
+	"File {0} is include itself": "File \"{0}\" is include itself",
 	"Argument out of range": "Argument out of range",
 	"Expression result is {0}, but compile result is {1}": "Expression result is \"{0}\", but compile result is \"{1}\"",
 	"Macro arguments count is {0}, but got {1}": "Macro arguments count is \"{0}\", but got \"{1}\"",

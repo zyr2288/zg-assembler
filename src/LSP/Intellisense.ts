@@ -12,7 +12,7 @@ export interface TriggerSuggestTag {
 }
 
 interface FileHelperData {
-	path: string;
+	itemPath: string;
 	exclude: string;
 }
 
@@ -89,13 +89,20 @@ export class Intellisense {
 			switch (com.triggerType) {
 				case TriggerSuggestType.AllAsm:
 				case TriggerSuggestType.AllFile:
-					const path = LSPUtils.assembler.fileUtils.ArrangePath(document.uri.fsPath);
+					let path;
+					if (!com.tag) {
+						path = LSPUtils.assembler.fileUtils.ArrangePath(document.uri.fsPath);
+					} else {
+						path = com.tag as string;
+						path = LSPUtils.assembler.fileUtils.Combine(path, com.showText);
+					}
+
 					newCom.command = {
 						title: "Get Folder Files",
 						command: CommandName,
 						arguments: [{
 							type: com.triggerType,
-							data: { path: path, exclude: path } as FileHelperData
+							data: { itemPath: path, exclude: document.uri.fsPath } as FileHelperData
 						} as TriggerSuggestTag]
 					};
 					break;
@@ -128,7 +135,7 @@ export class Intellisense {
 
 				const files = await LSPUtils.assembler.languageHelper.intellisense.GetFileHelper(
 					projectPath,
-					data.path,
+					data.itemPath,
 					Intellisense.suggestData.type,
 					data.exclude);
 
@@ -139,20 +146,20 @@ export class Intellisense {
 					com.sortText = file.index.toString();
 					com.kind = Intellisense.CompletionShowType[file.type!];
 					if (com.kind === vscode.CompletionItemKind.Folder) {
-						com.insertText.value += "/";
-						let path = await LSPUtils.assembler.fileUtils.GetPathFolder(data.path);
+						let path = await LSPUtils.assembler.fileUtils.GetPathFolder(data.itemPath);
 						path = LSPUtils.assembler.fileUtils.Combine(path, file.showText);
 						com.command = {
 							title: "Get Folder Files",
 							command: CommandName,
 							arguments: [{
 								type: Intellisense.suggestData.type,
-								data: { path, exclude: data.exclude }
+								data: { itemPath: path, exclude: data.exclude } as FileHelperData
 							} as TriggerSuggestTag]
 						};
 					}
 					result.push(com);
 				}
+				console.log(result);
 				break;
 		}
 		return result;

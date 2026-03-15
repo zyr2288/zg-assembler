@@ -135,6 +135,7 @@ export class FileUtils {
 		if (type === "none")
 			return "";
 
+		path = path.toLowerCase();
 		let parts = path.split(/[\\\/]/g);
 		if (type === "file")
 			parts.splice(parts.length - 1, 1);
@@ -159,9 +160,14 @@ export class FileUtils {
 	}
 	//#endregion 获取路径文件的文件名
 
-	//#region 整理路径成统一格式
-	/**整理路径成统一格式 */
+	//#region 整理路径成统一格式，同时将路径转换为统一的小写
+	/**
+	 * 整理路径成统一格式，同时将路径转换为统一的小写
+	 * @param path 要整理的路径
+	 * @returns 整理后的路径
+	 */
 	static ArrangePath(path: string) {
+		path = path.toLowerCase();
 		const parts = path.split(/[\\\/]/g);
 		const result: string[] = [];
 		for (let i = 0; i < parts.length; i++) {
@@ -172,6 +178,6 @@ export class FileUtils {
 		}
 		return result.join(Config.CommonSplit);
 	}
-	//#endregion 整理路径成统一格式
+	//#endregion 整理路径成统一格式，同时将路径转换为统一的小写
 
 }

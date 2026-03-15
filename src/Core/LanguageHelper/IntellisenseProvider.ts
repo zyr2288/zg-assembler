@@ -45,6 +45,11 @@ enum TriggerSuggestType {
 }
 
 //#region 提示项
+/**
+ * 智能提示项
+ * 
+ * 如果 triggerType 不为`undefined`，则 tag 为 `string` 的附加数据
+ */
 export class Completion {
 
 	/**复制所有提示 */
@@ -93,6 +98,8 @@ export class Completion {
 	type?: CompletionType;
 	/**附加数据 */
 	triggerType?: TriggerSuggestType;
+	/**智能提示选项附带数据 */
+	tag?: any;
 
 	Copy() {
 		let completion = Utils.DeepClone<Completion>(this);
@@ -226,7 +233,7 @@ export class IntellisenseProvider {
 
 		// 如果当前目录不在项目根目录下，添加返回上一级目录的提示
 		if (projectRoot !== inputPathFolder) {
-			const com = new Completion({ showText: "..", insertText: "..", index: 0 });
+			const com = new Completion({ showText: "..", insertText: "../", index: 0 });
 			com.type = CompletionType.Folder;
 			completions.push(com);
 		}
@@ -245,16 +252,18 @@ export class IntellisenseProvider {
 					com.index = CompletionIndex.Folder;
 					com.type = CompletionType.Folder;
 					com.triggerType = fileFilter;
+					com.insertText = file.name + "/";
 					break;
 
 				case "file":
 					com.index = CompletionIndex.File;
 					com.type = CompletionType.File;
+					com.insertText = file.name;
 					break;
 
 			}
 			com.showText = file.name;
-			com.insertText = file.name;
+			com.tag = inputPathFolder;
 			completions.push(com);
 		}
 
@@ -281,6 +290,7 @@ export class IntellisenseProvider {
 					completion.insertText = completion.insertText + " \"[exp]\"";
 					completion.triggerType = TriggerSuggestType.AllFile;
 					break;
+
 				case ".MACRO":
 					completion.insertText = completion.insertText + " [exp]\n\n.ENDM";
 					break;
