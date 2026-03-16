@@ -80,7 +80,7 @@ export class FileUtils {
 	 * @param text 要转换的字符串
 	 */
 	static StringToBytes(text: string) {
-		let coder = new TextEncoder();
+		const coder = new TextEncoder();
 		return coder.encode(text);
 	};
 	//#endregion 将字符串转换成Bytes
@@ -91,7 +91,7 @@ export class FileUtils {
 	 * @param data 需要转换的字节数组
 	 */
 	static BytesToString(data: Uint8Array) {
-		let coder = new TextDecoder();
+		const coder = new TextDecoder();
 		return coder.decode(data);
 	}
 	//#endregion 将字节转换成字符串

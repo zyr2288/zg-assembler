@@ -7,7 +7,7 @@ const FreshTime = 1000;
 export class UpdateFile {
 
 	private static fileUpdateThreadId: number;
-	private static updateFiles = new Map<string, string>();
+	private static updateFiles = new Map<string, vscode.TextDocument>();
 	private static errorCollection: vscode.DiagnosticCollection;
 
 	static Initialize(context: vscode.ExtensionContext) {
@@ -100,7 +100,7 @@ export class UpdateFile {
 		if (!vscode.workspace.workspaceFolders)
 			return;
 
-		let rp = new vscode.RelativePattern(
+		const rp = new vscode.RelativePattern(
 			vscode.workspace.workspaceFolders![0],
 			`{**/*.${LSPUtils.assembler.config.FileExtension.extension},${LSPUtils.assembler.config.ConfigFile}}`
 		);
@@ -115,17 +115,16 @@ export class UpdateFile {
 
 	/**文件删除 */
 	private static async FileDelete(e: vscode.Uri) {
-		if (await LSPUtils.assembler.fileUtils.GetFileName(e.fsPath) === LSPUtils.assembler.config.ConfigFile)
+		if ((await LSPUtils.assembler.fileUtils.GetFileName(e.fsPath)) === LSPUtils.assembler.config.ConfigFile)
 			return;
 
 		LSPUtils.assembler.ClearFile(e.fsPath);
 		UpdateFile.errorCollection.delete(e);
-
 	}
 
 	/**文件修改 */
 	private static async FileChange(e: vscode.Uri) {
-		let fileName = await LSPUtils.assembler.fileUtils.GetFileName(e.fsPath);
+		const fileName = (await LSPUtils.assembler.fileUtils.GetFileName(e.fsPath)).toLocaleLowerCase();
 		if (fileName !== LSPUtils.assembler.config.ConfigFile)
 			return;
 
@@ -134,11 +133,11 @@ export class UpdateFile {
 
 	/**文件创建 */
 	private static async FileCreate(e: vscode.Uri) {
-		let tempFiles = await LSPUtils.GetWorkspaceFilterFile();
+		const tempFiles = await LSPUtils.GetWorkspaceFilterFile();
 		if (tempFiles.includes(e.fsPath)) {
 			LSPUtils.fileUpdateFinished = false;
-			let buffer = await LSPUtils.assembler.fileUtils.ReadFile(e.fsPath);
-			let text = LSPUtils.assembler.fileUtils.BytesToString(buffer);
+			const buffer = await LSPUtils.assembler.fileUtils.ReadFile(e.fsPath);
+			const text = LSPUtils.assembler.fileUtils.BytesToString(buffer);
 			await LSPUtils.assembler.ParseText([{ text, filePath: e.fsPath }]);
 			LSPUtils.fileUpdateFinished = true;
 		}
@@ -168,7 +167,8 @@ export class UpdateFile {
 			}
 		}
 
-		UpdateFile.updateFiles.set(event.document.uri.fsPath, event.document.getText());
+		console.log(event.document.uri.fsPath);
+		UpdateFile.updateFiles.set(event.document.uri.fsPath, event.document);
 
 		LSPUtils.fileUpdateFinished = false;
 		clearTimeout(UpdateFile.fileUpdateThreadId);
@@ -177,7 +177,7 @@ export class UpdateFile {
 		UpdateFile.fileUpdateThreadId = setTimeout(async () => {
 			const files: { text: string, filePath: string }[] = [];
 			UpdateFile.updateFiles.forEach((text, filePath) => {
-				files.push({ text, filePath });
+				files.push({ text: text.getText(), filePath });
 			});
 			await LSPUtils.assembler.ParseText(files);
 			UpdateFile.UpdateDiagnostic(files.map(v => v.filePath));

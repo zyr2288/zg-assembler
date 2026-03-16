@@ -4,7 +4,7 @@ import { FileUtils } from "../Base/FileUtils";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
 import { Macro } from "../Base/Macro";
-import { ILabelCommon, ILabelTree, LabelScope, LabelType, LabelUtils } from "../Base/Label";
+import { ILabelCommon, ILabelTree, LabelScope, LabelType } from "../Base/Label";
 import { HelperUtils } from "./HelperUtils";
 import { HighlightRange } from "../Lines/CommonLine";
 import { Platform } from "../Platform/Platform";
@@ -241,7 +241,7 @@ export class IntellisenseProvider {
 		const files = await FileUtils.GetFolderFiles(inputPath);
 		for (let i = 0; i < files.length; ++i) {
 			const file = files[i];
-			if ((sameFolder && file.name === exFileName) ||
+			if ((sameFolder && file.name.toLocaleLowerCase() === exFileName.toLocaleLowerCase()) ||
 				(fileFilter === TriggerSuggestType.AllAsm && file.type === "file" && !file.name.endsWith(`.${Config.FileExtension.extension}`)))
 				continue;
 

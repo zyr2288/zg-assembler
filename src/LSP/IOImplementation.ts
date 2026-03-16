@@ -23,16 +23,16 @@ export class IOImplementation {
 
 	static async GetFolderFiles(path: string) {
 		path = await LSPUtils.assembler.fileUtils.GetPathFolder(path);
-		let uri = vscode.Uri.file(path);
-		let temp = await vscode.workspace.fs.readDirectory(uri);
-		let result: { name: string; type: "file" | "folder"; }[] = [];
+		const uri = vscode.Uri.file(path);
+		const allFiles = await vscode.workspace.fs.readDirectory(uri);
+		const result: { name: string, type: "file" | "folder" }[] = [];
 
-		for (let i = 0; i < temp.length; i++) {
-			const value = temp[i];
-			let t = { name: value[0], type: <"file" | "folder">"file" };
+		for (let i = 0; i < allFiles.length; i++) {
+			const value = allFiles[i];
+			const t = { name: value[0], type: "file" as "file" | "folder" };
 			if (value[1] == vscode.FileType.Directory)
 				t.type = "folder";
-			else if (value[1] != vscode.FileType.File)
+			else if (value[1] !== vscode.FileType.File)
 				continue;
 
 			result.push(t);
@@ -57,19 +57,18 @@ export class IOImplementation {
 	}
 
 	static async ReadFile(path: string) {
-		let uri = vscode.Uri.file(path);
-		let result = await vscode.workspace.fs.readFile(uri);
+		const uri = vscode.Uri.file(path);
+		const result = await vscode.workspace.fs.readFile(uri);
 		return result;
 	}
 
 	static async SaveFile(filePath: string, data: Uint8Array) {
 		try {
-			let uri = vscode.Uri.file(filePath);
+			const uri = vscode.Uri.file(filePath);
 			await vscode.workspace.fs.writeFile(uri, data);
 		} catch (exception: any) {
 			LSPUtils.ShowMessageBox(exception, "error");
 		}
-
 	}
 
 	static ShowMessage(message: string) {

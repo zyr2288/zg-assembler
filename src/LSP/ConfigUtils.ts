@@ -17,7 +17,7 @@ export class ConfigUtils {
 		LSPUtils.assembler.config.ProjectDir = workspace.uri.fsPath;
 		const settingFile = LSPUtils.assembler.fileUtils.Combine(
 			workspace.uri.fsPath,
-			"project-settings.json"
+			LSPUtils.assembler.config.ConfigFile
 		);
 
 		if (await LSPUtils.assembler.fileUtils.PathType(settingFile) !== "file") {
