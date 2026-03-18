@@ -225,9 +225,10 @@ export class FormatHelper {
 
 	//#region 格式化结束的命令行
 	private static FormatEndCommand(line: CommandLine, option: FormatOption): InsertLine | undefined {
-		const result = new InsertLine();
-		result.Append(line.command.text.toUpperCase());
-		switch (result.curLine) {
+		const result = FormatHelper.CreateInsertLine(option);
+		const command = line.command.text.toUpperCase();
+		result.Append(command);
+		switch (command) {
 			case ".ENDE":
 			case ".ENDIF":
 			case ".ENDM":
