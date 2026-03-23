@@ -173,6 +173,7 @@ export class HighlightingProvider {
 			case ".BASE":
 			case ".IF":
 			case ".ELSEIF":
+			case ".REPEAT":
 				tag = line.tag as CommandTagBase;
 				if (tag.exp)
 					HighlightingProvider.GetExpression(option.result, tag.exp);
