@@ -13,5 +13,5 @@
 
 历史记录请查阅 ChangeLog-Full.md
 
-[![Change Log](https://img.shields.io/badge/github-black?logo=github)](https://github.com/zyr2288/zg-assembler/blob/master/hangeLogs/ChangeLog-History.md)
-[![Change Log](https://img.shields.io/badge/gitee-red?logo=gitee)](https://gitee.com/zeng_ge/zg-assembler-next/tree/master/ChangeLogs/ChangeLog-History.md)
+[![Change Log](https://img.shields.io/badge/github-black?logo=github)](https://github.com/zyr2288/zg-assembler/blob/master/ChangeLog-History.md)
+[![Change Log](https://img.shields.io/badge/gitee-red?logo=gitee)](https://gitee.com/zeng_ge/zg-assembler-next/tree/master/ChangeLog-History.md)
