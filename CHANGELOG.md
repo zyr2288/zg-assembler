@@ -11,7 +11,7 @@
 - 修复缺少 `.ENDE` `.ENDM` 等命令的智能提示问题
 - 添加若路径开头为 `@`，则是项目根目录下的文件路径
 
-历史记录请查阅 ChangeLog-Full.md
+历史记录请查阅 ChangeLog-History.md
 
 [![Change Log](https://img.shields.io/badge/github-black?logo=github)](https://github.com/zyr2288/zg-assembler/blob/master/ChangeLog-History.md)
 [![Change Log](https://img.shields.io/badge/gitee-red?logo=gitee)](https://gitee.com/zeng_ge/zg-assembler-next/tree/master/ChangeLog-History.md)
