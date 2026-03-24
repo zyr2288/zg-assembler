@@ -274,6 +274,8 @@ export class IntellisenseProvider {
 	//#region 更新所有编译器命令
 	/**更新所有编译器命令 */
 	static UpdateCommandCompletions() {
+		const commandSet = new Set<string>();
+
 		Command.commandMap.forEach((value, command) => {
 			const completion = new Completion({
 				showText: command,
@@ -315,6 +317,32 @@ export class IntellisenseProvider {
 			IntellisenseProvider.commandCompletions.push(completion);
 			if (!NotInMacroCommands.includes(command))
 				IntellisenseProvider.commandNotInMacroCompletions.push(completion);
+
+			if (value.end) {
+				if (commandSet.has(value.end))
+					return;
+
+				commandSet.add(value.end);
+				IntellisenseProvider.commandCompletions.push(new Completion({
+					showText: value.end,
+					insertText: value.end.substring(1),
+					type: CompletionType.Command
+				}));
+			}
+
+			if (value.rest) {
+				value.rest.forEach((item) => {
+				if (commandSet.has(item.name))
+					return;
+
+				commandSet.add(item.name);
+					IntellisenseProvider.commandCompletions.push(new Completion({
+						showText: item.name,
+						insertText: item.name.substring(1),
+						type: CompletionType.Command
+					}));
+				});
+			}
 		});
 	}
 	//#endregion 更新所有编译器命令

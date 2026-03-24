@@ -8,7 +8,7 @@
 	},
 	"explorer.fileNesting.patterns": {
 		"package.json": "package-lock.json, package.*.json, webpack.*.js",
-		"README.md": "CHANGELOG.md, LICENSE.md",
+		"README.md": "CHANGELOG.md, ChangeLog-History.md, LICENSE.md",
 	},
 	"search.exclude": {
 		"out": true, // set this to false to include "out" folder in search results
