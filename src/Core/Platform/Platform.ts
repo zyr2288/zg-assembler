@@ -8,7 +8,6 @@ import { Asm6502 } from "./Asm6502";
 import { Asm65C816 } from "./Asm65C816";
 import { AsmSM83_GB } from "./AsmSM83-GB";
 import { AsmSPC700 } from "./AsmSPC700";
-import { AsmZ80_GB } from "./AsmZ80-GB";
 
 export interface IAddressingMode {
 	/**寻址正则表达式的分割 */
@@ -104,13 +103,14 @@ export class Platform {
 	static MatchAddressingMode(instruction: Token, expression: Token) {
 		const addressTypes = Platform.instructions.get(instruction.text.toUpperCase());
 		if (!addressTypes) {
-			let errorMsg = Localization.GetMessage("Unknow instruction {0}", instruction.text);
+			const errorMsg = Localization.GetMessage("Unknow instruction {0}", instruction.text);
 			MyDiagnostic.PushException(instruction, errorMsg);
 			return;
 		}
 
 		const result = { addressingMode: {} as IAddressingMode, exprs: [] as Token[] }
-		let start = 0, foundAddressType = false;
+		let start = 0;
+		let foundAddressType = false;
 
 		// 每个类型都判断一次
 		for (let i = 0; i < addressTypes.length; ++i) {
@@ -120,17 +120,13 @@ export class Platform {
 			result.exprs = [];
 			foundAddressType = false;
 
-			// 表达式为空
-			if (expression.isEmpty) {
+			if (expression.isEmpty) { // 表达式为空
 				if (type.addressType.length === 0) {
 					foundAddressType = true;
 					result.addressingMode = type;
 					break;
 				}
-			}
-
-			// 表达式不为空
-			else {
+			} else { // 表达式不为空
 				if (type.addressType.length === 0)
 					continue;
 
@@ -149,7 +145,7 @@ export class Platform {
 					}
 
 					const token = expression.Substring(start, match.index);
-					if (!type.addressType[j].startsWith("^") && !token.isEmpty) {
+					if (!type.addressType[j].startsWith("^")) {
 						result.exprs.push(token);
 					}
 
@@ -165,19 +161,18 @@ export class Platform {
 		}
 
 		if (!foundAddressType) {
-			let errorMsg = Localization.GetMessage("Instruction {0} do not support this addressing mode", instruction.text);
+			const errorMsg = Localization.GetMessage("Instruction {0} do not support this addressing mode", instruction.text);
 			MyDiagnostic.PushException(instruction, errorMsg);
 			return;
 		} else {
 			for (let i = 0; i < result.exprs.length; ++i) {
 				if (result.exprs[i].isEmpty) {
-					let errorMsg = Localization.GetMessage("Expression error");
+					const errorMsg = Localization.GetMessage("Expression error");
 					MyDiagnostic.PushException(result.exprs[i], errorMsg);
 					return;
 				}
 			}
 		}
-
 		return result;
 	}
 	//#endregion 匹配指令

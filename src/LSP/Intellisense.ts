@@ -96,11 +96,11 @@ export class Intellisense {
 			newCom.insertText = new vscode.SnippetString(com.insertText);
 			newCom.sortText = com.index.toString();
 
+			if (com.commitCharacters)
+				newCom.commitCharacters = com.commitCharacters;
+
 			if (com.comment)
 				newCom.documentation = new vscode.MarkdownString(com.comment);
-
-			if (com.type === CompletionType.Folder)
-				newCom.commitCharacters = ["/"];
 
 			// 不会再走这里
 			switch (com.triggerType) {

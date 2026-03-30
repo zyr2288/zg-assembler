@@ -90,6 +90,8 @@ export class Completion {
 	showText: string = "";
 	/**插入的文本 */
 	insertText: string = "";
+	/**自动提交字符，一般不使用 */
+	commitCharacters?: string[];
 	/**排序 */
 	index: CompletionIndex = CompletionIndex.Folder;
 	/**注释 */
@@ -332,10 +334,10 @@ export class IntellisenseProvider {
 
 			if (value.rest) {
 				value.rest.forEach((item) => {
-				if (commandSet.has(item.name))
-					return;
+					if (commandSet.has(item.name))
+						return;
 
-				commandSet.add(item.name);
+					commandSet.add(item.name);
 					IntellisenseProvider.commandCompletions.push(new Completion({
 						showText: item.name,
 						insertText: item.name.substring(1),
@@ -383,6 +385,7 @@ export class IntellisenseProvider {
 			return [];
 
 		const completions: Completion[] = [];
+		let insertText;
 		for (let j = 0; j < modes.length; ++j) {
 			const com = new Completion({ showText: "" });
 			com.type = CompletionType.AddressingType;
@@ -391,9 +394,14 @@ export class IntellisenseProvider {
 				com.showText = Localization.GetMessage("empty addressing mode");
 				com.insertText = "\n";
 			} else {
-				com.index = CompletionIndex.EmptyAddressing;
+				com.index = CompletionIndex.NotEmptyAddressing;
 				com.showText = modes[j].addressingMode!;
-				com.insertText = IntellisenseProvider.ReplaceCommon(modes[j].addressingMode!.replaceAll("$", "\\$"));
+				insertText = modes[j].addressingMode!.replaceAll("$", "\\$");
+				if (modes[j].addressingMode! === "#[exp]") {
+					com.commitCharacters = ["#"];
+				} else {
+					com.insertText = IntellisenseProvider.ReplaceCommon(insertText);
+				}
 			}
 			completions.push(com);
 		}
@@ -421,9 +429,8 @@ export class IntellisenseProvider {
 		if (!trigger || trigger === ".") {
 			const addrMode = Platform.MatchAddressingMode(content.main, content.rest);
 			if (addrMode) {
-				if (!HelperUtils.CurrentInToken(current, ...addrMode.exprs)) {
+				if (!HelperUtils.CurrentInToken(current, ...addrMode.exprs))
 					return [];
-				}
 			}
 
 			const prefix = HelperUtils.GetWord(content.rest.text, current, content.rest.start);
