@@ -6,6 +6,20 @@ enum TriggerSuggestType {
 	None, AllAsm, AllFile
 }
 
+enum CompletionType {
+	Instruction,
+	AddressingType,
+	Command,
+	Macro,
+	Defined,
+	Label,
+	Variable,
+	UnknowLabel,
+	MacroParamter,
+	Folder,
+	File
+}
+
 export interface TriggerSuggestTag {
 	type: TriggerSuggestType;
 	data: any;
@@ -85,6 +99,9 @@ export class Intellisense {
 			if (com.comment)
 				newCom.documentation = new vscode.MarkdownString(com.comment);
 
+			if (com.type === CompletionType.Folder)
+				newCom.commitCharacters = ["/"];
+
 			// 不会再走这里
 			switch (com.triggerType) {
 				case TriggerSuggestType.AllAsm:
@@ -96,7 +113,6 @@ export class Intellisense {
 						path = com.tag as string;
 						path = LSPUtils.assembler.fileUtils.Combine(path, com.showText);
 					}
-
 					newCom.command = {
 						title: "Get Folder Files",
 						command: CommandName,
@@ -159,7 +175,6 @@ export class Intellisense {
 					}
 					result.push(com);
 				}
-				console.log(result);
 				break;
 		}
 		return result;

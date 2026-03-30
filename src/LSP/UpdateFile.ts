@@ -167,7 +167,6 @@ export class UpdateFile {
 			}
 		}
 
-		console.log(event.document.uri.fsPath);
 		UpdateFile.updateFiles.set(event.document.uri.fsPath, event.document);
 
 		LSPUtils.fileUpdateFinished = false;
