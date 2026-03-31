@@ -2,6 +2,8 @@
 
 [English](./doc/README-en.md)
 
+[中文Wiki](https://gitee.com/zeng_ge/zg-assembler-next/wikis)
+
 一个 VSCode 的编译器插件，可以编译 6502 / 65c816 / SM83-gb / SPC700
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
