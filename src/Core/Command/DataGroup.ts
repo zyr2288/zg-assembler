@@ -93,14 +93,12 @@ class DataGroupUtils {
 		const matchEnd = option.matchIndex![0];
 
 		const tag: DataGroupTag = { dataGroup: new DataGroup(), name: line.arguments[0], expressions: [] };
-		if (Compiler.enviroment.compileTime < 0) {
-			const label = LabelUtils.CreateCommonLabel(tag.name, { ableNameless: false });
-			if (label) {
-				label.type = LabelType.Label;
-				label.comment = line.comment;
-				Compiler.enviroment.allDataGroup.set(tag.name.text, tag.dataGroup);
-				tag.dataGroup.label = label as ILabelNormal;
-			}
+		const label = LabelUtils.CreateCommonLabel(tag.name, { ableNameless: false });
+		if (label) {
+			label.type = LabelType.Label;
+			label.comment = line.comment;
+			Compiler.enviroment.allDataGroup.set(tag.name.text, tag.dataGroup);
+			tag.dataGroup.label = label as ILabelNormal;
 		}
 
 		const lines = option.allLines.slice(start, matchEnd);
@@ -158,14 +156,7 @@ class DataGroupUtils {
 		let tag = line.tag as DataGroupTag;
 		if (Compiler.FirstCompile()) {
 			DataGroupUtils.AnalyseFirst(option);
-			tag = line.tag;
-			const label = LabelUtils.CreateCommonLabel(tag.name, { ableNameless: false });
-			if (label) {
-				label.value = Compiler.enviroment.address.org;
-				label.type = LabelType.Label;
-				label.comment = line.comment;
-				Compiler.enviroment.allDataGroup.set(tag.name.text, tag.dataGroup);
-			}
+			tag = line.tag as DataGroupTag;
 			line.lineType = LineType.Finished;
 		}
 
