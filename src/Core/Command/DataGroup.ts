@@ -102,7 +102,6 @@ class DataGroupUtils {
 		}
 
 		const lines = option.allLines.slice(start, matchEnd);
-
 		Command.MarkLineFinished(option, start, matchEnd);
 
 		let dataIndex = 0;
@@ -157,11 +156,12 @@ class DataGroupUtils {
 		if (Compiler.FirstCompile()) {
 			DataGroupUtils.AnalyseFirst(option);
 			tag = line.tag as DataGroupTag;
-			line.lineType = LineType.Finished;
 		}
 
+		line.lineType = LineType.Finished;
 		line.lineResult.SetAddress();
 		line.lineResult.result.length = tag.expressions.length * dataLength;
+		tag.dataGroup.label.value = line.lineResult.address.org;
 
 		let index = 0;
 		for (let i = 0; i < tag.expressions.length; i++) {
