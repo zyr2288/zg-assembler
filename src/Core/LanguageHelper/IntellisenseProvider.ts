@@ -41,7 +41,7 @@ export enum CompletionIndex {
 }
 
 enum TriggerSuggestType {
-	None, AllAsm, AllFile
+	None, AllAsm, AllFile, CloseItemList
 }
 
 //#region 提示项
@@ -90,8 +90,6 @@ export class Completion {
 	showText: string = "";
 	/**插入的文本 */
 	insertText: string = "";
-	/**自动提交字符，一般不使用 */
-	commitCharacters?: string[];
 	/**排序 */
 	index: CompletionIndex = CompletionIndex.Folder;
 	/**注释 */
@@ -397,11 +395,7 @@ export class IntellisenseProvider {
 				com.index = CompletionIndex.NotEmptyAddressing;
 				com.showText = modes[j].addressingMode!;
 				insertText = modes[j].addressingMode!.replaceAll("$", "\\$");
-				if (modes[j].addressingMode! === "#[exp]") {
-					com.commitCharacters = ["#"];
-				} else {
-					com.insertText = IntellisenseProvider.ReplaceCommon(insertText);
-				}
+				com.insertText = IntellisenseProvider.ReplaceCommon(insertText);
 			}
 			completions.push(com);
 		}

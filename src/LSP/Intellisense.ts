@@ -3,7 +3,7 @@ import { CommandName } from "./AssCommands";
 import { LSPUtils } from "./LSPUtils";
 
 enum TriggerSuggestType {
-	None, AllAsm, AllFile
+	None, AllAsm, AllFile, CloseItemList
 }
 
 enum CompletionType {
@@ -95,9 +95,6 @@ export class Intellisense {
 			const newCom = new vscode.CompletionItem(com.showText);
 			newCom.insertText = new vscode.SnippetString(com.insertText);
 			newCom.sortText = com.index.toString();
-
-			if (com.commitCharacters)
-				newCom.commitCharacters = com.commitCharacters;
 
 			if (com.comment)
 				newCom.documentation = new vscode.MarkdownString(com.comment);
