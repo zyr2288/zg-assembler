@@ -506,6 +506,9 @@ export class HelperUtils {
 		const tag: DataGroupTag = tempLine.tag;
 		for (let i = 0; i < tag.expressions.length; i++) {
 			const exp = tag.expressions[i];
+			if (exp.parts[0].token.line !== lineNumber)
+				continue;
+
 			const match = HelperUtils.CurrentInExpression({ current, fileIndex }, exp);
 			if (!match)
 				continue;
