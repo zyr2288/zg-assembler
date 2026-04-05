@@ -23,6 +23,7 @@ export class MyDiagnostic {
 	private static allErrors = new Map<number, Map<number, DiagnosticMsg>>();
 	private static allWarning = new Map<number, Map<number, DiagnosticMsg>>();
 	private static allUnusedLine = new Map<number, Set<number>>();
+	private static allIgnoreLine = new Map<number, Set<number>>();
 
 	/***** 错误处理 *****/
 
@@ -43,6 +44,11 @@ export class MyDiagnostic {
 			MyDiagnostic.allErrors.set(fileIndex, fileErrors);
 		}
 
+		// 忽略行处理
+		const ignore = MyDiagnostic.allIgnoreLine.get(fileIndex);
+		if (ignore?.has(token.line))
+			return;
+		
 		const hash = Utils.GetHashcode(token.line, token.start, token.length)
 		fileErrors.set(hash, { word: token, msg });
 	}
@@ -123,6 +129,23 @@ export class MyDiagnostic {
 	}
 	//#endregion 获取警告
 
+	/***** 忽略行处理 *****/
+
+	//#region 添加忽略行
+	static AddIgnoreLine(lineNumber: number, fileIndex?: number) {
+		if (fileIndex === undefined)
+			fileIndex = Compiler.enviroment.fileIndex;
+
+		let ignore = MyDiagnostic.allIgnoreLine.get(fileIndex);
+		if (!ignore) {
+			ignore = new Set();
+			MyDiagnostic.allIgnoreLine.set(fileIndex, ignore);
+		}
+
+		ignore.add(lineNumber);
+	}
+	//#endregion 添加忽略行
+
 	/***** 未使用行处理 *****/
 
 	//#region 添加未使用行
@@ -149,11 +172,15 @@ export class MyDiagnostic {
 	static ClearFileExceptions(fileIndex: number) {
 		MyDiagnostic.allErrors.set(fileIndex, new Map());
 		MyDiagnostic.allWarning.set(fileIndex, new Map());
+		MyDiagnostic.allIgnoreLine.set(fileIndex, new Set());
+		MyDiagnostic.allUnusedLine.set(fileIndex, new Set());
 	}
 
 	static ClearAll() {
 		MyDiagnostic.allErrors.clear();
 		MyDiagnostic.allWarning.clear();
+		MyDiagnostic.allIgnoreLine.clear();
+		MyDiagnostic.allUnusedLine.clear();
 	}
 
 }

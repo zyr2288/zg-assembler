@@ -341,8 +341,16 @@ export class Analyser {
 			content = token.Copy();
 		}
 
-		if (comment && (comment[0] === "+" || comment[0] === "-"))
-			comment = comment.substring(1);
+		if (comment) {
+			if (comment[0] === "+" || comment[0] === "-")
+				comment = comment.substring(1);
+
+			if (comment.endsWith("@ignore")) 
+			{
+				comment = comment.substring(0, comment.length - 7);
+				MyDiagnostic.AddIgnoreLine(token.line);
+			}
+		}
 
 		return { content, comment };
 	}
