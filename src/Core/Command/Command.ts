@@ -16,7 +16,7 @@ import { Base, Original } from "./OrgAndBase";
 import { RepeatCommand } from "./RepeatCommand";
 import { EnumCommand } from "./EnumCommand";
 import { Expression } from "../Base/ExpressionUtils";
-import { DBGCommand, DWGCommand } from "./DataGroup";
+import { DBGCommand, DLGCommand, DWGCommand } from "./DataGroup";
 
 interface FindMatchOption {
 	/**命令名称 */
@@ -51,7 +51,7 @@ export class Command {
 		Command.AddCommand(
 			DefinedCommand, Original, Base, EnumCommand,
 			DBCommand, DWCommand, DLCommand, HexCommand,
-			DBGCommand, DWGCommand, DLCommand,
+			DBGCommand, DWGCommand, DLGCommand,
 			Include, Incbin,
 			IfConfident, IfDefConfident, IfNDefConfident,
 			MacroCommand, MsgCommand, ErrorCommand,
