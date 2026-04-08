@@ -439,8 +439,8 @@ Example 1:
 
 ```
     .MACRO TXY
-    TXA
-    TAY
+        TXA
+        TAY
     .ENDM
 
     TXY
@@ -452,16 +452,16 @@ Example 2:
 
 ```
     .MACRO test, a, b
-    .IF 3 == a
-    LDA 3
-    .ELSEIF 4 == a
-    LDX 4
-    .ELSEIF 5 == a && 5 == b
-    LDY 5
-    .ELSE
-    LDA 6
-    STA 6
-    .ENDIF
+        .IF 3 == a
+            LDA 3
+        .ELSEIF 4 == a
+            LDX 4
+        .ELSEIF 5 == a && 5 == b
+            LDY 5
+        .ELSE
+            LDA 6
+            STA 6
+        .ENDIF
     .ENDM
 
     test 3,3
@@ -493,10 +493,10 @@ For example:
 
 ```
     .REPEAT 2
-    NOP
-    .REPEAT 3
-    ASL
-    .ENDR
+        NOP
+        .REPEAT 3
+            ASL
+        .ENDR
     .ENDR
 ```
 

@@ -430,18 +430,17 @@ Unicode 形式
     .ENDM
 ```
 
-> 注意：用这里的指令可以自定义函数，所要使用的函数要在编译之前定义好，否则编译器会报错。
-
-> 注意：所有自定义函数内的 **标签** 属于 **局部变量**，请勿在函数外部使用。
-
-> 注意：所有自定义函数内定义的 **变量** 均为 **全局变量**。
+> 注意：
+> 1. 用这里的指令可以自定义函数，所要使用的函数要在编译之前定义好，否则编译器会报错。
+> 2. 所有自定义函数内的 **标签** 属于 **局部变量**，请勿在函数外部使用。
+> 3. 所有自定义函数内定义的 **变量** 均为 **全局变量**。
 
 实例 1：
 
 ```
     .MACRO TXY
-    TXA
-    TAY
+        TXA
+        TAY
     .ENDM
 
     TXY
@@ -453,16 +452,16 @@ Unicode 形式
 
 ```
     .MACRO test, a, b
-    .IF 3 == a
-    LDA 3
-    .ELSEIF 4 == a
-    LDX 4
-    .ELSEIF 5 == a && 5 == b
-    LDY 5
-    .ELSE
-    LDA 6
-    STA 6
-    .ENDIF
+        .IF 3 == a
+            LDA 3
+        .ELSEIF 4 == a
+            LDX 4
+        .ELSEIF 5 == a && 5 == b
+            LDY 5
+        .ELSE
+            LDA 6
+            STA 6
+        .ENDIF
     .ENDM
 
     test 3,3
@@ -494,10 +493,10 @@ Unicode 形式
 
 ```
     .REPEAT 2
-    NOP
-    .REPEAT 3
-    ASL
-    .ENDR
+        NOP
+        .REPEAT 3
+            ASL
+        .ENDR
     .ENDR
 ```
 
