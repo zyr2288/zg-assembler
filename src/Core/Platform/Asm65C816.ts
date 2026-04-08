@@ -32,22 +32,22 @@ export class Asm65C816 {
 		];
 		this.Add("AND", modes1, opCode);
 
-		this.AddInstruction("ASL", { opCode: [0x0A] });
-		this.AddInstruction("ASL", { addressingMode: "[exp],X", opCode: [, 0x16, 0x1E] });
-		this.AddInstruction("ASL", { addressingMode: "[exp]", opCode: [, 0x06, 0x0E] });
+		Platform.AddInstruction("ASL", { opCode: [0x0A] });
+		Platform.AddInstruction("ASL", { addressingMode: "[exp],X", opCode: [, 0x16, 0x1E] });
+		Platform.AddInstruction("ASL", { addressingMode: "[exp]", opCode: [, 0x06, 0x0E] });
 
 		const instrs1 = ["BCC", "BCS", "BEQ", "BNE", "BMI", "BPL", "BVC", "BVS", "BRA"];
 		const opCode3 = [0x90, 0xB0, 0xF0, 0xD0, 0x30, 0x10, 0x50, 0x70, 0x80];
 		for (let i = 0; i < instrs1.length; ++i)
-			this.AddInstruction(instrs1[i], { addressingMode: "[exp]", opCode: [, opCode3[i]], spProcess: this.Condition });
+			Platform.AddInstruction(instrs1[i], { addressingMode: "[exp]", opCode: [, opCode3[i]], spProcess: this.Condition });
 
-		this.AddInstruction("BRL", { addressingMode: "[exp]", opCode: [, , 0x82], spProcess: this.Condition2 });
+		Platform.AddInstruction("BRL", { addressingMode: "[exp]", opCode: [, , 0x82], spProcess: this.Condition2 });
 
-		this.AddInstruction("BIT", { addressingMode: "#[exp]", opCode: [, 0x89, 0x89] });
-		this.AddInstruction("BIT", { addressingMode: "[exp],X", opCode: [, 0x34, 0x3C] });
-		this.AddInstruction("BIT", { addressingMode: "[exp]", opCode: [, 0x24, 0x2C] });
+		Platform.AddInstruction("BIT", { addressingMode: "#[exp]", opCode: [, 0x89, 0x89] });
+		Platform.AddInstruction("BIT", { addressingMode: "[exp],X", opCode: [, 0x34, 0x3C] });
+		Platform.AddInstruction("BIT", { addressingMode: "[exp]", opCode: [, 0x24, 0x2C] });
 
-		this.AddInstruction("BRK", { opCode: [0x00] });
+		Platform.AddInstruction("BRK", { opCode: [0x00] });
 
 		const instrs2 = [
 			"CLC", "CLD", "CLI", "CLV", "SEC", "SED", "SEI",
@@ -66,7 +66,7 @@ export class Asm65C816 {
 			0x5B, 0x7B, 0x1B, 0x3B, 0xCB, 0xEB, 0xFB
 		];
 		for (let i = 0; i < instrs2.length; i++)
-			this.AddInstruction(instrs2[i], { opCode: [opCode4[i]] });
+			Platform.AddInstruction(instrs2[i], { opCode: [opCode4[i]] });
 
 		opCode = [
 			[, 0xC9, 0xC9], [, 0xC1], [, 0xD1], [, 0xD7], [, 0xD3],
@@ -74,20 +74,20 @@ export class Asm65C816 {
 		];
 		this.Add("CMP", modes1, opCode);
 
-		this.AddInstruction("COP", { opCode: [0x02] });
+		Platform.AddInstruction("COP", { opCode: [0x02] });
 
-		this.AddInstruction("CPX", { addressingMode: "#[exp]", opCode: [, 0xE0, 0xE0] });
-		this.AddInstruction("CPX", { addressingMode: "[exp]", opCode: [, 0xE4, 0xEC] });
+		Platform.AddInstruction("CPX", { addressingMode: "#[exp]", opCode: [, 0xE0, 0xE0] });
+		Platform.AddInstruction("CPX", { addressingMode: "[exp]", opCode: [, 0xE4, 0xEC] });
 
-		this.AddInstruction("CPY", { addressingMode: "#[exp]", opCode: [, 0xC0, 0xC0] });
-		this.AddInstruction("CPY", { addressingMode: "[exp]", opCode: [, 0xC4, 0xCC] });
+		Platform.AddInstruction("CPY", { addressingMode: "#[exp]", opCode: [, 0xC0, 0xC0] });
+		Platform.AddInstruction("CPY", { addressingMode: "[exp]", opCode: [, 0xC4, 0xCC] });
 
-		this.AddInstruction("DEC", { opCode: [0x3A] });
-		this.AddInstruction("DEC", { addressingMode: "[exp],X", opCode: [, 0xD6, 0xDE] });
-		this.AddInstruction("DEC", { addressingMode: "[exp]", opCode: [, 0XC6, 0XCE] });
+		Platform.AddInstruction("DEC", { opCode: [0x3A] });
+		Platform.AddInstruction("DEC", { addressingMode: "[exp],X", opCode: [, 0xD6, 0xDE] });
+		Platform.AddInstruction("DEC", { addressingMode: "[exp]", opCode: [, 0XC6, 0XCE] });
 
-		this.AddInstruction("DEX", { opCode: [0xCA] });
-		this.AddInstruction("DEY", { opCode: [0x88] });
+		Platform.AddInstruction("DEX", { opCode: [0xCA] });
+		Platform.AddInstruction("DEY", { opCode: [0x88] });
 
 		opCode = [
 			[, 0x49, 0x49], [, 0x41], [, 0x51], [, 0x57], [, 0x53],
@@ -95,26 +95,26 @@ export class Asm65C816 {
 		];
 		this.Add("EOR", modes1, opCode);
 
-		this.AddInstruction("INC", { opCode: [0x1A] });
-		this.AddInstruction("INC", { addressingMode: "[exp],X", opCode: [, 0xF6, 0xFE] });
-		this.AddInstruction("INC", { addressingMode: "[exp]", opCode: [, 0xE6, 0xEE] });
+		Platform.AddInstruction("INC", { opCode: [0x1A] });
+		Platform.AddInstruction("INC", { addressingMode: "[exp],X", opCode: [, 0xF6, 0xFE] });
+		Platform.AddInstruction("INC", { addressingMode: "[exp]", opCode: [, 0xE6, 0xEE] });
 
-		this.AddInstruction("INX", { opCode: [0xE8] });
-		this.AddInstruction("INY", { opCode: [0xC8] });
+		Platform.AddInstruction("INX", { opCode: [0xE8] });
+		Platform.AddInstruction("INY", { opCode: [0xC8] });
 
-		this.AddInstruction("JMP", { addressingMode: "([exp],X)", opCode: [, , 0x7C] });
-		this.AddInstruction("JMP", { addressingMode: "[[exp]]", opCode: [, , 0xDC] });
-		this.AddInstruction("JMP", { addressingMode: "([exp])", opCode: [, , 0x62] });
-		this.AddInstruction("JMP", { addressingMode: "[exp]", opCode: [, , 0x4C, 0x5C] });
+		Platform.AddInstruction("JMP", { addressingMode: "([exp],X)", opCode: [, , 0x7C] });
+		Platform.AddInstruction("JMP", { addressingMode: "[[exp]]", opCode: [, , 0xDC] });
+		Platform.AddInstruction("JMP", { addressingMode: "([exp])", opCode: [, , 0x62] });
+		Platform.AddInstruction("JMP", { addressingMode: "[exp]", opCode: [, , 0x4C, 0x5C] });
 
-		this.AddInstruction("JML", { addressingMode: "[[exp]]", opCode: [, , 0xDC] })
-		this.AddInstruction("JML", { addressingMode: "[exp]", opCode: [, , , 0x5C] });
+		Platform.AddInstruction("JML", { addressingMode: "[[exp]]", opCode: [, , 0xDC] })
+		Platform.AddInstruction("JML", { addressingMode: "[exp]", opCode: [, , , 0x5C] });
 
-		this.AddInstruction("JSR", { addressingMode: "([exp],X)", opCode: [, , 0xFC] });
-		this.AddInstruction("JSR", { addressingMode: "[exp]", opCode: [, , 0x20] });
+		Platform.AddInstruction("JSR", { addressingMode: "([exp],X)", opCode: [, , 0xFC] });
+		Platform.AddInstruction("JSR", { addressingMode: "[exp]", opCode: [, , 0x20] });
 
-		this.AddInstruction("JSL", { addressingMode: "([exp],X)", opCode: [, , 0xFC] });
-		this.AddInstruction("JSL", { addressingMode: "[exp]", opCode: [, , , 0x22] });
+		Platform.AddInstruction("JSL", { addressingMode: "([exp],X)", opCode: [, , 0xFC] });
+		Platform.AddInstruction("JSL", { addressingMode: "[exp]", opCode: [, , , 0x22] });
 
 		opCode = [
 			[, 0xA9, 0xA9], [, 0xA1], [, 0xB1], [, 0xB7], [, 0xB3],
@@ -122,22 +122,22 @@ export class Asm65C816 {
 		];
 		this.Add("LDA", modes1, opCode);
 
-		this.AddInstruction("LDX", { addressingMode: "#[exp]", opCode: [, 0xA2, 0xA2] });
-		this.AddInstruction("LDX", { addressingMode: "[exp],Y", opCode: [, 0xB6, 0xBE] });
-		this.AddInstruction("LDX", { addressingMode: "[exp]", opCode: [, 0xA6, 0xAE] });
+		Platform.AddInstruction("LDX", { addressingMode: "#[exp]", opCode: [, 0xA2, 0xA2] });
+		Platform.AddInstruction("LDX", { addressingMode: "[exp],Y", opCode: [, 0xB6, 0xBE] });
+		Platform.AddInstruction("LDX", { addressingMode: "[exp]", opCode: [, 0xA6, 0xAE] });
 
-		this.AddInstruction("LDY", { addressingMode: "#[exp]", opCode: [, 0xA0, 0xA0] });
-		this.AddInstruction("LDY", { addressingMode: "[exp],X", opCode: [, 0xB4, 0xBC] });
-		this.AddInstruction("LDY", { addressingMode: "[exp]", opCode: [, 0xA4, 0xAC] });
+		Platform.AddInstruction("LDY", { addressingMode: "#[exp]", opCode: [, 0xA0, 0xA0] });
+		Platform.AddInstruction("LDY", { addressingMode: "[exp],X", opCode: [, 0xB4, 0xBC] });
+		Platform.AddInstruction("LDY", { addressingMode: "[exp]", opCode: [, 0xA4, 0xAC] });
 
-		this.AddInstruction("LSR", { opCode: [0x4A] });
-		this.AddInstruction("LSR", { addressingMode: "[exp],X", opCode: [, 0x56, 0x5E] });
-		this.AddInstruction("LSR", { addressingMode: "[exp]", opCode: [, 0x46, 0x4E] });
+		Platform.AddInstruction("LSR", { opCode: [0x4A] });
+		Platform.AddInstruction("LSR", { addressingMode: "[exp],X", opCode: [, 0x56, 0x5E] });
+		Platform.AddInstruction("LSR", { addressingMode: "[exp]", opCode: [, 0x46, 0x4E] });
 
-		this.AddInstruction("MVN", { addressingMode: "[exp],[exp]", opCode: [, , 0x54], spProcess: this.Move });
-		this.AddInstruction("MVP", { addressingMode: "[exp],[exp]", opCode: [, , 0x44], spProcess: this.Move });
+		Platform.AddInstruction("MVN", { addressingMode: "[exp],[exp]", opCode: [, , 0x54], spProcess: this.Move });
+		Platform.AddInstruction("MVP", { addressingMode: "[exp],[exp]", opCode: [, , 0x44], spProcess: this.Move });
 
-		this.AddInstruction("NOP", { opCode: [0xEA] });
+		Platform.AddInstruction("NOP", { opCode: [0xEA] });
 
 		opCode = [
 			[, 0x09, 0x09], [, 0x01], [, 0x11], [, 0x17], [, 0x13],
@@ -145,20 +145,20 @@ export class Asm65C816 {
 		];
 		this.Add("ORA", modes1, opCode);
 
-		this.AddInstruction("PEA", { addressingMode: "#[exp]", opCode: [, , 0xF4] });
-		this.AddInstruction("PEA", { addressingMode: "[exp]", opCode: [, , 0xF4] });
-		this.AddInstruction("PEI", { addressingMode: "([exp])", opCode: [, 0xD4] });
-		this.AddInstruction("PER", { addressingMode: "[exp]", opCode: [, , 0x62] });
+		Platform.AddInstruction("PEA", { addressingMode: "#[exp]", opCode: [, , 0xF4] });
+		Platform.AddInstruction("PEA", { addressingMode: "[exp]", opCode: [, , 0xF4] });
+		Platform.AddInstruction("PEI", { addressingMode: "([exp])", opCode: [, 0xD4] });
+		Platform.AddInstruction("PER", { addressingMode: "[exp]", opCode: [, , 0x62] });
 
-		this.AddInstruction("REP", { addressingMode: "#[exp]", opCode: [, 0xC2] });
+		Platform.AddInstruction("REP", { addressingMode: "#[exp]", opCode: [, 0xC2] });
 
-		this.AddInstruction("ROL", { opCode: [0x2A] });
-		this.AddInstruction("ROL", { addressingMode: "[exp],X", opCode: [, 0x36, 0x3E] });
-		this.AddInstruction("ROL", { addressingMode: "[exp]", opCode: [, 0x26, 0x2E] });
+		Platform.AddInstruction("ROL", { opCode: [0x2A] });
+		Platform.AddInstruction("ROL", { addressingMode: "[exp],X", opCode: [, 0x36, 0x3E] });
+		Platform.AddInstruction("ROL", { addressingMode: "[exp]", opCode: [, 0x26, 0x2E] });
 
-		this.AddInstruction("ROR", { opCode: [0x6A] });
-		this.AddInstruction("ROR", { addressingMode: "[exp],X", opCode: [, 0x76, 0X7E] });
-		this.AddInstruction("ROR", { addressingMode: "[exp]", opCode: [, 0x66, 0X6E] });
+		Platform.AddInstruction("ROR", { opCode: [0x6A] });
+		Platform.AddInstruction("ROR", { addressingMode: "[exp],X", opCode: [, 0x76, 0X7E] });
+		Platform.AddInstruction("ROR", { addressingMode: "[exp]", opCode: [, 0x66, 0X6E] });
 
 		opCode = [
 			[, 0xE9, 0xE9], [, 0xE1], [, 0xF1], [, 0xF7], [, 0xF3],
@@ -166,26 +166,26 @@ export class Asm65C816 {
 		];
 		this.Add("SBC", modes1, opCode);
 
-		this.AddInstruction("SEP", { addressingMode: "#[exp]", opCode: [, 0xE2] });
+		Platform.AddInstruction("SEP", { addressingMode: "#[exp]", opCode: [, 0xE2] });
 
 		opCode = [
 			undefined, [, 0x81], [, 0X91], [, 0x97], [, 0X93],
 			[, 0x83], [, 0x95, 0x9D, 0x9F], [, , 0x99], [, 0x87], [, 0x92], [, 0x85, 0x8D, 0x8F]
 		];
 		this.Add("STA", modes1, opCode);
-		this.AddInstruction("STP", { opCode: [0xDB] });
+		Platform.AddInstruction("STP", { opCode: [0xDB] });
 
-		this.AddInstruction("STX", { addressingMode: "[exp],Y", opCode: [, 0x96] });
-		this.AddInstruction("STX", { addressingMode: "[exp]", opCode: [, 0x86, 0x8E] });
+		Platform.AddInstruction("STX", { addressingMode: "[exp],Y", opCode: [, 0x96] });
+		Platform.AddInstruction("STX", { addressingMode: "[exp]", opCode: [, 0x86, 0x8E] });
 
-		this.AddInstruction("STY", { addressingMode: "[exp],X", opCode: [, 0x94] });
-		this.AddInstruction("STY", { addressingMode: "[exp]", opCode: [, 0x84, 0x8C] });
+		Platform.AddInstruction("STY", { addressingMode: "[exp],X", opCode: [, 0x94] });
+		Platform.AddInstruction("STY", { addressingMode: "[exp]", opCode: [, 0x84, 0x8C] });
 
-		this.AddInstruction("STZ", { addressingMode: "[exp],X", opCode: [, 0x74, 0x9E] });
-		this.AddInstruction("STZ", { addressingMode: "[exp]", opCode: [, 0x64, 0x9C] });
+		Platform.AddInstruction("STZ", { addressingMode: "[exp],X", opCode: [, 0x74, 0x9E] });
+		Platform.AddInstruction("STZ", { addressingMode: "[exp]", opCode: [, 0x64, 0x9C] });
 
-		this.AddInstruction("TRB", { addressingMode: "[exp]", opCode: [, 0x14, 0x1C] });
-		this.AddInstruction("TSB", { addressingMode: "[exp]", opCode: [, 0x04, 0x0C] });
+		Platform.AddInstruction("TRB", { addressingMode: "[exp]", opCode: [, 0x14, 0x1C] });
+		Platform.AddInstruction("TSB", { addressingMode: "[exp]", opCode: [, 0x04, 0x0C] });
 	}
 
 	private Add(ins: string, modes: string[], codes: (Array<number | undefined> | undefined)[]) {
@@ -194,12 +194,8 @@ export class Asm65C816 {
 			if (!opCodes)
 				continue;
 
-			this.AddInstruction(ins, { addressingMode: modes[i], opCode: opCodes });
+			Platform.AddInstruction(ins, { addressingMode: modes[i], opCode: opCodes });
 		}
-	}
-
-	private AddInstruction(instruction: string, addressingMode: AddInstructionOption) {
-		Platform.AddInstruction(instruction, addressingMode);
 	}
 
 	private Condition(option: CompileOption) {
