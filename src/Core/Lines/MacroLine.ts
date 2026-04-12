@@ -42,6 +42,13 @@ export class MacroLine {
 		// 	return;
 		// }
 
+		if (macro.params.size !== tokens.length) {
+			const error = Localization.GetMessage("Macro arguments count is {0}, but got {1}", macro.params.size, tokens.length);
+			MyDiagnostic.PushException(content.main, error);
+			line.lineType = LineType.Error;
+			return;
+		}
+
 		for (let i = 0; i < tokens.length; i++) {
 			const exp = ExpressionUtils.SplitAndSort(tokens[i]);
 			if (exp) {
@@ -85,6 +92,14 @@ export class MacroLine {
 	}
 
 	AnalyseThird(option: CompileOption) {
+		// const line = option.GetCurrent<MacroLine>();
+		// if (line.macro.params.size !== this.expressions.length) {
+		// 	const error = Localization.GetMessage("Macro arguments count is {0}, but got {1}", line.macro.params.size, this.expressions.length);
+		// 	MyDiagnostic.PushException(this.name, error);
+		// 	this.lineType = LineType.Error;
+		// 	return;
+		// }
+
 		for (let i = 0; i < this.expressions.length; i++) {
 			const exp = this.expressions[i];
 			ExpressionUtils.CheckLabels(option, exp);
