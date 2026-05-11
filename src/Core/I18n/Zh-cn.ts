@@ -56,6 +56,10 @@ export const Chinese: LocalizationMsg = {
 
 	"Global labels": "全局标签",
 	"Local labels": "局部标签",
+
+	"Comamnd .CHRMAP argument error": "命令 .CHRMAP 参数错误",
+	"Comamnd .STRING arguments error": "命令 .STRING 参数错误",
+	"Command .STR: character not found": "命令 .STR: 字符未找到",
 }
 
 export const CommandTip_Chinese: LocalizationTip = {

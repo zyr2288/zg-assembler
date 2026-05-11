@@ -129,7 +129,7 @@ export class ExpressionUtils {
 
 	//#region 搜索所有标签
 	/**
-	 * 检查所以标签
+	 * 搜索所有标签
 	 * @param option 编译选项
 	 * @param expParts 表达式
 	 * @returns true为有误

@@ -4,6 +4,7 @@ import { FileUtils } from "./FileUtils";
 import { ILabelNamelessCollection, ILabelNormal, ILabelTree, LabelType, } from "./Label";
 import { IMacro } from "./Macro";
 import { CompileResult } from "../Compiler/CompileResult";
+import { CharCommand } from "../Command/CharCommand";
 
 export interface FileLineInfo {
 	fileIndex: number;
@@ -216,6 +217,8 @@ export class Enviroment {
 		this.fileLabel.global.clear();
 
 		this.fileMacros.clear();
+
+		CharCommand.CharMap.clear();
 	}
 	//#endregion 清除所有标记
 

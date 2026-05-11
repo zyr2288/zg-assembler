@@ -89,7 +89,8 @@
 		],
 		"configurationDefaults": {
 			"[zg-assembly]": {
-				"editor.wordBasedSuggestions": "off"
+				"editor.wordBasedSuggestions": "off",
+				"editor.colorDecorators": false
 			}
 		},
 		"menus": {

@@ -17,6 +17,7 @@ import { RepeatCommand } from "./RepeatCommand";
 import { EnumCommand } from "./EnumCommand";
 import { Expression } from "../Base/ExpressionUtils";
 import { DBGCommand, DLGCommand, DWGCommand } from "./DataGroup";
+import { CharCommand, StrCommand } from "./CharCommand";
 
 interface FindMatchOption {
 	/**命令名称 */
@@ -50,12 +51,13 @@ export class Command {
 	static Initialize() {
 		Command.AddCommand(
 			DefinedCommand, Original, Base, EnumCommand,
+			CharCommand, StrCommand,
 			DBCommand, DWCommand, DLCommand, HexCommand,
 			DBGCommand, DWGCommand, DLGCommand,
 			Include, Incbin,
 			IfConfident, IfDefConfident, IfNDefConfident,
 			MacroCommand, MsgCommand, ErrorCommand,
-			RepeatCommand
+			RepeatCommand, 
 		);
 	}
 	//#endregion 命令的初始化

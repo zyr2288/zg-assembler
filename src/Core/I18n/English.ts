@@ -53,6 +53,10 @@ export const English = {
 
 	"Global labels":"Global labels",
 	"Local labels": "Local labels",
+
+	"Comamnd .CHRMAP argument error": "Command .CHRMAP arguments error",
+	"Comamnd .STRING arguments error": "Comamnd .STRING arguments error",
+	"Command .STR: character not found": "Command .STR: character not found",
 }
 
 export const CommandTip_English = {
