@@ -105,6 +105,11 @@ export class MyDiagnostic {
 			MyDiagnostic.allWarning.set(fileIndex, fileWarnings);
 		}
 
+		// 忽略行处理
+		const ignore = MyDiagnostic.allIgnoreLine.get(fileIndex);
+		if (ignore?.has(token.line))
+			return;
+
 		const hash = Utils.GetHashcode(token.line, token.start, token.length)
 		fileWarnings.set(hash, { word: token, msg });
 	}

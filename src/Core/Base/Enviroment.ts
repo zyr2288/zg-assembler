@@ -48,6 +48,9 @@ export class Enviroment {
 
 	address = { base: 0, org: -1, offset: 0 };
 
+	/**字符映射表 */
+	charMap = new Map<string, { value: number, length: number }>();
+
 	/**所有编译结果 */
 	compileResult = new CompileResult();
 	/**所有行，key是fileIndex，CommonLine是以行的index作为索引 */
@@ -218,7 +221,7 @@ export class Enviroment {
 
 		this.fileMacros.clear();
 
-		CharCommand.CharMap.clear();
+		this.charMap.clear();
 	}
 	//#endregion 清除所有标记
 

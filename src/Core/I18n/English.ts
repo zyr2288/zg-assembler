@@ -23,6 +23,7 @@ export const English = {
 	"Data group {0} do not found": "Data group \"{0}\" do not found",
 
 	"Unsupport string": "This expression do not support using string",
+	"String format error": "String format error",
 
 	"rename error": "Can not rename",
 	"format error": "Can not format",
@@ -56,7 +57,7 @@ export const English = {
 
 	"Comamnd .CHRMAP argument error": "Command .CHRMAP arguments error",
 	"Comamnd .STRING arguments error": "Comamnd .STRING arguments error",
-	"Command .STR: character not found": "Command .STR: character not found",
+	"Character not found in .STR": "Character \"{0}\" not found in character map, will be replaced with \"{1}\"",
 }
 
 export const CommandTip_English = {

@@ -61,7 +61,7 @@ export interface ExpressionPart {
 	/**结果值 */
 	value: number;
 	/**如果是字符串，则会有每个char值 */
-	chars?: number[];
+	charValues?: number[];
 }
 //#endregion 表达式分割
 
@@ -293,7 +293,7 @@ export class ExpressionUtils {
 				const part = Utils.DeepClone(expression.parts);
 				part[index] = {
 					token: expression.parts[index].token.Copy(),
-					value: expression.parts[index].chars![i],
+					value: expression.parts[index].charValues![i],
 					type: PriorityType.Level_0_Sure,
 					highlightType: HighlightType.Number
 				}
@@ -359,6 +359,149 @@ export class ExpressionUtils {
 	}
 	//#endregion 获取数字
 
+	//#region 拆分分析字符串
+	/**
+	 * 拆分分析字符串
+	 * @param token 已经去掉两端双引号的字符串Token
+	 * @returns 
+	 */
+	static SplitStringToChars(token: Token) {
+		const GetChar = (index: number, length?: number) => {
+			length = length || 1;
+			if (index + length - 1 >= token.length)
+				return;
+
+			return token.text.substring(index, index + length);
+		}
+
+		const result: string[] = [];
+
+		/**是否是转义字符 */
+		let inMark = false;
+
+		/**是否在大括号之内 */
+		let inRange = -1;
+
+		const AddToResult = (chr: string) => {
+			if (inRange >= 0) {
+				result[result.length - 1] += chr;
+				return;
+			}
+
+			result.push(chr);
+		}
+
+
+		for (let i = 0; i < token.length; i++) {
+			const chr = token.text[i];
+			switch (chr) {
+				case "\\":			// 转义字符
+					if (inMark) {
+						AddToResult(chr);
+						inMark = false;
+						break;
+					}
+					inMark = true;
+					break;
+
+				case "x":
+					if (inMark) {
+						const chr = GetChar(i + 1, 2);
+						if (!chr) {
+							const error = Localization.GetMessage("String format error");
+							MyDiagnostic.PushException(token, error);
+							return;
+						}
+
+						const code = parseInt(chr, 16);
+						AddToResult(String.fromCharCode(code));
+						i += 2;
+						inMark = false;
+						break;
+					}
+					AddToResult(chr);
+					break;
+
+				case "u":
+					if (inMark) {
+						const chr = GetChar(i + 1, 1);
+						if (chr !== "{") {
+							const error = Localization.GetMessage("String format error");
+							MyDiagnostic.PushException(token, error);
+							return;
+						}
+
+						const endIndex = token.text.indexOf("}", i + 2);
+						if (endIndex === -1) {
+							const error = Localization.GetMessage("String format error");
+							MyDiagnostic.PushException(token, error);
+							return;
+						}
+
+						const code = parseInt(token.text.substring(i + 2, endIndex), 16);
+						if (isNaN(code)) {
+							const error = Localization.GetMessage("String format error");
+							MyDiagnostic.PushException(token, error);
+							return;
+						}
+
+						AddToResult(String.fromCharCode(code));
+						i = endIndex;
+						inMark = false;
+						break;
+					}
+					AddToResult(chr);
+					break;
+
+				case "{":			// 开始范围
+					if (inMark) {
+						result.push(chr);
+						inMark = false;
+						break;
+					}
+
+					if (inRange >= 0) {
+						const error = Localization.GetMessage("String format error");
+						MyDiagnostic.PushException(token, error);
+						return;
+					}
+
+					AddToResult(chr);
+					inRange = i;
+					break;
+
+				case "}":			// 结束范围
+					if (inMark) {
+						result.push(chr);
+						inMark = false;
+						break;
+					}
+
+					if (inRange < 0) {
+						const error = Localization.GetMessage("String format error");
+						MyDiagnostic.PushException(token, error);
+						return;
+					}
+
+					AddToResult(chr);
+					inRange = -1;
+					break;
+				default:
+					AddToResult(chr);
+					break;
+			}
+		}
+
+		if (inRange >= 0) {
+			const error = Localization.GetMessage("String format error");
+			MyDiagnostic.PushException(token, error);
+			return;
+		}
+
+		return result;
+	}
+	//#endregion 拆分分析字符串
+
 	/***** private *****/
 
 	//#region 分割表达式
@@ -369,7 +512,7 @@ export class ExpressionUtils {
 	 */
 	private static SplitExpression(expression: Token) {
 
-		const result = { success: true, parts: [] as ExpressionPart[], stringIndex: -1, stringLength: 0 };
+		const result = { success: true, parts: [] as ExpressionPart[], stringLength: 0 };
 
 		// 临时标签
 		if (LabelUtils.namelessLabelRegex.test(expression.text)) {
@@ -410,37 +553,44 @@ export class ExpressionUtils {
 						}
 						const temp = ExpressionUtils.ProcessString(part.token);
 						if (temp) {
-							part.token.text = temp;
+							part.token.text = temp.text;
 						} else {
 							result.success = false;
 							return result;
 						}
 
-						const length = part.token.text.length;
-						switch (length) {
-							case 0:
-								const error = Localization.GetMessage("Expression error");
-								MyDiagnostic.PushException(part.token, error);
-								result.success = false;
-								break forLoop;
-							case 1:
-								part.type = PriorityType.Level_0_Sure;
-								part.value = part.token.text.charCodeAt(0);
-								if (result.stringLength === 0)
-									result.stringLength = 1;
+						const chars = ExpressionUtils.SplitStringToChars(temp)!;
+						if (Compiler.FirstCompile()) {
+							part.type = PriorityType.Level_3_CharArray;
+							result.stringLength = chars.length;
+						} else {
+							// 判断字符串长度，0则是错误，1则是单独字符，可以当作数字，大于1则是字符串
+							switch (chars.length) {
+								case 0:
+									const error = Localization.GetMessage("Expression error");
+									MyDiagnostic.PushException(part.token, error);
+									result.success = false;
+									break forLoop;
+								case 1:
+									part.type = PriorityType.Level_0_Sure;
+									part.value = ExpressionUtils.GetCharCode(chars[0]);
+									if (result.stringLength === 0)
+										result.stringLength = 1;
 
-								break;
-							default:
-								part.type = PriorityType.Level_3_CharArray;
-								part.chars = [];
-								for (let i = 0; i < part.token.text.length; i++)
-									part.chars[i] = part.token.text.charCodeAt(i);
+									break;
+								default:
+									part.type = PriorityType.Level_3_CharArray;
+									part.charValues = [];
+									for (let i = 0; i < chars.length; i++)
+										part.charValues[i] = ExpressionUtils.GetCharCode(chars[i]);
 
-								if (result.stringLength < part.token.text.length)
-									result.stringLength = part.token.text.length;
+									if (result.stringLength < chars.length)
+										result.stringLength = chars.length;
 
-								break;
+									break;
+							}
 						}
+
 						stringStart = -1;
 						isLabel = false;
 					}
@@ -564,7 +714,80 @@ export class ExpressionUtils {
 
 		return result;
 	}
+
+	private static GetCharCode(text: string) {
+		const temp = Compiler.enviroment.charMap.get(text);
+		if (temp)
+			return temp.value;
+
+		return text.charCodeAt(0);
+	}
 	//#endregion 分割表达式
+
+	//#region 处理字符串
+	/**
+	 * 处理字符串
+	 * @param token 字符串Token
+	 * @returns 
+	 */
+	private static ProcessString(token: Token) {
+		const result = token.Copy();
+		result.text = "";
+
+		let isConvert = false;
+
+		const GetChar = (str: string, index: number, length: number) => {
+			let result = "";
+			while (true) {
+				if (index >= str.length || length <= 0)
+					break;
+
+				result += str[index];
+
+				index++;
+				length--;
+			}
+
+			if (length !== 0) {
+				const error = Localization.GetMessage("Expression error");
+				MyDiagnostic.PushException(token, error);
+				throw null;
+			}
+
+			return result;
+		}
+
+		try {
+			for (let i = 0; i < token.length; i++) {
+				const char = GetChar(token.text, i, 1);
+				switch (char) {
+					case "\\":
+						isConvert = true;
+						continue;
+					default:
+						if (isConvert) {
+							switch (char) {
+								case "\"":
+									result.text += "\"";
+									break;
+								case "x":
+								case "u":
+									result.text += `\\${char}`;
+									break;
+							}
+							isConvert = false;
+							continue;
+						}
+						result.text += char;
+						break;
+				}
+			}
+			return result;
+		} catch {
+			return;
+		}
+	}
+	//#endregion 处理字符串
 
 	//#region 表达式排序，使用二叉树分析
 	/**
@@ -766,7 +989,7 @@ export class ExpressionUtils {
 				continue;
 
 			if (param.values.length > 1) {
-				part.chars = param.values;
+				part.charValues = param.values;
 				expression.stringIndex = i;
 				expression.stringLength = param.values.length;
 			} else if (param.values.length === 0) {
@@ -779,84 +1002,5 @@ export class ExpressionUtils {
 		}
 	}
 	//#endregion 检查在 Macro 里的参数
-
-	//#region 处理字符串
-	private static ProcessString(token: Token) {
-		let result = "";
-		let isConvert = false;
-
-		const GetChar = (str: string, index: number, length: number) => {
-			let result = "";
-			while (true) {
-				if (index >= str.length || length <= 0)
-					break;
-
-				result += str[index];
-
-				index++;
-				length--;
-			}
-
-			if (length !== 0) {
-				const error = Localization.GetMessage("Expression error");
-				MyDiagnostic.PushException(token, error);
-				throw null;
-			}
-
-			return result;
-		}
-
-		try {
-			for (let i = 0; i < token.length; i++) {
-				const char = GetChar(token.text, i, 1);
-				switch (char) {
-					case "\\":
-						isConvert = true;
-						continue;
-					default:
-						if (isConvert) {
-							switch (char) {
-								case "\"":
-									result += "\"";
-									break;
-								case "x":
-									const hex = GetChar(token.text, i + 1, 2);
-									result += String.fromCharCode(parseInt(hex, 16));
-									i += 2;
-									break;
-								case "u":
-									const left = GetChar(token.text, i + 1, 1);
-									if (left !== "{") {
-										const error = Localization.GetMessage("Expression error");
-										MyDiagnostic.PushException(token, error);
-										return;
-									}
-
-									let index = 0;
-									while (true) {
-										const right = GetChar(token.text, i + 2 + index, 1);
-										if (right === "}") {
-											const charCode = parseInt(token.text.substring(i + 2, i + 2 + index - 1), 16);
-											result += String.fromCharCode(charCode);
-											break;
-										}
-										i++;
-									}
-									break;
-							}
-							isConvert = false;
-							continue;
-						}
-
-						result += char;
-						break;
-				}
-			}
-			return result;
-		} catch {
-			return;
-		}
-	}
-	//#endregion 处理字符串
 
 }

@@ -26,6 +26,7 @@ export const Chinese: LocalizationMsg = {
 	"Data group {0} do not found": "数据组 \"{0}\" 未找到",
 
 	"Unsupport string": "这个表达式不支持字符串",
+	"String format error": "字符串格式错误",
 
 	"rename error": "重命名错误",
 	"format error": "格式化错误",
@@ -59,7 +60,7 @@ export const Chinese: LocalizationMsg = {
 
 	"Comamnd .CHRMAP argument error": "命令 .CHRMAP 参数错误",
 	"Comamnd .STRING arguments error": "命令 .STRING 参数错误",
-	"Command .STR: character not found": "命令 .STR: 字符未找到",
+	"Character not found in .STR": "未在码表中找到字符 \"{0}\"，将以 \"{1}\" 代替",
 }
 
 export const CommandTip_Chinese: LocalizationTip = {

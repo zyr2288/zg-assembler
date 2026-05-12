@@ -2,6 +2,7 @@ import { CompileOption } from "../Base/CompileOption";
 import { Expression, ExpressionPart, ExpressionUtils } from "../Base/ExpressionUtils";
 import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { Token } from "../Base/Token";
+import { Compiler } from "../Compiler/Compiler";
 import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
@@ -28,8 +29,6 @@ export class CharCommand implements ICommand {
 	start: ICommandName = { name: ".CHRMAP", min: 2, max: 3 };
 	allowLabel = false;
 
-	static CharMap = new Map<string, number[]>();
-
 	AnalyseFirst(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
 		const exps: Array<Expression | undefined> = [];
@@ -40,7 +39,18 @@ export class CharCommand implements ICommand {
 			return;
 		}
 
-		const chars = AnalyseString(line.arguments[1].Trim());
+		const token = AnalyseString(line.arguments[1]);
+		if (!token) {
+			line.lineType = LineType.Error;
+			return;
+		}
+
+		const chars = ExpressionUtils.SplitStringToChars(token);
+		if (!chars) {
+			line.lineType = LineType.Error;
+			return;
+		}
+
 		if (line.arguments[2]) {
 			exps[1] = ExpressionUtils.SplitAndSort(line.arguments[2]);
 		}
@@ -59,6 +69,10 @@ export class CharCommand implements ICommand {
 	}
 
 	Compile(option: CompileOption) {
+		if (Compiler.FirstCompile()) {
+			this.AnalyseFirst(option);
+		}
+
 		const line = option.GetCurrent<CommandLine>();
 		const tag = line.tag as CharCommmandTag;
 
@@ -80,183 +94,102 @@ export class CharCommand implements ICommand {
 			chrFixLength = value.value;
 			if (chrFixLength < 0) {
 				const error = Localization.GetMessage("Comamnd .CHRMAP argument error");
-				MyDiagnostic.PushException(line.command, error);
+				const token = ExpressionUtils.CombineExpressionPart(tag.exp[1].parts);
+				MyDiagnostic.PushException(token, error);
 				return;
 			}
 		}
 
-		let start = value.value, result, tempValue, tempLength;
+		let start = value.value, result;
 		for (let i = 0; i < tag.chars.length; i++) {
 			const chr = tag.chars[i];
-			result = [] as number[];
-			tempValue = start;
-			if (chrFixLength === 0) {
-				do {
-					result.unshift(tempValue & 0xFF);
-					tempValue >>>= 8;
-				} while (tempValue !== 0)
-			} else {
-				tempLength = chrFixLength;
-				do {
-					result.unshift(tempValue & 0xFF);
-					tempValue >>>= 8;
-				} while (--tempLength > 0)
-			}
-			CharCommand.CharMap.set(chr, result);
+			result = { value: start, length: chrFixLength };
+			Compiler.enviroment.charMap.set(chr, result);
 			start++;
 		}
+
+		line.lineType = LineType.Finished;
 	}
 }
 
 export class StrCommand implements ICommand {
-	start: ICommandName = { name: ".STRING", min: 1, max: 2 };
+	start: ICommandName = { name: ".STR", min: 1, max: 2 };
 	allowLabel = false;
 
 	AnalyseFirst(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
 
-		const chars = AnalyseString(line.arguments[0]);
-		line.tag = { lineNumber: line.org.line, start: line.arguments[0].start, chars } as StrCommandTag;
+		const token = AnalyseString(line.arguments[0]);
+		if (!token) {
+			line.lineType = LineType.Error;
+			return;
+		}
+
+		const chars = ExpressionUtils.SplitStringToChars(token);
+		if (!chars) {
+			line.lineType = LineType.Error;
+			return;
+		}
+
+		line.tag = { lineNumber: line.org.line, start: line.arguments[0].start + 1, chars } as StrCommandTag;
 	}
 
 	Compile(option: CompileOption) {
+		if (Compiler.FirstCompile()) {
+			this.AnalyseFirst(option);
+		}
+
 		const line = option.GetCurrent<CommandLine>();
 		const tag = line.tag as StrCommandTag;
 		const chars = tag.chars;
 
-		let tempValue: number[] = [], temp, strIndex = tag.start;
+		line.lineResult.SetAddress();
+		line.lineType = LineType.Finished;
+
+		let temp, strIndex = tag.start;
 		for (let i = 0; i < chars.length; i++) {
 			const chr = chars[i];
-			temp = CharCommand.CharMap.get(chr);
+			temp = Compiler.enviroment.charMap.get(chr);
 
 			if (temp === undefined) {
-				line.lineType = LineType.Error;
-				const error = Localization.GetMessage("Command .STR: character not found");
+				temp = { value: 0, length: 0 };
+				if (chr.length === 1)
+					temp = { value: chr.charCodeAt(0), length: 0 };
+
+				const error = Localization.GetMessage("Character not found in .STR", chr, temp.value);
 				const token = new Token(chr, { start: strIndex, line: line.org.line });
-				MyDiagnostic.PushException(token, error);
-				return;
+				MyDiagnostic.PushWarning(token, error);
 			}
 
-			tempValue.push(...temp);
+			temp = this.GetValues(temp);
+			line.lineResult.result.push(...temp);
+			strIndex += chr.length;
 		}
+	}
+
+	private GetValues(char: { value: number, length: number }) {
+		let temp = char.value, length = char.length, result: number[] = [];
+		if (char.length === 0) {
+			do {
+				result.unshift(temp & 0xFF);
+				temp >>>= 8;
+			} while (temp !== 0);
+		} else {
+			do {
+				result.unshift(temp & 0xFF);
+				temp >>>= 8;
+			} while (--length > 0);
+		}
+		return result;
 	}
 }
 
-function AnalyseString(str: Token, useUnicode = false) {
-	const result: string[] = [];
+function AnalyseString(token: Token) {
+	const temp = token.Trim();
+	if (temp.text.startsWith("\"") && temp.text.endsWith("\""))
+		return temp.Substring(1, temp.text.length - 2);
 
-	if (!str.text.startsWith("\"") || !str.text.endsWith("\"")) {
-		const error = Localization.GetMessage("Comamnd .STRING arguments error");
-		MyDiagnostic.PushException(str, error);
-		return;
-	}
-
-	const token = str.Substring(1, str.length - 2);
-	const GetChar = (index: number, length?: number) => {
-		length = length || 1;
-		if (index + length - 1 >= str.length)
-			return;
-
-		return token.text.substring(index, index + length);
-	}
-
-	const AddToResult = (chr:string) => {
-		if (inRange) {
-			result[result.length - 1] += chr;
-			return;
-		}
-
-		result.push(chr);
-	}
-
-	let inMark = false, inRange = false;
-	for (let i = 0; i < token.length; i++) {
-		const chr = token.text[i];
-		switch (chr) {
-			case "\\":			// 转义字符
-				if (inMark) {
-					result.push(chr);
-					inMark = false;
-					break;
-				}
-				inMark = true;
-				break;
-
-			case "x":
-				if (inMark) {
-					if (!useUnicode) {
-						const error = Localization.GetMessage("Comamnd .CHRMAP argument error");
-						MyDiagnostic.PushException(str, error);
-						return;
-					}
-
-					const chr = GetChar(i + 1, 2);
-					if (!chr) {
-						const error = Localization.GetMessage("Comamnd .CHRMAP argument error");
-						MyDiagnostic.PushException(str, error);
-						return;
-					}
-					break;
-				}
-				AddToResult(chr);
-				break;
-
-			case "u":
-				if (inMark) {
-					if (!useUnicode) {
-						const error = Localization.GetMessage("Comamnd .CHRMAP argument error");
-						MyDiagnostic.PushException(str, error);
-						return;
-					}
-
-					const chr = GetChar(i + 1, 2);
-					if (!chr) {
-						const error = Localization.GetMessage("Comamnd .CHRMAP argument error");
-						MyDiagnostic.PushException(str, error);
-						return;
-					}
-					break;
-				}
-				AddToResult(chr);
-				break;
-
-			case "{":			// 开始范围
-				if (inMark) {
-					result.push(chr);
-					inMark = false;
-					break;
-				}
-
-				if (inRange) {
-					const error = Localization.GetMessage("Comamnd .CHRMAP argument error");
-					MyDiagnostic.PushException(str, error);
-					return;
-				}
-
-				inRange = true;
-				result.push("");
-				break;
-
-			case "}":			// 结束范围
-				if (inMark) {
-					result.push(chr);
-					inMark = false;
-					break;
-				}
-
-				if (!inRange) {
-					const error = Localization.GetMessage("Comamnd .CHRMAP argument error");
-					MyDiagnostic.PushException(str, error);
-					return;
-				}
-
-				inRange = false;
-				break;
-			default:
-				AddToResult(chr);
-				break;
-		}
-	}
-
-	return result;
+	const error = Localization.GetMessage("String format error");
+	MyDiagnostic.PushException(token, error);
+	return;
 }
