@@ -19,9 +19,7 @@ export type CharCommmandTag = {
 }
 
 export type StrCommandTag = {
-	lineNumber: number;
-	start: number;
-	chars: string[];
+	exp: Expression;
 }
 
 export class CharCommand implements ICommand {
@@ -69,11 +67,13 @@ export class CharCommand implements ICommand {
 	}
 
 	Compile(option: CompileOption) {
-		if (Compiler.FirstCompile()) {
+		if (Compiler.FirstCompile())
 			this.AnalyseFirst(option);
-		}
 
 		const line = option.GetCurrent<CommandLine>();
+		if (line.lineType === LineType.Error)
+			return;
+
 		const tag = line.tag as CharCommmandTag;
 
 		// 字符固定长度，0为自动
@@ -119,38 +119,45 @@ export class StrCommand implements ICommand {
 	AnalyseFirst(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
 
-		const token = AnalyseString(line.arguments[0]);
-		if (!token) {
+		const expression = ExpressionUtils.SplitAndSort(line.arguments[0]);
+		if (!expression) {
 			line.lineType = LineType.Error;
 			return;
 		}
 
-		const chars = ExpressionUtils.SplitStringToChars(token);
-		if (!chars) {
-			line.lineType = LineType.Error;
-			return;
-		}
+		line.tag = { exp: expression } as StrCommandTag;
+	}
 
-		line.tag = { lineNumber: line.org.line, start: line.arguments[0].start + 1, chars } as StrCommandTag;
+	AnalyseThird(option: CompileOption) {
+		const line = option.GetCurrent<CommandLine>();
+		const tag = line.tag as StrCommandTag;
+		ExpressionUtils.CheckLabels(option, tag.exp);
 	}
 
 	Compile(option: CompileOption) {
-		if (Compiler.FirstCompile()) {
+		if (Compiler.FirstCompile())
 			this.AnalyseFirst(option);
-		}
-
+		
 		const line = option.GetCurrent<CommandLine>();
+		if (line.lineType === LineType.Error)
+			return;
+
 		const tag = line.tag as StrCommandTag;
-		const chars = tag.chars;
 
 		line.lineResult.SetAddress();
+		if (tag.exp.parts.length !== 1) {
+			const error = Localization.GetMessage("Comamnd .STRING arguments error");
+			const token = ExpressionUtils.CombineExpressionPart(tag.exp.parts);
+			MyDiagnostic.PushException(token, error);
+			return;
+		}
+
 		line.lineType = LineType.Finished;
 
-		let temp, strIndex = tag.start;
-		for (let i = 0; i < chars.length; i++) {
-			const chr = chars[i];
+		let temp, strIndex = tag.exp.parts[0].token.start;
+		for (let i = 0; i < tag.exp.parts[0].chars!.length; i++) {
+			const chr = tag.exp.parts[0].chars![i];
 			temp = Compiler.enviroment.charMap.get(chr);
-
 			if (temp === undefined) {
 				temp = { value: 0, length: 0 };
 				if (chr.length === 1)
@@ -165,6 +172,8 @@ export class StrCommand implements ICommand {
 			line.lineResult.result.push(...temp);
 			strIndex += chr.length;
 		}
+
+		line.lineResult.AddAddress();
 	}
 
 	private GetValues(char: { value: number, length: number }) {

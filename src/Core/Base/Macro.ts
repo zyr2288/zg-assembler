@@ -1,4 +1,5 @@
 import { CommonLine } from "../Lines/CommonLine";
+import { Expression } from "./ExpressionUtils";
 import { ILabelNormal } from "./Label";
 import { Token } from "./Token";
 
@@ -13,7 +14,7 @@ export class Macro {
 	/**所有标签 */
 	labels: Map<string, ILabelNormal> = new Map();
 	/**所有参数 */
-	params: Map<string, { label: ILabelNormal, values: number[] }> = new Map();
+	params: Map<string, { label: ILabelNormal, value: number | Expression }> = new Map();
 	/**不定参数 */
 	// indParams?: { name: Token, values: number[][] };
 	/**所有行 */

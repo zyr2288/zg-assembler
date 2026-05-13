@@ -108,25 +108,32 @@ export class MacroLine {
 
 	async Compile(option: CompileOption) {
 		this.label?.Compile(option);
-		if (Compiler.enviroment.compileTime === 0)
+		if (Compiler.FirstCompile())
 			this.macro = Utils.DeepClone(this.macro);
 
 		let index = 0;
 
 		const keys = this.macro.params.keys();
+
+		let temp;
 		for (const key of keys) {
 			const exp = this.expressions[index];
-			const temp = ExpressionUtils.GetStringValue(exp, { macro: option.macro });
-			index++;
-
-			if (!temp.success)
-				continue;
-
 			const param = this.macro.params.get(key)!;
-			param.values = temp.values;
+			if (exp.stringIndex < 0) {
+				temp = ExpressionUtils.GetValue(exp.parts, { macro: option.macro });
+				if (!temp.success)
+					continue;
 
-			if (temp.values.length === 1)
-				param.label.value = temp.values[0];
+				param.value = temp.value;
+				param.label.value = temp.value;
+			} else {
+				param.value = exp;
+			}
+
+			// param.value = temp.values;
+
+			// if (temp.values.length === 1)
+			// 	param.label.value = temp.values[0];
 		}
 
 		// 移除不定参数

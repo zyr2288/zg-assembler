@@ -61,7 +61,7 @@ export interface ExpressionPart {
 	/**结果值 */
 	value: number;
 	/**如果是字符串，则会有每个char值 */
-	charValues?: number[];
+	chars?: string[];
 }
 //#endregion 表达式分割
 
@@ -293,11 +293,13 @@ export class ExpressionUtils {
 				const part = Utils.DeepClone(expression.parts);
 				part[index] = {
 					token: expression.parts[index].token.Copy(),
-					value: expression.parts[index].charValues![i],
+					value: 0,
 					type: PriorityType.Level_0_Sure,
-					highlightType: HighlightType.Number
-				}
+					highlightType: HighlightType.Number,
+				};
+				delete (part[index].chars);
 
+				part[index].value = ExpressionUtils.GetCharCode(expression.parts[index].chars![i]);
 				const temp = ExpressionUtils.GetValue(part, option);
 				if (!temp.success) {
 					result.success = temp.success;
@@ -395,6 +397,16 @@ export class ExpressionUtils {
 		for (let i = 0; i < token.length; i++) {
 			const chr = token.text[i];
 			switch (chr) {
+				case "\"":
+					if (inMark) {
+						AddToResult(chr);
+						inMark = false;
+					} else {
+						const error = Localization.GetMessage("String format error");
+						MyDiagnostic.PushException(token, error);
+						return;
+					}
+					break;
 				case "\\":			// 转义字符
 					if (inMark) {
 						AddToResult(chr);
@@ -506,7 +518,7 @@ export class ExpressionUtils {
 
 	//#region 分割表达式
 	/**
-	 * 分割表达式
+	 * 分割表达式，仅仅是对表达式进行分割，不对其进行运算
 	 * @param expression 整合的表达式Token
 	 * @returns 
 	 */
@@ -560,35 +572,25 @@ export class ExpressionUtils {
 						}
 
 						const chars = ExpressionUtils.SplitStringToChars(temp)!;
-						if (Compiler.FirstCompile()) {
-							part.type = PriorityType.Level_3_CharArray;
-							result.stringLength = chars.length;
-						} else {
-							// 判断字符串长度，0则是错误，1则是单独字符，可以当作数字，大于1则是字符串
-							switch (chars.length) {
-								case 0:
-									const error = Localization.GetMessage("Expression error");
-									MyDiagnostic.PushException(part.token, error);
-									result.success = false;
-									break forLoop;
-								case 1:
-									part.type = PriorityType.Level_0_Sure;
-									part.value = ExpressionUtils.GetCharCode(chars[0]);
-									if (result.stringLength === 0)
-										result.stringLength = 1;
+						if (!chars) {
+							result.success = false;
+							return result;
+						}
 
-									break;
-								default:
-									part.type = PriorityType.Level_3_CharArray;
-									part.charValues = [];
-									for (let i = 0; i < chars.length; i++)
-										part.charValues[i] = ExpressionUtils.GetCharCode(chars[i]);
+						// 判断字符串长度，0则是错误，1则是单独字符，可以当作数字，大于1则是字符串
+						switch (chars.length) {
+							case 0:
+								const error = Localization.GetMessage("Expression error");
+								MyDiagnostic.PushException(part.token, error);
+								result.success = false;
+								break forLoop;
+							default:
+								part.type = PriorityType.Level_3_CharArray;
+								part.chars = chars;
+								if (result.stringLength < chars.length)
+									result.stringLength = chars.length;
 
-									if (result.stringLength < chars.length)
-										result.stringLength = chars.length;
-
-									break;
-							}
+								break;
 						}
 
 						stringStart = -1;
@@ -806,14 +808,16 @@ export class ExpressionUtils {
 					result.parts.push(part);
 					break;
 				case PriorityType.Level_3_CharArray:
-					if (result.stringIndex >= 0) {
+					if (result.stringIndex >= 0 && part.chars?.length !== 1) {
 						const error = Localization.GetMessage("Expression error");
 						MyDiagnostic.PushException(part.token, error);
 						result.success = false;
 						return result;
 					}
 
-					result.stringIndex = result.parts.length;
+					if (part.chars!.length > 1)
+						result.stringIndex = result.parts.length;
+
 					result.parts.push(part);
 					break;
 				case PriorityType.Level_1_Label:
@@ -958,9 +962,14 @@ export class ExpressionUtils {
 					}
 					break;
 				case PriorityType.Level_3_CharArray:
-					const error = Localization.GetMessage("Expression error");
-					MyDiagnostic.PushException(part.token, error);
-					noError = false;
+					if (part.chars!.length > 1) {
+						const error = Localization.GetMessage("Expression error");
+						MyDiagnostic.PushException(part.token, error);
+						noError = false;
+					} else {
+						const value = ExpressionUtils.GetCharCode(part.chars![0]);
+						SaveValue(part, value);
+					}
 					break;
 				case PriorityType.Level_5:
 					result.push("(" + part.token.text + ")");
@@ -988,15 +997,13 @@ export class ExpressionUtils {
 			if (!param)
 				continue;
 
-			if (param.values.length > 1) {
-				part.charValues = param.values;
-				expression.stringIndex = i;
-				expression.stringLength = param.values.length;
-			} else if (param.values.length === 0) {
-				continue;
-			} else {
-				part.value = param.values[0];
+			if (typeof (param.value) === "number") {
+				part.value = param.value;
 				part.type = PriorityType.Level_0_Sure;
+			} else {
+				// part.chars = param.value;
+				// expression.stringIndex = i;
+				// expression.stringLength = param.value.length;
 			}
 
 		}

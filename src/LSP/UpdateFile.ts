@@ -150,6 +150,10 @@ export class UpdateFile {
 		if (event.document.languageId !== LSPUtils.assembler.config.FileExtension.language)
 			return;
 
+		const editor = vscode.window.activeTextEditor;
+		if (editor?.document.uri.fsPath !== event.document.uri.fsPath)
+			return;
+
 		for (let i = 0; i < event.contentChanges.length; ++i) {
 			const value = event.contentChanges[i];
 			if (value.text.match(/\r\n|\r|\n/)) {
@@ -160,7 +164,6 @@ export class UpdateFile {
 					continue;
 
 				const range = new vscode.Range(lineNumber, match.index, lineNumber, match.index + match.length);
-				const editor = vscode.window.activeTextEditor!;
 				editor.edit((ee) => {
 					ee.replace(range, match!.text);
 				});
