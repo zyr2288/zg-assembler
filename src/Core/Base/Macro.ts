@@ -14,9 +14,9 @@ export class Macro {
 	/**所有标签 */
 	labels: Map<string, ILabelNormal> = new Map();
 	/**所有参数 */
-	params: Map<string, { label: ILabelNormal, value: number | Expression }> = new Map();
+	params: Map<string, { label: ILabelNormal, exp: Expression }> = new Map();
 	/**不定参数 */
-	// indParams?: { name: Token, values: number[][] };
+	// indParams?: { name: Token, exps: Expression[] };
 	/**所有行 */
 	lines: CommonLine[] = [];
 	/**行偏移 */

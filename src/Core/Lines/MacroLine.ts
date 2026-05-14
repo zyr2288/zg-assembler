@@ -112,28 +112,11 @@ export class MacroLine {
 			this.macro = Utils.DeepClone(this.macro);
 
 		let index = 0;
-
 		const keys = this.macro.params.keys();
-
-		let temp;
 		for (const key of keys) {
-			const exp = this.expressions[index];
 			const param = this.macro.params.get(key)!;
-			if (exp.stringIndex < 0) {
-				temp = ExpressionUtils.GetValue(exp.parts, { macro: option.macro });
-				if (!temp.success)
-					continue;
-
-				param.value = temp.value;
-				param.label.value = temp.value;
-			} else {
-				param.value = exp;
-			}
-
-			// param.value = temp.values;
-
-			// if (temp.values.length === 1)
-			// 	param.label.value = temp.values[0];
+			param.exp = this.expressions[index];
+			index++;
 		}
 
 		// 移除不定参数

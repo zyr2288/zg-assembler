@@ -72,10 +72,13 @@ export interface Expression {
 	parts: ExpressionPart[];
 	/**字符串Index，-1则是没有字符串 */
 	stringIndex: number;
-	/**字符串长度，默认0 */
-	stringLength: number;
 }
 //#endregion 一个表达式结果
+
+export interface ResultData<T> {
+	success: boolean;
+	data: T;
+}
 
 /**表达式工具 */
 export class ExpressionUtils {
@@ -111,19 +114,20 @@ export class ExpressionUtils {
 	/**
 	 * 分割并排序表达式
 	 * @param expression 表达式
-	 * @param info 文件信息
+	 * @param option.macro 宏
 	 * @returns 
 	 */
 	static SplitAndSort(expression: Token): Expression | undefined {
-		let temp = ExpressionUtils.SplitExpression(expression);
+		let temp;
+		temp = ExpressionUtils.SplitExpression(expression);
 		if (!temp.success)
 			return;
 
-		let temp2 = ExpressionUtils.LexerSort(temp.parts);
+		temp = ExpressionUtils.LexerSort(temp.data.parts);
 		if (!temp.success)
 			return;
 
-		return { parts: temp2.parts, stringIndex: temp2.stringIndex, stringLength: temp.stringLength };
+		return { parts: temp.data.parts, stringIndex: temp.data.stringIndex };
 	}
 	//#endregion 分割并排序表达式
 
@@ -175,6 +179,9 @@ export class ExpressionUtils {
 	 */
 	static GetValue(parts: ExpressionPart[], option?: { macro?: Macro, tryValue?: boolean }) {
 		const result = { success: true, value: 0 };
+		if (option?.macro)
+			ExpressionUtils.ReplaceExpression(parts, option.macro);
+
 		const exps = ExpressionUtils.CheckLabelAndGetValue(parts, option);
 		if (!exps) {
 			result.success = false;
@@ -276,10 +283,14 @@ export class ExpressionUtils {
 	 */
 	static GetStringValue(expression: Expression, option?: { macro?: Macro, tryValue?: boolean }) {
 		const result = { success: true, values: [] as number[] };
-		result.values.length = expression.stringLength;
+
+		if (expression.stringIndex < 0)
+			result.values.length = 1;
+		else
+			result.values.length = expression.parts[expression.stringIndex].chars!.length;
 
 		if (option?.macro)
-			ExpressionUtils.CheckExpressionMacro(expression, option.macro)
+			ExpressionUtils.ReplaceExpression(expression.parts, option.macro);
 
 		const index = expression.stringIndex;
 		if (index < 0) {
@@ -289,7 +300,7 @@ export class ExpressionUtils {
 			if (temp.success)
 				result.values[0] = temp.value;
 		} else {
-			for (let i = 0; i < expression.stringLength; i++) {
+			for (let i = 0; i < result.values.length; i++) {
 				const part = Utils.DeepClone(expression.parts);
 				part[index] = {
 					token: expression.parts[index].token.Copy(),
@@ -524,11 +535,14 @@ export class ExpressionUtils {
 	 */
 	private static SplitExpression(expression: Token) {
 
-		const result = { success: true, parts: [] as ExpressionPart[], stringLength: 0 };
+		const result: ResultData<{ parts: ExpressionPart[], stringMaxLength: number }> = {
+			success: true,
+			data: { parts: [], stringMaxLength: 0 }
+		};
 
 		// 临时标签
 		if (LabelUtils.namelessLabelRegex.test(expression.text)) {
-			result.parts.push({ token: expression, type: PriorityType.Level_1_Label, value: 0, highlightType: HighlightType.Label });
+			result.data.parts.push({ token: expression, type: PriorityType.Level_1_Label, value: 0, highlightType: HighlightType.Label });
 			return result;
 		}
 
@@ -587,8 +601,8 @@ export class ExpressionUtils {
 							default:
 								part.type = PriorityType.Level_3_CharArray;
 								part.chars = chars;
-								if (result.stringLength < chars.length)
-									result.stringLength = chars.length;
+								if (result.data.stringMaxLength < chars.length)
+									result.data.stringMaxLength = chars.length;
 
 								break;
 						}
@@ -704,13 +718,13 @@ export class ExpressionUtils {
 			if (part.type !== PriorityType.Level_3_CharArray)
 				part.token = part.token.Trim();
 
-			result.parts.push(part);
+			result.data.parts.push(part);
 			CreateNewPart();
 		}
 
 		if (result.success && isLabel) {
 			const errorMsg = Localization.GetMessage("Expression error");
-			MyDiagnostic.PushException(result.parts[result.parts.length - 1].token, errorMsg);
+			MyDiagnostic.PushException(result.data.parts[result.data.parts.length - 1].token, errorMsg);
 			result.success = false;
 		}
 
@@ -798,27 +812,31 @@ export class ExpressionUtils {
 	 */
 	private static LexerSort(exprParts: ExpressionPart[]) {
 
-		const result = { success: true, parts: [] as ExpressionPart[], stringIndex: -1 };
+		const result: ResultData<{ parts: ExpressionPart[], stringIndex: number }> = {
+			success: true,
+			data: { parts: [], stringIndex: -1 }
+		};
 		const stack: ExpressionPart[] = [];
 
 		for (let i = 0; i < exprParts.length; i++) {
 			const part = exprParts[i];
 			switch (part.type) {
 				case PriorityType.Level_0_Sure:
-					result.parts.push(part);
+					result.data.parts.push(part);
 					break;
 				case PriorityType.Level_3_CharArray:
-					if (result.stringIndex >= 0 && part.chars?.length !== 1) {
+					if (result.data.stringIndex >= 0 && part.chars?.length !== 1) {
 						const error = Localization.GetMessage("Expression error");
 						MyDiagnostic.PushException(part.token, error);
 						result.success = false;
 						return result;
 					}
 
-					if (part.chars!.length > 1)
-						result.stringIndex = result.parts.length;
+					if (part.chars!.length > 1) {
+						result.data.stringIndex = result.data.parts.length;
+					}
 
-					result.parts.push(part);
+					result.data.parts.push(part);
 					break;
 				case PriorityType.Level_1_Label:
 				case PriorityType.Level_2_Address:
@@ -827,7 +845,7 @@ export class ExpressionUtils {
 						part.value = temp.value;
 						part.type = PriorityType.Level_0_Sure;
 					}
-					result.parts.push(part);
+					result.data.parts.push(part);
 					break;
 				case PriorityType.Level_4_Brackets:
 					if (part.token.text === "(") {
@@ -835,7 +853,7 @@ export class ExpressionUtils {
 					} else {
 						while (stack.length > 0 && stack[stack.length - 1].token.text !== "(") {
 							const lex = stack.pop()!;
-							result.parts.push(lex);
+							result.data.parts.push(lex);
 						}
 
 						if (stack.length === 0 || stack[stack.length - 1].token.text !== "(") {
@@ -854,7 +872,7 @@ export class ExpressionUtils {
 					} else {
 						while (stack.length > 0 && stack[stack.length - 1].token.text !== "[") {
 							const lex = stack.pop()!;
-							result.parts.push(lex);
+							result.data.parts.push(lex);
 						}
 
 						if (stack.length === 0 || stack[stack.length - 1].token.text !== "[") {
@@ -864,7 +882,7 @@ export class ExpressionUtils {
 							break;
 						}
 
-						result.parts.push(stack.pop()!);
+						result.data.parts.push(stack.pop()!);
 					}
 					break;
 				default:
@@ -873,8 +891,10 @@ export class ExpressionUtils {
 						if (!top)
 							break;
 
-						if (part.type >= top.type && top.type !== PriorityType.Level_4_Brackets && top.type !== PriorityType.Level_5) {
-							result.parts.push(top);
+						if (part.type >= top.type &&
+							top.type !== PriorityType.Level_4_Brackets &&
+							top.type !== PriorityType.Level_5) {
+							result.data.parts.push(top);
 							continue;
 						}
 
@@ -901,7 +921,7 @@ export class ExpressionUtils {
 				result.success = false;
 				break;
 			}
-			result.parts.push(p);
+			result.data.parts.push(p);
 		}
 
 		return result;
@@ -997,17 +1017,41 @@ export class ExpressionUtils {
 			if (!param)
 				continue;
 
-			if (typeof (param.value) === "number") {
-				part.value = param.value;
-				part.type = PriorityType.Level_0_Sure;
-			} else {
-				// part.chars = param.value;
-				// expression.stringIndex = i;
-				// expression.stringLength = param.value.length;
-			}
+			// if (typeof (param.value) === "number") {
+			// 	part.value = param.value;
+			// 	part.type = PriorityType.Level_0_Sure;
+			// } else {
+			// 	part.chars = param.value;
+			// 	expression.stringIndex = i;
+			// 	expression.stringLength = param.value.length;
+			// }
 
 		}
 	}
 	//#endregion 检查在 Macro 里的参数
+
+	//#region 替换 Macro 里的参数
+	/**
+	 * 替换 Macro 里的参数
+	 * @param expParts 表达式小节
+	 * @param stringIndex 字符串索引
+	 * @param macro 宏
+	 * @returns 返回false是错误，true是正确
+	 */
+	private static ReplaceExpression(expParts: ExpressionPart[], macro: Macro) {
+		for (let i = 0; i < expParts.length; i++) {
+			const part = expParts[i];
+			if (part.type !== PriorityType.Level_1_Label)
+				continue;
+
+			const param = macro.params.get(part.token.text);
+			if (!param)
+				continue;
+
+			expParts.splice(i, 1, ...param.exp.parts);
+			i += param.exp.parts.length - 1;
+		}
+	}
+	//#endregion 替换 Macro 里的参数
 
 }
