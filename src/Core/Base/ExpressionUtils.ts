@@ -115,17 +115,20 @@ export class ExpressionUtils {
 	 * 分割并排序表达式
 	 * @param expression 表达式
 	 * @param option.macro 宏
-	 * @returns 
+	 * @returns 如果返回 undefined 则表示有误
 	 */
-	static SplitAndSort(expression: Token): Expression | undefined {
+	static SplitAndSort(expression: Token, option?: { macro?: Macro }): Expression | undefined {
 		let temp;
 		temp = ExpressionUtils.SplitExpression(expression);
 		if (!temp.success)
 			return;
 
-		temp = ExpressionUtils.LexerSort(temp.data.parts);
+		temp = ExpressionUtils.LexerSort(temp.data);
 		if (!temp.success)
 			return;
+
+		if (option?.macro)
+			ExpressionUtils.ReplaceExpression(temp.data, option.macro);
 
 		return { parts: temp.data.parts, stringIndex: temp.data.stringIndex };
 	}
@@ -179,9 +182,6 @@ export class ExpressionUtils {
 	 */
 	static GetValue(parts: ExpressionPart[], option?: { macro?: Macro, tryValue?: boolean }) {
 		const result = { success: true, value: 0 };
-		if (option?.macro)
-			ExpressionUtils.ReplaceExpression(parts, option.macro);
-
 		const exps = ExpressionUtils.CheckLabelAndGetValue(parts, option);
 		if (!exps) {
 			result.success = false;
@@ -272,57 +272,6 @@ export class ExpressionUtils {
 		return result;
 	}
 	//#endregion 获取结果值
-
-	//#region 获取包含字符串的结果值
-	/**
-	 * 获取包含字符串的结果值
-	 * @param expression 表达式
-	 * @param option 编译选项
-	 * @param analyseOption 分析选项
-	 * @returns 
-	 */
-	static GetStringValue(expression: Expression, option?: { macro?: Macro, tryValue?: boolean }) {
-		const result = { success: true, values: [] as number[] };
-
-		if (expression.stringIndex < 0)
-			result.values.length = 1;
-		else
-			result.values.length = expression.parts[expression.stringIndex].chars!.length;
-
-		if (option?.macro)
-			ExpressionUtils.ReplaceExpression(expression.parts, option.macro);
-
-		const index = expression.stringIndex;
-		if (index < 0) {
-			result.values.length = 1;
-			const temp = ExpressionUtils.GetValue(expression.parts, option);
-			result.success = temp.success;
-			if (temp.success)
-				result.values[0] = temp.value;
-		} else {
-			for (let i = 0; i < result.values.length; i++) {
-				const part = Utils.DeepClone(expression.parts);
-				part[index] = {
-					token: expression.parts[index].token.Copy(),
-					value: 0,
-					type: PriorityType.Level_0_Sure,
-					highlightType: HighlightType.Number,
-				};
-				delete (part[index].chars);
-
-				part[index].value = ExpressionUtils.GetCharCode(expression.parts[index].chars![i]);
-				const temp = ExpressionUtils.GetValue(part, option);
-				if (!temp.success) {
-					result.success = temp.success;
-					break;
-				}
-
-				result.values[i] = temp.value;
-			}
-		}
-		return result;
-	}
-	//#endregion 获取包含字符串的结果值
 
 	//#region 拼合ExpressionPart成Token
 	/**
@@ -535,9 +484,9 @@ export class ExpressionUtils {
 	 */
 	private static SplitExpression(expression: Token) {
 
-		const result: ResultData<{ parts: ExpressionPart[], stringMaxLength: number }> = {
+		const result: ResultData<Expression> = {
 			success: true,
-			data: { parts: [], stringMaxLength: 0 }
+			data: { parts: [], stringIndex: -1 }
 		};
 
 		// 临时标签
@@ -598,11 +547,15 @@ export class ExpressionUtils {
 								MyDiagnostic.PushException(part.token, error);
 								result.success = false;
 								break forLoop;
+							case 1:
+								part.type = PriorityType.Level_3_CharArray;
+								part.chars = chars;
+								break;
 							default:
 								part.type = PriorityType.Level_3_CharArray;
 								part.chars = chars;
-								if (result.data.stringMaxLength < chars.length)
-									result.data.stringMaxLength = chars.length;
+								if (result.data.stringIndex < 0)
+									result.data.stringIndex = i;
 
 								break;
 						}
@@ -731,7 +684,7 @@ export class ExpressionUtils {
 		return result;
 	}
 
-	private static GetCharCode(text: string) {
+	static GetCharCode(text: string) {
 		const temp = Compiler.enviroment.charMap.get(text);
 		if (temp)
 			return temp.value;
@@ -808,18 +761,18 @@ export class ExpressionUtils {
 	//#region 表达式排序，使用二叉树分析
 	/**
 	 * 表达式排序，使用二叉树分析
-	 * @param exprParts 所有部分
+	 * @param expression 所有部分
 	 */
-	private static LexerSort(exprParts: ExpressionPart[]) {
+	private static LexerSort(expression: Expression) {
 
-		const result: ResultData<{ parts: ExpressionPart[], stringIndex: number }> = {
+		const result: ResultData<Expression> = {
 			success: true,
 			data: { parts: [], stringIndex: -1 }
 		};
 		const stack: ExpressionPart[] = [];
 
-		for (let i = 0; i < exprParts.length; i++) {
-			const part = exprParts[i];
+		for (let i = 0; i < expression.parts.length; i++) {
+			const part = expression.parts[i];
 			switch (part.type) {
 				case PriorityType.Level_0_Sure:
 					result.data.parts.push(part);
@@ -1033,22 +986,25 @@ export class ExpressionUtils {
 	//#region 替换 Macro 里的参数
 	/**
 	 * 替换 Macro 里的参数
-	 * @param expParts 表达式小节
+	 * @param expression 表达式小节
 	 * @param stringIndex 字符串索引
 	 * @param macro 宏
 	 * @returns 返回false是错误，true是正确
 	 */
-	private static ReplaceExpression(expParts: ExpressionPart[], macro: Macro) {
-		for (let i = 0; i < expParts.length; i++) {
-			const part = expParts[i];
+	private static ReplaceExpression(expression: Expression, macro: Macro) {
+		for (let i = 0; i < expression.parts.length; i++) {
+			const part = expression.parts[i];
 			if (part.type !== PriorityType.Level_1_Label)
 				continue;
 
 			const param = macro.params.get(part.token.text);
-			if (!param)
+			if (!param || !param.exp)
 				continue;
 
-			expParts.splice(i, 1, ...param.exp.parts);
+			expression.parts.splice(i, 1, ...param.exp.parts);
+			if (expression.stringIndex < 0)
+				expression.stringIndex = i + param.exp.stringIndex;
+
 			i += param.exp.parts.length - 1;
 		}
 	}

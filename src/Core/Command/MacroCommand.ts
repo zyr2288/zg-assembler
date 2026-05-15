@@ -77,7 +77,7 @@ export class MacroCommand implements ICommand {
 			}
 
 			const label: ILabelNormal = { token, type: LabelType.Parameter, scope: LabelScope.Global, fileIndex: 0 };
-			macro.params.set(token.text, { label, value: 0 });
+			macro.params.set(token.text, { label });
 		}
 
 		macro.lines = Utils.DeepClone(option.allLines.slice(option.index + 1, matchEnd));

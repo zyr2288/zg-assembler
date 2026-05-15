@@ -88,7 +88,7 @@ export class IfConfident implements ICommand {
 		const result = option.matchIndex!;
 		let index = 0;
 
-		let exp = ExpressionUtils.SplitAndSort(line.arguments[0]);
+		let exp = ExpressionUtils.SplitAndSort(line.arguments[0], option);
 		const tag: IfConfidentTag = { exp, lines: [{ offsetFirstLine: 0, confident: false, exp }] };
 
 		const commands = [".ELSEIF", ".ELSE", ".ENDIF"];
@@ -103,7 +103,7 @@ export class IfConfident implements ICommand {
 
 			switch (searchIndex) {
 				case 0:
-					tempLine.tag = { exp: ExpressionUtils.SplitAndSort(line.arguments[0]) };
+					tempLine.tag = { exp: ExpressionUtils.SplitAndSort(line.arguments[0], option) };
 					break;
 				case 1:
 					index = 2;
@@ -112,7 +112,7 @@ export class IfConfident implements ICommand {
 
 
 			if (tempLine.arguments[0]) {
-				exp = ExpressionUtils.SplitAndSort(tempLine.arguments[0]);
+				exp = ExpressionUtils.SplitAndSort(tempLine.arguments[0], option);
 				if (!exp)
 					tempLine.lineType = LineType.Error;
 			} else {

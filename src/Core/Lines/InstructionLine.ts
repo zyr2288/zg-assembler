@@ -3,6 +3,7 @@ import { Expression, ExpressionUtils } from "../Base/ExpressionUtils";
 import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { Token } from "../Base/Token";
 import { Utils } from "../Base/Utils";
+import { Compiler } from "../Compiler/Compiler";
 import { Localization } from "../I18n/Localization";
 import { IAddressingMode, Platform } from "../Platform/Platform";
 import { LineResult, LineType } from "./CommonLine";
@@ -22,12 +23,7 @@ export class InstructionLine {
 		const temp = Platform.MatchAddressingMode(line.instruction, content.rest);
 		if (temp) {
 			line.addressMode = temp.addressingMode;
-			for (let i = 0; i < temp.exprs.length; i++) {
-				const token = temp.exprs[i];
-				const temp2 = ExpressionUtils.SplitAndSort(token);
-				if (temp2)
-					line.expressions[i] = temp2;
-			}
+			line.expTokens = temp.exprs;
 			return line;
 		}
 	}
@@ -36,20 +32,31 @@ export class InstructionLine {
 
 	key: "instruction" = "instruction";
 	org!: Token;
-	comment?:string;
+	comment?: string;
 	lineType: LineType = LineType.None;
 
 	label?: LabelLine;
 
 	instruction!: Token;
+
+	expTokens: Token[] = [];
 	expressions: Expression[] = [];
+
 	addressMode!: IAddressingMode;
+
 
 	lineResult = new LineResult();
 
 	/**第一次分析 */
 	AnalyseFirst(option: CompileOption) {
 		this.label?.Analyse(option);
+
+		for (let i = 0; i < this.expTokens.length; i++) {
+			const token = this.expTokens[i];
+			const temp2 = ExpressionUtils.SplitAndSort(token, option);
+			if (temp2)
+				this.expressions[i] = temp2;
+		}
 	}
 
 	/**第三次分析 */
@@ -59,6 +66,16 @@ export class InstructionLine {
 
 	/**编译结果 */
 	Compile(option: CompileOption) {
+		if (Compiler.FirstCompile()) {
+			// expTokens不要清除，如果是函数内的清除就没办法编译
+			for (let i = 0; i < this.expTokens.length; i++) {
+				const token = this.expTokens[i];
+				const temp2 = ExpressionUtils.SplitAndSort(token, option);
+				if (temp2)
+					this.expressions[i] = temp2;
+			}
+		}
+
 		this.lineResult.SetAddress();
 		this.label?.Compile(option);
 

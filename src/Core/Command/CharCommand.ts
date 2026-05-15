@@ -119,7 +119,7 @@ export class StrCommand implements ICommand {
 	AnalyseFirst(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
 
-		const expression = ExpressionUtils.SplitAndSort(line.arguments[0]);
+		const expression = ExpressionUtils.SplitAndSort(line.arguments[0], option);
 		if (!expression) {
 			line.lineType = LineType.Error;
 			return;
@@ -149,6 +149,7 @@ export class StrCommand implements ICommand {
 			const error = Localization.GetMessage("Comamnd .STRING arguments error");
 			const token = ExpressionUtils.CombineExpressionPart(tag.exp.parts);
 			MyDiagnostic.PushException(token, error);
+			line.lineType = LineType.Error;
 			return;
 		}
 

@@ -69,7 +69,7 @@ class Message {
 
 		const tag: MsgTag = { message: str.Substring(1, str.length - 2), expressions: [], address: { base: -1, org: -1 } };
 		for (let i = 1; i < line.arguments.length; i++) {
-			const temp = ExpressionUtils.SplitAndSort(line.arguments[i]);
+			const temp = ExpressionUtils.SplitAndSort(line.arguments[i], option);
 			if (!temp) {
 				line.lineType = LineType.Error;
 				continue;

@@ -39,7 +39,7 @@ export class RepeatCommand implements ICommand {
 
 	async Compile(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
-		const exp = ExpressionUtils.SplitAndSort(line.arguments[0]);
+		const exp = ExpressionUtils.SplitAndSort(line.arguments[0], option);
 		if (!exp) {
 			line.lineType = LineType.Error;
 			return;
@@ -82,7 +82,7 @@ export class RepeatCommand implements ICommand {
 
 	private AnalyseLines(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
-		const temp = ExpressionUtils.SplitAndSort(line.arguments[0]);
+		const temp = ExpressionUtils.SplitAndSort(line.arguments[0], option);
 		if (!temp) {
 			line.lineType = LineType.Error;
 			return;

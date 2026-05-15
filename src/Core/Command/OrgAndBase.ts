@@ -75,7 +75,7 @@ class AddressUtils {
 
 	static Analyse(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();
-		const tag: CommandTagBase = { exp: ExpressionUtils.SplitAndSort(line.arguments[0]) };
+		const tag: CommandTagBase = { exp: ExpressionUtils.SplitAndSort(line.arguments[0], option) };
 		if (!tag.exp) {
 			line.lineType = LineType.Error;
 			return;
