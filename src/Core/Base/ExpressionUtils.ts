@@ -46,7 +46,7 @@ export enum PriorityType {
 	/**|| */
 	Level_15_OrOr,
 	/**中括号 */
-	Level_16_Brackets,
+	Level_16_VarParams,
 };
 //#endregion 算数优先级
 
@@ -100,7 +100,7 @@ export class ExpressionUtils {
 		ExpressionUtils.AddPriority(PriorityType.Level_13_Or, "|");
 		ExpressionUtils.AddPriority(PriorityType.Level_14_AndAnd, "&&");
 		ExpressionUtils.AddPriority(PriorityType.Level_15_OrOr, "||");
-		ExpressionUtils.AddPriority(PriorityType.Level_16_Brackets, "[", "]");
+		ExpressionUtils.AddPriority(PriorityType.Level_16_VarParams, "[", "]");
 	}
 
 	private static AddPriority(type: PriorityType, ...op: string[]) {
@@ -127,8 +127,11 @@ export class ExpressionUtils {
 		if (!temp.success)
 			return;
 
-		if (option?.macro)
-			ExpressionUtils.ReplaceExpression(temp.data, option.macro);
+		if (option?.macro) {
+			let temp2 = ExpressionUtils.ReplaceExpression(temp.data, option.macro);
+			if (!temp2.success)
+				return;
+		}
 
 		return { parts: temp.data.parts, stringIndex: temp.data.stringIndex };
 	}
@@ -819,7 +822,7 @@ export class ExpressionUtils {
 						stack.pop();
 					}
 					break;
-				case PriorityType.Level_16_Brackets:
+				case PriorityType.Level_16_VarParams:
 					if (part.token.text === "[") {
 						stack.push(part);
 					} else {
@@ -868,7 +871,7 @@ export class ExpressionUtils {
 			if (!p)
 				break;
 
-			if (p.type === PriorityType.Level_4_Brackets || p.type === PriorityType.Level_16_Brackets) {
+			if (p.type === PriorityType.Level_4_Brackets || p.type === PriorityType.Level_16_VarParams) {
 				const erroMsg = Localization.GetMessage("Expression error");
 				MyDiagnostic.PushException(p.token, erroMsg);
 				result.success = false;
@@ -890,15 +893,19 @@ export class ExpressionUtils {
 	 * @returns true为正确，false为有误
 	 */
 	private static CheckLabelAndGetValue(parts: ExpressionPart[], option?: { tryValue?: boolean, macro?: Macro }) {
-		const result: (string | number)[] = [];
+		const result: (
+			{ type: "string", value: string } |
+			{ type: "number", value: number } |
+			{ type: "varParams", value: string }
+		)[] = [];
 		let tryValue = Compiler.enviroment.compileTime < Config.ProjectSetting.compileTimes - 1;
 		if (option?.tryValue !== undefined)
 			tryValue = option.tryValue;
 
 		let noError = true;
 
-		const SaveValue = (part: ExpressionPart, value: number) => {
-			part.value = value;
+		const SaveValue = (part: ExpressionPart, value: typeof result[0]) => {
+			part.value = value.value;
 			part.type = PriorityType.Level_0_Sure;
 			result.push(part.value);
 		}
@@ -907,7 +914,7 @@ export class ExpressionUtils {
 			const part = parts[i];
 			switch (part.type) {
 				case PriorityType.Level_0_Sure:
-					result.push(part.value);
+					result.push({part.value});
 					break;
 				case PriorityType.Level_1_Label:
 					const temp = ExpressionUtils.GetNumber(part.token.text);
@@ -947,6 +954,15 @@ export class ExpressionUtils {
 				case PriorityType.Level_5:
 					result.push("(" + part.token.text + ")");
 					break;
+				case PriorityType.Level_16_VarParams:
+					if (!option?.macro) {
+						const error = Localization.GetMessage("Cannot use array without macro");
+						MyDiagnostic.PushException(part.token, error);
+						noError = false;
+						break;
+					}
+					result.push(part.token.text);
+					break;
 				default:
 					result.push(part.token.text);
 					break;
@@ -959,54 +975,50 @@ export class ExpressionUtils {
 	}
 	//#endregion 检查所有小节并获取值，简化计算量
 
-	//#region 检查在 Macro 里的参数
-	private static CheckExpressionMacro(expression: Expression, macro: Macro) {
-		for (let i = 0; i < expression.parts.length; i++) {
-			const part = expression.parts[i];
-			if (part.type !== PriorityType.Level_1_Label)
-				continue;
-
-			const param = macro.params.get(part.token.text);
-			if (!param)
-				continue;
-
-			// if (typeof (param.value) === "number") {
-			// 	part.value = param.value;
-			// 	part.type = PriorityType.Level_0_Sure;
-			// } else {
-			// 	part.chars = param.value;
-			// 	expression.stringIndex = i;
-			// 	expression.stringLength = param.value.length;
-			// }
-
-		}
-	}
-	//#endregion 检查在 Macro 里的参数
-
 	//#region 替换 Macro 里的参数
 	/**
 	 * 替换 Macro 里的参数
 	 * @param expression 表达式小节
 	 * @param stringIndex 字符串索引
 	 * @param macro 宏
-	 * @returns 返回false是错误，true是正确
+	 * @returns
 	 */
-	private static ReplaceExpression(expression: Expression, macro: Macro) {
+	private static ReplaceExpression(expression: Expression, macro: Macro): ResultData<undefined> {
+		let temp, varParams: ExpressionPart[] = [];
+		const result: ResultData<undefined> = { success: true, data: undefined };
 		for (let i = 0; i < expression.parts.length; i++) {
 			const part = expression.parts[i];
-			if (part.type !== PriorityType.Level_1_Label)
-				continue;
+			switch (part.type) {
+				case PriorityType.Level_1_Label:
+					temp = macro.params.get(part.token.text);
+					if (temp && temp.exp) {
+						expression.parts.splice(i, 1, ...temp.exp.parts);
+						if (expression.stringIndex < 0)
+							expression.stringIndex = i + temp.exp.stringIndex;
 
-			const param = macro.params.get(part.token.text);
-			if (!param || !param.exp)
-				continue;
+						i += temp.exp.parts.length - 1;
+						break;
+					}
 
-			expression.parts.splice(i, 1, ...param.exp.parts);
-			if (expression.stringIndex < 0)
-				expression.stringIndex = i + param.exp.stringIndex;
+					if (part.token.text === macro.varParams?.name.text) {
+						temp = expression.parts.splice(i, 1);
+						varParams.push(temp[0]);
+					}
 
-			i += param.exp.parts.length - 1;
+					break;
+				case PriorityType.Level_16_VarParams:
+					temp = varParams.pop();
+					if (!temp) {
+						const error = Localization.GetMessage("Expression error");
+						MyDiagnostic.PushException(part.token, error);
+						result.success = false;
+						return result;
+					}
+					expression.parts.splice(i, 1, temp);
+					break;
+			}
 		}
+		return result;
 	}
 	//#endregion 替换 Macro 里的参数
 

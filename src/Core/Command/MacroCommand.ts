@@ -62,12 +62,21 @@ export class MacroCommand implements ICommand {
 
 		for (let i = 1; i < line.arguments.length; i++) {
 			const token = line.arguments[i].Trim();
-			// 这里是不定参数，还不知道需不需要
-			// if (i === last && token.text.startsWith("...")) {
-			// 	const copy = token.Copy().Substring(3);
-			// 	macro.indParams = { name: copy, values: [] };
-			// 	break;
-			// }
+
+			// 这里是不定参数
+			if (i === line.arguments.length - 1 && token.text.startsWith("...")) {
+				const copy = token.Substring(3);
+				macro.varParams = { name: copy, exps: [] };
+				macro.params.set(copy.text + ".length", {
+					label: {
+						type: LabelType.Defined,
+						scope: LabelScope.Global,
+						fileIndex: 0,
+						token: copy
+					}
+				});
+				break;
+			}
 
 			if (!LabelUtils.CheckIllegal(token.text, false)) {
 				const error = Localization.GetMessage("Label {0} illegal", token.text);

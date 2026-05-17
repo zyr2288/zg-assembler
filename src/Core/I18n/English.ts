@@ -1,14 +1,12 @@
 export const English = {
 	"Unsupport platform {0}": "Unsupport platform \"{0}\", please check the platform in \"project-settings.json\"",
 	"Label {0} not found": "Label \"{0}\" not found",
-	"Can not use nameless label in Macro": "Can not use nameless label in Macro",
 	"Label {0} illegal": "Label \"{0}\" illegal",
 	"Label {0} is already defined": "Label \"{0}\" is already defined",
 	"Unknow instruction {0}": "Unknow instruction \"{0}\"",
 	"Instruction {0} do not support this addressing mode": "Instruction \"{0}\" do not support this addressing mode",
 	"Command {0} Error": "Command \"{0}\" Error",
 	"Expression error": "Expression error",
-	"Macro arguments error": "Macro arguments error",
 	"Command {0} do not support nesting": "Command \"{0}\" do not support nesting",
 	"Command {0} can not use in Macro": "Command \"{0}\" can not use in Macro",
 	"Unmatched command {0}": "Unmatched command \"{0}\"",
@@ -19,7 +17,12 @@ export const English = {
 	"File {0} is include itself": "File \"{0}\" is include itself",
 	"Argument out of range": "Argument out of range",
 	"Expression result is {0}, but compile result is {1}": "Expression result is \"{0}\", but compile result is \"{1}\"",
+
+	"Can not use nameless label in Macro": "Can not use nameless label in Macro",
+	"Macro arguments error": "Macro arguments error",
 	"Macro arguments count is {0}, but got {1}": "Macro arguments count is \"{0}\", but got \"{1}\"",
+	"Cannot use array without macro": "数组必须使用在带不定参数的函数内",
+
 	"Data group {0} do not found": "Data group \"{0}\" do not found",
 
 	"Unsupport string": "This expression do not support using string",
@@ -52,7 +55,7 @@ export const English = {
 	"Cannot find program path {0}": "Cannot find program path {0}",
 	"Hot Reload Success": "Hot reload success",
 
-	"Global labels":"Global labels",
+	"Global labels": "Global labels",
 	"Local labels": "Local labels",
 
 	"Comamnd .CHRMAP argument error": "Command .CHRMAP arguments error",
@@ -91,7 +94,7 @@ export const CommandTip_English = {
 		exp: ".HEX 456789ABCDEF\t;equivalent to .DB $45,$67,$89,$AB,$CD,$EF\n.HEX 0 1 23 4567\t;equivalent to .DB $00,$01,$23,$45,$67"
 	},
 	msg: {
-		comment: "Out put a message. You can format value to binary, decimal or hexadecimal.", 
+		comment: "Out put a message. You can format value to binary, decimal or hexadecimal.",
 		format: ".MSG message[, arg0, arg1...]",
 		exp: ".ORG $8000\n.MSG \"Now ORG address: {0}, @{0}, ${0}\", *\n\n;Now ORG address: 32768, @1000 0000 0000 0000, $8000"
 	},
@@ -100,8 +103,18 @@ export const CommandTip_English = {
 		exp: ".ERROR \"Compile error\"\n;Compile error",
 	},
 	enum: {
-		comment: "Reassign PC and suppress assembly output.\n\nUseful for defining variables in RAM.", 
+		comment: "Reassign PC and suppress assembly output.\n\nUseful for defining variables in RAM.",
 		format: ".ENUM startAddress\nlabelName, byteLength\n...\n.ENDE",
 		exp: ".ENUM $300\n\tmusic.counter, 1\t; .DEF music.counter, $300\n\tmusic.addrHigh, 2\t; .DEF music.addrHigh, music.counter + 1 ($301)\n\tmusic.addrLow, 3\t; .DEF music.addrLow, music.addrHigh + 2 ($303)\n.ENDE"
+	},
+	chrmap: {
+		comment: "Define a character mapping table, which is used to convert characters in .STR to character codes.\n\nThe character mapping table is an array of 256 bytes. You can use the index of the array as the character code, and the value of the array as the character corresponding to the character code.\n\nFor example, if you want to map the character \"A\" to the character code 0x41, you can set the value of the array at index 0x41 to \"A\".",
+		format: ".CHRMAP startAddress, characters, [Char fix length]",
+		exp: ".CHRMAP $00, \" ABCDEFG\", 2"
+	},
+	str: {
+		comment: "Export a string ",
+		format: ".STR string",
+		exp: ".STR \"Hello World!\""
 	}
 }

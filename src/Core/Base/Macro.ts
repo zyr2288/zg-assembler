@@ -3,12 +3,9 @@ import { Expression } from "./ExpressionUtils";
 import { ILabelNormal } from "./Label";
 import { Token } from "./Token";
 
-export type IMacro = Macro;
-
 export class Macro {
 	/**名称 */
 	name!: Token;
-	type: "macro" = "macro";
 	/**文件编号 */
 	fileIndex!: number;
 	/**所有标签 */
@@ -16,7 +13,7 @@ export class Macro {
 	/**所有参数 */
 	params: Map<string, { label: ILabelNormal, exp?: Expression }> = new Map();
 	/**不定参数 */
-	// indParams?: { name: Token, exps: Expression[] };
+	varParams?: { name: Token, exps: Expression[] };
 	/**所有行 */
 	lines: CommonLine[] = [];
 	/**行偏移 */
