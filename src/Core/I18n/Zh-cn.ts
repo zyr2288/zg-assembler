@@ -115,7 +115,7 @@ export const CommandTip_Chinese: LocalizationTip = {
 	},
 	chrmap: {
 		comment: "定义一个字符映射表，编译器会将字符串中的每个字符替换为对应的数值。",
-		format: ".CHRMAP 起始地址, 字符串[, 字符固定长度]",
+		format: ".CHRMAP 起始地址, \"字符串\"[, 字符固定长度]",
 		exp: ".CHRMAP $00, \" ABCDEFG\", 2"
 	},
 	str: {

@@ -109,7 +109,7 @@ export const CommandTip_English = {
 	},
 	chrmap: {
 		comment: "Define a character mapping table, which is used to convert characters in .STR to character codes.\n\nThe character mapping table is an array of 256 bytes. You can use the index of the array as the character code, and the value of the array as the character corresponding to the character code.\n\nFor example, if you want to map the character \"A\" to the character code 0x41, you can set the value of the array at index 0x41 to \"A\".",
-		format: ".CHRMAP startAddress, characters, [Char fix length]",
+		format: ".CHRMAP startAddress, \"characters\", [Char fix length]",
 		exp: ".CHRMAP $00, \" ABCDEFG\", 2"
 	},
 	str: {
