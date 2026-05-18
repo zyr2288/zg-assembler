@@ -13,7 +13,7 @@ export class Macro {
 	/**所有参数 */
 	params: Map<string, { label: ILabelNormal, exp?: Expression }> = new Map();
 	/**不定参数 */
-	varParams?: { name: Token, exps: Expression[] };
+	varParams?: { name: Token, values: number[] };
 	/**所有行 */
 	lines: CommonLine[] = [];
 	/**行偏移 */

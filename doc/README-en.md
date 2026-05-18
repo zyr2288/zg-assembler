@@ -19,34 +19,36 @@ Testing files:
 1. [.BASE](#base)
 2. [.ORG](#org)
 3. [.DEF](#def)
-4. [.DB .DW .DL](#db-dw-dl)
-5. [.DBG .DWG .DLG .ENDD](#dbg-dwg-dlg-endd)
-6. [.HEX](#hex)
-7. [.IF .ELSEIF .ELSE .ENDIF](#if-elseif-else-endif)
-8. [.IFDEF .IFNDEF .ELSE .ENDIF](#ifdef-ifndef-else-endif)
-9. [.INCBIN](#incbin)
-10. [.INCLUDE](#include)
-11. [.MACRO .ENDM](#macro-endm)
-12. [.REPEAT .ENDR](#repeat-endr)
-13. [.MSG .ERROR](#msg-error)
+4. [.ENUM .ENDE](#enum-ende)
+5. [.DB .DW .DL](#db-dw-dl)
+6. [.DBG .DWG .DLG .ENDD](#dbg-dwg-dlg-endd)
+7. [.HEX](#hex)
+8. [.CHRMAP .STR](#chrmap-str)
+9. [.IF .ELSEIF .ELSE .ENDIF](#if-elseif-else-endif)
+10. [.IFDEF .IFNDEF .ELSE .ENDIF](#ifdef-ifndef-else-endif)
+11. [.INCBIN](#incbin)
+12. [.INCLUDE](#include)
+13. [.MACRO .ENDM](#macro-endm)
+14. [.REPEAT .ENDR](#repeat-endr)
+15. [.MSG .ERROR](#msg-error)
 
--   [ZG Assembler in Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZENG-GE.zg-assembler)
--   An extensible compiler for [VSCode](https://code.visualstudio.com/).
--   When the assembly file is opened, a `project-settings.json` file is created in project directory.
--   If you want to use core, use `npm run build-core` to build core source.
+- [ZG Assembler in Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ZENG-GE.zg-assembler)
+- An extensible compiler for [VSCode](https://code.visualstudio.com/).
+- When the assembly file is opened, a `project-settings.json` file is created in project directory.
+- If you want to use core, use `npm run build-core` to build core source.
 
 ```json
 {
-    "platform": "6502",         // Target Platform
-    "intellisense": true,
-    "outOfRangeWarning": true,  // Compile result out-of-bounds warning
-    "entry": "main.asm",
-    "compileTimes": 2,
-    "outputEntryFile": "",
-    "outputSingleFile": "",
-    "copyToClipboard": true,    // Copy result bytes to the clipboard
-    "includes": ["**/*.asm"],
-    "excludes": []
+	"platform": "6502", // Target Platform
+	"intellisense": true,
+	"outOfRangeWarning": true, // Compile result out-of-bounds warning
+	"entry": "main.asm",
+	"compileTimes": 2,
+	"outputEntryFile": "",
+	"outputSingleFile": "",
+	"copyToClipboard": true, // Copy result bytes to the clipboard
+	"includes": ["**/*.asm"],
+	"excludes": []
 }
 ```
 
@@ -56,7 +58,7 @@ Testing files:
 
 ### Compile
 
--   In the editor under `.asm` file, right click on the mouse and the compile menu will appear.
+- In the editor under `.asm` file, right click on the mouse and the compile menu will appear.
 
 ---
 
@@ -84,27 +86,27 @@ Translated with DeepL.com (free version)
 
 ### Label
 
--   You can use sub labels, such as `player.x` `player.y`.
--   Press vscode's Find Definition shortcut key (default F12) to find the label definition location directly.
--   All `xx = yy` is used as a variable, the compiler will not check for duplicate definitions. To define constants, use the `.DEF` command.
+- You can use sub labels, such as `player.x` `player.y`.
+- Press vscode's Find Definition shortcut key (default F12) to find the label definition location directly.
+- All `xx = yy` is used as a variable, the compiler will not check for duplicate definitions. To define constants, use the `.DEF` command.
 
 ---
 
 ### Local label
 
--   If a label is starting with "." (dot), then the label is valid only for this file.
+- If a label is starting with "." (dot), then the label is valid only for this file.
 
 ---
 
 ### Folding
 
--   The folding function starts with `;+` and ends with `;-`.
+- The folding function starts with `;+` and ends with `;-`.
 
 ---
 
 ### Nameless label
 
--   Labels are one or more '+' or '-' characters are nameless labels.
+- Labels are one or more '+' or '-' characters are nameless labels.
 
 ```
 --      LDA $2002
@@ -156,8 +158,8 @@ Unicode type:
 
 ### Comments and folding
 
--   When a `;` character is included, everything after `;` on the line is a comment.
--   Comments of `;+` `;-` are collapsed to make it easier to collapse parts of the code.
+- When a `;` character is included, everything after `;` on the line is a comment.
+- Comments of `;+` `;-` are collapsed to make it easier to collapse parts of the code.
 
 ---
 
@@ -167,9 +169,9 @@ The plugin disables word-based suggestions by default, to enable this feature, a
 
 ```json
 {
-    "[zg-assembly]": {
-        "editor.wordBasedSuggestions": "matchingDocuments"
-    }
+	"[zg-assembly]": {
+		"editor.wordBasedSuggestions": "matchingDocuments"
+	}
 }
 ```
 
@@ -184,8 +186,8 @@ The plugin disables word-based suggestions by default, to enable this feature, a
     .BASE baseAddress
 ```
 
--   Set the generated file address, the default is `.BASE 0`, it is not same as `.ORG`.
--   For example, if `.BASE $10`, the generated file will be written from `$10`, and the previous `$F` address will be `0`.
+- Set the generated file address, the default is `.BASE 0`, it is not same as `.ORG`.
+- For example, if `.BASE $10`, the generated file will be written from `$10`, and the previous `$F` address will be `0`.
 
 > Note:
 >
@@ -205,8 +207,8 @@ The plugin disables word-based suggestions by default, to enable this feature, a
     .ORG originalAddress
 ```
 
--   Set the start compile address, e.g. `.ORG $8000`, then the compile will start at $8000.
--   You can also use `.ORG *`, which means compilation will start from the current address. But the current address has to be known, otherwise the compiler reports an error.
+- Set the start compile address, e.g. `.ORG $8000`, then the compile will start at $8000.
+- You can also use `.ORG *`, which means compilation will start from the current address. But the current address has to be known, otherwise the compiler reports an error.
 
 > Note: If you use the `.BASE` command, after `.ORG`, otherwise it compiles with an error.
 
@@ -219,11 +221,13 @@ The plugin disables word-based suggestions by default, to enable this feature, a
 
 ### `.DEF`
 
+Define a constant (non-variable).
+
 ```
     .DEF name, expression
 ```
 
--   Define a constant, for example: `.DEF idefined, $12`
+for example: `.DEF idefined, $12`
 
 > Note: `temp = $12` can also be defined, but `temp` can be re-value.
 
@@ -238,20 +242,20 @@ The plugin disables word-based suggestions by default, to enable this feature, a
 
 ```
     .ENUM startAddress
-    label, byteLength
-    ...
+        label, byteLength
+        ...
     .ENDE
 ```
 
--   Reassign PC and suppress assembly output. Useful for defining variables in RAM.
--   Example：
+- Reassign PC and suppress assembly output. Useful for defining variables in RAM.
+- Example：
 
 ```
-   .ENUM $300
-   music.counter,  1    ; Same as .DEF music.counter,  $300
-   music.addrHigh, 2    ; Same as .DEF music.addrHigh, $301 (music.counter + 1)
-   music.addrLow,  3    ; Same as .DEF music.addrLow,  $303 (music.addrHigh + 2)
-   .ENDE
+    .ENUM $300
+        music.counter,  1    ; Same as .DEF music.counter,  $300
+        music.addrHigh, 2    ; Same as .DEF music.addrHigh, $301 (music.counter + 1)
+        music.addrLow,  3    ; Same as .DEF music.addrLow,  $303 (music.addrHigh + 2)
+    .ENDE
 ```
 
 </details>
@@ -269,7 +273,7 @@ The plugin disables word-based suggestions by default, to enable this feature, a
     .DL data1 [, data2, data3...]     ;4 bytes
 ```
 
--   A series of bytes data
+- A series of bytes data
 
 </details>
 
@@ -280,14 +284,14 @@ The plugin disables word-based suggestions by default, to enable this feature, a
 
 ### `.DBG` `.DWG` `.DLG` `.ENDD`
 
--   Data group, get the data index.
+- Data group, get the data index.
 
 For example:
 
 ```
     .DWG data
 
-    .data1, .data2, .data3, .data1
+        .data1, .data2, .data3, .data1
 
     .ENDD
 
@@ -305,11 +309,11 @@ For example:
 
 ### `.HEX`
 
+A hexadecimal string, can be separated by spaces.
+
 ```
     .HEX hexString
 ```
-
--   A hexadecimal string, can be separated by spaces.
 
 For example:
 
@@ -322,11 +326,29 @@ For example:
 ---
 
 <details>
+<summary>.CHRMAP .STR</summary>
+
+### `.CHRMAP` `.STR`
+
+Character mapping, used to represent each character in hexadecimal.
+
+```
+    .CHRMAP 0, "ABCD{END}", 2
+	.STR "ABCD{END}"
+```
+
+- When the character code table does not have a corresponding character, the default output is the character's Unicode or 0 (if it is a control character, such as {END}).
+
+</details>
+
+---
+
+<details>
 <summary>.IF .ELSEIF .ELSE .ENDIF</summary>
 
 ### `.IF` `.ELSEIF` `.ELSE` `.ENDIF`
 
--   Process a block of code if an expression is true.
+- Process a block of code if an expression is true.
 
 > Note: Must know the parameters value.
 
@@ -361,7 +383,7 @@ For example:
     .ENDIF
 ```
 
--   Process a block of code if a label has been defined / not defined.
+- Process a block of code if a label has been defined / not defined.
 
 </details>
 
@@ -376,9 +398,9 @@ For example:
     .INCBIN filePath[, fileStartPosition, readLength]
 ```
 
--   You can read the binary content of the reference file. Please fill in the relative path of the file in the double quotes.
--   If it starts with `@`, the path is relative to the project root.
-For example:
+- You can read the binary content of the reference file. Please fill in the relative path of the file in the double quotes.
+- If it starts with `@`, the path is relative to the project root.
+  For example:
 
 ```
     .INCBIN "Folder/file.bin", 0, 100
@@ -398,8 +420,8 @@ For example:
     .INCLUDE filePath
 ```
 
--   You can quote the file, please fill in the relative path of the file in double quotes. If there are also reference files in the reference file, please fill in relative to the main compilation file path. E.g:
--   If it starts with @, the path is relative to the project root.
+- You can quote the file, please fill in the relative path of the file in double quotes. If there are also reference files in the reference file, please fill in relative to the main compilation file path. E.g:
+- If it starts with @, the path is relative to the project root.
 
 ```
     .INCLUDE "Folder/file.asm"
@@ -421,11 +443,13 @@ For example:
     .ENDM
 ```
 
--   Define a macro. Macro arguments are comma separated.
+- Define a macro. Macro arguments are comma separated.
 
-> Note: Arguments shoud get the value at first compilation.
-
-> Note: All labels in macro are local labels, please do not use them outside the macro.
+> Note:
+> 1. Before using a macro, you must define it first.
+> 2. All labels in macro are local labels, please do not use them outside the macro.
+> 3. All variables in macro are global variables.
+> 4. You can use indefinite parameters, when the last parameter name starts with three dots (e.g. `...args`), it means you can use any number of parameters.
 
 For example:
 
@@ -446,7 +470,7 @@ Example 1:
     TXY
 ```
 
--   The compilation result:`8A A8`
+- The compilation result:`8A A8`
 
 Example 2:
 
@@ -470,8 +494,24 @@ Example 2:
     test 5,5
 ```
 
--   The compilation result:`A5 03 A6 04 A5 06 85 06 A4 05`
+- The compilation result:`A5 03 A6 04 A5 06 85 06 A4 05`
 
+Example 3:
+
+```
+    .MACRO DW_Reverse, ...data
+    i = 0
+        .REPEAT data.length
+            .DB >data[i]
+            .DB <data[i]
+            i = i + 1
+        .ENDR
+    .ENDM
+
+    DW_Reverse $1234, $5678, $90AB, $CDEF
+```
+
+- The compilation result:`12 34 56 78 90 AB CD EF`
 </details>
 
 ---
@@ -487,7 +527,7 @@ Example 2:
     .ENDR
 ```
 
--   Repeat a block of code a specified number of times.
+- Repeat a block of code a specified number of times.
 
 For example:
 
@@ -500,7 +540,7 @@ For example:
     .ENDR
 ```
 
--   The compilation result is same as:`NOP ASL ASL ASL NOP ASL ASL ASL`
+- The compilation result is same as:`NOP ASL ASL ASL NOP ASL ASL ASL`
 
 </details>
 
@@ -516,8 +556,8 @@ For example:
     .ERROR message[, arg1, arg2...]
 ```
 
--   `MSG` - Out put a message.
--   `ERROR` - Out put a message and stop compile
+- `MSG` - Out put a message.
+- `ERROR` - Out put a message and stop compile
 
 ```
     .ORG $8000
@@ -532,7 +572,7 @@ For example:
     .ENDIF
 ```
 
--   The message is：
+- The message is：
 
 > test 10, $B, @0000 1010
 >

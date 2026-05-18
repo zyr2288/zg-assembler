@@ -115,6 +115,9 @@ export class MacroLine {
 		let index = 0;
 		const keys = this.macro.params.keys();
 		for (const key of keys) {
+			if (key.endsWith(".length"))
+				continue;
+
 			const param = this.macro.params.get(key)!;
 			param.exp = this.expressions[index];
 			index++;
@@ -124,13 +127,22 @@ export class MacroLine {
 		if (this.macro.varParams) {
 			let tempIndex = 0;
 			for (let i = index; i < this.expressions.length; i++) {
-				this.macro.varParams.exps[tempIndex] = this.expressions[i];
+				const value = ExpressionUtils.GetValue(this.expressions[i].parts, option);
+				if (value.success) {
+					this.macro.varParams.values[tempIndex] = value.value;
+				} else {
+					const error = Localization.GetMessage("Expression error");
+					const token = ExpressionUtils.CombineExpressionPart(this.expressions[i].parts);
+					MyDiagnostic.PushException(token, error);
+					this.lineType = LineType.Error;
+					return;
+				}
 				tempIndex++;
 			}
 			this.macro.params.get(this.macro.varParams.name.text + ".length")!.exp = {
 				parts: [{
 					highlightType: HighlightType.Number,
-					value: this.macro.varParams.exps.length,
+					value: this.macro.varParams.values.length,
 					token: this.macro.varParams.name.Copy(),
 					type: PriorityType.Level_0_Sure
 				}],

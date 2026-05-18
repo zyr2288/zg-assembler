@@ -130,7 +130,7 @@ export class LabelUtils {
 	//#endregion 创建通用标签
 
 	//#region 查询标签
-	static FindLabel(token: Token, option?: { fileIndex?: number, macro?: Macro }) {
+	static FindLabel(token: Token, option?: { fileIndex?: number, macro?: Macro }) : ILabelNormal | ILabelNameless | undefined {
 		if (!token || token.isEmpty)
 			return;
 
@@ -209,13 +209,20 @@ export class LabelUtils {
 
 		if (option?.macro) {
 			const param = option.macro.params.get(token.text);
-			if (param) {
+			if (param) 
 				return param.label;
-			}
 
 			const label = option.macro.labels.get(token.text);
-			if (label) {
+			if (label) 
 				return label;
+
+			if (option.macro.varParams?.name.text === token.text) {
+				return {
+					type: LabelType.Parameter,
+					scope: LabelScope.Global,
+					token,
+					fileIndex: option.macro.fileIndex,
+				}
 			}
 			// macro.params.get(token.text)?.label ?? macro.labels.get(token.text);
 		}

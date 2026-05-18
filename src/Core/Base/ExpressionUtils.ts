@@ -80,6 +80,8 @@ export interface ResultData<T> {
 	data: T;
 }
 
+type ExpressionTerm = { type: "string", value: string } | { type: "number", value: number } | { type: "varParams", value: string };
+
 /**表达式工具 */
 export class ExpressionUtils {
 
@@ -183,7 +185,7 @@ export class ExpressionUtils {
 	 * @param other.tryValue 默认不写按照最后一次编译是false，其它是true
 	 * @returns 
 	 */
-	static GetValue(parts: ExpressionPart[], option?: { macro?: Macro, tryValue?: boolean }) {
+	static GetValue(parts: ExpressionPart[], option?: { macro?: Macro }) {
 		const result = { success: true, value: 0 };
 		const exps = ExpressionUtils.CheckLabelAndGetValue(parts, option);
 		if (!exps) {
@@ -202,75 +204,110 @@ export class ExpressionUtils {
 		for (let index = 0; index < exps.length; index++) {
 			errorIndex++;
 			let element = exps[index];
-			if (typeof element === "number")
-				continue;
-
-			switch (element) {
-				case "(!)":
-				case "(-)":
-				case "(>)":
-				case "(<)":
-				case "(~)":
-					const pre = GetPart(index - 1) as number;
-					if (pre === undefined) {
+			switch (element.type) {
+				case "number":
+					continue;
+				case "varParams":
+					const pre = GetPart(index - 1)?.value as number | undefined;
+					if (pre === undefined || !option?.macro) {
 						result.success = false;
 						const errorMsg = Localization.GetMessage("Expression error");
 						MyDiagnostic.PushException(parts[errorIndex].token, errorMsg);
 						break;
 					}
 
-					switch (element) {
-						case "(!)": element = pre !== 0 ? 1 : 0; break;
-						case "(-)": element = -pre; break;
-						case "(>)": element = (pre & 0xFF00) >> 8; break;
-						case "(<)": element = pre & 0xFF; break;
-						case "(~)": element = ~pre; break;
+					if (!option.macro.varParams?.values[pre] || pre >= option.macro.varParams.values.length) {
+						result.success = false;
+						const errorMsg = Localization.GetMessage("Argument out of range");
+						MyDiagnostic.PushException(parts[errorIndex].token, errorMsg);
+						break;
 					}
 
+					element = { type: "number", value: option.macro.varParams!.values[pre] };
 					exps[index] = element;
 					exps.splice(index - 1, 1);
 					index -= 1;
 					break;
-				default:
-					const value1 = GetPart(index - 2) as number;
-					const value2 = GetPart(index - 1) as number;
-					if (value1 === undefined || value2 === undefined) {
-						result.success = false;
-						const errorMsg = Localization.GetMessage("Expression error");
-						MyDiagnostic.PushException(parts[errorIndex].token, errorMsg);
-						break;
-					}
+				case "string":
+					switch (element.value) {
+						case "(!)":
+						case "(-)":
+						case "(>)":
+						case "(<)":
+						case "(~)":
+							const pre = GetPart(index - 1)?.value as number | undefined;
+							if (pre === undefined) {
+								result.success = false;
+								const errorMsg = Localization.GetMessage("Expression error");
+								MyDiagnostic.PushException(parts[errorIndex].token, errorMsg);
+								break;
+							}
 
-					switch (element) {
-						case "*": element = value1 * value2; break;
-						case "/": element = value1 / value2; break;
-						case "%": element = value1 % value2; break;
-						case "+": element = value1 + value2; break;
-						case "-": element = value1 - value2; break;
-						case "<<": element = value1 << value2; break;
-						case ">>": element = value1 >>> value2; break;
-						case "==": element = value1 === value2 ? 1 : 0; break;
-						case "!=": element = value1 !== value2 ? 1 : 0; break;
-						case "&": element = value1 & value2; break;
-						case "^": element = value1 ^ value2; break;
-						case "|": element = value1 | value2; break;
-						case "&&": element = value1 && value2; break;
-						case "||": element = value1 || value2; break;
-						case ">": element = value1 > value2 ? 1 : 0; break;
-						case ">=": element = value1 >= value2 ? 1 : 0; break;
-						case "<": element = value1 < value2 ? 1 : 0; break;
-						case "<=": element = value1 <= value2 ? 1 : 0; break;
-					}
+							switch (element.value) {
+								case "(!)":
+									element = { type: "number", value: pre !== 0 ? 1 : 0 };
+									break;
+								case "(-)":
+									element = { type: "number", value: -pre };
+									break;
+								case "(>)":
+									element = { type: "number", value: (pre & 0xFF00) >> 8 };
+									break;
+								case "(<)":
+									element = { type: "number", value: pre & 0xFF };
+									break;
+								case "(~)":
+									element = { type: "number", value: ~pre };
+									break;
+							}
 
-					exps[index] = element;
-					exps.splice(index - 2, 2);
-					index -= 2;
-					break;
+							exps[index] = element;
+							exps.splice(index - 1, 1);
+							index -= 1;
+							break;
+						default:
+							const value1 = GetPart(index - 2)?.value as number | undefined;
+							const value2 = GetPart(index - 1)?.value as number | undefined;
+							if (value1 === undefined || value2 === undefined) {
+								result.success = false;
+								const errorMsg = Localization.GetMessage("Expression error");
+								MyDiagnostic.PushException(parts[errorIndex].token, errorMsg);
+								break;
+							}
+
+							switch (element.value) {
+								case "*": element = { type: "number", value: value1 * value2 }; break;
+								case "/": element = { type: "number", value: value1 / value2 }; break;
+								case "%": element = { type: "number", value: value1 % value2 }; break;
+								case "+": element = { type: "number", value: value1 + value2 }; break;
+								case "-": element = { type: "number", value: value1 - value2 }; break;
+								case "<<": element = { type: "number", value: value1 << value2 }; break;
+								case ">>": element = { type: "number", value: value1 >>> value2 }; break;
+								case "==": element = { type: "number", value: value1 === value2 ? 1 : 0 }; break;
+								case "!=": element = { type: "number", value: value1 !== value2 ? 1 : 0 }; break;
+								case "&": element = { type: "number", value: value1 & value2 }; break;
+								case "^": element = { type: "number", value: value1 ^ value2 }; break;
+								case "|": element = { type: "number", value: value1 | value2 }; break;
+								case "&&": element = { type: "number", value: value1 && value2 }; break;
+								case "||": element = { type: "number", value: value1 || value2 }; break;
+								case ">": element = { type: "number", value: value1 > value2 ? 1 : 0 }; break;
+								case ">=": element = { type: "number", value: value1 >= value2 ? 1 : 0 }; break;
+								case "<": element = { type: "number", value: value1 < value2 ? 1 : 0 }; break;
+								case "<=": element = { type: "number", value: value1 <= value2 ? 1 : 0 }; break;
+							}
+
+							exps[index] = element;
+							exps.splice(index - 2, 2);
+							index -= 2;
+							break;
+					}
 			}
+
+
 		}
 
 		if (result.success)
-			result.value = exps[0] as number;
+			result.value = exps[0]?.value as number;
 
 		return result;
 	}
@@ -893,33 +930,29 @@ export class ExpressionUtils {
 	 * @returns true为正确，false为有误
 	 */
 	private static CheckLabelAndGetValue(parts: ExpressionPart[], option?: { tryValue?: boolean, macro?: Macro }) {
-		const result: (
-			{ type: "string", value: string } |
-			{ type: "number", value: number } |
-			{ type: "varParams", value: string }
-		)[] = [];
+		const result: ExpressionTerm[] = [];
 		let tryValue = Compiler.enviroment.compileTime < Config.ProjectSetting.compileTimes - 1;
 		if (option?.tryValue !== undefined)
 			tryValue = option.tryValue;
 
 		let noError = true;
 
-		const SaveValue = (part: ExpressionPart, value: typeof result[0]) => {
+		const SaveValue = (part: ExpressionPart, value: { type: "number", value: number }) => {
 			part.value = value.value;
 			part.type = PriorityType.Level_0_Sure;
-			result.push(part.value);
+			result.push(value);
 		}
 
 		for (let i = 0; i < parts.length; i++) {
 			const part = parts[i];
 			switch (part.type) {
 				case PriorityType.Level_0_Sure:
-					result.push({part.value});
+					result.push({ type: "number", value: part.value });
 					break;
 				case PriorityType.Level_1_Label:
 					const temp = ExpressionUtils.GetNumber(part.token.text);
 					if (temp.success) {
-						SaveValue(part, temp.value);
+						SaveValue(part, { type: "number", value: temp.value });
 						break;
 					}
 
@@ -932,13 +965,13 @@ export class ExpressionUtils {
 							MyDiagnostic.PushException(part.token, errorMsg);
 						}
 					} else {
-						SaveValue(part, label.value);
+						SaveValue(part, { type: "number", value: label.value });
 					}
 					break;
 				case PriorityType.Level_2_Address:
 					switch (part.token.text) {
-						case "*": SaveValue(part, Compiler.enviroment.address.org); break;
-						case "$": SaveValue(part, Compiler.enviroment.address.base); break;
+						case "*": SaveValue(part, { type: "number", value: Compiler.enviroment.address.org }); break;
+						case "$": SaveValue(part, { type: "number", value: Compiler.enviroment.address.base }); break;
 					}
 					break;
 				case PriorityType.Level_3_CharArray:
@@ -948,11 +981,11 @@ export class ExpressionUtils {
 						noError = false;
 					} else {
 						const value = ExpressionUtils.GetCharCode(part.chars![0]);
-						SaveValue(part, value);
+						SaveValue(part, { type: "number", value: value });
 					}
 					break;
 				case PriorityType.Level_5:
-					result.push("(" + part.token.text + ")");
+					result.push({ type: "string", value: "(" + part.token.text + ")" });
 					break;
 				case PriorityType.Level_16_VarParams:
 					if (!option?.macro) {
@@ -961,10 +994,10 @@ export class ExpressionUtils {
 						noError = false;
 						break;
 					}
-					result.push(part.token.text);
+					result.push({ type: "varParams", value: part.token.text });
 					break;
 				default:
-					result.push(part.token.text);
+					result.push({ type: "string", value: part.token.text });
 					break;
 			}
 		}
@@ -1002,6 +1035,7 @@ export class ExpressionUtils {
 
 					if (part.token.text === macro.varParams?.name.text) {
 						temp = expression.parts.splice(i, 1);
+						i--;
 						varParams.push(temp[0]);
 					}
 
@@ -1014,6 +1048,7 @@ export class ExpressionUtils {
 						result.success = false;
 						return result;
 					}
+					temp.type = PriorityType.Level_16_VarParams;
 					expression.parts.splice(i, 1, temp);
 					break;
 			}

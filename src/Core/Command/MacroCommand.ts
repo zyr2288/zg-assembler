@@ -66,7 +66,14 @@ export class MacroCommand implements ICommand {
 			// 这里是不定参数
 			if (i === line.arguments.length - 1 && token.text.startsWith("...")) {
 				const copy = token.Substring(3);
-				macro.varParams = { name: copy, exps: [] };
+				if (!LabelUtils.CheckIllegal(copy.text, false)) {
+					const error = Localization.GetMessage("Label {0} illegal", copy.text);
+					MyDiagnostic.PushException(copy, error);
+					line.lineType = LineType.Error;
+					continue;
+				}
+
+				macro.varParams = { name: copy, values: [] };
 				macro.params.set(copy.text + ".length", {
 					label: {
 						type: LabelType.Defined,
