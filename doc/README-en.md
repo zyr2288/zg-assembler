@@ -333,11 +333,29 @@ For example:
 Character mapping, used to represent each character in hexadecimal.
 
 ```
-    .CHRMAP 0, "ABCD{END}", 2
-	.STR "ABCD{END}"
+    .CHRMAP startValue, "String"[, fixedLength]
+	.STR "Output string"
 ```
 
-- When the character code table does not have a corresponding character, the default output is the character's Unicode or 0 (if it is a control character, such as {END}).
+Example 1:
+
+```
+    .CHRMAP 0, "ABCD{END}"
+    .STR "ABCD{END}"
+```
+
+In this example, will output `00 01 02 03 04`.
+
+Example 2:
+
+```
+    .CHRMAP 0, "ABCD{END}", 2
+    .STR "ABCD{END}"
+```
+
+In this example, will output `00 00 00 01 00 02 00 03 04`.
+
+If the character code table does not have a corresponding character, the default output is the character's Unicode or 0 (if it is a control character, such as {END}).
 
 </details>
 
