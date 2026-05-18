@@ -185,7 +185,7 @@ export class ExpressionUtils {
 	 * @param other.tryValue 默认不写按照最后一次编译是false，其它是true
 	 * @returns 
 	 */
-	static GetValue(parts: ExpressionPart[], option?: { macro?: Macro }) {
+	static GetValue(parts: ExpressionPart[], option?: { macro?: Macro, tryValue?: boolean }) {
 		const result = { success: true, value: 0 };
 		const exps = ExpressionUtils.CheckLabelAndGetValue(parts, option);
 		if (!exps) {

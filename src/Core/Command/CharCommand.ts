@@ -79,14 +79,14 @@ export class CharCommand implements ICommand {
 		// 字符固定长度，0为自动
 		let chrFixLength = 0;
 
-		const value = ExpressionUtils.GetValue(tag.exp[0].parts, { ...option });
+		const value = ExpressionUtils.GetValue(tag.exp[0].parts, { macro: option.macro, tryValue: false });
 		if (!value.success) {
 			line.lineType = LineType.Error;
 			return;
 		}
 
 		if (tag.exp[1]) {
-			const value = ExpressionUtils.GetValue(tag.exp[1].parts, { ...option });
+			const value = ExpressionUtils.GetValue(tag.exp[1].parts, { macro: option.macro, tryValue: false });
 			if (!value.success) {
 				line.lineType = LineType.Error;
 				return;

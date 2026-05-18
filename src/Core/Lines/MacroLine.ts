@@ -127,7 +127,7 @@ export class MacroLine {
 		if (this.macro.varParams) {
 			let tempIndex = 0;
 			for (let i = index; i < this.expressions.length; i++) {
-				const value = ExpressionUtils.GetValue(this.expressions[i].parts, option);
+				const value = ExpressionUtils.GetValue(this.expressions[i].parts, { macro: option.macro, tryValue: false });
 				if (value.success) {
 					this.macro.varParams.values[tempIndex] = value.value;
 				} else {
