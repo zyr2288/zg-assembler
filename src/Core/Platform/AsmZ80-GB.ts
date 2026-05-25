@@ -12,6 +12,8 @@ import { Platform } from "./Platform";
  * https://github.com/kolen/z80-opcode-table/blob/master/table_ref.txt
  * 
  * https://sndream.github.io/PanDocs/#cpucomparisionwithz80
+ * 
+ * @deprecated 暂时不用，使用SM83-GB
  */
 export class AsmZ80_GB {
 	static platformName = "z80-gb";

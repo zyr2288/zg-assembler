@@ -46,16 +46,16 @@
 
 ```json
 {
-	"platform": "6502", // 选择平台
-	"intellisense": true, // 是否开启智能提示
-	"outOfRangeWarning": true, // 编译结果越界警告
-	"entry": "main.asm", // 入口文件
-	"compileTimes": 2, // 编译次数，至少两次，否则会出错
-	"outputEntryFile": "", // 输出入口文件，不写则不输出
-	"outputSingleFile": "", // 单个文件输出，不写则不输出
-	"copyToClipboard": true, // 结果是否复制到剪贴板
-	"includes": ["**/*.asm"], // 项目包含的文件
-	"excludes": [] // 项目排除的文件
+    "platform": "6502",        // 选择平台
+    "intellisense": true,      // 是否开启智能提示
+    "outOfRangeWarning": true, // 编译结果越界警告
+    "entry": "main.asm",       // 入口文件
+    "compileTimes": 2,         // 编译次数，至少两次，否则会出错
+    "outputEntryFile": "",     // 输出入口文件，不写则不输出
+    "outputSingleFile": "",    // 单个文件输出，不写则不输出
+    "copyToClipboard": true,   // 结果是否复制到剪贴板
+    "includes": ["**/*.asm"],  // 项目包含的文件
+    "excludes": []             // 项目排除的文件
 }
 ```
 
@@ -475,7 +475,7 @@ Unicode 形式
 > 1. 用这里的指令可以自定义函数，所要使用的函数要在编译之前定义好，否则编译器会报错。
 > 2. 所有自定义函数内的 **标签** 属于 **局部变量**，请勿在函数外部使用。
 > 3. 所有自定义函数内定义的 **变量** 均为 **全局变量**。
-> 4. 可以使用不定参数，当最后一个参数名称起始为三个点（例如：`...args`）时，表示可以使用任意数量的参数。
+> 4. 可以使用不定参数，当最后一个参数名称起始为三个点（例如：`...args`）时，表示可以使用任意数量的参数。同时，不定参数会自动添加一个常量为 `arg.length` 的参数，用于表示参数的数量，可参考示例3。
 
 示例 1：
 
