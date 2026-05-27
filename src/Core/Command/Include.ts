@@ -143,7 +143,7 @@ export class Incbin implements ICommand {
 	}
 }
 
-class IncludeUtils {
+export class IncludeUtils {
 
 	static async CheckFile(option: CompileOption) {
 		const line = option.GetCurrent<CommandLine>();

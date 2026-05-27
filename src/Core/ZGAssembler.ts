@@ -20,7 +20,7 @@ import { LabelTreeProvider } from "./LanguageHelper/LabelTree";
 import { FormatHelper } from "./LanguageHelper/FormatHelper";
 
 export class ZGAssembler {
-
+	static instance: ZGAssembler;
 	config = Config;
 	diagnostic = MyDiagnostic;
 	fileUtils = FileUtils;
@@ -42,6 +42,7 @@ export class ZGAssembler {
 		ExpressionUtils.Initialize();
 		Platform.SwitchPlatform("6502");
 		Command.Initialize();
+		ZGAssembler.instance = this;
 	}
 
 	async ParseText(files: { text: string, filePath: string }[]) {
