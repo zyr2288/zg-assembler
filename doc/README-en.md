@@ -120,6 +120,12 @@ Translated with DeepL.com (free version)
         ; AD 02 20 10 FB A5 00 F0 05 10 06 4C 00 90 4C 00 80 4C 00 A0
 ```
 
+### Label Tree
+
+- In the editor, the label tree is displayed on the left side of the file list.
+- Clicking on the label will jump to the label definition location.
+- After compilation, the label tree will display the address of the label.
+
 ---
 
 ### Operator
