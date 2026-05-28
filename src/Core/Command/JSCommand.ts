@@ -1,6 +1,9 @@
 import { CompileOption } from "../Base/CompileOption";
+import { Config } from "../Base/Config";
 import { FileUtils } from "../Base/FileUtils";
+import { MyDiagnostic } from "../Base/MyDiagnostic";
 import { Compiler } from "../Compiler/Compiler";
+import { Localization } from "../I18n/Localization";
 import { CommandLine } from "../Lines/CommandLine";
 import { LineType } from "../Lines/CommonLine";
 import { ZGAssembler } from "../ZGAssembler";
@@ -16,21 +19,32 @@ export class JSCommand implements ICommand {
 	allowLabel = false;
 
 	async AnalyseFirst(option: CompileOption) {
-		const result = await IncludeUtils.CheckFile(option);
-		if (!result.exsist)
-			return;
-
 		const line = option.GetCurrent<CommandLine>();
+		if (Config.ProjectSetting.useJS !== true) {
+			const error = Localization.GetMessage("Can not use JS script");
+			MyDiagnostic.PushWarning(line.command, error);
+			line.lineType = LineType.Finished;
+			return;
+		}
+
+		const result = await IncludeUtils.CheckFile(option);
+		if (!result.exsist) {
+			line.lineType = LineType.Error;
+			return;
+		}
+
 		const tag: JSCommandTag = { path: result.path };
 		line.tag = tag;
 	}
 
 	async Compile(option: CompileOption) {
-		if (Compiler.FirstCompile()) {
+		if (Compiler.FirstCompile())
 			await this.AnalyseFirst(option);
-		}
 
 		const line = option.GetCurrent<CommandLine>();
+		if (line.lineType === LineType.Error || line.lineType === LineType.Finished)
+			return;
+
 		line.lineResult.SetAddress();
 		line.lineType = LineType.Finished;
 
@@ -45,11 +59,24 @@ export class JSCommand implements ICommand {
 
 		const func = new Function("ZGAssembler", `return (${fileContent})(ZGAssembler)`);
 		const data = func(ZGAssembler.instance);
-		if (data instanceof Uint8Array) {
-			line.lineResult.result = Array.from(data);
-			line.lineResult.AddAddress();
-		} else {
+		if (!(data instanceof Uint8Array)) {
+			const error = Localization.GetMessage("JS script must return Uint8Array");
+			MyDiagnostic.PushException(line.command, error);
 			line.lineType = LineType.Error;
+			return;
+		}
+
+		const tempData = Array.from(data);
+		if (line.lineResult.result.length === 0) {
+			line.lineResult.result = tempData;
+			line.lineResult.AddAddress();
+		} else if (line.lineResult.result.length !== tempData.length) {
+			const error = Localization.GetMessage("Return array must be same length");
+			MyDiagnostic.PushException(line.command, error);
+			line.lineType = LineType.Error;
+			return;
+		} else {
+			line.lineResult.result = tempData;
 		}
 	}
 }

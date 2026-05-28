@@ -25,7 +25,7 @@
 		},
 		"asmCommand": {
 			"name": "keyword.other.zg-assembly.commands",
-			"match": "(?i)(^|\\s+)(\\.BASE|\\.ORG|\\.IF|\\.INCLUDE|\\.INCBIN|\\.ELSEIF|\\.ELSE|\\.ENDIF|\\.IFDEF|\\.IFNDEF|\\.DB|\\.DW|\\.DL|\\.ENDD|\\.CHRMAP|\\.STR|\\.ENUM|\\.ENDE|\\.REPEAT|\\.ENDR|\\.ENDM|\\.MSG|\\.ERROR)(\\s+|(?=\\,|;))"
+			"match": "(?i)(^|\\s+)(\\.BASE|\\.ORG|\\.IF|\\.INCLUDE|\\.INCBIN|\\.ELSEIF|\\.ELSE|\\.ENDIF|\\.IFDEF|\\.IFNDEF|\\.DB|\\.DW|\\.DL|\\.ENDD|\\.CHRMAP|\\.STR|\\.ENUM|\\.ENDE|\\.REPEAT|\\.ENDR|\\.ENDM|\\.JS|\\.MSG|\\.ERROR)(\\s+|(?=\\,|;))"
 		},
 		"defined": {
 			"name": "keyword.other.zg-assembly.commands",

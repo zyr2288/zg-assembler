@@ -32,7 +32,7 @@ export class Config {
 		copyToClipboard: false,
 		includes: ["**/*.asm"],
 		excludes: [] as string[],
-		script: { before: "", after: "" },
+		useJS: false,
 	}
 
 	static ProjectSetting: typeof Config.ProjectDefaultSetting = {
@@ -46,7 +46,7 @@ export class Config {
 		copyToClipboard: false,
 		includes: ["**/*.asm"],
 		excludes: [] as string[],
-		script: { before: "", after: "" },
+		useJS: false,
 	}
 
 	static ProjectDir = "";
@@ -108,14 +108,8 @@ export class Config {
 				Config.ProjectSetting.excludes = [];
 		}
 
-		if (!Config.ProjectSetting.script) {
-			Config.ProjectSetting.script = { before: "", after: "" };
-		} else {
-			if (typeof (Config.ProjectSetting.script.before) !== "string")
-				Config.ProjectSetting.script.before = "";
-			if (typeof (Config.ProjectSetting.script.after) !== "string")
-				Config.ProjectSetting.script.after = "";
-		}
+		if (typeof (Config.ProjectSetting.useJS) !== "boolean")
+			Config.ProjectSetting.useJS = false;
 	}
 	//#endregion 读取配置文件
 

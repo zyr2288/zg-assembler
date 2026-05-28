@@ -13,7 +13,8 @@
 		"outputSingleFile": { "type": "string", "description": "编译单个文件的输出" },
 		"copyToClipboard": { "type": "boolean", "description": "是否复制16进制结果到剪贴板" },
 		"includes": { "type": "array", "default": "**/*.asm", "items": { "type": "string" }, "description": "工程包含的文件" },
-		"excludes": { "type": "array", "default": "", "items": { "type": "string" }, "description": "工程排除的文件" }
+		"excludes": { "type": "array", "default": "", "items": { "type": "string" }, "description": "工程排除的文件" },
+		"useJS": { "type": "boolean", "default": false, "description": "是否开启JS脚本" }
 	},
 	"required": [
 		"platform",

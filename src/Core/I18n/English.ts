@@ -61,6 +61,11 @@ export const English = {
 	"Comamnd .CHRMAP argument error": "Command .CHRMAP arguments error",
 	"Comamnd .STRING arguments error": "Comamnd .STRING arguments error",
 	"Character not found in .STR": "Character \"{0}\" not found in character map, will be replaced with \"{1}\"",
+
+	"JS script error": "JS script error",
+	"JS script must return Uint8Array": "JS script must return Uint8Array",
+	"Return array must be same length": "Return array must be same length",
+	"Can not use JS script": "Can not use JS script, please check the \"useJS\" in \"project-settings.json\", this line will be ignored.",
 }
 
 export const CommandTip_English = {
