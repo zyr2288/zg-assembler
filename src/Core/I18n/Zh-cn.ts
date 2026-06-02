@@ -65,7 +65,7 @@ export const Chinese: LocalizationMsg = {
 	"Character not found in .STR": "未在码表中找到字符 \"{0}\"，将以 \"{1}\" 代替",
 
 	"JS script error": "JS脚本错误",
-	"JS script must return Uint8Array": "JS脚本必须返回 Uint8Array",
+	"JS script must return Uint8Array": "JS脚本必须返回 Uint8Array 或 undefined 类型",
 	"Return array must be same length": "返回数组长度必须相同",
 	"Can not use JS script": "未启用JS脚本，请检查 \"project-setting.json\" 的 \"useJS\" 选项",
 }

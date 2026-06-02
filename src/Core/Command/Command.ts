@@ -18,7 +18,6 @@ import { EnumCommand } from "./EnumCommand";
 import { Expression } from "../Base/ExpressionUtils";
 import { DBGCommand, DLGCommand, DWGCommand } from "./DataGroup";
 import { CharCommand, StrCommand } from "./CharCommand";
-import { JSCommand } from "./JSCommand";
 
 interface FindMatchOption {
 	/**命令名称 */
@@ -57,7 +56,7 @@ export class Command {
 			DBGCommand, DWGCommand, DLGCommand,
 			Include, Incbin,
 			IfConfident, IfDefConfident, IfNDefConfident,
-			MacroCommand, JSCommand,
+			MacroCommand,
 			MsgCommand, ErrorCommand,
 			RepeatCommand, 
 		);

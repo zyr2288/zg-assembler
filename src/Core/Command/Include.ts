@@ -162,6 +162,8 @@ export class IncludeUtils {
 		if (filePath.text.startsWith("@")) {
 			result.path = filePath.text.substring(1);
 			result.path = FileUtils.Combine(Config.ProjectDir, result.path);
+		} else {
+			result.path = filePath.text;
 		}
 
 		let type = await FileUtils.PathType(result.path);
