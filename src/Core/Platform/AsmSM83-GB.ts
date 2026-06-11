@@ -129,8 +129,8 @@ export class AsmSM83_GB {
 		Platform.AddInstruction("JP", { addressingMode: "[exp]", opCode: [, , 0xC3] });
 
 		// ===== CALL =====
-		this.AddInstructionSeries2("CALL", ["NZ,[exp]", "NC,[exp]"], 0xC4, 1, 0x10);
-		this.AddInstructionSeries2("CALL", ["Z,[exp]", "C,[exp]"], 0xC4, 2, 0x10);
+		this.AddInstructionSeries2("CALL", ["NZ,[exp]", "NC,[exp]"], 0xC4, 2, 0x10);
+		this.AddInstructionSeries2("CALL", ["Z,[exp]", "C,[exp]"], 0xCC, 2, 0x10);
 		Platform.AddInstruction("CALL", { addressingMode: "[exp]", opCode: [, , 0xCD] });
 
 		// ===== PUSH POP =====
@@ -167,6 +167,15 @@ export class AsmSM83_GB {
 			Platform.AddInstruction(key, { opCode: [insAndOpCode[key]] });
 	}
 
+	/**
+	 * 
+	 * @param instruction 操作指令
+	 * @param addrTypes 寻址方式
+	 * @param startOpCode 开始指令码
+	 * @param opCodeLength 指令码长度
+	 * @param step 步长
+	 * @param spProcess 
+	 */
 	private AddInstructionSeries2(instruction: string, addrTypes: string[], startOpCode: number, opCodeLength: number, step: number, spProcess?: AddInstructionOption["spProcess"]) {
 		let opCode: number[];
 		for (let i = 0; i < addrTypes.length; i++) {
