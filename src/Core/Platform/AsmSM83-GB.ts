@@ -84,6 +84,9 @@ export class AsmSM83_GB {
 		for (let i = 0; i < instruction.length; i++) {
 			for (let j = 0; j < addrType.length; j++) {
 				Platform.AddInstruction(instruction[i], { addressingMode: `A,${addrType[j]}`, opCode: [opCode] });
+				if (addrType[j] === "A")
+					Platform.AddInstruction(instruction[i], { addressingMode: `A`, opCode: [opCode] });
+
 				opCode++;
 			}
 		}
