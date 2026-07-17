@@ -1,12 +1,12 @@
 # 更新日志
 
-### 2026-07-07 v0.3.86
+### 2026-07-08 v0.3.87
 
 - 修复当插件激活时，使用别的脚本生成 `asm` 文件时候，所编辑的脚本会被修改的问题
 - 新增 `.CHRMAP` `.STR` 命令，具体用法请参照 `README.md` 中的说明
 - `.MACRO` 新增不定参数，具体用法请参照 `README.md` 中的说明
 - 修复 `SM83-gb` 平台下的 `CALL` 指令的寻址方式问题
-- 添加 `ADD` `ADC` `SUB` `SBC` `AND` `XOR` `OR` `CP` 指令的寻址方式 `A`
+- 添加 `ADD` `ADC` `SUB` `SBC` `AND` `XOR` `OR` `CP` 指令的寻址方式
 
 历史记录请查阅 ChangeLog-History.md
 
