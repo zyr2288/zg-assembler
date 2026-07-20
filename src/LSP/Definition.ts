@@ -1,6 +1,9 @@
 import * as vscode from "vscode";
 import { LSPUtils } from "./LSPUtils";
 
+/**
+ * 定义跳转
+ */
 export class Definition {
 
 	static Initialize(context: vscode.ExtensionContext) {

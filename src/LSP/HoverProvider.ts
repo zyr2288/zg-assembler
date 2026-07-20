@@ -1,6 +1,9 @@
 import * as vscode from "vscode";
 import { LSPUtils } from "./LSPUtils";
 
+/**
+ * 鼠标提示
+ */
 export class HoverProvider {
 	static Initialize(context: vscode.ExtensionContext) {
 		context.subscriptions.push(

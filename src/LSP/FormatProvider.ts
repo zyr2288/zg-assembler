@@ -1,6 +1,9 @@
 import * as vscode from "vscode";
 import { LSPUtils } from "./LSPUtils";
 
+/**
+ * 格式化
+ */
 export class FormatProvider {
 
 	/**初始化 */

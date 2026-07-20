@@ -1,6 +1,9 @@
 import * as vscode from "vscode";
 import { LSPUtils } from "./LSPUtils";
 
+/**
+ * 文本解释，用于编译后点击某一行解析结果
+ */
 export class TextDecoration {
 
 	private static decoration: vscode.TextEditorDecorationType;

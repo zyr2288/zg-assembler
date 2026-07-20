@@ -1,6 +1,9 @@
 import * as vscode from "vscode";
 import { LSPUtils } from "./LSPUtils";
 
+/**
+ * 引用提供器
+ */
 export class ReferencesProvider {
 
 	static Initialize(context: vscode.ExtensionContext) {

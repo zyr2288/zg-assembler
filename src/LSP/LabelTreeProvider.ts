@@ -2,6 +2,9 @@ import * as vscode from "vscode";
 import { LSPUtils } from "./LSPUtils";
 import { Definition } from "./Definition";
 
+/**
+ * 标签树提供器
+ */
 export class LabelTreeProvider implements vscode.TreeDataProvider<LabelTreeItem> {
 
 	private static LabelTreeRefresh: () => void;

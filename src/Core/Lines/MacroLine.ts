@@ -71,7 +71,10 @@ export class MacroLine {
 		const macroOp = new CompileOption();
 		macroOp.allLines = macro.lines;
 
+		let tempFileIndex = Compiler.enviroment.fileIndex;
+		Compiler.enviroment.fileIndex = macro.fileIndex;
 		Compiler.GetLinesResult(macroOp, result);
+		Compiler.enviroment.fileIndex = tempFileIndex;
 	}
 
 

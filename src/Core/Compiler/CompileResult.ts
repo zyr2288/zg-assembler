@@ -14,6 +14,9 @@ export class CompileResult {
 	finished = false;
 
 	SetLine(option: { baseAddress: number, fileIndex: number, lineNumber: number, line: InstructionLine | CommandLine }) {
+		if (option.fileIndex < 0)
+			return;
+
 		this.baseAddLines.set(
 			option.baseAddress,
 			{ fileIndex: option.fileIndex, lineNumber: option.lineNumber, line: option.line }

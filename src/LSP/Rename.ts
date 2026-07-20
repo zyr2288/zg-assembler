@@ -1,6 +1,9 @@
 import * as vscode from "vscode";
 import { LSPUtils } from "./LSPUtils";
 
+/**
+ * 重命名提供器
+ */
 export class Rename {
 
 	static Initialize(context: vscode.ExtensionContext) {

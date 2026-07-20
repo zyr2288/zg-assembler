@@ -4,6 +4,9 @@ import { ConfigUtils } from "./ConfigUtils";
 
 const FreshTime = 1000;
 
+/**
+ * 更新文件类
+ */
 export class UpdateFile {
 
 	private static fileUpdateThreadId: number;

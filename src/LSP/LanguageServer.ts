@@ -16,6 +16,9 @@ import { TextDecoration } from "./TextDecoration";
 import { LabelTreeProvider } from "./LabelTreeProvider";
 import { FormatProvider } from "./FormatProvider";
 
+/**
+ * 语言服务器
+ */
 export class LanguageServer {
 
 	private assembler!: ZGAssembler;
