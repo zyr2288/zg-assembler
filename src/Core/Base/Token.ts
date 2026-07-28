@@ -75,9 +75,7 @@ export class Token {
 	//#region 截取
 	Substring(index: number, length?: number) {
 		let end: number | undefined = undefined;
-		if (length == undefined)
-			end = undefined;
-		else
+		if (length !== undefined)
 			end = index + length;
 
 		const word = this.Copy();
