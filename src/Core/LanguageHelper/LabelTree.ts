@@ -14,7 +14,12 @@ export interface LabelTreeItem {
 
 export class LabelTreeProvider {
 
-	static GetVariableInfo(filePath: string) {
+	/**
+	 * 获取标签信息
+	 * @param filePath 文件路径
+	 * @returns 
+	 */
+	static GetLabelInfo(filePath: string) {
 		let result: LabelTreeItem[] = [];
 		const fileIndex = Compiler.enviroment.GetFileIndex(filePath, false);
 		if (fileIndex < 0) {
@@ -50,7 +55,13 @@ export class LabelTreeProvider {
 	}
 
 	//#region 输出文件的变量信息
-	static OutputVariableInfo(filePath: string, radix: number) {
+	/**
+	 * 输出文件的变量信息
+	 * @param filePath 文件路径
+	 * @param radix 进制
+	 * @returns 
+	 */
+	static OutpuLabelInfo(filePath: string, radix: number) {
 		let result: string[] = [], index = 0;
 		const fileIndex = Compiler.enviroment.GetFileIndex(filePath, false);
 		// 全局，其余局部
@@ -74,7 +85,12 @@ export class LabelTreeProvider {
 				index++;
 			});
 		} else {
+			const localLabels = Compiler.enviroment.allLabel.local.get(fileIndex);
+			if (localLabels) {
+				localLabels.forEach((label, name, map) => {
 
+				});
+			}
 		}
 		result.sort((a, b) => a.localeCompare(b));
 		return result;

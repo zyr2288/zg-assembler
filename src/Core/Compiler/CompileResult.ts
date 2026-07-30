@@ -6,8 +6,10 @@ import { Compiler } from "./Compiler";
  * 存储编译结果，用于Debug
  */
 export class CompileResult {
+	
 	/**key是BaseAddress */
 	baseAddLines = new Map<number, { fileIndex: number, lineNumber: number, line: InstructionLine | CommandLine }>();
+
 	/**key1是fileIndex，key2是lineNumber */
 	fileLines = new Map<number, Map<number, { baseAddress: number, line: InstructionLine | CommandLine }>>();
 

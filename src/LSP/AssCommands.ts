@@ -3,10 +3,13 @@ import { ConfigUtils } from "./ConfigUtils";
 import { Intellisense, TriggerSuggestTag } from "./Intellisense";
 import { LSPUtils } from "./LSPUtils";
 import { UpdateFile } from "./UpdateFile";
+import { IPlugin } from "../Plugin/IPlugin";
 
 export const CommandName = "zg-assembly.triggerSuggest";
 
 export class AssCommands {
+
+	private static plugins: Record<string, IPlugin> = {};
 
 	static Initialize(context: vscode.ExtensionContext) {
 		// 注册智能提示
@@ -104,6 +107,10 @@ export class AssCommands {
 			` $(alert) ${LSPUtils.assembler.localization.GetMessage("compile error")}` :
 			` $(check) ${LSPUtils.assembler.localization.GetMessage("compile finished")}`;
 		LSPUtils.StatueBarShowText(showText, 3000);
+	}
+
+	static async ReadPlugin() {
+		
 	}
 
 }

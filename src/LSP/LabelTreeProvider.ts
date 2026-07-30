@@ -35,13 +35,13 @@ export class LabelTreeProvider implements vscode.TreeDataProvider<LabelTreeItem>
 
 	/**导出所有标签 */
 	static async ExportLabels(item: LabelTreeItem, radix: number) {
-		let result: string[] = [], index = 0;
+		let result: string[] = [];
 		switch (item.type) {
 			case "global":
-				result = LSPUtils.assembler.languageHelper.labelTree.OutputVariableInfo("", radix);
+				result = LSPUtils.assembler.languageHelper.labelTree.OutpuLabelInfo("", radix);
 				break;
 			case "file":
-				result = LSPUtils.assembler.languageHelper.labelTree.OutputVariableInfo(item.path, radix);
+				result = LSPUtils.assembler.languageHelper.labelTree.OutpuLabelInfo(item.path, radix);
 				break;
 		}
 		result.sort((a, b) => a.localeCompare(b));
@@ -92,12 +92,13 @@ export class LabelTreeProvider implements vscode.TreeDataProvider<LabelTreeItem>
 		let items;
 		switch (element.type) {
 			case "global":
-				items = LSPUtils.assembler.languageHelper.labelTree.GetVariableInfo("");
+				items = LSPUtils.assembler.languageHelper.labelTree.GetLabelInfo("");
 				break;
 			case "file":
-				items = LSPUtils.assembler.languageHelper.labelTree.GetVariableInfo(element.path);
+				items = LSPUtils.assembler.languageHelper.labelTree.GetLabelInfo(element.path);
 				break;
 		}
+
 		if (items) {
 			items.forEach((label) => {
 				const filePath = LSPUtils.assembler.compiler.enviroment.GetFilePath(label.fileIndex);

@@ -25,8 +25,6 @@ interface MatchResult {
 	}
 }
 
-const CommentRegex = /;(?=(?:[^"]*"[^"]*")*[^"]*$)/;
-
 export class Analyser {
 
 	private static space = new Set<string>([" ", "\t"]);
