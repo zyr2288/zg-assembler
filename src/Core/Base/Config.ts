@@ -1,3 +1,5 @@
+export type PlatformType = "6502" | "65c816" | "SM83-gb" | "SPC700"
+
 export class Config {
 	static readonly FileExtension = {
 		scheme: "file",
@@ -22,7 +24,7 @@ export class Config {
 	static readonly InProject = true;
 
 	static readonly ProjectDefaultSetting = {
-		platform: "6502",
+		platform: "6502" as PlatformType,
 		intellisense: true,
 		outOfRangeWarning: true,
 		entry: "main.asm",
