@@ -10,6 +10,7 @@ export const CommandName = "zg-assembly.triggerSuggest";
 export class AssCommands {
 
 	private static plugins: Record<string, IPlugin> = {};
+	private static pluginModule?: typeof import("../Plugin/Index") = undefined;
 
 	static Initialize(context: vscode.ExtensionContext) {
 		// 注册智能提示
@@ -54,6 +55,18 @@ export class AssCommands {
 
 		const result = await LSPUtils.assembler.CompileText(text, filePath);
 		UpdateFile.UpdateDiagnostic();
+
+		for (const key in AssCommands.plugins) {
+			const plugin = AssCommands.plugins[key];
+			if (plugin.AfterCompile) {
+				await plugin.AfterCompile({
+					outFilePath: LSPUtils.assembler.config.ProjectSetting.outputSingleFile,
+					compileType: "single",
+					outputBin: result
+				});
+			}
+		}
+
 		if (result) {
 			let toFile = LSPUtils.assembler.config.ProjectSetting.outputSingleFile;
 			toFile = toFile.replace(/\[name\]/g, fileName);
@@ -68,18 +81,20 @@ export class AssCommands {
 
 	/**编译入口文件 */
 	static async CompileEntryFile() {
-		if (!vscode.workspace.workspaceFolders || !vscode.window.activeTextEditor)
+		if (!vscode.window.activeTextEditor)
+			return;
+
+		const workspace = vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri);
+		if (!workspace)
 			return;
 
 		LSPUtils.StatueBarShowText(` $(sync~spin) ${LSPUtils.assembler.localization.GetMessage("compiling")}...`, 0);
 
 		await LSPUtils.WaitingCompileFinished();
 		await ConfigUtils.ReadConfig(vscode.window.activeTextEditor.document.uri);
+		await AssCommands.ReadPlugin();
 
-		const filePath = LSPUtils.assembler.fileUtils.Combine(
-			vscode.workspace.workspaceFolders[0].uri.fsPath,
-			LSPUtils.assembler.config.ProjectSetting.entry
-		);
+		const filePath = LSPUtils.assembler.fileUtils.Combine(workspace.uri.fsPath, LSPUtils.assembler.config.ProjectSetting.entry);
 
 		if (await LSPUtils.assembler.fileUtils.PathType(filePath) !== "file") {
 			const errorMsg = LSPUtils.assembler.localization.GetMessage("File {0} is not exist", filePath);
@@ -96,6 +111,17 @@ export class AssCommands {
 		const result = await LSPUtils.assembler.CompileText(text, filePath);
 		UpdateFile.UpdateDiagnostic();
 
+		for (const key in AssCommands.plugins) {
+			const plugin = AssCommands.plugins[key];
+			if (plugin.AfterCompile) {
+				await plugin.AfterCompile({
+					outFilePath: LSPUtils.assembler.config.ProjectSetting.outputEntryFile,
+					compileType: "entry",
+					outputBin: result
+				});
+			}
+		}
+
 		if (result) {
 			await LSPUtils.OutputResult(result, {
 				toFile: LSPUtils.assembler.config.ProjectSetting.outputEntryFile,
@@ -110,7 +136,25 @@ export class AssCommands {
 	}
 
 	static async ReadPlugin() {
-		
+		if (!vscode.window.activeTextEditor)
+			return;
+
+		const workspace = vscode.workspace.getWorkspaceFolder(vscode.window.activeTextEditor.document.uri);
+		if (!workspace)
+			return;
+
+		for (const key in LSPUtils.assembler.config.ProjectSetting.plugin) {
+			if (!AssCommands.pluginModule) {
+				AssCommands.pluginModule = require("../Plugin").default;
+			}
+			
+			if (!AssCommands.plugins[key]) {
+				// @ts-ignore
+				AssCommands.plugins[key] = new AssCommands.pluginModule[key]();
+			}
+
+			AssCommands.plugins[key].Initialize(LSPUtils.assembler, LSPUtils.assembler.config.ProjectSetting.plugin[key]);
+		}
 	}
 
 }

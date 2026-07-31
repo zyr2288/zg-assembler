@@ -16,22 +16,19 @@ const extensionConfig = {
 			import: "./src/Core/ZGAssembler.ts",
 			library: { name: "ZGAssembler", type: "commonjs2", export: "ZGAssembler" },
 		},
-		extension: {
-			import: "./src/extension.ts"
-		},
+		extension: { import: "./src/extension.ts" },
+		Plugin: {
+			import: "./src/Plugin"
+		}
 	}, // the entry point of this extension, 📖 -> https://webpack.js.org/configuration/entry-context/
 	output: {
 		// the bundle is stored in the "dist" folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
 		path: path.resolve(__dirname, "dist"),
 		clean: true,
 		filename: "[name].js",
-		libraryTarget: "commonjs2",
+		// libraryTarget: "commonjs2",
 	},
-	optimization: {
-		splitChunks: {
-			chunks: "all"
-		}
-	},
+	optimization: { splitChunks: { chunks: "all" } },
 	externals: {
 		vscode: "commonjs vscode" // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack"ed, 📖 -> https://webpack.js.org/configuration/externals/
 		// modules added here also need to be added in the .vscodeignore file
@@ -41,17 +38,7 @@ const extensionConfig = {
 		extensions: [".ts", ".js"]
 	},
 	module: {
-		rules: [
-			{
-				test: /\.ts$/,
-				exclude: /node_modules/,
-				use: [
-					{
-						loader: "ts-loader"
-					}
-				]
-			}
-		]
+		rules: [{ test: /\.ts$/, exclude: /node_modules/, use: [{ loader: "ts-loader" }] }]
 	},
 	devtool: "nosources-source-map",
 	infrastructureLogging: {

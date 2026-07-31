@@ -1,16 +1,18 @@
 import * as vscode from "vscode";
 import { ZGAssembler } from "../Core/ZGAssembler";
 
-export interface IPlugin {
-	name: string;
-
-	Initialize(assembler: ZGAssembler, option: any): void | Promise<void>;
-	BeforeCompile?(assembler: ZGAssembler): void | Promise<void>;
-	AfterCompile?(assembler: ZGAssembler): void | Promise<void>;
+export interface CompileOption {
+	outFilePath: string;
+	compileType: "entry" | "single";
+	outputBin?: Int16Array;
 }
 
-export class PluginUtils {
-	static async ReadPluginOption(asmFileUri: vscode.Uri) {
+export interface IPlugin {
+	name: string;
+	assembler: ZGAssembler;
+	option: any;
 
-	}
+	Initialize(assembler: ZGAssembler, option: any): void | Promise<void>;
+	BeforeCompile?(option: CompileOption): void | Promise<void>;
+	AfterCompile?(option: CompileOption): void | Promise<void>;
 }

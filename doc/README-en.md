@@ -48,7 +48,8 @@ Testing files:
     "outputSingleFile": "",
     "copyToClipboard": true,   // Copy result bytes to the clipboard
     "includes": ["**/*.asm"],
-    "excludes": []
+    "excludes": [],
+    "plugin": {}               // Plugins (optional)
 }
 ```
 
@@ -180,6 +181,10 @@ The plugin disables word-based suggestions by default, to enable this feature, a
     }
 }
 ```
+
+## Plugin
+
+You can use plugins in the `plugin` option. the `plugin` option is a JSON object, the key is the plugin name, the value is the plugin configuration.
 
 ## Compiler commands (example of 6502)
 

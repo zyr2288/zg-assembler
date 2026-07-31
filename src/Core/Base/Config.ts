@@ -10,6 +10,8 @@ export class Config {
 	};
 
 	static readonly ConfigFile = "project-settings.json";
+	static readonly PluginDir = "plugins";
+
 	static readonly CommonSplit = "/";
 	static readonly ExtensionCommandNames = {
 		/**显示标签树 */
@@ -34,7 +36,7 @@ export class Config {
 		copyToClipboard: false,
 		includes: ["**/*.asm"],
 		excludes: [] as string[],
-		useJS: false,
+		plugin: {} as Record<string, any>,
 	}
 
 	static ProjectSetting: typeof Config.ProjectDefaultSetting = {
@@ -48,7 +50,7 @@ export class Config {
 		copyToClipboard: false,
 		includes: ["**/*.asm"],
 		excludes: [] as string[],
-		useJS: false,
+		plugin: {} as Record<string, any>,
 	}
 
 	static ProjectDir = "";
@@ -110,8 +112,8 @@ export class Config {
 				Config.ProjectSetting.excludes = [];
 		}
 
-		if (typeof (Config.ProjectSetting.useJS) !== "boolean")
-			Config.ProjectSetting.useJS = false;
+		if (typeof (Config.ProjectSetting.plugin) !== "object")
+			Config.ProjectSetting.plugin = {};
 	}
 	//#endregion 读取配置文件
 
