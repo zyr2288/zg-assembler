@@ -3,9 +3,11 @@
 > [!IMPORTANT]
 > 特别注意，该项目已全面使用 `bun` 作为编译工具，不再使用 `npm`，请确保已安装 `bun` 并配置好环境变量
 
-使用以下命令进行编译内核：
+如果要调试或者编译，请先安装依赖:
 
-> bun run build-core
+```bash
+> bun install
+```
 
 [English](./doc/README-en.md)
 
