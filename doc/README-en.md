@@ -1,5 +1,12 @@
 # Zeng Ge Assembler
 
+> [!IMPORTANT]
+> This project is now fully based on `bun` as the compiler tool, and no longer uses `npm`, please ensure that you have installed `bun` and configured the environment variables.
+
+To compile core source, use the following command:
+
+> bun run build-core
+
 [简体中文](../README.md)
 
 A simple assembler for 6502 / 65c816 / SM83-gb / SPC700

@@ -144,11 +144,19 @@ export class AssCommands {
 			return;
 
 		for (const key in LSPUtils.assembler.config.ProjectSetting.plugin) {
-			if (!AssCommands.pluginModule) {
+			if (!AssCommands.pluginModule) 
 				AssCommands.pluginModule = require("../Plugin").default;
-			}
 			
-			if (!AssCommands.plugins[key]) {
+			
+			const pluginPath = LSPUtils.assembler.fileUtils.Combine(
+				LSPUtils.assembler.config.ProjectDir, 
+				"plugin",
+				`${key}.js`
+			);
+
+			if (await LSPUtils.assembler.fileUtils.PathType(pluginPath) === "file") {
+				AssCommands.plugins[key] = require(pluginPath).default;
+			} else if (!AssCommands.plugins[key]) {
 				// @ts-ignore
 				AssCommands.plugins[key] = new AssCommands.pluginModule[key]();
 			}
