@@ -1,12 +1,9 @@
 # Zeng Ge Assembler
 
-> [!IMPORTANT]
-> This project is now fully based on `bun` as the compiler tool, and no longer uses `npm`, please ensure that you have installed `bun` and configured the environment variables.
-
 If you want to debug or compile the project, please install the dependencies first:
 
 ```bash
-> bun install
+> npm install
 ```
 
 [简体中文](../README.md)

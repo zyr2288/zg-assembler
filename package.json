@@ -215,11 +215,11 @@
 		}
 	},
 	"scripts": {
-		"vscode:prepublish": "bun run package",
+		"vscode:prepublish": "npm run package",
 		"build-core": "rolldown -c rolldown.config.ts --buildCore=true",
 		"compile": "rolldown -c rolldown.config.ts",
-		"watch": "bun run rolldown -c rolldown.config.ts --watch",
-		"package": "bun run rolldown -c rolldown.config.ts --production=true",
+		"watch": "rolldown -c rolldown.config.ts --watch",
+		"package": "rolldown -c rolldown.config.ts --production=true",
 		"compile-tests": "tsc -p . --outDir out",
 		"watch-tests": "tsc -p . -w --outDir out",
 		"pretest": "npm run compile-tests && npm run compile && npm run lint",
