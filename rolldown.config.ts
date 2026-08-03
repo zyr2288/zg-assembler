@@ -3,10 +3,10 @@ import pakcage from "./package.json" with { type: "json" };
 
 export default defineConfig((env) => {
 
-	let production = env.production === "true";
-	let buildCore = env.buildCore === "true";
+	const production = env.production === "true";
+	const buildCore = env.buildCore === "true";
 
-	let banner = `/**\n * ZG Assembler v${pakcage.version}\n */`;
+	const banner = `/**\n * ZG Assembler v${pakcage.version}\n */`;
 	const options: RolldownOptions = {};
 
 	// vscode插件
@@ -26,11 +26,10 @@ export default defineConfig((env) => {
 	// 编译成外部核心库
 	options.input = ["src/Core/ZGAssembler.ts"];
 	options.output = {
-		dir: "dist-core",
 		name: "ZGAssembler",
-		globals: {
-			ZGAssembler: "ZGAssembler"
-		},
+		entryFileNames: `[name]-iife-v${pakcage.version}.js`,
+		dir: "dist-core",
+		globals: { ZGAssembler: "ZGAssembler" },
 		format: "iife",
 		minify: true,
 		cleanDir: true,
