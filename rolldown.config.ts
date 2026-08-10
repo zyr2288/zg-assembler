@@ -6,7 +6,7 @@ export default defineConfig((env): RolldownOptions | RolldownOptions[] => {
 	const production = env.production === "true";
 	const buildCore = env.buildCore === "true";
 
-	const banner = `/**\n * ZG Assembler v${pakcage.version}\n * © 2022-present, ZENG-GE\n * License MIT\n */`;
+	const banner = `/**\n * ZG Assembler v${pakcage.version}\n * © 2022-present, ZENG GE\n * License MIT\n */`;
 
 	// vscode插件
 	if (!buildCore) {
