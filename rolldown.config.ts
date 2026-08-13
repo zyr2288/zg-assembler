@@ -19,7 +19,7 @@ export default defineConfig((env): RolldownOptions | RolldownOptions[] => {
 				cleanDir: true,
 				postBanner: banner,
 			},
-			external: ["vscode"],
+			external: ["vscode", "@vscode/debugadapter"],
 		}
 	}
 
