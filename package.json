@@ -237,7 +237,7 @@
 		"@vscode/test-electron": "^2.3.9",
 		"eslint": "^8.57.0",
 		"ts-loader": "^9.5.1",
-		"typescript": "^5.4.5"
+		"typescript": "^7.0.2"
 	},
 	"dependencies": {
 		"rolldown": "^1.2.2"

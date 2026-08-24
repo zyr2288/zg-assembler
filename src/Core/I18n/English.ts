@@ -48,6 +48,7 @@ export const English = {
 
 	"Please compile the file before Debug": "Please compile the file before Debug",
 	"Debugger can not connect to the emulator": "Debugger can not connect to the emulator",
+	"Debug error": "Debug error: {0}",
 	"Connect to emulator...{0}": "Connecting emulator ... {0}",
 	"Connected emulator": "Connected emulator",
 	"Cannot find launch.json": "Cannot find launch.json",

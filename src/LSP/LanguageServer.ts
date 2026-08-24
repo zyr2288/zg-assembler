@@ -10,7 +10,7 @@ import { Definition } from "./Definition";
 import { Intellisense } from "./Intellisense";
 import { HoverProvider } from "./HoverProvider";
 import { Rename } from "./Rename";
-import { ZGAssemblerDebugAdapter } from "./DebugAdapter/ZGAssemblerDebugAdapter";
+import { ZGAssemblerDebugAdapter } from "./DebugAdapter/DebugAdapter";
 import { ReferencesProvider } from "./ReferencesProvider";
 import { TextDecoration } from "./TextDecoration";
 import { LabelTreeProvider } from "./LabelTreeProvider";

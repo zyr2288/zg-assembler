@@ -251,9 +251,9 @@ export class DebugClient {
 
 }
 
-export type ClientConnectType = "close" | "tryConnect" | "connected" | "abort";
+export type ConnectStatue = "close" | "tryConnect" | "tryConnectFail" | "connected" | "abort";
 
-interface ConnectType {
+export interface ConnectType {
 	connected: null;
 	tryConnect: number;
 	tryConnectFail: null;
@@ -275,7 +275,7 @@ class TcpClient {
 	private host: string;
 	private port: number;
 	private messageStack: Record<string, <T extends keyof ReceiveDatas>(data: ReceiveDatas[T]) => void> = {};
-	private _connectType: ClientConnectType = "close";
+	private _connectType: ConnectStatue = "close";
 
 	constructor(option: ClientOption) {
 		this.clientSocket = new Socket();
@@ -344,7 +344,7 @@ class TcpClient {
 			this.ConnectMessageHandle?.("tryConnect", times + 1);
 			this.clientSocket.connect({ host: this.host, port: this.port });
 			await this.Wait(this.option.timeout);
-			switch (this._connectType as ClientConnectType) {
+			switch (this._connectType as ConnectStatue) {
 				case "connected":
 					this.ConnectMessageHandle?.("connected", null);
 					this.OnConnectedHandle?.();
@@ -445,3 +445,97 @@ class TcpClient {
 	}
 }
 //#endregion Tcp客户端
+
+/**
+ * 连接客户端用的Socket，只写了简单的发送和接收，具体在外部实现
+ * 只要实现两个接口即可
+ * 1. UpdateStatue：连接状态更新
+ * 2. ReceiveData：接收数据
+ */
+export class ConnectClient {
+
+	UpdateStatue?: <T extends keyof ConnectType>(type: ConnectStatue, data: ConnectType[T]) => void;
+	ReceiveData?: (data: Buffer) => void;
+
+	connectType: ConnectStatue = "tryConnect";
+	private option = { host: "127.0.0.1", port: 4065, timeOut: 1, retryTimes: 10 };
+	private socket: Socket;
+
+	constructor(clientOption?: { host: string, port: number }) {
+		if (clientOption)
+			Object.assign(this.option, clientOption);
+
+		this.socket = new Socket();
+
+		// 连接成功
+		this.socket.on("connect", () => {
+			this.connectType = "connected";
+			this.UpdateStatue?.("connected", null);
+		});
+
+		// 连接关闭
+		this.socket.on("close", () => {
+			switch (this.connectType) {
+				case "abort":
+					this.connectType = "close";
+					this.Close();
+					break;
+			}
+		});
+
+		// 接收数据
+		this.socket.on("data", (e) => this.ReceiveData?.(e));
+	}
+
+	async Connect() {
+		this.socket.setTimeout(5 * 1000);
+		if (this.option.retryTimes < 1)
+			this.option.retryTimes = 1;
+
+		let times = 0;
+		this.connectType = "tryConnect";
+		while (times < this.option.retryTimes) {
+			this.UpdateStatue?.("tryConnect", times + 1);
+			this.socket.connect({ host: this.option.host, port: this.option.port });
+			await this.Wait(this.option.timeOut);
+			switch (this.connectType as ConnectStatue) {
+				case "connected":
+					this.UpdateStatue?.("connected", null);
+					return true;
+				case "abort":
+					return false;
+			}
+
+			times++;
+		}
+
+		this.UpdateStatue?.("tryConnectFail", null);
+		this.Close();
+		return false;
+	}
+
+	/**
+	 * 将消息转换为JSON字符串并发送
+	 * @param data 消息数据
+	 */
+	SendMessage(data: any) {
+		let json = JSON.stringify(data);
+		this.socket.write(json, "utf8");
+	}
+
+	Close() {
+		if (this.connectType === "close")
+			return;
+
+		this.connectType = "abort";
+		this.socket.destroySoon();
+	}
+
+	private async Wait(second: number): Promise<void> {
+		return new Promise((resolve, reject) => {
+			setTimeout(() => {
+				resolve();
+			}, second * 1000);
+		});
+	}
+}

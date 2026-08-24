@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { LSPUtils } from "../LSPUtils";
-import { ZGAssemblerDebugConfig, ZGAssemblerDebugSession } from "./ZGAssemblerDebugSession";
+import { ZGAssemblerDebugConfig, ZGAssemblerDebugSession } from "./DebugMessage";
 import { AssCommands } from "../AssCommands";
 
 /**与lanch的type一致 */
@@ -14,23 +14,18 @@ export class ZGAssemblerDebugAdapter {
 	} = {};
 
 	static Initialize(context: vscode.ExtensionContext) {
-		context.subscriptions.push(
-			vscode.debug.registerDebugConfigurationProvider(DebugType, new ZGAssemblerDebugConfigProvider())
-		);
+		context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider(DebugType, new ZGAssemblerDebugConfigProvider()));
+		context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory(DebugType, new ZGAssemblerDebugFactory()));
+		// 热重载的，暂时不用
+		// context.subscriptions.push(
+		// 	vscode.commands.registerCommand(DebugReloadCommand, () => {
+		// 		let folder = vscode.workspace.workspaceFolders?.[0];
+		// 		if (!folder)
+		// 			return;
 
-		context.subscriptions.push(
-			vscode.debug.registerDebugAdapterDescriptorFactory(DebugType, new ZGAssemblerDebugFactory())
-		);
-
-		context.subscriptions.push(
-			vscode.commands.registerCommand(DebugReloadCommand, () => {
-				let folder = vscode.workspace.workspaceFolders?.[0];
-				if (!folder)
-					return;
-
-				ZGAssemblerDebugAdapter.debugAdapterOption.HotReloadHandle?.(folder.uri.fsPath);
-			})
-		);
+		// 		ZGAssemblerDebugAdapter.debugAdapterOption.HotReloadHandle?.(folder.uri.fsPath);
+		// 	})
+		// );
 	}
 }
 
@@ -38,14 +33,15 @@ class ZGAssemblerDebugFactory implements vscode.DebugAdapterDescriptorFactory {
 	createDebugAdapterDescriptor(session: vscode.DebugSession): vscode.ProviderResult<vscode.DebugAdapterTracker> {
 		const debugSession = new ZGAssemblerDebugSession(session.configuration);
 		// ZGAssemblerDebugAdapter.debugAdapterOption.reloadRomFunction = debugSession.debugClient.ReloadRom.bind(debugSession.debugClient);
-		ZGAssemblerDebugAdapter.debugAdapterOption.HotReloadHandle = async () => {
-			const rootFolder = vscode.workspace.workspaceFolders?.[0];
-			if (!rootFolder)
-				return;
-			
-			await AssCommands.CompileEntryFile();
-			await debugSession.debugClient.HotReload(rootFolder.uri.fsPath, debugSession.config.romOffset);
-		}
+		// 热重载的，暂时不用
+		// ZGAssemblerDebugAdapter.debugAdapterOption.HotReloadHandle = async () => {
+		// 	const rootFolder = vscode.workspace.workspaceFolders?.[0];
+		// 	if (!rootFolder)
+		// 		return;
+
+		// 	await AssCommands.CompileEntryFile();
+		// 	await debugSession.client.HotReload(rootFolder.uri.fsPath, debugSession.config.romOffset);
+		// }
 		const temp = new vscode.DebugAdapterInlineImplementation(debugSession);
 		return temp;
 	}

@@ -50,6 +50,7 @@ export const Chinese: LocalizationMsg = {
 
 	"Please compile the file before Debug": "请在Debug之前编译文件",
 	"Debugger can not connect to the emulator": "调试器未能连接模拟器",
+	"Debug error": "Debug错误: {0}",
 	"Connect to emulator...{0}": "正在连接模拟器 ... {0}",
 	"Connected emulator": "已连接到模拟器",
 	"Cannot find launch.json": "找不到 launch.json",
