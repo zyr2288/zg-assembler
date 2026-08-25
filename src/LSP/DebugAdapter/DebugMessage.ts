@@ -23,6 +23,20 @@ interface DebugMessageReceive {
 	};
 }
 
+/** 发送到模拟器消息的格式 */
+interface DebugMsgToEmu {
+	debugInit: { cpuType: string };
+	/**设定断点 */
+	breakpointSet: { baseAddress: number, orgAddress: number };
+	/**移除断点 */
+	breakpointRemove: { baseAddress: number, orgAddress: number };
+}
+
+/** 从模拟器接收消息的格式 */
+interface DebugMsgFromEmu {
+
+}
+
 export interface ZGAssemblerDebugConfig extends vscode.DebugConfiguration {
 	type: "zgassembly";
 	request: "attach";
@@ -74,6 +88,9 @@ export class ZGAssemblerDebugSession extends DebugSession {
 		// 在这里写所有从模拟器接收的消息所映射的函数
 		this.functionMap.set("breakpointHit", this.BreakpointHit.bind(this));
 		this.functionMap.set("resume", this.EmuResume.bind(this));
+		this.functionMap.set("pause", () => {
+			this.sendEvent(new StoppedEvent("pause", SessionThreadID));
+		})
 	}
 
 	/***** 消息处理 *****/
@@ -84,38 +101,30 @@ export class ZGAssemblerDebugSession extends DebugSession {
 	 * @param data 接收的消息
 	 * @returns 
 	 */
-	private MessageReceive(data: Buffer) {
+	private MessageReceive(data: Uint8Array) {
 		let json = this.textDecoder.decode(data);
-		let receiveMsg: (DebugMessageReceive | DebugMessageRequest)[] = JSON.parse(json);
+		let receiveMsg: DebugMessageReceive | DebugMessageRequest = JSON.parse(json);
 
-		let response: any[] = [];
-		for (let msg of receiveMsg) {
-			// 如果接收的消息包含method，则是请求消息
-			if ("method" in msg) {
-				const func = this.functionMap.get(msg.method);
-				if (func) {
-					let temp = { jsonRPC: "2.0", id: msg.id, result: func(msg.params) };
-					if (temp.id) {
-						response.push(temp);
-					}
-				} else {
-					const error = LSPUtils.assembler.localization.GetMessage("Debug error", `Method ${msg.method} not found`);
-					LSPUtils.assembler.fileUtils.ShowMessage(error);
-				}
-				continue;
-			}
+		if ("method" in receiveMsg) {
+			const func = this.functionMap.get(receiveMsg.method);
+			if (func) {
+				let temp = { jsonRPC: "2.0", id: receiveMsg.id, result: func(receiveMsg.params) } as DebugMessageReceive;
+				if (temp.id)
+					this.MessageSend(temp);
 
-			if (msg.error) {
-				const error = LSPUtils.assembler.localization.GetMessage("Debug error", `${msg.error.code}, ${msg.error.message}`)
+			} else {
+				const error = LSPUtils.assembler.localization.GetMessage("Debug error", `Method ${receiveMsg.method} not found`);
 				LSPUtils.assembler.fileUtils.ShowMessage(error);
-				return;
 			}
-			this.messageStack[msg.id!]!(msg);
+			return;
 		}
 
-		if (response.length > 0)
-			this.client.SendMessage(response);
-
+		if (receiveMsg.error) {
+			const error = LSPUtils.assembler.localization.GetMessage("Debug error", `${receiveMsg.error.code}, ${receiveMsg.error.message}`)
+			LSPUtils.assembler.fileUtils.ShowMessage(error);
+			return;
+		}
+		this.messageStack[receiveMsg.id!]!(receiveMsg);
 	}
 	//#endregion 接收消息
 
@@ -125,8 +134,9 @@ export class ZGAssemblerDebugSession extends DebugSession {
 	 * @param request 请求消息
 	 * @returns 响应消息
 	 */
-	private MessageSend(request: DebugMessageRequest) {
+	private MessageSend(request: DebugMessageRequest | DebugMessageReceive): Promise<any> {
 		return new Promise((resolve, reject) => {
+			this.client.SendMessage(request);
 			if (!request.id) {
 				resolve(undefined);
 				return;
@@ -184,6 +194,9 @@ export class ZGAssemblerDebugSession extends DebugSession {
 
 		response.body = response.body || {};
 
+		let requestToEmu: DebugMessageRequest = { jsonRPC: "2.0", method: "debugInit", params: { cpuType: this.GetCpuType() } };
+		await this.MessageSend(requestToEmu);
+
 		this.sendResponse(response);
 		this.sendEvent(new InitializedEvent());
 	}
@@ -229,36 +242,36 @@ export class ZGAssemblerDebugSession extends DebugSession {
 
 	//#region 暂停请求
 	protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments, request?: DebugProtocol.Request): void {
-		let message = { jsonRPC: "2.0", method: "pause" } as DebugMessageRequest;
-		this.client.SendMessage(message);
+		let message: DebugMessageRequest = { jsonRPC: "2.0", method: "pause" };
+		this.MessageSend(message);
 		this.sendResponse(response);
 	}
 	//#endregion 暂停请求
 
 	//#region 继续/恢复请求
 	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments, request?: DebugProtocol.Request): void {
-		let message = { jsonRPC: "2.0", method: "resume" } as DebugMessageRequest;
-		this.client.SendMessage(message);
+		let message: DebugMessageRequest = { jsonRPC: "2.0", method: "resume" };
+		this.MessageSend(message);
 		this.sendResponse(response);
 	}
 	//#endregion 继续/恢复请求
 
 	//#region 单步请求
 	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments, request?: DebugProtocol.Request): void {
-		let message = { jsonRPC: "2.0", method: "step-into" } as DebugMessageRequest;
-		this.client.SendMessage(message);
+		let message: DebugMessageRequest = { jsonRPC: "2.0", method: "step-into" };
+		this.MessageSend(message);
 		this.sendResponse(response);
 	}
 
 	protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments, request?: DebugProtocol.Request): void {
-		let message = { jsonRPC: "2.0", method: "step-out" } as DebugMessageRequest;
-		this.client.SendMessage(message);
+		let message: DebugMessageRequest = { jsonRPC: "2.0", method: "step-out" };
+		this.MessageSend(message);
 		this.sendResponse(response);
 	}
 
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments, request?: DebugProtocol.Request): void {
-		let message = { jsonRPC: "2.0", method: "debug-step-over" } as DebugMessageRequest;
-		this.client.SendMessage(message);
+		let message: DebugMessageRequest = { jsonRPC: "2.0", method: "step-over" };
+		this.MessageSend(message);
 		this.sendResponse(response);
 	}
 	//#endregion 单步请求
@@ -323,6 +336,23 @@ export class ZGAssemblerDebugSession extends DebugSession {
 
 	/***** 自定义消息处理 *****/
 
+	private CreateId() {
+		return Math.random().toString(36).substring(8);
+	}
+
+	//#region 根据平台获取CPU类型
+	private GetCpuType() {
+		switch (LSPUtils.assembler.config.ProjectSetting.platform) {
+			case "6502":
+				return "Nes";
+			case "65c816":
+				return "Snes";
+			case "SM83-gb":
+				return "Gba";
+		}
+	}
+	//#endregion 根据平台获取CPU类型
+
 	//#region 模拟器命中某个断点消息处理
 	private BreakpointHit(data: { baseAddress: number }) {
 		const temp = data.baseAddress + this.config.romOffset;
@@ -362,7 +392,6 @@ export class ZGAssemblerDebugSession extends DebugSession {
 		}
 
 		const tempSet = new Set(collection.keys());
-		const responseList:any[] = [];
 		for (let i = 0; i < lineNumbers.length; i++) {
 			const lineNumber = lineNumbers[i] - this.debugOption.debugBaseLine;
 			const colLine = collection.get(lineNumber);
@@ -376,11 +405,11 @@ export class ZGAssemblerDebugSession extends DebugSession {
 			result.push({ line: lineNumber + this.debugOption.debugBaseLine, verified: !!line });
 			if (line) {
 				collection.set(lineNumber, { baseAddr: line.baseAddress, orgAddr: line.line.lineResult.address.org, verified: !!line });
-				let message = {
-					jsonRPC: "2.0", method: "breakpoint-set",
+				const message: DebugMessageRequest = {
+					jsonRPC: "2.0", method: "breakpointSet",
 					params: { baseAddress: line.baseAddress - romOffset, orgAddress: line.line.lineResult.address.org }
-				} as DebugMessageRequest;
-				responseList.push(message);
+				};
+				this.MessageSend(message);
 			}
 		}
 
@@ -390,15 +419,12 @@ export class ZGAssemblerDebugSession extends DebugSession {
 			if (!line)
 				continue;
 
-			let message = {
-				jsonRPC: "2.0", method: "breakpoint-remove",
+			const message: DebugMessageRequest = {
+				jsonRPC: "2.0", method: "breakpointRemove",
 				params: { baseAddress: line.baseAddr - romOffset, orgAddress: line.orgAddr }
-			} as DebugMessageRequest;
-			responseList.push(message);
+			};
+			this.MessageSend(message);
 		}
-
-		if (responseList.length > 0)
-			this.client.SendMessage(responseList);
 
 		return result;
 	}

@@ -8,55 +8,6 @@ interface MsgDataType<T, K> {
 	waiting: boolean;
 }
 
-/**发送或接受的消息 */
-interface ReceiveDatas {
-	"debug-init": { send: { cpuType: string }, receive: undefined, waiting: false };
-	/**设定断点 */
-	"breakpoint-set": { send: { baseAddress: number, orgAddress: number }, receive: undefined, waiting: false };
-	/**移除断点 */
-	"breakpoint-remove": { send: { baseAddress: number, orgAddress: number }, receive: undefined, waiting: false };
-	/**命中断点 */
-	"breakpoint-hit": { send: { baseAddress: number, orgAddress: number }, receive: undefined, waiting: false };
-	/**获取断点 */
-	"breakpoint-get": { send: undefined, receive: Record<number, number>, waiting: false };
-	/**获取寄存器信息 */
-	"registers-get": { send: undefined, receive: Record<string, number>, waiting: true };
-	/**暂停 */
-	"pause": { send: undefined, receive: undefined, waiting: false };
-	/**继续 */
-	"resume": { send: undefined, receive: undefined, waiting: false };
-	/**单步进入 */
-	"step-into": { send: undefined, receive: undefined, waiting: false };
-	/**单步出 */
-	"step-out": { send: undefined, receive: undefined, waiting: false };
-	/**单步跳过 */
-	"step-over": { send: undefined, receive: undefined, waiting: false };
-	/**重启 */
-	"reset": { send: undefined, receive: undefined, waiting: false };
-	/**重新载入ROM */
-	"reload": { send: undefined, receive: undefined, waiting: false };
-	/**热重载 */
-	"hot-reload": { send: { path: string }, receive: { success: boolean }, waiting: false };
-	/**当前游戏状态 */
-	"game-state": { send: undefined, receive: { state: "open" | "close" }, waiting: false };
-}
-
-/**连接选项 */
-export interface ClientOption {
-	/**主机地址 */
-	host: string;
-	/**端口 */
-	port: number;
-	/**是否断线重连 */
-	tryReconnect?: boolean;
-	/**重连次数 */
-	tryTimes?: number;
-	/**超时时间 */
-	timeoutSecond?: number;
-	/**编辑器Debug行号基础，默认1 */
-	debugBaseLinenumber?: number;
-}
-
 export type ConnectStatue = "close" | "tryConnect" | "tryConnectFail" | "connected" | "abort";
 
 export interface ConnectType {
@@ -74,12 +25,15 @@ export interface ConnectType {
 export class ConnectClient {
 
 	UpdateStatue?: <T extends keyof ConnectType>(type: ConnectStatue, data: ConnectType[T]) => void;
-	ReceiveData?: (data: Buffer) => void;
+	ReceiveData?: (data: Uint8Array) => void;
 	ClientCloseEvent?: () => void;
 
 	connectType: ConnectStatue = "tryConnect";
 	private option = { host: "127.0.0.1", port: 4065, timeOut: 1, retryTimes: 10 };
 	private socket: Socket;
+	private textEncoder = new TextEncoder();
+	private textDecoder = new TextDecoder();
+	private buffer: Buffer = Buffer.from([]);
 
 	constructor(clientOption?: { host: string, port: number }) {
 		if (clientOption)
@@ -106,7 +60,29 @@ export class ConnectClient {
 		});
 
 		// 接收数据
-		this.socket.on("data", (e) => this.ReceiveData?.(e));
+		this.socket.on("data", (chunk) => {
+			// 追加新数据
+			this.buffer = Buffer.concat([this.buffer, chunk]);
+
+			// 循环处理所有完整消息
+			while (this.buffer.length >= 4) {
+				const msgLength = this.buffer.readUInt32LE(0); // 读取长度（小端）
+				const totalLength = 4 + msgLength;
+
+				// 数据还不够，等待更多
+				if (this.buffer.length < totalLength)
+					break; 
+
+				// 提取消息体（去掉长度前缀）
+				const messageBuffer = this.buffer.subarray(4, totalLength);
+				// 转换为 Uint8Array 传给 ReceiveData（可选）
+				const messageArray = new Uint8Array(messageBuffer);
+				this.ReceiveData?.(messageArray);
+
+				// 移除已处理的数据
+				this.buffer = this.buffer.subarray(totalLength);
+			}
+		});
 	}
 
 	async Connect() {
@@ -141,8 +117,12 @@ export class ConnectClient {
 	 * @param data 消息数据
 	 */
 	SendMessage(data: any) {
-		let json = JSON.stringify(data);
-		this.socket.write(json, "utf8");
+		const json = JSON.stringify(data);
+		const body = Buffer.from(json, 'utf8');
+		const packet = Buffer.alloc(4 + body.length);
+		packet.writeUInt32LE(body.length, 0);
+		body.copy(packet, 4);
+		this.socket.write(packet);
 	}
 
 	Close() {
