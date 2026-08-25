@@ -13,11 +13,9 @@ export default defineConfig((env): RolldownOptions | RolldownOptions[] => {
 		return {
 			input: ["src/extension.ts", "src/Core/ZGAssembler.ts", "src/Plugin"],
 			output: {
-				dir: "dist",
-				format: "cjs",
-				minify: production,
-				cleanDir: true,
-				postBanner: banner,
+				dir: "dist", format: "cjs",
+				minify: production, cleanDir: true,
+				postBanner: banner, sourcemap: !production,
 			},
 			external: ["vscode", "@vscode/debugadapter"],
 		}

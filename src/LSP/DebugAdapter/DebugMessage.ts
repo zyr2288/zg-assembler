@@ -67,6 +67,9 @@ export class ZGAssemblerDebugSession extends DebugSession {
 		this.client = new ConnectClient(this.config);
 		this.client.UpdateStatue = this.UpdateStatue.bind(this);
 		this.client.ReceiveData = this.MessageReceive.bind(this);
+		this.client.ClientCloseEvent = () => {
+			this.sendEvent(new TerminatedEvent());
+		}
 
 		// 在这里写所有从模拟器接收的消息所映射的函数
 		this.functionMap.set("breakpointHit", this.BreakpointHit.bind(this));
@@ -83,30 +86,36 @@ export class ZGAssemblerDebugSession extends DebugSession {
 	 */
 	private MessageReceive(data: Buffer) {
 		let json = this.textDecoder.decode(data);
-		let receiveMsg: DebugMessageReceive | DebugMessageRequest = JSON.parse(json);
+		let receiveMsg: (DebugMessageReceive | DebugMessageRequest)[] = JSON.parse(json);
 
-		// 如果接收的消息包含method，则是请求消息
-		if ("method" in receiveMsg) {
-			const func = this.functionMap.get(receiveMsg.method);
-			if (func) {
-				let response = { jsonRPC: "2.0", id: receiveMsg.id, result: func(receiveMsg.params) };
-				if (response.id)
-					this.client.SendMessage(response);
-
-				return;
+		let response: any[] = [];
+		for (let msg of receiveMsg) {
+			// 如果接收的消息包含method，则是请求消息
+			if ("method" in msg) {
+				const func = this.functionMap.get(msg.method);
+				if (func) {
+					let temp = { jsonRPC: "2.0", id: msg.id, result: func(msg.params) };
+					if (temp.id) {
+						response.push(temp);
+					}
+				} else {
+					const error = LSPUtils.assembler.localization.GetMessage("Debug error", `Method ${msg.method} not found`);
+					LSPUtils.assembler.fileUtils.ShowMessage(error);
+				}
+				continue;
 			}
 
-			const error = LSPUtils.assembler.localization.GetMessage("Debug error", `Method ${receiveMsg.method} not found`);
-			LSPUtils.assembler.fileUtils.ShowMessage(error);
-			return;
+			if (msg.error) {
+				const error = LSPUtils.assembler.localization.GetMessage("Debug error", `${msg.error.code}, ${msg.error.message}`)
+				LSPUtils.assembler.fileUtils.ShowMessage(error);
+				return;
+			}
+			this.messageStack[msg.id!]!(msg);
 		}
 
-		if (receiveMsg.error) {
-			const error = LSPUtils.assembler.localization.GetMessage("Debug error", `${receiveMsg.error.code}, ${receiveMsg.error.message}`)
-			LSPUtils.assembler.fileUtils.ShowMessage(error);
-			return;
-		}
-		this.messageStack[receiveMsg.id!]!(receiveMsg);
+		if (response.length > 0)
+			this.client.SendMessage(response);
+
 	}
 	//#endregion 接收消息
 
@@ -353,6 +362,7 @@ export class ZGAssemblerDebugSession extends DebugSession {
 		}
 
 		const tempSet = new Set(collection.keys());
+		const responseList:any[] = [];
 		for (let i = 0; i < lineNumbers.length; i++) {
 			const lineNumber = lineNumbers[i] - this.debugOption.debugBaseLine;
 			const colLine = collection.get(lineNumber);
@@ -370,7 +380,7 @@ export class ZGAssemblerDebugSession extends DebugSession {
 					jsonRPC: "2.0", method: "breakpoint-set",
 					params: { baseAddress: line.baseAddress - romOffset, orgAddress: line.line.lineResult.address.org }
 				} as DebugMessageRequest;
-				this.client.SendMessage(message);
+				responseList.push(message);
 			}
 		}
 
@@ -384,8 +394,11 @@ export class ZGAssemblerDebugSession extends DebugSession {
 				jsonRPC: "2.0", method: "breakpoint-remove",
 				params: { baseAddress: line.baseAddr - romOffset, orgAddress: line.orgAddr }
 			} as DebugMessageRequest;
-			this.client.SendMessage(message);
+			responseList.push(message);
 		}
+
+		if (responseList.length > 0)
+			this.client.SendMessage(responseList);
 
 		return result;
 	}
