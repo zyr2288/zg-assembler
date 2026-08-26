@@ -50,3 +50,7 @@ export default defineConfig((env): RolldownOptions | RolldownOptions[] => {
 
 	return [option1, option2, option3];
 });
+
+function ProccessEnv(isProduction: boolean) {
+
+}

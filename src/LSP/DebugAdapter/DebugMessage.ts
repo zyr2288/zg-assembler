@@ -8,7 +8,7 @@ import { DebugProtocol } from "@vscode/debugprotocol";
 interface DebugMessageRequest {
 	jsonRPC: "2.0";
 	id?: string;
-	method: string;
+	method: keyof DebugMsgToEmu;
 	params?: Record<string, any>;
 }
 
@@ -30,11 +30,17 @@ interface DebugMsgToEmu {
 	breakpointSet: { baseAddress: number, orgAddress: number };
 	/**移除断点 */
 	breakpointRemove: { baseAddress: number, orgAddress: number };
+	pause: undefined;
+	resume: undefined;
+	stepInto: undefined;
+	stepOut: undefined;
+	stepOver: undefined;
 }
 
 /** 从模拟器接收消息的格式 */
 interface DebugMsgFromEmu {
-
+	breakpointHit: { baseAddress: number };
+	pause: undefined;
 }
 
 export interface ZGAssemblerDebugConfig extends vscode.DebugConfiguration {
@@ -194,8 +200,8 @@ export class ZGAssemblerDebugSession extends DebugSession {
 
 		response.body = response.body || {};
 
-		let requestToEmu: DebugMessageRequest = { jsonRPC: "2.0", method: "debugInit", params: { cpuType: this.GetCpuType() } };
-		await this.MessageSend(requestToEmu);
+		const requestToEmu: DebugMessageRequest = { jsonRPC: "2.0", method: "debugInit", params: { cpuType: this.config.cpuType } };
+		this.MessageSend(requestToEmu);
 
 		this.sendResponse(response);
 		this.sendEvent(new InitializedEvent());
@@ -226,20 +232,6 @@ export class ZGAssemblerDebugSession extends DebugSession {
 	}
 	//#endregion 设定断点请求
 
-	//#region 附加进程请求
-	/**附加进程请求 */
-	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments, request?: DebugProtocol.Request) {
-		if (this.client.connectType !== "connected") {
-			this.sendEvent(new TerminatedEvent());
-			return;
-		}
-
-		// 执行初始化
-		this.sendResponse(response);
-		this.sendEvent(new InitializedEvent());
-	}
-	//#endregion 附加进程请求
-
 	//#region 暂停请求
 	protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments, request?: DebugProtocol.Request): void {
 		let message: DebugMessageRequest = { jsonRPC: "2.0", method: "pause" };
@@ -258,19 +250,19 @@ export class ZGAssemblerDebugSession extends DebugSession {
 
 	//#region 单步请求
 	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments, request?: DebugProtocol.Request): void {
-		let message: DebugMessageRequest = { jsonRPC: "2.0", method: "step-into" };
+		let message: DebugMessageRequest = { jsonRPC: "2.0", method: "stepInto" };
 		this.MessageSend(message);
 		this.sendResponse(response);
 	}
 
 	protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments, request?: DebugProtocol.Request): void {
-		let message: DebugMessageRequest = { jsonRPC: "2.0", method: "step-out" };
+		let message: DebugMessageRequest = { jsonRPC: "2.0", method: "stepOut" };
 		this.MessageSend(message);
 		this.sendResponse(response);
 	}
 
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments, request?: DebugProtocol.Request): void {
-		let message: DebugMessageRequest = { jsonRPC: "2.0", method: "step-over" };
+		let message: DebugMessageRequest = { jsonRPC: "2.0", method: "stepOver" };
 		this.MessageSend(message);
 		this.sendResponse(response);
 	}
@@ -290,6 +282,22 @@ export class ZGAssemblerDebugSession extends DebugSession {
 	}
 	//#endregion 断开连接
 
+	/***** 勿动以下方法 *****/
+
+	//#region 附加进程请求
+	/**附加进程请求 */
+	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments, request?: DebugProtocol.Request) {
+		if (this.client.connectType !== "connected") {
+			this.sendEvent(new TerminatedEvent());
+			return;
+		}
+
+		// 执行初始化
+		this.sendResponse(response);
+		this.sendEvent(new InitializedEvent());
+	}
+	//#endregion 附加进程请求
+
 	//#region 线程请求，勿动
 	protected threadsRequest(response: DebugProtocol.ThreadsResponse, request?: DebugProtocol.Request): void {
 		// session进程，不能移除，移除后无法停止在断点
@@ -302,8 +310,11 @@ export class ZGAssemblerDebugSession extends DebugSession {
 
 	//#region 线程追踪，勿动
 	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments, request?: DebugProtocol.Request): void {
-		if (!this.hitStack)
+		if (!this.hitStack) {
+			response.body = { stackFrames: [] };
+			this.sendResponse(response);
 			return;
+		}
 
 		response.body = { stackFrames: [this.hitStack] };
 		this.sendResponse(response);
@@ -340,19 +351,6 @@ export class ZGAssemblerDebugSession extends DebugSession {
 		return Math.random().toString(36).substring(8);
 	}
 
-	//#region 根据平台获取CPU类型
-	private GetCpuType() {
-		switch (LSPUtils.assembler.config.ProjectSetting.platform) {
-			case "6502":
-				return "Nes";
-			case "65c816":
-				return "Snes";
-			case "SM83-gb":
-				return "Gba";
-		}
-	}
-	//#endregion 根据平台获取CPU类型
-
 	//#region 模拟器命中某个断点消息处理
 	private BreakpointHit(data: { baseAddress: number }) {
 		const temp = data.baseAddress + this.config.romOffset;
@@ -363,7 +361,7 @@ export class ZGAssemblerDebugSession extends DebugSession {
 			return;
 		}
 		const source = new Source(line.filePath, line.filePath);
-		this.hitStack = new StackFrame(SessionThreadID, "line", source, line.lineNumber + 1);
+		this.hitStack = new StackFrame(SessionThreadID, "line", source, line.lineNumber);
 		this.sendEvent(new StoppedEvent("breakpoint", SessionThreadID));
 	}
 	//#endregion 模拟器命中某个断点消息处理

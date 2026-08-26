@@ -9,7 +9,7 @@
 	"explorer.fileNesting.patterns": {
 		"package.json": "package-lock.json, package.*.json, webpack.*.js, bun.lock",
 		"README.md": "CHANGELOG.md, ChangeLog-History.md, LICENSE.md",
-		"rolldown.config.ts": "tsconfig.json"
+		"rolldown.config.ts": "tsconfig.json, envPackage.ts"
 	},
 	"search.exclude": {
 		"out": true, // set this to false to include "out" folder in search results
