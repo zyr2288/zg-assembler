@@ -9,10 +9,13 @@
 	"explorer.fileNesting.patterns": {
 		"package.json": "package-lock.json, package.*.json, webpack.*.js, bun.lock",
 		"README.md": "CHANGELOG.md, ChangeLog-History.md, LICENSE.md",
-		"rolldown.config.ts": "tsconfig.json, envPackage.ts"
+		"rolldown.config.ts": "tsconfig.json, envPackage.ts, .oxfmtrc.json, .env.*, env.d.ts"
 	},
 	"search.exclude": {
 		"out": true, // set this to false to include "out" folder in search results
 		"dist": true // set this to false to include "dist" folder in search results
+	},
+	"[json]": {
+		"editor.defaultFormatter": "vscode.json-language-features"
 	}
 }

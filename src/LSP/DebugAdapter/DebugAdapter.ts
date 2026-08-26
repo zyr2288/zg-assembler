@@ -30,6 +30,9 @@ export class ZGAssemblerDebugAdapter {
 }
 
 class ZGAssemblerDebugFactory implements vscode.DebugAdapterDescriptorFactory {
+
+	static isRegister = true;
+
 	createDebugAdapterDescriptor(session: vscode.DebugSession): vscode.ProviderResult<vscode.DebugAdapterTracker> {
 		const debugSession = new ZGAssemblerDebugSession(session.configuration);
 		// ZGAssemblerDebugAdapter.debugAdapterOption.reloadRomFunction = debugSession.debugClient.ReloadRom.bind(debugSession.debugClient);

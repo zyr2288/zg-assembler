@@ -1,5 +1,6 @@
 import { defineConfig, OutputOptions, RolldownOptions } from "rolldown";
 import pakcage from "./package.json" with { type: "json" };
+import { InlineEnvPlugin } from "./envPackage";
 
 export default defineConfig((env): RolldownOptions | RolldownOptions[] => {
 
@@ -18,6 +19,7 @@ export default defineConfig((env): RolldownOptions | RolldownOptions[] => {
 				postBanner: banner, sourcemap: !production,
 			},
 			external: ["vscode", "@vscode/debugadapter"],
+			plugins: [InlineEnvPlugin({ production })],
 		}
 	}
 
@@ -29,28 +31,29 @@ export default defineConfig((env): RolldownOptions | RolldownOptions[] => {
 			minify: true, cleanDir: false, postBanner: banner,
 			extend: true
 		} as OutputOptions,
+
 	};
 
-	let output;
+	let output, allOptions: RolldownOptions[] = [];
 
-	const option1 = structuredClone(baseOption);
-	output = option1.output as OutputOptions;
+	allOptions[0] = structuredClone(baseOption);
+	output = allOptions[0].output as OutputOptions;
 	output.entryFileNames = `[name]-${output.format}-v${pakcage.version}.js`;
 	output.cleanDir = true;
 
-	const option2 = structuredClone(baseOption);
-	output = option2.output as OutputOptions;
+	allOptions[1] = structuredClone(baseOption);
+	output = allOptions[1].output as OutputOptions;
 	output.format = "iife";
 	output.entryFileNames = `[name]-${output.format}-v${pakcage.version}.js`;
 
-	const option3 = structuredClone(baseOption);
-	output = option3.output as OutputOptions;
+	allOptions[2] = structuredClone(baseOption);
+	output = allOptions[2].output as OutputOptions;
 	output.format = "esm";
 	output.entryFileNames = `[name]-${output.format}-v${pakcage.version}.js`;
 
-	return [option1, option2, option3];
+	for(const option of allOptions) {
+		option.plugins = [InlineEnvPlugin({ production })];
+	}
+
+	return allOptions;
 });
-
-function ProccessEnv(isProduction: boolean) {
-
-}
