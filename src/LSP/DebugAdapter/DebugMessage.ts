@@ -188,13 +188,6 @@ export class ZGAssemblerDebugSession extends DebugSession {
 	/**插件初始化 */
 	protected async initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments) {
 
-		if (process.env.ZGAssembler_TestDebugAdapter === "true") {
-			response.body = response.body || {};
-			this.sendResponse(response);
-			this.sendEvent(new InitializedEvent());
-			return;
-		}
-
 		// 如果没有编译文件，则停止调试
 		if (!LSPUtils.assembler.compiler.enviroment.compileResult.finished) {
 			const error = LSPUtils.assembler.localization.GetMessage("Please compile the file before Debug");
@@ -223,12 +216,6 @@ export class ZGAssemblerDebugSession extends DebugSession {
 	 * @param request 请求消息
 	 */
 	protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments, request?: DebugProtocol.Request): void {
-		if (process.env.ZGAssembler_TestDebugAdapter === "true") {
-			response.body = { breakpoints: [] };
-			this.sendResponse(response);
-			return;
-		}
-
 		response.body = { breakpoints: [] };
 		if (args.source.path && args.breakpoints) {
 			const lineNumbers = args.breakpoints.map(v => v.line);
@@ -299,19 +286,11 @@ export class ZGAssemblerDebugSession extends DebugSession {
 	//#region 附加进程请求
 	/**附加进程请求 */
 	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments, request?: DebugProtocol.Request) {
-		if (process.env.ZGAssembler_TestDebugAdapter === "true") {
-			// 执行初始化
-			this.sendResponse(response);
-			this.sendEvent(new InitializedEvent());
-			return;
-		}
-
 		if (this.client.connectType !== "connected") {
 			this.sendEvent(new TerminatedEvent());
 			return;
 		}
 
-		// 执行初始化
 		this.sendResponse(response);
 		this.sendEvent(new InitializedEvent());
 	}
@@ -375,15 +354,28 @@ export class ZGAssemblerDebugSession extends DebugSession {
 		const temp = data.baseAddress + this.config.romOffset;
 		const line = this.CompileDebug.GetDebugLine(temp);
 		if (!line) {
-			this.hitStack = new StackFrame(SessionThreadID, "line");
+			this.hitStack = new StackFrame(this.frameStack++, "line");
 			this.sendEvent(new StoppedEvent("pause", SessionThreadID));
 			return;
 		}
-		const source = new Source("D:\\ProgramTest\\ZGAssembler-Test\\BattleCity\\main.asm", "D:\\ProgramTest\\ZGAssembler-Test\\BattleCity\\main.asm");
-		this.hitStack = new StackFrame(this.frameStack++, "line", source, 1);
+		const source = new Source(line.filePath, line.filePath);
+		this.hitStack = new StackFrame(this.frameStack++, "line", source, line.lineNumber + 1);
 		this.sendEvent(new StoppedEvent("breakpoint", SessionThreadID));
 	}
 	//#endregion 模拟器命中某个断点消息处理
+
+	//#region 移除断点
+	private BreakpointRemove(data: { baseAddress: number }) {
+		const tempAddr = data.baseAddress + this.config.romOffset;
+		const line = this.CompileDebug.GetDebugLine(tempAddr);
+		if (!line)
+			return;
+
+		const debugLine = this.debugCollection.get(line.filePath)?.get(line.lineNumber);
+		if (!debugLine)
+			return;
+	}
+	//#endregion 移除断点
 
 	//#region 模拟器继续运行的请求
 	private EmuResume() {
@@ -449,9 +441,9 @@ export class ZGAssemblerDebugSession extends DebugSession {
 
 	/***** 测试用 *****/
 
-	HitBreakpoint() {
-		const source = new Source("D:\\ProgramTest\\ZGAssembler-Test\\Battle City\\main.asm", "D:\\ProgramTest\\ZGAssembler-Test\\Battle City\\main.asm");
-		this.hitStack = new StackFrame(this.frameStack++, "line", source, 1);
-		this.sendEvent(new StoppedEvent("breakpoint", SessionThreadID));
-	}
+	// HitBreakpoint() {
+	// 	const source = new Source("d:/programtest/zgassembler-test/battle city/main.asm", "d:/programtest/zgassembler-test/battle city/main.asm");
+	// 	this.hitStack = new StackFrame(this.frameStack++, "line", source, 1);
+	// 	this.sendEvent(new StoppedEvent("breakpoint", SessionThreadID));
+	// }
 }

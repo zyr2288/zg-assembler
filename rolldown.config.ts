@@ -28,8 +28,7 @@ export default defineConfig((env): RolldownOptions | RolldownOptions[] => {
 		output: {
 			name: "ZGAssembler", entryFileNames: "",
 			dir: "dist-core", format: "umd",
-			minify: true, cleanDir: false, postBanner: banner,
-			extend: true
+			minify: true, cleanDir: false, postBanner: banner, extend: true
 		} as OutputOptions,
 
 	};
@@ -51,7 +50,7 @@ export default defineConfig((env): RolldownOptions | RolldownOptions[] => {
 	output.format = "esm";
 	output.entryFileNames = `[name]-${output.format}-v${pakcage.version}.js`;
 
-	for(const option of allOptions) {
+	for (const option of allOptions) {
 		option.plugins = [InlineEnvPlugin({ production })];
 	}
 

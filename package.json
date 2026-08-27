@@ -69,10 +69,6 @@
 				"command": "zg-assembler.outputLabels-16",
 				"title": "%Export labels - 16%",
 				"icon": "syntaxes/export.svg"
-			},
-			{
-				"command": "zg-assembler.helloWorld",
-				"title": "Hello World"
 			}
 		],
 		"languages": [
