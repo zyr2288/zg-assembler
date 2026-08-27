@@ -1,48 +1,54 @@
-# Welcome to your VS Code Extension
+# zg-assembler — VS Code 扩展快速上手
 
-## What's in the folder
+这是为 zg-assembler（一个支持 6502 / 65c816 / SM83-GB / SPC700 汇编的 VS Code 插件）准备的快速上手说明。本文档覆盖本地开发、调试、打包与发布的常用步骤，以及常见配置与示例。
 
-* This folder contains all of the files necessary for your extension.
-* `package.json` - this is the manifest file in which you declare your extension and command.
-  * The sample plugin registers a command and defines its title and command name. With this information VS Code can show the command in the command palette. It doesn’t yet need to load the plugin.
-* `src/extension.ts` - this is the main file where you will provide the implementation of your command.
-  * The file exports one function, `activate`, which is called the very first time your extension is activated (in this case by executing the command). Inside the `activate` function we call `registerCommand`.
-  * We pass the function containing the implementation of the command as the second parameter to `registerCommand`.
+---
 
-## Setup
+## 特性概述
+zg-assembler 提供以下主要功能：
+- 语法高亮（6502 / 65c816 / SM83-GB / SPC700）
+- 代码片段（常用伪指令 / 模板）
+- 行内/工作区级别的配置支持
 
-* install the recommended extensions (amodio.tsl-problem-matcher, ms-vscode.extension-test-runner, and dbaeumer.vscode-eslint)
+---
 
+## 先决条件
+- Node.js >= 16（根据你的 package.json 确认）
+- npm 或 yarn
+- VS Code（用于调试扩展）
+- 推荐安装 `vsce`（用于打包和发布）：`npm install -g vsce`（可选）
 
-## Get up and running straight away
+---
 
-* Press `F5` to open a new window with your extension loaded.
-* Run your command from the command palette by pressing (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) and typing `Hello World`.
-* Set breakpoints in your code inside `src/extension.ts` to debug your extension.
-* Find output from your extension in the debug console.
+## 本地运行（开发）
+1. 克隆仓库并安装依赖：
+   - git clone https://github.com/zyr2288/zg-assembler.git
+   - cd zg-assembler
+   - npm install
 
-## Make changes
+2. 编译 TypeScript（如果项目使用 TypeScript）：
+   - npm run build
+   - 或者在开发过程中使用 watch：`npm run watch`（若 package.json 中有定义）
 
-* You can relaunch the extension from the debug toolbar after changing code in `src/extension.ts`.
-* You can also reload (`Ctrl+R` or `Cmd+R` on Mac) the VS Code window with your extension to load your changes.
+3. 启动扩展调试：
+   - 在 VS Code 中打开项目目录：`code .`
+   - 进入 Run and Debug（运行和调试，快捷键 Ctrl+Shift+D）
+   - 选择 “Launch Extension”（或扩展提供的调试配置），按 F5 启动扩展开发主机窗口（Extension Development Host）
+   - 在开发主机中，打开或创建一个以支持的汇编后缀结尾的文件（例如 `.asm`、`.s`、或你在 `package.json` 中声明的语言关联），检查语法高亮与片段
 
+4. 常用调试技巧：
+   - 在扩展代码中设置断点（例如在 `activate`、命令处理器或语言服务启动处）
+   - 使用 `console.log` 查看输出，或在调试控制台查看
+   - 打开扩展开发主机的“输出”面板，选择扩展主进程对应的通道查看日志
 
-## Explore the API
+---
 
-* You can open the full set of our API when you open the file `node_modules/@types/vscode/index.d.ts`.
-
-## Run tests
-
-* Install the [Extension Test Runner](https://marketplace.visualstudio.com/items?itemName=ms-vscode.extension-test-runner)
-* Run the "watch" task via the **Tasks: Run Task** command. Make sure this is running, or tests might not be discovered.
-* Open the Testing view from the activity bar and click the Run Test" button, or use the hotkey `Ctrl/Cmd + ; A`
-* See the output of the test result in the Test Results view.
-* Make changes to `src/test/extension.test.ts` or create new test files inside the `test` folder.
-  * The provided test runner will only consider files matching the name pattern `**.test.ts`.
-  * You can create folders inside the `test` folder to structure your tests any way you want.
-
-## Go further
-
-* Reduce the extension size and improve the startup time by [bundling your extension](https://code.visualstudio.com/api/working-with-extensions/bundling-extension).
-* [Publish your extension](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) on the VS Code extension marketplace.
-* Automate builds by setting up [Continuous Integration](https://code.visualstudio.com/api/working-with-extensions/continuous-integration).
+## 使用示例
+创建一个 6502 汇编示例文件 `example-6502.asm`：
+```asm
+; example-6502.asm
+        ORG $8000
+start:  LDA #$01
+        STA $0200
+        INX
+        JMP start

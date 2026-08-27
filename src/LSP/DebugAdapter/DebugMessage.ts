@@ -131,7 +131,9 @@ export class ZGAssemblerDebugSession extends DebugSession {
 			LSPUtils.assembler.fileUtils.ShowMessage(error);
 			return;
 		}
-		this.messageStack[receiveMsg.id!]!(receiveMsg);
+
+		if (receiveMsg.id && this.messageStack[receiveMsg.id])
+			this.messageStack[receiveMsg.id](receiveMsg);
 	}
 	//#endregion 接收消息
 
@@ -141,7 +143,7 @@ export class ZGAssemblerDebugSession extends DebugSession {
 	 * @param request 请求消息
 	 * @returns 响应消息
 	 */
-	private MessageSend(request: DebugMessageRequest | DebugMessageReceive): Promise<any> {
+	private MessageSend(request: DebugMessageRequest | DebugMessageReceive, timeout = 5000): Promise<any> {
 		return new Promise((resolve, reject) => {
 			this.client.SendMessage(request);
 			if (!request.id) {
@@ -149,11 +151,27 @@ export class ZGAssemblerDebugSession extends DebugSession {
 				return;
 			}
 
+			let timer: NodeJS.Timeout | null = null;
 			// 如果发送的有Id号，则等待响应
 			this.messageStack[request.id] = (data) => {
+				if (timer) {
+					clearTimeout(timer);
+					timer = null;
+				}
+
 				resolve(data.result);
 				delete (this.messageStack[request.id!]);
 			}
+
+			// 设置超时
+			timer = setTimeout(() => {
+				// 如果超时，检查回调是否还存在，存在则删除并reject
+				if (this.messageStack[request.id!]) {
+					reject(new Error(`Message with id ${request.id} timed out`));
+					delete this.messageStack[request.id!];
+				}
+				timer = null;
+			}, timeout);;
 		});
 	}
 	//#endregion 发送消息

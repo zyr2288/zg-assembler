@@ -16,3 +16,5 @@ dist-core/**
 test/**
 **.vsix
 ChangeLog-History.md
+.env.development
+.env.production

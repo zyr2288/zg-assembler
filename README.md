@@ -1,11 +1,5 @@
 # Zeng Ge Assembler
 
-如果要调试或者编译，请先安装依赖:
-
-```bash
-> npm install
-```
-
 [English](./doc/README-en.md)
 
 [中文Wiki](https://gitee.com/zeng_ge/zg-assembler-next/wikis)
