@@ -1,11 +1,11 @@
 import * as vscode from "vscode";
 import { LSPUtils } from "../LSPUtils";
 import { ZGAssemblerDebugConfig, ZGAssemblerDebugSession } from "./DebugMessage";
-import { AssCommands } from "../AssCommands";
+// import { AssCommands } from "../AssCommands";
 
 /**与lanch的type一致 */
 const DebugType = "ZG-Assembler";
-const DebugReloadCommand = "zg-assembly.reloadRom";
+// const DebugReloadCommand = "zg-assembly.reloadRom";
 
 export class ZGAssemblerDebugAdapter {
 

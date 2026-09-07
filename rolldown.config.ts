@@ -18,7 +18,7 @@ export default defineConfig((env): RolldownOptions | RolldownOptions[] => {
 				minify: production, cleanDir: true,
 				postBanner: banner, sourcemap: !production,
 			},
-			external: ["vscode", "@vscode/debugadapter"],
+			external: ["vscode"],
 			plugins: [InlineEnvPlugin({ production })],
 		}
 	}
