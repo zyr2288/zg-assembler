@@ -129,7 +129,7 @@ export class RenameAndReferences {
 
 					const fileName = Compiler.enviroment.GetFilePath(label.fileIndex);
 					const tokens = result.get(fileName) ?? [];
-					tokens.push(label.token);
+					tokens.push(label.token.Copy());
 					result.set(fileName, tokens);
 					LabelUtils.RenameLabel(label as ILabelNormal, newLabelStr);
 				}
@@ -158,7 +158,7 @@ export class RenameAndReferences {
 				if (macro) {
 					const fileName = Compiler.enviroment.GetFilePath(macro.fileIndex);
 					const tokens = result.get(fileName) ?? [];
-					tokens.push(macro.name);
+					tokens.push(macro.name.Copy());
 					result.set(fileName, tokens);
 					MacroUtils.Rename(macro, newLabelStr);
 				}
