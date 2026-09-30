@@ -130,7 +130,7 @@ export class LabelUtils {
 	//#endregion 创建通用标签
 
 	//#region 查询标签
-	static FindLabel(token: Token, option?: { fileIndex?: number, macro?: Macro }) : ILabelNormal | ILabelNameless | undefined {
+	static FindLabel(token: Token, option?: { fileIndex?: number, macro?: Macro }): ILabelNormal | ILabelNameless | undefined {
 		if (!token || token.isEmpty)
 			return;
 
@@ -209,11 +209,11 @@ export class LabelUtils {
 
 		if (option?.macro) {
 			const param = option.macro.params.get(token.text);
-			if (param) 
+			if (param)
 				return param.label;
 
 			const label = option.macro.labels.get(token.text);
-			if (label) 
+			if (label)
 				return label;
 
 			if (option.macro.varParams?.name.text === token.text) {
@@ -270,6 +270,42 @@ export class LabelUtils {
 		return token
 	}
 	//#endregion 去除标签后的冒号
+
+	//#region 重命名标签
+	/**
+	 * 重命名标签
+	 * @param oldLabel 旧标签
+	 * @param newName 新名称
+	 * @returns 
+	 */
+	static RenameLabel(oldLabel: ILabelNormal, newName: string) {
+		let temp;
+		if (oldLabel.scope === LabelScope.Global) {
+			temp = Compiler.enviroment.allLabel.global.get(oldLabel.token.text);
+			if (!temp)
+				return;
+
+			Compiler.enviroment.allLabel.global.delete(oldLabel.token.text);
+			temp.token.text = newName;
+			Compiler.enviroment.allLabel.global.set(newName, temp);
+
+			temp = Compiler.enviroment.labelTree.global.get(oldLabel.token.text);
+			if (temp) {
+				Compiler.enviroment.labelTree.global.delete(oldLabel.token.text);
+				Compiler.enviroment.labelTree.global.set(newName, temp);
+			}
+			return;
+		}
+
+		temp = Compiler.enviroment.allLabel.local.get(oldLabel.fileIndex)?.get(oldLabel.token.text);
+		if (!temp)
+			return;
+
+		Compiler.enviroment.allLabel.local.get(oldLabel.fileIndex)?.delete(oldLabel.token.text);
+		temp.token.text = newName;
+		Compiler.enviroment.allLabel.local.get(oldLabel.fileIndex)?.set(newName, temp);
+	}
+	//#endregion 重命名标签
 
 	/***** private *****/
 

@@ -1,6 +1,6 @@
 import { Expression, PriorityType } from "../Base/ExpressionUtils";
 import { ILabelNormal, LabelScope, LabelUtils } from "../Base/Label";
-import { Macro } from "../Base/Macro";
+import { Macro, MacroUtils } from "../Base/Macro";
 import { Token } from "../Base/Token";
 import { CommandTagBase } from "../Command/Command";
 import { DataCommandTag } from "../Command/DataCommand";
@@ -111,7 +111,6 @@ export class RenameAndReferences {
 
 		const result = new Map<string, Token[]>();
 
-		let tempMacro: Macro | undefined;
 		let tempLabel: ILabelNormal | undefined;
 		if (RenameAndReferences.SaveRename.type === "label" || RenameAndReferences.SaveRename.type === "macroLabel") {
 			tempLabel = LabelUtils.FindLabel(RenameAndReferences.SaveRename.token!, { macro: RenameAndReferences.SaveRename.macro }) as ILabelNormal | undefined;
@@ -132,6 +131,7 @@ export class RenameAndReferences {
 					const tokens = result.get(fileName) ?? [];
 					tokens.push(label.token);
 					result.set(fileName, tokens);
+					LabelUtils.RenameLabel(label as ILabelNormal, newLabelStr);
 				}
 				break;
 			case "macroLabel":
@@ -160,6 +160,7 @@ export class RenameAndReferences {
 					const tokens = result.get(fileName) ?? [];
 					tokens.push(macro.name);
 					result.set(fileName, tokens);
+					MacroUtils.Rename(macro, newLabelStr);
 				}
 				break;
 		}

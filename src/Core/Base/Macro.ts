@@ -2,6 +2,7 @@ import { CommonLine } from "../Lines/CommonLine";
 import { Expression } from "./ExpressionUtils";
 import { ILabelNormal } from "./Label";
 import { Token } from "./Token";
+import { Compiler } from "../Compiler/Compiler";
 
 export class Macro {
 	/**名称 */
@@ -20,4 +21,12 @@ export class Macro {
 	lineOffset: number = 0;
 	/**注释 */
 	comment?: string;
+}
+
+export class MacroUtils {
+	static Rename(macro: Macro, newName: string) {
+		Compiler.enviroment.allMacro.delete(macro.name.text);
+		Compiler.enviroment.allMacro.set(newName, macro);
+		macro.name.text = newName;
+	}
 }
