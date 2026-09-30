@@ -22,7 +22,6 @@ export class Rename {
 
 		await LSPUtils.WaitingCompileFinished();
 
-		LSPUtils.fileUpdateFinished = false;
 		const renameClass = LSPUtils.assembler.languageHelper.renameAndReferences;
 		const lineText = document.lineAt(position.line).text;
 		const charRange = renameClass.PreRename(document.fileName, lineText, position.line, position.character);
@@ -31,15 +30,11 @@ export class Rename {
 		}
 
 		const range = new vscode.Range(position.line, charRange.start, position.line, charRange.start + charRange.length);
-
-		LSPUtils.fileUpdateFinished = true;
 		return range;
 	}
 
 	private static async Rename(document: vscode.TextDocument, position: vscode.Position, newName: string, token: vscode.CancellationToken) {
 		await LSPUtils.WaitingCompileFinished();
-
-		LSPUtils.fileUpdateFinished = false;
 
 		const renameClass = LSPUtils.assembler.languageHelper.renameAndReferences;
 		const edit = new vscode.WorkspaceEdit();
@@ -60,7 +55,6 @@ export class Rename {
 			}
 		}
 
-		LSPUtils.fileUpdateFinished = true;
 		return edit;
 	}
 }

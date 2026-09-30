@@ -279,31 +279,35 @@ export class LabelUtils {
 	 * @returns 
 	 */
 	static RenameLabel(oldLabel: ILabelNormal, newName: string) {
-		let temp;
+		let temp1, temp2, oldName = oldLabel.token.text;
 		if (oldLabel.scope === LabelScope.Global) {
-			temp = Compiler.enviroment.allLabel.global.get(oldLabel.token.text);
-			if (!temp)
+			temp1 = Compiler.enviroment.allLabel.global.get(oldName);
+			if (!temp1)
 				return;
 
-			Compiler.enviroment.allLabel.global.delete(oldLabel.token.text);
-			temp.token.text = newName;
-			Compiler.enviroment.allLabel.global.set(newName, temp);
+			Compiler.enviroment.allLabel.global.delete(oldName);
+			temp1.token.text = newName;
+			Compiler.enviroment.allLabel.global.set(newName, temp1);
 
-			temp = Compiler.enviroment.labelTree.global.get(oldLabel.token.text);
-			if (temp) {
-				Compiler.enviroment.labelTree.global.delete(oldLabel.token.text);
-				Compiler.enviroment.labelTree.global.set(newName, temp);
+			temp1 = Compiler.enviroment.labelTree.global.get(oldName);
+			if (temp1) {
+				Compiler.enviroment.labelTree.global.delete(oldName);
+				Compiler.enviroment.labelTree.global.set(newName, temp1);
 			}
 			return;
 		}
 
-		temp = Compiler.enviroment.allLabel.local.get(oldLabel.fileIndex)?.get(oldLabel.token.text);
-		if (!temp)
+		temp1 = Compiler.enviroment.allLabel.local.get(oldLabel.fileIndex);
+		if (!temp1)
 			return;
 
-		Compiler.enviroment.allLabel.local.get(oldLabel.fileIndex)?.delete(oldLabel.token.text);
-		temp.token.text = newName;
-		Compiler.enviroment.allLabel.local.get(oldLabel.fileIndex)?.set(newName, temp);
+		temp2 = temp1.get(oldName);
+		if (!temp2)
+			return;
+
+		temp1.delete(oldName);
+		temp2.token.text = newName;
+		temp1.set(newName, temp2);
 	}
 	//#endregion 重命名标签
 
